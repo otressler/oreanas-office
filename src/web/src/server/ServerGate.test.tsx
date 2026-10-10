@@ -111,6 +111,33 @@ describe('ServerGate', () => {
     expect(wakingScreen()).not.toBeInTheDocument()
   })
 
+  it('shows the error screen when the server gave up starting, and stops probing', async () => {
+    fetchMock.mockResolvedValueOnce(waking(503)).mockResolvedValue(
+      new Response(JSON.stringify({ status: 'error' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    renderGate()
+
+    await advance(GRACE_MS + retryDelay(1))
+    expect(screen.getByText(de.serverGate.errorTitle)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: de.serverGate.retry })).toBeInTheDocument()
+    expect(wakingScreen()).not.toBeInTheDocument()
+
+    // Error is final: a broken server isn't kept awake either.
+    await advance(60_000)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('treats a 500 without the error body as waking', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('oops', { status: 500 })).mockResolvedValue(ok())
+    renderGate()
+
+    await advance(GRACE_MS + retryDelay(1))
+    expect(child()).toBeInTheDocument()
+  })
+
   it('treats network errors and 502/504 as waking and backs off up to 5 s', async () => {
     fetchMock
       .mockRejectedValueOnce(new TypeError('Failed to fetch'))

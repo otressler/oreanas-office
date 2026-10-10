@@ -90,7 +90,7 @@ The templates are in `infra/`, with the owner's step-by-step guide in `infra/REA
 - **Database size:** the free serverless database is capped at 1 vCore (0.5 minimum), so a busy session can't use up the free allowance twice as fast.
 - **Placeholder image:** the first deployment runs a public ASP.NET sample image on port 8080 until CI pushes the real one. Re-deploying the template with `infra/deploy.ps1` keeps whichever image is live.
 - **Sign-in to Azure services:** the app uses its system-assigned managed identity for SQL (Entra-only, no passwords) and Blob Storage (shared keys turned off).
-- **CI deployments:** GitHub Actions signs in with OIDC (no stored Azure secret) and may change the container app only. Deployment is switched on with the repository variable `DEPLOY_ENABLED`.
+- **CI deployments:** GitHub Actions signs in with OIDC (no stored Azure secret) and may change only the container app and its Container Apps environment. Deployment is switched on with the repository variable `DEPLOY_ENABLED`.
 - **Health probes:** Container Apps keeps its default TCP probes. `/api/health` returns 503 while the database resumes, so it must never be a probe.
 - **Budgets** cover only the app's resource group, so they don't include Foundry image costs if those live elsewhere.
 

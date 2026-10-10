@@ -24,6 +24,15 @@ export function ServerGate({ children }: { children: ReactNode }) {
           testId="offline-screen"
         />
       )
+    case 'error':
+      return (
+        <GateMessage
+          title={de.serverGate.errorTitle}
+          body={de.serverGate.errorBody}
+          testId="error-screen"
+          action={{ label: de.serverGate.retry, onClick: () => window.location.reload() }}
+        />
+      )
     case 'waking':
       return (
         <GateMessage
@@ -41,11 +50,13 @@ function GateMessage({
   body,
   testId,
   busy = false,
+  action,
 }: {
   title: string
   body: string
   testId: string
   busy?: boolean
+  action?: { label: string; onClick: () => void }
 }) {
   return (
     <section
@@ -65,6 +76,15 @@ function GateMessage({
       />
       <h1 className="text-2xl font-semibold text-parchment">{title}</h1>
       <p className="text-base text-dim">{body}</p>
+      {action && (
+        <button
+          type="button"
+          onClick={action.onClick}
+          className="rounded-md border border-candle px-4 py-2 text-candle hover:bg-candle/10"
+        >
+          {action.label}
+        </button>
+      )}
     </section>
   )
 }

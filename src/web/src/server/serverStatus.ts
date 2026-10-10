@@ -5,7 +5,9 @@
 // - backoff from 1 s growing to a 5 s cap, each attempt aborted after 10 s;
 // - no requests while the device is offline (waits for the `online` event);
 // - no requests while the page is hidden (waits until it is visible again);
-// - stops for good once the server is ready, so nothing keeps it awake.
+// - stops for good once the server is ready, so nothing keeps it awake;
+// - also stops for good when the server reports an error it can't recover
+//   from by waiting, so a broken server isn't kept awake either.
 //
 // The status lives in a small store so any later screen can read it.
 import { create } from 'zustand'
@@ -20,6 +22,8 @@ export type ServerStatus =
   | 'offline'
   /** The server answered "ok". Final. */
   | 'ready'
+  /** The server gave up starting; waiting won't help. Final until the page is reloaded. */
+  | 'error'
 
 interface ServerStatusState {
   status: ServerStatus
@@ -44,7 +48,8 @@ let stopCurrent: (() => void) | null = null
 
 /** Starts probing unless a probe loop is already running or the server is ready. */
 export function startServerGate(): void {
-  if (stopCurrent || useServerStatus.getState().status === 'ready') return
+  const { status } = useServerStatus.getState()
+  if (stopCurrent || status === 'ready' || status === 'error') return
   stopCurrent = runGate()
 }
 
@@ -90,8 +95,8 @@ function runGate(): () => void {
       clearTimeout(timeout)
       inFlight = null
       if (stopped) return
-      if (result === 'ok') {
-        setStatus('ready')
+      if (result === 'ok' || result === 'error') {
+        setStatus(result === 'ok' ? 'ready' : 'error')
         stop()
         return
       }

@@ -29,6 +29,15 @@ export interface paths {
                         "application/json": components["schemas"]["HealthResponse"];
                     };
                 };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HealthResponse"];
+                    };
+                };
                 /** @description Service Unavailable */
                 503: {
                     headers: {

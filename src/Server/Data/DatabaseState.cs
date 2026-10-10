@@ -1,12 +1,25 @@
 namespace OreanasOffice.Server.Data;
 
-// Whether the startup migration has finished. Set once by DatabaseMigrator;
-// a restart starts over at false and migrates again (a no-op when up to date).
+// How the startup migration went. Set once by DatabaseMigrator; a restart starts
+// over at Migrating and migrates again (a no-op when up to date).
 public sealed class DatabaseState
 {
-    private volatile bool _isMigrated;
+    private volatile MigrationStatus _status = MigrationStatus.Migrating;
 
-    public bool IsMigrated => _isMigrated;
+    public MigrationStatus Status => _status;
 
-    public void MarkMigrated() => _isMigrated = true;
+    public bool IsMigrated => _status == MigrationStatus.Migrated;
+
+    public void MarkMigrated() => _status = MigrationStatus.Migrated;
+
+    public void MarkFailed() => _status = MigrationStatus.Failed;
+}
+
+public enum MigrationStatus
+{
+    Migrating,
+    Migrated,
+    // Gave up: an error that waiting won't fix (for example the app's identity
+    // has no database access yet), or the database stayed unreachable too long.
+    Failed,
 }

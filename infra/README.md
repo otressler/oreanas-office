@@ -111,13 +111,17 @@ $spId     = az ad sp create --id $clientId --query id --output tsv
 az ad app federated-credential create --id $clientId --parameters federated-credential.json
 Remove-Item federated-credential.json
 
-# Least privilege: Contributor on the container app only, not on the resource group.
+# Least privilege: Contributor on the container app and its environment, not on the resource group.
+# Updating an app also needs the environment's "join" permission, which Reader doesn't include.
 $appResourceId = az containerapp show --name oreanas-office --resource-group $rg --query id --output tsv
-az role assignment create --assignee-object-id $spId --assignee-principal-type ServicePrincipal `
-    --role Contributor --scope $appResourceId
+$envResourceId = az containerapp env show --name cae-oreanas --resource-group $rg --query id --output tsv
+foreach ($scope in $appResourceId, $envResourceId) {
+    az role assignment create --assignee-object-id $spId --assignee-principal-type ServicePrincipal `
+        --role Contributor --scope $scope
+}
 ```
 
-This identity can change the container app (its image, settings, secrets) and nothing else. It can't read the database, the storage account or other resources. If `az containerapp update` in the workflow ever fails on a missing read permission for the environment, add `Reader` on the resource group as well.
+This identity can change the container app (its image, settings, secrets) and its Container Apps environment, and nothing else. It can't read the database, the storage account or other resources.
 
 ### 7. Set the repository variables
 

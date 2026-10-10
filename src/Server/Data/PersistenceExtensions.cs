@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using OreanasOffice.Server.Hosting;
 
 namespace OreanasOffice.Server.Data;
@@ -23,6 +24,7 @@ public static class PersistenceExtensions
                     errorNumbersToAdd: null)));
 
         builder.Services.AddSingleton<DatabaseState>();
+        builder.Services.TryAddSingleton(TimeProvider.System);
         if (!BuildTime.IsGeneratingOpenApiDocument)
         {
             builder.Services.AddHostedService<DatabaseMigrator>();

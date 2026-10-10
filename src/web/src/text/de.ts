@@ -21,6 +21,10 @@ export const de = {
     offlineTitle: 'Keine Verbindung',
     offlineBody:
       'Dein Gerät ist gerade offline. Sobald die Verbindung zurück ist, geht es von selbst weiter.',
+    errorTitle: 'Der Tisch kann nicht starten',
+    errorBody:
+      'Der Server hat ein Problem, das sich nicht durch Warten löst. Sag bitte deiner Spielleitung Bescheid.',
+    retry: 'Erneut versuchen',
   },
 
   update: {
