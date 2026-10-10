@@ -1,0 +1,17 @@
+// Parameters for main.bicep. No secret or personal values live here:
+// they come from environment variables when you deploy (see infra/README.md).
+using 'main.bicep'
+
+param sqlEntraAdminLogin = readEnvironmentVariable('SQL_ENTRA_ADMIN_LOGIN')
+param sqlEntraAdminObjectId = readEnvironmentVariable('SQL_ENTRA_ADMIN_OBJECT_ID')
+param sqlClientIpAddress = readEnvironmentVariable('SQL_CLIENT_IP', '')
+
+param budgetContactEmail = readEnvironmentVariable('BUDGET_CONTACT_EMAIL')
+
+// Private ghcr.io package: user name + PAT with read:packages. Leave both unset if the package is public.
+param ghcrUsername = readEnvironmentVariable('GHCR_USERNAME', '')
+param ghcrToken = readEnvironmentVariable('GHCR_TOKEN', '')
+
+// Unset on the first deployment (public placeholder). On later runs set it to the live image,
+// otherwise the deployment rolls the app back to the placeholder. infra/deploy.ps1 does this for you.
+param containerImage = readEnvironmentVariable('CONTAINER_IMAGE', 'mcr.microsoft.com/dotnet/samples:aspnetapp')

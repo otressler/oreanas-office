@@ -1,0 +1,135 @@
+// Oreana's Office: production infrastructure, deployed to one resource group.
+// See infra/README.md for what this creates, what it costs and how to deploy it.
+targetScope = 'resourceGroup'
+
+@description('Azure region. Defaults to the resource group\'s region.')
+param location string = resourceGroup().location
+
+@description('Base name used for the resources.')
+@minLength(3)
+@maxLength(20)
+param baseName string = 'oreanas'
+
+@description('Container image to run. The default is a public placeholder that listens on 8080, so the first deployment works before CI has pushed an image. On later runs pass the image that is currently live, or this resets it.')
+param containerImage string = 'mcr.microsoft.com/dotnet/samples:aspnetapp'
+
+@description('GitHub user name for pulling images from ghcr.io. Leave empty with ghcrToken if the package is public.')
+param ghcrUsername string = ''
+
+@description('GitHub personal access token (classic) with read:packages. Leave empty if the package is public.')
+@secure()
+param ghcrToken string = ''
+
+@description('Microsoft Entra admin of the SQL server: sign-in name (UPN).')
+param sqlEntraAdminLogin string
+
+@description('Microsoft Entra admin of the SQL server: object id of that user.')
+param sqlEntraAdminObjectId string
+
+@description('Optional: your public IP address, so you can run infra/sql/grant-app-access.sql from your machine. Empty for none.')
+param sqlClientIpAddress string = ''
+
+@description('Email address for the budget alerts.')
+param budgetContactEmail string
+
+@description('First day of the first budget month (yyyy-MM-01). Defaults to the current month.')
+param budgetStartDate string = utcNow('yyyy-MM-01')
+
+@description('Log Analytics daily ingestion cap in GB (a string, because Bicep has no decimals).')
+param logDailyQuotaGb string = '0.1'
+
+var suffix = uniqueString(resourceGroup().id)
+var appName = '${baseName}-office'
+var databaseName = 'OreanasOffice'
+var storageAccountName = take('st${baseName}${suffix}', 24)
+var logAnalyticsWorkspaceName = 'log-${baseName}'
+
+module logging 'modules/logging.bicep' = {
+  name: 'logging'
+  params: {
+    location: location
+    name: logAnalyticsWorkspaceName
+    dailyQuotaGb: logDailyQuotaGb
+  }
+}
+
+module storage 'modules/storage.bicep' = {
+  name: 'storage'
+  params: {
+    location: location
+    name: storageAccountName
+    containerNames: ['dataprotection']
+  }
+}
+
+module sql 'modules/sql.bicep' = {
+  name: 'sql'
+  params: {
+    location: location
+    serverName: 'sql-${baseName}-${suffix}'
+    databaseName: databaseName
+    entraAdminLogin: sqlEntraAdminLogin
+    entraAdminObjectId: sqlEntraAdminObjectId
+    clientIpAddress: sqlClientIpAddress
+  }
+}
+
+module app 'modules/app.bicep' = {
+  name: 'app'
+  dependsOn: [logging]
+  params: {
+    location: location
+    environmentName: 'cae-${baseName}'
+    appName: appName
+    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
+    containerImage: containerImage
+    ghcrUsername: ghcrUsername
+    ghcrToken: ghcrToken
+    // No password: the app signs in with its system-assigned managed identity.
+    databaseConnectionString: 'Server=tcp:${sql.outputs.serverFqdn},1433;Database=${sql.outputs.databaseName};Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;Connect Timeout=30'
+    blobServiceUri: storage.outputs.blobEndpoint
+  }
+}
+
+module blobAccess 'modules/blob-access.bicep' = {
+  name: 'blob-access'
+  // Runs after storage implicitly: the app module already takes storage's blob endpoint.
+  params: {
+    storageAccountName: storageAccountName
+    principalId: app.outputs.principalId
+    principalName: appName
+  }
+}
+
+module budgets 'modules/budgets.bicep' = {
+  name: 'budgets'
+  params: {
+    amounts: [10, 30]
+    contactEmail: budgetContactEmail
+    startDate: budgetStartDate
+  }
+}
+
+@description('Public address of the app.')
+output appUrl string = 'https://${app.outputs.fqdn}'
+
+@description('Host name of the app.')
+output appFqdn string = app.outputs.fqdn
+
+@description('Container app name; also the display name of its managed identity (use it in grant-app-access.sql).')
+output appName string = app.outputs.name
+
+@description('Name of the app\'s system-assigned managed identity.')
+output appIdentityName string = app.outputs.name
+
+@description('Object (principal) id of the app\'s managed identity.')
+output appPrincipalId string = app.outputs.principalId
+
+@description('SQL server host name.')
+output sqlServerFqdn string = sql.outputs.serverFqdn
+
+@description('Database name.')
+output databaseName string = sql.outputs.databaseName
+
+@description('Blob service endpoint.')
+output blobEndpoint string = storage.outputs.blobEndpoint
