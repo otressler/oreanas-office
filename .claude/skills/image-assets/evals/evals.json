@@ -1,0 +1,23 @@
+{
+  "skill_name": "image-assets",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Make me a battle map background for tonight's goblin ambush. 16x10 grid. A shallow river runs north to south through the middle (about 3 cells wide, wiggly), there's a fallen tree trunk across it at rows 4-5 that works as a bridge, thick brambles on the east bank (difficult terrain), forest edge on the west side, a muddy road enters from the west edge around row 7. Dusk, misty, a bit eerie.",
+      "expected_output": "An ASCII or JSON layout matching the description, a colour-coded guide at an exact 16 px-step size, a map image generated from that guide (edit endpoint) with sidecar metadata, an alignment review, and an honest note on what drifted.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "can you do token icons for my bestiary? goblin boss (bigger than the others, wolf pelt cloak, notched scimitar), dire wolf (huge, grey, scarred muzzle), and a bugbear with a spiked morningstar. they should look like one set",
+      "expected_output": "Three transparent-background 1024x1024 PNG icons with a shared style block, generated sequentially, saved with sidecar JSON under assets/generated/tokens/.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Here's the layout for the gorge crossing encounter: evals/files/gorge-crossing.json. Paint the background for it and tell me how well it lines up with the grid.",
+      "expected_output": "Guide rendered from the JSON, prompt built from scene/vibe/lighting plus legend and elevation in words (bridge above a gorge), image at the guide's size, alignment review sheet, and a concrete assessment of alignment.",
+      "files": ["evals/files/gorge-crossing.json"]
+    }
+  ]
+}
