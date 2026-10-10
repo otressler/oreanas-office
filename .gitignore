@@ -1,2 +1,21 @@
 .env
 *-workspace/
+
+# .NET
+bin/
+obj/
+.vs/
+*.user
+src/Server/wwwroot/
+
+# Node
+node_modules/
+dist/
+dev-dist/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Bicep build output
+infra/**/*.json
+!infra/**/*.parameters.json

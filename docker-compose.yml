@@ -1,0 +1,36 @@
+# Local development services. scripts/dev.ps1 starts them, or `docker compose up -d`.
+# The `app` profile runs the production container against the same services,
+# for smoke tests: `docker compose --profile app up --build`.
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Local_Dev_Only_1"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite-blob --blobHost 0.0.0.0 --loose
+    ports:
+      - "10000:10000"
+    volumes:
+      - azurite-data:/data
+
+  app:
+    profiles: [app]
+    build: .
+    depends_on: [sql, azurite]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Database: "Server=sql,1433;Database=OreanasOffice;User Id=sa;Password=Local_Dev_Only_1;TrustServerCertificate=True"
+      ConnectionStrings__Storage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+    ports:
+      - "8080:8080"
+
+volumes:
+  sql-data:
+  azurite-data:

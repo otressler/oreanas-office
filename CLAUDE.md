@@ -24,3 +24,16 @@ There is only one deployed environment: production, which scales to zero between
 - When a decision is made or changes, update its concept in `knowledge/decisions/` (the `decision:` field and the body), and add a dated entry to `knowledge/log.md`.
 - Concepts you write get `status: draft` and `generated: { by: claude-code/<model>, at: <UTC time> }`. Only add `verified: { by: human:oliver.langschede, ... }` once the project owner has actually confirmed the content.
 - Every concept needs YAML frontmatter with a `type`. `index.md` and `log.md` have no frontmatter, except `okf_version` in the root `index.md`. Keep each folder's `index.md` in sync when you add or rename concepts.
+
+## Repository layout and commands
+
+- `src/Server`: ASP.NET Core app (`OreanasOffice.Server`). Features register through extension methods called from `Program.cs`.
+- `src/web`: Vite + React app. Its build goes into the server's `wwwroot` inside the container.
+- `tests/Server.Tests`: xUnit tests; integration tests use Testcontainers, so Docker must run.
+- `infra/`: Bicep templates. Only the project owner provisions Azure; Claude writes templates and summarises resources and cost first (`knowledge/decisions/hosting.md`).
+- Local development: `pwsh scripts/dev.ps1` (SQL Server and Azurite in Docker, backend on :5080, Vite on :5173 forwarding `/api` and `/hubs`).
+- Backend tests: `dotnet test`. Frontend: `npm test` and `npm run test:e2e` in `src/web`.
+- API types: building the server writes `src/web/src/api/openapi.json`; `npm run gen:api` turns it into `schema.d.ts`.
+- EF migrations: `dotnet ef migrations add <Name> --project src/Server --output-dir Data/Migrations`.
+- All interface text is German and lives in `src/web/src/text/de.ts`.
+- Work happens on `stage/<n>-<name>` branches per `knowledge/implementation-plan.md`.

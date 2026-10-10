@@ -1,0 +1,26 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "OreanasOffice.Server | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "OreanasOffice.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "OreanasOffice.Server"
+    }
+  ]
+}
