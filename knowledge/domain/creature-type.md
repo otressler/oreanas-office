@@ -4,7 +4,7 @@ title: Creature type
 description: Reusable monster template with size, speed and icon — the campaign's bestiary.
 tags: [domain, fight, tokens]
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 ---
 
 # Schema
@@ -15,7 +15,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 | `campaignId` | → [Campaign](/domain/campaign.md) | One bestiary per campaign for now |
 | `name` | string | e.g. "Goblin" |
 | `size` | enum | Sets the token footprint ([creature size](/rules/creature-size.md)) |
-| `speed` | int, feet | For the DM's movement hint |
+| `speed` | int, squares | For the DM's movement hint. Entered and shown in meters: 6 squares = 9 m ([movement rules](/rules/movement-distance.md)) |
 | `appearance` | text | Short visual description that feeds the icon prompt |
 | `iconAssetId` | → [Asset](/domain/asset.md), nullable | One icon per type ([token icons](/features/token-icons.md)) |
 | `notes` | text | DM-only notes |

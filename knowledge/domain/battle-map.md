@@ -4,7 +4,7 @@ title: Battle map
 description: Grid layout (terrain, elevation, features, entrances), scene description and chosen background image.
 tags: [domain, fight, map]
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 ---
 
 # Schema
@@ -14,8 +14,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 | `id` | id | |
 | `campaignId` | → [Campaign](/domain/campaign.md) | |
 | `name` | string | |
-| `width`, `height` | int, cells | The N×M grid the DM chooses |
-| `cellSizeFt` | int | 5 by default ([movement rules](/rules/movement-distance.md)) |
+| `width`, `height` | int, cells | The N×M grid the DM chooses. One cell is always 1.5 m ([movement rules](/rules/movement-distance.md)) |
 | `layout` | JSON document | See below. Stored as one document, not a table of cells ([persistence](/decisions/persistence.md)) |
 | `scene` | text | What the place is: "rope bridge over a misty gorge" |
 | `vibe` | text | Mood: "tense, overcast, wind" |
@@ -40,7 +39,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 ```
 
 - **`terrain`**: `void` (not part of the map) | `floor` | `difficult` | `water` | `wall`. The walkable area is everything that isn't `void` or `wall`.
-- **`elevation`**: height in feet relative to the map's base level. Shown to players. How it affects movement is an open question in the [movement rules](/rules/movement-distance.md).
+- **`elevation`**: height in meters (one decimal) relative to the map's base level. Unlike distances, it isn't tied to whole squares. Shown to players. How it affects movement is an open question in the [movement rules](/rules/movement-distance.md).
 - **`features`**: the few important objects (bridge, pillar, door, stairs…). `kind` is free text, which also feeds the image prompt. The footprint is a rectangle in cells.
 - **`entrances`**: `entrance` | `exit` | `both`, on edge cells.
 

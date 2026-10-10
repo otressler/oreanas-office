@@ -4,7 +4,7 @@ title: Asset
 description: A generated or uploaded image — map background or token icon — with its prompt, model and status.
 tags: [domain, images, ai]
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:45:10Z }
 ---
 
 # Schema
@@ -17,7 +17,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 | `origin` | enum `generated` \| `uploaded` | |
 | `prompt` | text, nullable | The full prompt sent to the model |
 | `model` | string, nullable | Model deployment used |
-| `status` | enum `queued` \| `running` \| `done` \| `failed` | Generation runs as a background job |
+| `status` | enum `queued` \| `running` \| `done` \| `failed` | Generation runs as a background job. These rows are the job queue, so queued jobs survive the container stopping ([hosting](/decisions/hosting.md)) |
 | `url` | string, nullable | Location in blob storage ([persistence](/decisions/persistence.md)) |
 | `createdAt` | timestamp | |
 

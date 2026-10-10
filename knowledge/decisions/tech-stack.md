@@ -1,25 +1,33 @@
 ---
 type: Decision
 title: Tech stack
-description: Choose between a .NET and a TypeScript stack; blocks phase 1 of the roadmap.
+description: .NET (ASP.NET Core) backend, chosen to fit Azure hosting; the frontend is a separate decision.
 tags: [decision, architecture]
-decision: open
+decision: accepted
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:10:00Z }
 ---
 
-# Options
+# Decision (set by the project owner)
 
-| | .NET | TypeScript |
-|---|------|------------|
-| Backend | ASP.NET Core | Node (e.g. SvelteKit or Next.js server) |
-| Realtime | SignalR / Azure SignalR Service | WebSockets or Socket.IO |
-| Frontend | Blazor, or a TypeScript frontend | SvelteKit or Next.js |
-| Board rendering | Canvas library via JS (e.g. Konva) | Konva or PixiJS |
-| Fit with Microsoft Foundry and Azure | Very good | Good |
+Hosting is on Azure ([hosting](/decisions/hosting.md)), so the backend is **.NET**.
 
-Both are fine for this app. The main question is which language the developers prefer.
+# Backend
 
-# Needed for
+| Concern | Choice |
+|---------|--------|
+| Runtime | .NET 10 (LTS), ASP.NET Core |
+| Realtime | ASP.NET Core SignalR, in-process ([realtime sync](/decisions/realtime-sync.md)) |
+| Sign-in | ASP.NET Core Identity with cookie auth, plus the Google handler ([auth](/decisions/auth.md)) |
+| Data | EF Core with Azure SQL Database; SQL Server locally ([persistence](/decisions/persistence.md)) |
+| API description | Built-in OpenAPI document, used to generate the frontend's types |
+| Images | Azure Blob Storage SDK; Foundry through its OpenAI-compatible API |
+| Packaging | One container that also serves the built frontend from `wwwroot` |
 
-[Realtime sync](/decisions/realtime-sync.md), [persistence](/decisions/persistence.md), [auth](/decisions/auth.md) and phase 1 of the [roadmap](/roadmap.md).
+# Frontend
+
+See [frontend stack](/decisions/frontend-stack.md) (proposed): a React + TypeScript PWA with a Konva canvas.
+
+# Options that were considered
+
+A Node/TypeScript backend was the alternative. With Azure hosting, ASP.NET Core has sign-in with Google, SignalR and SQL Server access built in, so it needs fewer extra libraries.

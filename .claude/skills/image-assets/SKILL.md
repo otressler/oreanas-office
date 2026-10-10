@@ -44,7 +44,7 @@ The grid is the source of truth and the picture is decoration. The model paints 
    python .claude/skills/image-assets/scripts/render_guide.py map.json --out <dir>/guide.png
    ```
    ASCII uses `.` floor, `,` difficult, `~` water, `#` wall, space or `_` void; add features with `--feature "bridge:5,3,3,1:rope bridge"` (x, y, w, h in cells, zero-based). It prints the exact `size` to request, `cell_px`, and a `legend` describing each colour.
-3. **Write the prompt** with the map template in `references/prompts.md`: scene, vibe and lighting, then the legend lines, then the fixed rules (top-down orthographic, keep every region in place, no grid, no text). Mention elevation in words when it matters ("the bridge spans a deep gorge, the ledge is 10 ft above the floor"), because the guide has no height channel.
+3. **Write the prompt** with the map template in `references/prompts.md`: scene, vibe and lighting, then the legend lines, then the fixed rules (top-down orthographic, keep every region in place, no grid, no text). Mention elevation in words when it matters ("the bridge spans a deep gorge, the ledge is 3 m above the floor"), because the guide has no height channel.
 4. **Generate** with the guide as `--image` at the printed `--size`.
 5. **Check the fit.**
    ```bash

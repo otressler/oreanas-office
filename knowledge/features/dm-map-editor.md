@@ -4,7 +4,7 @@ title: DM map editor
 description: Set the grid, paint terrain, place features, elevation, entrances and creatures, and describe the scene.
 tags: [feature, dm, editor]
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 sources:
   - id: brief
     resource: /references/original-brief.md
@@ -20,12 +20,13 @@ Let the DM build a fight quickly. This is not a full level editor: the DM places
 1. Create a [battle map](/domain/battle-map.md) with a chosen grid size N×M.
 2. Paint terrain per cell with a brush: walkable floor, difficult terrain, water, wall, or `void` (not part of the map). Tools: single cell, rectangle, fill.
 3. Place important objects ("features") with a rectangular footprint: bridge, pillar, door, stairs and so on. Each has a label, an elevation and a "blocks movement" switch.
-4. Set height levels: paint elevation (in feet) onto cells, and give features their own elevation (a bridge above a gorge).
+4. Set height levels: paint elevation (in meters) onto cells, and give features their own elevation (a bridge above a gorge).
 5. Mark entrances and exits on edge cells.
 6. Describe the scene, vibe and lighting in free text.
 7. Add creatures: pick a [creature type](/domain/creature-type.md), or create one on the spot, then click cells to place [tokens](/domain/token.md). Labels number themselves ("Goblin 1", "Goblin 2").
 8. Start [AI map generation](/features/ai-map-generation.md), compare versions and pick a background.
 9. Save as an [encounter](/domain/encounter.md) for a later session.
+10. Work offline: everything except image generation works without a connection and syncs on demand ([offline prep](/decisions/offline-prep-pwa.md)).
 
 # Notes
 

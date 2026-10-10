@@ -29,3 +29,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 # Notes
 
 Session attendance isn't modelled. Who takes part in a fight comes from the [tokens](/domain/token.md) on the encounter.
+
+# Later
+
+A `playMode` field, `byod` (default) or `local`, set by the session DM. It decides whether a table view may move every player character ([backlog](/backlog.md)).

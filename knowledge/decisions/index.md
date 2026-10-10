@@ -1,17 +1,20 @@
 # Accepted
 
 - [OKF knowledge base](okf-knowledge-base.md) - Project knowledge lives in this OKF bundle and is read before building
+- [Hosting](hosting.md) - Scale-to-zero on Azure Container Apps with the free Azure SQL offer, about $1–2 a month before images
+- [Tech stack](tech-stack.md) - .NET (ASP.NET Core) backend, chosen to fit Azure hosting
+- [Frontend stack](frontend-stack.md) - React + TypeScript PWA built with Vite, Konva canvas, served from the backend container
+- [Auth](auth.md) - Users sign in with a local account or Google; players join campaigns with a join code
+- [Rules edition](rules-edition.md) - The group plays D&D 5e (2024): every step costs one square (1.5 m), no corner cutting
+- [Play setting](play-setting.md) - In person, remote, and mixed sessions are all supported
 
 # Proposed
 
+- [Offline prep and PWA](offline-prep-pwa.md) - Installable PWA; the DM preps offline and syncs on demand, live play needs the server
 - [Image generation approach](image-generation-approach.md) - The grid is the source of truth; AI paints from a colour-coded guide image
-- [Realtime sync](realtime-sync.md) - The server holds the board state and pushes moves to every device over WebSockets
-- [Persistence](persistence.md) - Relational database for entities, map layout as a JSON document, images in blob storage
-- [Auth](auth.md) - Lightweight sign-in plus a campaign join code
+- [Realtime sync](realtime-sync.md) - The server holds the board state and pushes moves over in-process SignalR in a single, scale-to-zero instance
+- [Persistence](persistence.md) - Azure SQL Database (free offer) with EF Core, map layout as a JSON document, images in Blob Storage
 
 # Open
 
-- [Tech stack](tech-stack.md) - .NET or TypeScript; blocks phase 1
-- [Rules edition](rules-edition.md) - Which D&D rules set the defaults, such as the diagonal rule
-- [Play setting](play-setting.md) - One table, remote, or both
 - [Image budget](image-budget.md) - How much image generation may cost per map

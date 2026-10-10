@@ -10,6 +10,7 @@ Spec and design knowledge for the battle map app. Start with the overview, then 
 
 - [Overview](overview.md) - What the app is, who it is for, and what is in and out of scope
 - [Roadmap](roadmap.md) - Build phases, from the image-generation spike to the campaign manager
+- [Backlog](backlog.md) - Accepted feature ideas not yet scheduled into a phase
 
 # Sections
 
