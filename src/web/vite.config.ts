@@ -1,7 +1,68 @@
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from 'vitest/config'
+
+// Calm dark "table" colour; keep in sync with --color-table in src/index.css.
+const TABLE_COLOR = '#14161b'
+
+// The ASP.NET Core backend during local development (scripts/dev.ps1).
+const BACKEND = 'http://localhost:5080'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    VitePWA({
+      // A new version waits until the user agrees to reload (UpdatePrompt.tsx),
+      // so it never reloads the page in the middle of a fight.
+      registerType: 'prompt',
+      injectRegister: false,
+      // The glob below already picks up the icons; this avoids listing them twice.
+      includeManifestIcons: false,
+      manifest: {
+        name: "Oreana's Office",
+        short_name: 'Oreana',
+        description: 'Kampfkarten für eure D&D-Runde, live auf jedem Gerät.',
+        lang: 'de',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        theme_color: TABLE_COLOR,
+        background_color: TABLE_COLOR,
+        icons: [
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          {
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
+      },
+      workbox: {
+        // App shell and static files only. API calls, sign-in and SignalR are
+        // never cached (knowledge/decisions/frontend-stack.md).
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/hubs(\/|$)/, /^\/signin-/, /^\/signout/],
+        cleanupOutdatedCaches: true,
+      },
+    }),
+  ],
+  server: {
+    proxy: {
+      '/api': { target: BACKEND },
+      '/hubs': { target: BACKEND, ws: true },
+    },
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    restoreMocks: true,
+    unstubGlobals: true,
+  },
 })

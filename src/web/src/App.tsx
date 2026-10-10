@@ -1,5 +1,13 @@
-import { de } from './text/de'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RouterProvider } from 'react-router'
+import { router } from './router'
+
+const queryClient = new QueryClient()
 
 export default function App() {
-  return <h1>{de.appName}</h1>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  )
 }
