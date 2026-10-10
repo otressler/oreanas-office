@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-10-11
+- **Stage 1 built**: The walking skeleton is on the branch `stage/1-walking-skeleton`, waiting for the project owner's gate check ([implementation plan](/implementation-plan.md)). Added an "As built" section to [hosting](/decisions/hosting.md): Germany West Central, a 1-vCore cap on the free database, a placeholder first image, managed identity for SQL and Blob, CI deploys over OIDC behind `DEPLOY_ENABLED`, and TCP-only health probes. Added an open question on speeds that aren't a multiple of 1.5 m to [movement distance](/rules/movement-distance.md).
+
 ## 2026-10-10
 - **Stage 1 questions answered**: The project owner set the interface to German only; added the [UI language](/decisions/ui-language.md) decision, a "More languages" item in the [backlog](/backlog.md), and German number formatting in [movement distance](/rules/movement-distance.md). The code is in the GitHub repository `otressler/oreanas-office`. Only the project owner provisions Azure, after a summary of resources and cost ([hosting](/decisions/hosting.md)). Updated the [implementation plan](/implementation-plan.md).
 - **Implementation plan**: Added the [implementation plan](/implementation-plan.md) at the project owner's request: ten stages with a manual quality gate each, the order of work per stage, where subagents in worktrees run in parallel, and 13 questions with default answers. Linked it from the [roadmap](/roadmap.md).

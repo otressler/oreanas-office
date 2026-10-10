@@ -46,3 +46,4 @@ Distance is calculated only in the frontend ([frontend stack](/decisions/fronten
 - **Corners**: is a diagonal blocked when only one of the two side cells is blocked, or only when both are? The current reading is "either one". Confirm it at the table.
 - **Elevation**: does climbing or jumping between heights cost extra, or is height only shown? For now, show it and don't count it.
 - **Flying**: should a flying token ignore terrain costs and blocked cells?
+- **Speeds that aren't a multiple of 1.5 m**: when someone enters such a speed (for example 10 m), the app currently rounds down to whole squares (10 m → 6 squares), because a partial square can't be entered. Confirm, or reject such input instead.
