@@ -1,6 +1,8 @@
 # Update Log
 
 ## 2026-10-10
+- **Stage 1 questions answered**: The project owner set the interface to German only; added the [UI language](/decisions/ui-language.md) decision, a "More languages" item in the [backlog](/backlog.md), and German number formatting in [movement distance](/rules/movement-distance.md). The code is in the GitHub repository `otressler/oreanas-office`. Only the project owner provisions Azure, after a summary of resources and cost ([hosting](/decisions/hosting.md)). Updated the [implementation plan](/implementation-plan.md).
+- **Implementation plan**: Added the [implementation plan](/implementation-plan.md) at the project owner's request: ten stages with a manual quality gate each, the order of work per stage, where subagents in worktrees run in parallel, and 13 questions with default answers. Linked it from the [roadmap](/roadmap.md).
 - **Play mode choice**: The project owner confirmed that the DM picks the play mode per session. Updated the [backlog](/backlog.md) and added a later `playMode` field to the [session](/domain/session.md).
 - **Play modes**: The project owner confirmed two play modes. In local mode, the table view moves every player character. In bring-your-own-device mode, each player moves only their own and the table view only shows the board. Updated the [backlog](/backlog.md) and the permission rule on the [token](/domain/token.md).
 - **Statuses**: The project owner extended status rings: players can put them on any creature, and statuses can also mark terrain. Added terrain statuses to the [backlog](/backlog.md).

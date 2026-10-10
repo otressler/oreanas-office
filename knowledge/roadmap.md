@@ -17,6 +17,8 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | 3 | AI visuals | Maps and tokens look good | Backgrounds and creature icons are generated from the editor ([AI map generation](/features/ai-map-generation.md), [token icons](/features/token-icons.md)) |
 | 4 | Table extras | Smoother fights | Ruler, area templates, pings, hidden tokens, HP and conditions |
 
+The [implementation plan](/implementation-plan.md) splits phases 1–4 into ten stages, each ending in a quality gate, and runs phase 0 alongside stages 1–6.
+
 # Backlog
 
 Accepted ideas for the battle map app that aren't scheduled into a phase yet are in the [backlog](/backlog.md).

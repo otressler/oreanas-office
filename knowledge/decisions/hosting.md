@@ -73,6 +73,7 @@ Image generation on Microsoft Foundry is paid per image and isn't part of hostin
 
 # Production setup
 
+- **Only the project owner provisions Azure resources.** Claude writes the templates and scripts but never runs them against Azure. Before each provisioning or infrastructure change, Claude gives the project owner a summary: every resource that will be created or changed, its tier and settings, and its expected monthly cost. Set by the project owner on 2026-10-10.
 - One resource group in one region close to the players.
 - A Container Apps environment on the Consumption plan only. Don't add dedicated workload profiles, because they bill even when idle.
 - Keep logs small. Log Analytics charges per GB ingested, so log warnings and errors, not every request.

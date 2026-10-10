@@ -11,7 +11,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 
 - **One square is 1.5 m**, set by the project owner. This is a fixed constant in the app, not a per-map setting.
 - **Distances are stored and calculated in whole squares** and only converted to meters for display (squares × 1.5). The app adds whole numbers only, so 1.5 m steps never cause rounding errors.
-- **Display uses meters** with up to one decimal, formatted for the device's language (e.g. "7,5 m" in German, "7.5 m" in English). Feet never appear in the app.
+- **Display uses meters** with up to one decimal, in German number format, e.g. "7,5 m" ([UI language](/decisions/ui-language.md)). Feet never appear in the app.
 - Rulebook speeds convert the usual way: 30 ft = 9 m = 6 squares, 25 ft = 7.5 m = 5 squares.
 
 # Rule

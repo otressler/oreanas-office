@@ -48,3 +48,9 @@ They all follow the [overview](/overview.md) principle "show, don't enforce", an
 | **Character colour and portrait** | Each player picks a colour for their token ring, pings and drawings, and a portrait. | Adds a `color` to the [character](/domain/character.md). Portraits already exist ([token icons](/features/token-icons.md)). |
 | **Show my token** | A button that centres the view on the player's own character. | |
 | **Haptic feedback** | A short vibration when a move is confirmed, so the player knows the tap counted. | Only where the device supports it. |
+
+# App-wide
+
+| Idea | What it does | Notes |
+|------|--------------|-------|
+| **More languages** | The interface in languages other than German, chosen per user. | The interface is German only for now ([UI language](/decisions/ui-language.md)). Interface text is the easy part. User content is harder: the bestiary, scene descriptions and the image prompts built from them would each need a version per language. |
