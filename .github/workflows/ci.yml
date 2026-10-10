@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/otressler/oreanas-office
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/web/package-lock.json
+
+      # Integration tests start SQL Server and Azurite with Testcontainers;
+      # Docker is preinstalled on GitHub's Ubuntu runners.
+      - name: Backend tests
+        run: dotnet test
+
+      - name: Install web dependencies
+        working-directory: src/web
+        run: npm ci
+
+      - name: Lint
+        working-directory: src/web
+        run: npm run lint
+
+      - name: Unit tests
+        working-directory: src/web
+        run: npm test
+
+      - name: Build web app
+        working-directory: src/web
+        run: npm run build
+
+      - name: Install Playwright browser
+        working-directory: src/web
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        working-directory: src/web
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: src/web/playwright-report
+          if-no-files-found: ignore
+          retention-days: 7
+
+  deploy:
+    needs: test
+    # Off until the owner has provisioned Azure and set the repository variable DEPLOY_ENABLED=true.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    # No "environment:" here: it would change the OIDC subject to repo:...:environment:<name>,
+    # and the federated credential is for repo:otressler/oreanas-office:ref:refs/heads/main.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Sign in to Azure (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Update container app
+        env:
+          APP_NAME: ${{ vars.AZURE_CONTAINER_APP }}
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          IMAGE_TAG: ${{ env.IMAGE }}:${{ github.sha }}
+        run: |
+          fqdn=$(az containerapp update \
+            --name "$APP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$IMAGE_TAG" \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)
+          echo "Deployed $IMAGE_TAG to https://$fqdn" >> "$GITHUB_STEP_SUMMARY"
