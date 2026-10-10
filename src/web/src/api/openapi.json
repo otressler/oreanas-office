@@ -8,11 +8,43 @@
     "/api/health": {
       "get": {
         "tags": [
-          "OreanasOffice.Server"
+          "Health"
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
           }
         }
       }
@@ -20,7 +52,7 @@
   },
   "tags": [
     {
-      "name": "OreanasOffice.Server"
+      "name": "Health"
     }
   ]
 }
