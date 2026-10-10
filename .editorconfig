@@ -17,3 +17,6 @@ dotnet_sort_system_directives_first = true
 
 [*.md]
 trim_trailing_whitespace = false
+
+[**/Migrations/*.cs]
+generated_code = true
