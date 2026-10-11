@@ -3,11 +3,39 @@ import { expect, type BrowserContext, type Page } from '@playwright/test'
 // Text the specs look for; mirrors src/text/de.ts.
 export const text = {
   appName: "Oreana's Office",
-  homeTitle: 'Der Tisch ist bald bereit',
+  signInTitle: 'Anmelden',
+  homeTitle: 'Deine Kampagnen',
   notFoundTitle: 'Diese Seite gibt es nicht',
   wakingTitle: 'Der Tisch wird geweckt…',
   offlineTitle: 'Keine Verbindung',
   installButton: 'App installieren',
+  email: 'E-Mail-Adresse',
+  password: 'Passwort',
+  signInButton: 'Anmelden',
+  invalidCredentials: 'E-Mail-Adresse oder Passwort stimmen nicht.',
+  registerTitle: 'Konto erstellen',
+  displayName: 'Anzeigename',
+  registerButton: 'Konto erstellen',
+  inviteExpiredTitle: 'Link abgelaufen',
+  campaignName: 'Name der Kampagne',
+  create: 'Anlegen',
+  joinCode: 'Beitrittscode',
+  joinButton: 'Beitreten',
+  joinCodeInvalid:
+    'Diesen Code gibt es nicht. Prüf ihn oder frag deine Spielleitung nach dem aktuellen.',
+  roleDm: 'Spielleitung',
+  rolePlayer: 'Spieler',
+  charactersTitle: 'Charaktere',
+  newCharacter: 'Neuer Charakter',
+  characterName: 'Name',
+  speed: 'Geschwindigkeit in Metern',
+  sessionsTitle: 'Sitzungen',
+  newSession: 'Neue Sitzung',
+  sessionTitle: 'Titel',
+  activate: 'Starten',
+  activeStatus: 'Läuft',
+  activeSessionLabel: 'Läuft gerade',
+  profileLink: (name: string) => `Profil von ${name}`,
 }
 
 type HealthState = 'ok' | 'waking'
@@ -50,4 +78,11 @@ export async function waitForServiceWorker(page: Page) {
       message: 'precache was created',
     })
     .toBeGreaterThan(0)
+}
+
+/** Signs in through the form on /anmelden. */
+export async function signInWithForm(page: Page, email: string, password: string) {
+  await page.getByLabel(text.email).fill(email)
+  await page.getByLabel(text.password, { exact: true }).fill(password)
+  await page.getByRole('button', { name: text.signInButton }).click()
 }

@@ -18,17 +18,18 @@ test('health answers ok', async ({ request }) => {
   expect(await response.json()).toMatchObject({ status: 'ok' })
 })
 
+// Nobody is signed in, so the app ends up on the sign-in page.
 test('the shell loads and the app wakes up', async ({ page }) => {
   await page.goto('/')
   await expect(shellHeader(page)).toBeVisible()
-  await expect(page.getByRole('heading', { name: text.homeTitle })).toBeVisible({
+  await expect(page.getByRole('heading', { name: text.signInTitle })).toBeVisible({
     timeout: WAKE_TIMEOUT,
   })
 })
 
 test('an offline reload still shows the shell', async ({ page, context }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: text.homeTitle })).toBeVisible({
+  await expect(page.getByRole('heading', { name: text.signInTitle })).toBeVisible({
     timeout: WAKE_TIMEOUT,
   })
   await waitForServiceWorker(page)

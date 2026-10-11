@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { mockHealth, shellHeader, text, waitForServiceWorker } from './support.ts'
+import { MockBackend } from './mockBackend.ts'
+import { shellHeader, text, waitForServiceWorker } from './support.ts'
 
 test('shows the cached shell after an offline reload', async ({ page, context }) => {
-  await mockHealth(context, 'ok')
+  const backend = new MockBackend()
+  backend.signIn(context, backend.addUser({ displayName: 'Mira', email: 'mira@example.org' }))
+  await backend.attach(context)
   await page.goto('/')
   await expect(page.getByRole('heading', { name: text.homeTitle })).toBeVisible()
   await waitForServiceWorker(page)
