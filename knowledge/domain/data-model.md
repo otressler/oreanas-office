@@ -16,6 +16,7 @@ sources:
 ```mermaid
 erDiagram
     USER ||--o{ CAMPAIGN_MEMBER : "is"
+    USER ||--o{ REGISTRATION_INVITE : "creates (admin)"
     CAMPAIGN ||--o{ CAMPAIGN_MEMBER : "has"
     USER ||--o{ CHARACTER : "owns"
     CAMPAIGN ||--o{ CHARACTER : "contains"
@@ -34,7 +35,7 @@ erDiagram
 
 # Entities
 
-[User](/domain/user.md), [Campaign](/domain/campaign.md), [Campaign member](/domain/campaign-member.md), [Character](/domain/character.md), [Session](/domain/session.md), [Encounter](/domain/encounter.md), [Battle map](/domain/battle-map.md), [Creature type](/domain/creature-type.md), [Token](/domain/token.md), [Asset](/domain/asset.md).
+[User](/domain/user.md), [Registration invite](/domain/registration-invite.md), [Campaign](/domain/campaign.md), [Campaign member](/domain/campaign-member.md), [Character](/domain/character.md), [Session](/domain/session.md), [Encounter](/domain/encounter.md), [Battle map](/domain/battle-map.md), [Creature type](/domain/creature-type.md), [Token](/domain/token.md), [Asset](/domain/asset.md).
 
 # "Only one active" rules
 

@@ -15,7 +15,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 | `name` | string | |
 | `defaultDmUserId` | → [User](/domain/user.md) | New sessions start with this DM |
 | `activeSessionId` | → [Session](/domain/session.md), nullable | At most one active session |
-| `joinCode` | string | Players join with it ([auth decision](/decisions/auth.md)) |
+| `joinCode` | string | Players join with it ([auth decision](/decisions/auth.md)). Six characters without look-alikes (no 0/O, 1/I); any `dm` member can replace it with a new one, which makes the old one stop working |
 | `createdAt` | timestamp | |
 
 # Contains

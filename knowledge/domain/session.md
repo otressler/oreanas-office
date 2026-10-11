@@ -22,6 +22,8 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 
 # Rules
 
+- Any `dm` member of the campaign can create a session ([campaign member](/domain/campaign-member.md)).
+- The session DM or the campaign's default DM makes it active, changes its DM to another `dm` member, and ends it.
 - Only one session per campaign is active (`Campaign.activeSessionId`).
 - The session DM can start and end encounters, move every token, and see hidden tokens.
 - Everyone else in the campaign is a player for this session.

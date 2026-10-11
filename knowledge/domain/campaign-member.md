@@ -18,5 +18,6 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 
 # Notes
 
+- Leaving a campaign and removing members aren't supported yet.
 - The campaign's default DM always has `role: dm`.
 - Who runs a specific night is stored on the [session](/domain/session.md) (`dmUserId`), so a `dm` member can hand over to another `dm` member for one session.

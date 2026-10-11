@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <!-- The OpenAPI document is written on build; the frontend generates its types from it (npm run gen:api). -->
     <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../web/src/api</OpenApiDocumentsDirectory>
     <OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
+    <UserSecretsId>53032293-1f9d-4554-8e84-5887dd5ac387</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

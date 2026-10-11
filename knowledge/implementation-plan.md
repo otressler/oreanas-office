@@ -70,7 +70,7 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 1 | UI language | Stage 1 | **Answered:** German only ([UI language](/decisions/ui-language.md)); more languages are in the [backlog](/backlog.md) |
 | 2 | Where does the code live? | Stage 1 | **Answered:** the GitHub repository `otressler/oreanas-office` |
 | 3 | Who provisions Azure? | Stage 1 | **Answered:** only the project owner. Claude writes the templates and gives a summary of every resource and its cost before each provisioning ([hosting](/decisions/hosting.md)) |
-| 4 | [Persistence](/decisions/persistence.md) and [realtime sync](/decisions/realtime-sync.md) are only proposed, but stages 2–4 build them | Stage 2 | Accept both as written |
+| 4 | [Persistence](/decisions/persistence.md) and [realtime sync](/decisions/realtime-sync.md) are only proposed, but stages 2–4 build them | Stage 2 / Stage 4 | **Persistence answered:** accepted as written. Realtime sync is decided at the start of stage 4, after the board exists: last move wins, only confirmed moves are sent, idle connections drop after 30 minutes |
 | 5 | When an encounter starts, how do characters get onto the board? ([DM map editor](/features/dm-map-editor.md) open question) | Stage 3 | The DM ticks which characters take part; their tokens appear on the entrance cells, and players move them from there |
 | 6 | The sample "Gorge crossing" map has its bridge over `void` cells, but `void` blocks movement and a feature with `blocksMovement: false` doesn't make cells walkable ([battle map](/domain/battle-map.md), [movement rules](/rules/movement-distance.md)) | Stage 4 | A non-blocking feature makes its footprint walkable at the feature's elevation, whatever the terrain below |
 | 7 | Corner rule: does one blocked side cell block a diagonal? | Stage 4 | Yes, either side blocks (the current reading) |
@@ -80,6 +80,7 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 11 | [Image budget](/decisions/image-budget.md) | Stage 7 | Set after T0 records the cost per image |
 | 12 | Are ruler and area templates shared with everyone, or only on the measuring device? | Stage 9 | Shared, like pings, and not saved |
 | 13 | What "HP and conditions" means, and how it relates to status rings in the [backlog](/backlog.md) | Stage 10 | Designed with the project owner at the start of stage 10 |
+| 14 | How do images reach the browser: public blob container, short-lived signed links, or through the app? ([persistence](/decisions/persistence.md)) | Stage 7 | Short-lived signed links, so one campaign's images stay private |
 
 # T0 — Image spike (parallel track)
 
@@ -130,8 +131,9 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 
 **Feature set**
 
-- Sign-in with a local account and with Google, long-lived cookie sessions, linking Google from the profile, and admin-created one-time reset links ([auth](/decisions/auth.md)).
-- [Campaigns](/domain/campaign.md) with a join code, [members](/domain/campaign-member.md) with roles, and promoting a member to `dm`.
+- Sign-in with a local account and with Google, 180-day sliding cookie sessions, linking Google from the profile, and admin-created one-time reset links ([auth](/decisions/auth.md)).
+- Registration only through a [registration invite](/domain/registration-invite.md): the site admin creates a link valid for 4 hours, usable by several people, revocable. The admin flag comes from the configured address on a Google sign-in.
+- [Campaigns](/domain/campaign.md) with a join code that `dm` members can replace, [members](/domain/campaign-member.md) with roles, and promoting a member to `dm` (by any `dm` member).
 - [Characters](/domain/character.md): name, size, speed entered in meters and stored in squares.
 - [Sessions](/domain/session.md): create, choose the DM, make active (only one per campaign), end.
 - Landing page: your campaigns, and the active session of each.
@@ -146,11 +148,12 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
    - **Frontend:** sign-in, profile, campaign, character and session screens against the stubs.
 3. *Sequential:* integrate; Playwright with two browser contexts (register, create, join by code).
 
-**Needs from the project owner:** a Google OAuth client with `localhost`, phone test (`dev.oreanas-office.otressler.de`) and production (`oreanas-office.otressler.de`) redirect URIs, and its secret in Container Apps.
+**Needs from the project owner:** a Google OAuth client with `localhost`, phone test (`dev.oreanas-office.otressler.de`) and production (`oreanas-office.otressler.de`) redirect URIs on the path `/api/auth/google/callback`; its ID and secret as local user secrets, in `.env` for phone tests, and in Container Apps; and the admin address in the same three places.
 
 **Manual gate**
 
-- [ ] Register a local account on the laptop and sign in with Google on a phone.
+- [ ] Sign in with Google as admin and create an invite link. Through it, register a local account on the laptop and a Google account on a phone.
+- [ ] Without a link, or with an expired or revoked one, registering fails with a German message; signing in to an existing account still works.
 - [ ] Create a campaign on the laptop and join it from the phone with the code.
 - [ ] Create a character with speed 9 m; it shows 9 m everywhere (and "9 m", not "6 squares").
 - [ ] Create a session, make it active, hand the DM role to another member.

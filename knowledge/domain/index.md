@@ -5,6 +5,7 @@
 # Campaign and people
 
 - [User](user.md) - A person who signs in; can be a player in one campaign and the DM in another
+- [Registration invite](registration-invite.md) - A 4-hour link from the site admin that lets people create an account
 - [Campaign](campaign.md) - A running game with members, sessions, characters and a bestiary
 - [Campaign member](campaign-member.md) - Links a user to a campaign with a role
 - [Character](character.md) - A player character owned by one user in one campaign
