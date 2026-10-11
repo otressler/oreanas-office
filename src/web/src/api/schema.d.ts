@@ -1215,7 +1215,7 @@ export interface components {
             field?: null | string;
         };
         /** @enum {unknown} */
-        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded";
+        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded";
         AuthOptionsResponse: {
             googleEnabled: boolean;
         };

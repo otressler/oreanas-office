@@ -244,6 +244,7 @@ export const de = {
     joinCodeInvalid:
       'Diesen Code gibt es nicht. Prüf ihn oder frag deine Spielleitung nach dem aktuellen.',
     speedInvalid: 'Gib die Geschwindigkeit in Metern an, zum Beispiel 9.',
+    dateInvalid: 'Bitte wähle ein Datum.',
     notADm: 'Diese Person gehört nicht zur Spielleitung der Kampagne.',
     anotherSessionActive: 'In dieser Kampagne läuft schon eine Sitzung. Beende sie zuerst.',
     sessionEnded: 'Diese Sitzung ist schon beendet.',

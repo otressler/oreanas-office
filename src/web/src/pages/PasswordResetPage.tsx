@@ -6,8 +6,7 @@ import { ApiRequestError, unwrap } from '../api/errors'
 import { Button, ErrorAlert, PageTitle, TextField } from '../components/ui'
 import { de } from '../text/de'
 import type { SignInState } from './SignInPage'
-
-const MIN_PASSWORD_LENGTH = 8
+import { limits } from '../lib/limits'
 
 /** /passwort-zuruecksetzen?benutzer=<userId>&token=<token>, a link the admin sent. */
 export function PasswordResetPage() {
@@ -19,7 +18,7 @@ export function PasswordResetPage() {
 
   const reset = useMutation({
     mutationFn: async () => {
-      if (password.length < MIN_PASSWORD_LENGTH) {
+      if (password.length < limits.passwordMin) {
         throw new ApiRequestError(400, 'passwordTooShort', 'newPassword')
       }
       await unwrap(

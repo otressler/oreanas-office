@@ -29,7 +29,7 @@ public static class CharacterEndpoints
         Guid campaignId, ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken)
     {
         var userId = user.GetUserId();
-        var isDm = await IsDmAsync(db, campaignId, userId, cancellationToken);
+        var isDm = await db.IsCampaignDmAsync(campaignId, userId, cancellationToken);
         var characters = await Responses(
                 db.Characters.Where(c => c.CampaignId == campaignId).OrderBy(c => c.Name), userId, isDm)
             .ToListAsync(cancellationToken);
@@ -84,7 +84,7 @@ public static class CharacterEndpoints
         }
 
         var userId = user.GetUserId();
-        if (character.OwnerUserId != userId && !await IsDmAsync(db, campaignId, userId, cancellationToken))
+        if (character.OwnerUserId != userId && !await db.IsCampaignDmAsync(campaignId, userId, cancellationToken))
         {
             return TypedResults.Forbid();
         }
@@ -117,24 +117,14 @@ public static class CharacterEndpoints
             return new ApiError(ApiErrorCode.SpeedInvalid, "speedSquares");
         }
 
-        // JSON numbers bind to any enum value. The frontend offers only the defined
-        // sizes, so there is no dedicated code; the field tells what was wrong.
-        if (!Enum.IsDefined(request.Size))
-        {
-            return new ApiError(ApiErrorCode.NameInvalid, "size");
-        }
-
         return null;
     }
 
-    private static Task<bool> IsDmAsync(AppDbContext db, Guid campaignId, Guid userId, CancellationToken cancellationToken) =>
-        db.CampaignMembers.AnyAsync(
-            m => m.CampaignId == campaignId && m.UserId == userId && m.Role == CampaignRole.Dm, cancellationToken);
 
     private static async Task<CharacterResponse> LoadAsync(
         AppDbContext db, Guid campaignId, Guid characterId, Guid userId, CancellationToken cancellationToken)
     {
-        var isDm = await IsDmAsync(db, campaignId, userId, cancellationToken);
+        var isDm = await db.IsCampaignDmAsync(campaignId, userId, cancellationToken);
         return await Responses(db.Characters.Where(c => c.Id == characterId), userId, isDm).SingleAsync(cancellationToken);
     }
 

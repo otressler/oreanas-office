@@ -29,6 +29,7 @@ public enum ApiErrorCode
     NameInvalid,
     JoinCodeInvalid,
     SpeedInvalid,
+    DateInvalid,
     NotADm,
     AnotherSessionActive,
     SessionEnded,

@@ -22,6 +22,7 @@ const ALL_CODES = {
   nameInvalid: true,
   joinCodeInvalid: true,
   speedInvalid: true,
+  dateInvalid: true,
   notADm: true,
   anotherSessionActive: true,
   sessionEnded: true,

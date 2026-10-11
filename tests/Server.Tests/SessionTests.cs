@@ -308,6 +308,35 @@ public sealed class SessionTests(AppFixture fixture)
         person.Client.PutAsJsonAsync(
             $"/api/campaigns/{campaignId}/sessions/{sessionId}/dm", new ChangeSessionDmRequest(userId), Json);
 
+    [Fact]
+    public async Task Sessions_need_a_date()
+    {
+        var dm = await fixture.App.CreatePersonAsync("Mira");
+        var campaign = await dm.CreateCampaignAsync();
+
+        var response = await dm.Client.PostAsJsonAsync($"/api/campaigns/{campaign.Id}/sessions", new { title = "Ohne Datum" });
+
+        Assert.Equal(new ApiError(ApiErrorCode.DateInvalid, "date"), await response.ReadAsync<ApiError>(HttpStatusCode.BadRequest));
+    }
+
+    [Fact]
+    public async Task Starting_and_ending_at_once_never_leaves_an_ended_session_running()
+    {
+        var dm = await fixture.App.CreatePersonAsync("Mira");
+        var campaign = await dm.CreateCampaignAsync();
+
+        for (var round = 0; round < 5; round++)
+        {
+            var session = await dm.CreateSessionAsync(campaign.Id, $"Runde {round}");
+            var path = $"/api/campaigns/{campaign.Id}/sessions/{session.Id}";
+
+            await Task.WhenAll(dm.Client.PostAsync($"{path}/activate", null), dm.Client.PostAsync($"{path}/end", null));
+
+            var status = (await ListAsync(dm, campaign.Id)).Single(s => s.Id == session.Id).Status;
+            Assert.Equal(SessionStatus.Ended, status);
+        }
+    }
+
     private static async Task<List<SessionResponse>> ListAsync(Person person, Guid campaignId) =>
         await (await person.Client.GetAsync($"/api/campaigns/{campaignId}/sessions"))
             .ReadAsync<List<SessionResponse>>(HttpStatusCode.OK);

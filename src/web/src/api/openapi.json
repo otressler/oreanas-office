@@ -1088,6 +1088,7 @@
           "nameInvalid",
           "joinCodeInvalid",
           "speedInvalid",
+          "dateInvalid",
           "notADm",
           "anotherSessionActive",
           "sessionEnded"

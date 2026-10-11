@@ -17,6 +17,7 @@ import {
 } from '../components/ui'
 import { formatDate } from '../lib/dates'
 import { de } from '../text/de'
+import { limits } from '../lib/limits'
 
 /** The landing page: your campaigns, joining one by code, creating one. */
 export function HomePage() {
@@ -142,7 +143,7 @@ function CreateForm() {
           label={de.home.createName}
           hint={de.home.createHint}
           required
-          maxLength={100}
+          maxLength={limits.campaignName}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />

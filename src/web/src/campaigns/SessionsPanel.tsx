@@ -16,6 +16,7 @@ import {
 import { formatDate, todayIso } from '../lib/dates'
 import { de } from '../text/de'
 import { campaignKeys, useSessions } from './queries'
+import { limits } from '../lib/limits'
 
 /**
  * Game nights of the campaign. `dm` members create them; the session DM or the
@@ -104,7 +105,7 @@ function SessionForm({
         label={de.sessions.titleLabel}
         placeholder={de.sessions.titlePlaceholder}
         required
-        maxLength={200}
+        maxLength={limits.sessionTitle}
         value={title}
         onChange={(event) => setTitle(event.target.value)}
       />

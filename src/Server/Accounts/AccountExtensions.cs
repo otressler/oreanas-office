@@ -50,10 +50,16 @@ public static class AccountExtensions
                         : null);
 
                 // Cancelled at Google, a stale or replayed callback, or Google
-                // refusing the code: back to the sign-in page instead of an error page.
+                // refusing the code: back to where it started instead of an error
+                // page. A signed-in user linking from the profile would be sent on
+                // from the sign-in page, losing the message.
                 options.Events.OnRemoteFailure = context =>
                 {
-                    context.Response.Redirect($"/anmelden?fehler={AccountInput.QueryValue(ApiErrorCode.GoogleFailed)}");
+                    var page = context.Properties?.Items.TryGetValue(AuthEndpoints.ModeKey, out var mode) == true
+                        && mode == AuthEndpoints.LinkMode
+                            ? "/profil"
+                            : "/anmelden";
+                    context.Response.Redirect($"{page}?fehler={AccountInput.QueryValue(ApiErrorCode.GoogleFailed)}");
                     context.HandleResponse();
                     return Task.CompletedTask;
                 };

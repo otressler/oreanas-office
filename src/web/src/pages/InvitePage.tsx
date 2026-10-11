@@ -17,8 +17,7 @@ import {
 } from '../components/ui'
 import { formatDateTime } from '../lib/dates'
 import { de } from '../text/de'
-
-const MIN_PASSWORD_LENGTH = 8
+import { limits } from '../lib/limits'
 
 /** /einladung/:token — registration through an admin's invite link. */
 export function InvitePage() {
@@ -92,7 +91,7 @@ function RegistrationForm({ token }: { token: string }) {
   const register = useMutation({
     mutationFn: async () => {
       // The server checks this too; checking first saves a round trip.
-      if (password.length < MIN_PASSWORD_LENGTH) {
+      if (password.length < limits.passwordMin) {
         throw new ApiRequestError(400, 'passwordTooShort', 'password')
       }
       return unwrap(
@@ -121,7 +120,7 @@ function RegistrationForm({ token }: { token: string }) {
         hint={de.invite.displayNameHint}
         autoComplete="nickname"
         required
-        maxLength={50}
+        maxLength={limits.displayName}
         value={displayName}
         invalid={field === 'displayName'}
         onChange={(event) => setDisplayName(event.target.value)}

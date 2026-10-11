@@ -9,6 +9,7 @@ import { GoogleButton } from '../auth/GoogleButton'
 import { RedirectError } from '../auth/RedirectError'
 import { Button, ButtonLink, ErrorAlert, Note, PageTitle, Panel, TextField } from '../components/ui'
 import { de } from '../text/de'
+import { limits } from '../lib/limits'
 
 /** /profil: display name, Google, sign out, and the way to the admin page. */
 export function ProfilePage() {
@@ -80,7 +81,7 @@ function DisplayNameForm({ initial }: { initial: string }) {
           label={de.profile.displayName}
           autoComplete="nickname"
           required
-          maxLength={50}
+          maxLength={limits.displayName}
           value={displayName}
           onChange={(event) => {
             setDisplayName(event.target.value)

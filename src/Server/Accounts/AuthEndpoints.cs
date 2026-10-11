@@ -18,12 +18,12 @@ public static class AuthEndpoints
 {
     // Kept in the authentication properties, which travel to Google and back
     // encrypted in the state parameter and then in the external cookie.
-    private const string ModeKey = "oreana:mode";
+    internal const string ModeKey = "oreana:mode";
     private const string ReturnUrlKey = "oreana:returnUrl";
     private const string InviteKey = "oreana:invite";
     private const string UserIdKey = "oreana:userId";
     private const string LoginMode = "login";
-    private const string LinkMode = "link";
+    internal const string LinkMode = "link";
 
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {

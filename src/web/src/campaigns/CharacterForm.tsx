@@ -13,6 +13,7 @@ import {
 } from '../lib/units'
 import { de } from '../text/de'
 import { campaignKeys } from './queries'
+import { limits } from '../lib/limits'
 
 const SIZES: CreatureSize[] = ['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan']
 /** 6 squares = 9 m, the usual walking speed (30 ft in the rulebook). */
@@ -88,7 +89,7 @@ export function CharacterForm({
       <TextField
         label={de.characters.name}
         required
-        maxLength={100}
+        maxLength={limits.characterName}
         value={name}
         onChange={(event) => setName(event.target.value)}
       />

@@ -173,7 +173,8 @@ public sealed class CharacterTests(AppFixture fixture)
         var numericResponse = await player.Client.PostAsync($"/api/campaigns/{campaignId}/characters", numeric);
         var unknownResponse = await player.Client.PostAsync($"/api/campaigns/{campaignId}/characters", unknown);
 
-        await numericResponse.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.NameInvalid, "size");
+        // Enums bind only by name, so a number fails like an unknown name.
+        Assert.Equal(HttpStatusCode.BadRequest, numericResponse.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, unknownResponse.StatusCode);
         Assert.Empty(await ListAsync(player, campaignId));
     }

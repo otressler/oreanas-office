@@ -56,10 +56,16 @@ public static class SessionEndpoints
             return TypedResults.BadRequest(new ApiError(ApiErrorCode.NameInvalid, "title"));
         }
 
+        // A request without a date binds to 0001-01-01.
+        if (request.Date == default)
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.DateInvalid, "date"));
+        }
+
         Guid dmUserId;
         if (request.DmUserId is { } requestedDm)
         {
-            if (!await IsDmMemberAsync(db, campaignId, requestedDm, cancellationToken))
+            if (!await db.IsCampaignDmAsync(campaignId, requestedDm, cancellationToken))
             {
                 return TypedResults.BadRequest(new ApiError(ApiErrorCode.NotADm, "dmUserId"));
             }
@@ -91,16 +97,15 @@ public static class SessionEndpoints
 
     // Planned → active. Conflict when another session of the campaign is active
     // (AnotherSessionActive) or this one has ended (SessionEnded). Already active: unchanged.
+    //
+    // Status changes are conditional updates (WHERE on the old status), not a read
+    // and a save: otherwise an "end" landing between the read and the save of an
+    // "activate" would be overwritten, and an ended session would run again.
     private static async Task<Results<Ok<SessionResponse>, Conflict<ApiError>>> ActivateSession(
         Guid campaignId, Guid sessionId, ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken)
     {
-        var session = await FindAsync(db, campaignId, sessionId, cancellationToken);
-        if (session.Status == SessionStatus.Ended)
-        {
-            return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
-        }
-
-        if (session.Status == SessionStatus.Planned)
+        var status = await StatusAsync(db, campaignId, sessionId, cancellationToken);
+        if (status == SessionStatus.Planned)
         {
             var anotherActive = await db.Sessions.AnyAsync(
                 s => s.CampaignId == campaignId && s.Id != sessionId && s.Status == SessionStatus.Active, cancellationToken);
@@ -109,17 +114,28 @@ public static class SessionEndpoints
                 return TypedResults.Conflict(new ApiError(ApiErrorCode.AnotherSessionActive));
             }
 
-            session.Status = SessionStatus.Active;
             try
             {
-                await db.SaveChangesAsync(cancellationToken);
+                var updated = await db.Sessions
+                    .Where(s => s.Id == sessionId && s.Status == SessionStatus.Planned)
+                    .ExecuteUpdateAsync(set => set.SetProperty(s => s.Status, SessionStatus.Active), cancellationToken);
+                if (updated == 0)
+                {
+                    // Someone else started or ended it in the meantime.
+                    status = await StatusAsync(db, campaignId, sessionId, cancellationToken);
+                }
             }
-            catch (DbUpdateException ex) when (UniqueIndex.IsViolation(ex))
+            catch (Exception ex) when (UniqueIndex.IsViolation(ex))
             {
-                // Another session became active between the check and the save; the
+                // Another session became active between the check and the update; the
                 // filtered unique index IX_Sessions_CampaignId_Active let only one win.
                 return TypedResults.Conflict(new ApiError(ApiErrorCode.AnotherSessionActive));
             }
+        }
+
+        if (status == SessionStatus.Ended)
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
         }
 
         return TypedResults.Ok(await LoadAsync(db, sessionId, user.GetUserId(), cancellationToken));
@@ -129,12 +145,9 @@ public static class SessionEndpoints
     private static async Task<Ok<SessionResponse>> EndSession(
         Guid campaignId, Guid sessionId, ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken)
     {
-        var session = await FindAsync(db, campaignId, sessionId, cancellationToken);
-        if (session.Status != SessionStatus.Ended)
-        {
-            session.Status = SessionStatus.Ended;
-            await db.SaveChangesAsync(cancellationToken);
-        }
+        await db.Sessions
+            .Where(s => s.Id == sessionId && s.CampaignId == campaignId && s.Status != SessionStatus.Ended)
+            .ExecuteUpdateAsync(set => set.SetProperty(s => s.Status, SessionStatus.Ended), cancellationToken);
 
         return TypedResults.Ok(await LoadAsync(db, sessionId, user.GetUserId(), cancellationToken));
     }
@@ -148,31 +161,35 @@ public static class SessionEndpoints
         AppDbContext db,
         CancellationToken cancellationToken)
     {
-        var session = await FindAsync(db, campaignId, sessionId, cancellationToken);
-        if (session.Status == SessionStatus.Ended)
+        if (await StatusAsync(db, campaignId, sessionId, cancellationToken) == SessionStatus.Ended)
         {
             return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
         }
 
-        if (!await IsDmMemberAsync(db, campaignId, request.UserId, cancellationToken))
+        if (!await db.IsCampaignDmAsync(campaignId, request.UserId, cancellationToken))
         {
             return TypedResults.BadRequest(new ApiError(ApiErrorCode.NotADm, "userId"));
         }
 
-        session.DmUserId = request.UserId;
-        await db.SaveChangesAsync(cancellationToken);
+        var updated = await db.Sessions
+            .Where(s => s.Id == sessionId && s.CampaignId == campaignId && s.Status != SessionStatus.Ended)
+            .ExecuteUpdateAsync(set => set.SetProperty(s => s.DmUserId, request.UserId), cancellationToken);
+        if (updated == 0)
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
+        }
 
         return TypedResults.Ok(await LoadAsync(db, sessionId, user.GetUserId(), cancellationToken));
     }
 
     // The SessionManager policy has checked that the session belongs to the campaign.
-    private static Task<GameSession> FindAsync(
+    private static Task<SessionStatus> StatusAsync(
         AppDbContext db, Guid campaignId, Guid sessionId, CancellationToken cancellationToken) =>
-        db.Sessions.SingleAsync(s => s.Id == sessionId && s.CampaignId == campaignId, cancellationToken);
+        db.Sessions
+            .Where(s => s.Id == sessionId && s.CampaignId == campaignId)
+            .Select(s => s.Status)
+            .SingleAsync(cancellationToken);
 
-    private static Task<bool> IsDmMemberAsync(AppDbContext db, Guid campaignId, Guid userId, CancellationToken cancellationToken) =>
-        db.CampaignMembers.AnyAsync(
-            m => m.CampaignId == campaignId && m.UserId == userId && m.Role == CampaignRole.Dm, cancellationToken);
 
     private static Task<SessionResponse> LoadAsync(
         AppDbContext db, Guid sessionId, Guid userId, CancellationToken cancellationToken) =>

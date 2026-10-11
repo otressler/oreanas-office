@@ -38,11 +38,10 @@ function Invites() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: invitesKey }),
   })
 
-  // The new link is shown only while it's still usable.
+  // The token is shown only once, so the new link stays until it's revoked here;
+  // a slow or failed reload of the list must not hide it.
   const created =
-    create.data && invites.data?.some((invite) => invite.id === create.data.id) !== false
-      ? create.data
-      : null
+    create.data && !(revoke.isSuccess && revoke.variables === create.data.id) ? create.data : null
 
   return (
     <Panel title={de.admin.invitesTitle}>
