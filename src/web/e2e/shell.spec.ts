@@ -43,6 +43,32 @@ test('shows the waking screen while the server answers 503, then the app', async
   expect(health.calls).toHaveLength(calls)
 })
 
+test("offers installing when the browser does, and opens the browser's dialog", async ({
+  page,
+  context,
+}) => {
+  await mockHealth(context, 'ok')
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: text.homeTitle })).toBeVisible()
+
+  // Headless Chromium doesn't offer installing by itself, so fire its event with
+  // a fake dialog that records the call.
+  await page.evaluate(() => {
+    const event = Object.assign(new Event('beforeinstallprompt', { cancelable: true }), {
+      prompt: async () => {
+        document.body.dataset.installPrompted = 'yes'
+      },
+      userChoice: Promise.resolve({ outcome: 'accepted' }),
+    })
+    window.dispatchEvent(event)
+  })
+
+  const install = page.getByRole('banner').getByRole('button', { name: text.installButton })
+  await install.click()
+  await expect(page.locator('body')).toHaveAttribute('data-install-prompted', 'yes')
+  await expect(install).toHaveCount(0)
+})
+
 test('serves a valid web app manifest', async ({ request }) => {
   const response = await request.get('/manifest.webmanifest')
   expect(response.ok()).toBe(true)

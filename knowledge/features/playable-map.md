@@ -25,7 +25,7 @@ Each player uses their own device, sees the current board and moves their charac
 6. Pinch to zoom and drag to pan.
 7. Show the elevation of a cell and of each token on tap.
 8. Undo your own last move.
-9. Installable as a PWA. The app opens instantly from cache and shows "Waking up the table…" while the server starts ([hosting](/decisions/hosting.md), [offline prep](/decisions/offline-prep-pwa.md)).
+9. Installable as a PWA. The app opens instantly from cache and shows "Waking up the table…" while the server starts ([hosting](/decisions/hosting.md), [offline prep](/decisions/offline-prep-pwa.md)). The header has an "App installieren" button while the app isn't installed. In browsers that support it (Chrome, Edge), it opens the browser's install dialog. iPhones and iPads have no such dialog, so there it shows how to add the app through Share → "Zum Home-Bildschirm". The button is hidden when the app already runs installed, and in browsers that offer neither (Firefox on Android).
 10. Disconnect when the app goes to the background and reconnect when it's visible again ([realtime sync](/decisions/realtime-sync.md)).
 11. **Reach highlight**: when a token is selected, shade the cells it can reach within its default speed. A hint only: moves beyond it are allowed, and the distance preview still shows the distance to any target ([speed](/rules/movement-distance.md)).
 

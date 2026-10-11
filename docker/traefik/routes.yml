@@ -1,0 +1,15 @@
+# Traefik route for phone tests (docker compose profile "phone", scripts/phone.ps1).
+# TLS is terminated here; the app sees X-Forwarded-Proto: https.
+http:
+  routers:
+    oreanas-office:
+      rule: Host(`dev.oreanas-office.otressler.de`)
+      entryPoints: [websecure]
+      service: oreanas-office
+      tls:
+        certResolver: inwx
+  services:
+    oreanas-office:
+      loadBalancer:
+        servers:
+          - url: http://app:8080

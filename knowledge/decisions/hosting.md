@@ -101,6 +101,7 @@ The templates are in `infra/`, with the owner's step-by-step guide in `infra/REA
 - Blob Storage: the Azurite emulator.
 - Image generation calls the real Foundry deployment; there's no local substitute.
 - Google sign-in needs a `localhost` redirect URI on the OAuth client.
+- Phone tests: the developer's machine serves the production container at `https://dev.oreanas-office.otressler.de` behind its own Traefik (`scripts/phone.ps1`, Compose profile `phone`). The certificate comes from Let's Encrypt through the INWX DNS challenge, with the INWX credentials in the gitignored `.env`. A public A record points to the machine's home network address, so the site is reachable only at home. This isn't a second deployed environment: it works only while that machine runs it. The project owner's homeserver Traefik stays out of it on purpose.
 
 # Decision
 

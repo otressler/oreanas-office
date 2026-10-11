@@ -59,7 +59,7 @@ Phase 1 of the roadmap is done after stage 4, phase 2 after stage 6, phase 3 aft
 
 ## Testing on real phones before production
 
-The PWA needs HTTPS, and phones can't reach `localhost`. To check a stage on phones before it reaches production, run the local build behind a dev tunnel (Microsoft Dev Tunnels or similar) and add the tunnel's address as a Google redirect URI. Until stage 4 passes nobody plays on production, so stages 1–4 may also be checked directly on production. From stage 5 on, production is in use, so gates are checked on the tunnel first and deployed after they pass.
+The PWA needs HTTPS, and phones can't reach `localhost`. To check a stage on phones before it reaches production, the developer's machine serves it at `https://dev.oreanas-office.otressler.de`, reachable only inside the home network. `pwsh scripts/phone.ps1` starts the production container, its database and a Traefik proxy there (Docker Compose profile `phone`). Traefik gets a Let's Encrypt certificate through the INWX DNS challenge, and a public A record points the domain at the machine's home network address. The project owner's homeserver isn't involved. The domain is a Google redirect URI from stage 2 on. Until stage 4 passes nobody plays on production, so stages 1–4 may also be checked directly on production. From stage 5 on, production is in use, so gates are checked on the phone test address first and deployed after they pass.
 
 # Decisions to confirm
 
@@ -103,6 +103,7 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 - ASP.NET Core Data Protection keys in Blob Storage, so sign-in survives cold starts ([hosting](/decisions/hosting.md)).
 - OpenAPI document and an `npm run gen:api` script with openapi-typescript.
 - PWA: manifest, icons, service worker caching the app shell only, and the waking screen ("Der Tisch wird geweckt…" or similar).
+- Install button in the header: the browser's install dialog where supported, instructions on iOS ([playable map](/features/playable-map.md)).
 - German interface text in one message catalogue, and German number and date formatting ([UI language](/decisions/ui-language.md)).
 - Dockerfile that builds the frontend into `wwwroot`. Bicep for the Container Apps environment (Consumption, 0–1 replicas), the free Azure SQL offer set to "continue with charges", Storage with soft delete, small logging, and budget alerts at $10 and $30. A GitHub Actions workflow: build, test, push to GHCR, update the container app.
 
@@ -121,6 +122,7 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 
 - [ ] One command starts the app locally and it opens in the browser.
 - [ ] The production address opens on a phone, and the app installs to the home screen.
+- [ ] "App installieren" opens the install dialog on Android, shows the Share instructions on an iPhone, and is gone once the app runs installed.
 - [ ] After the app has scaled to zero, opening it shows the shell at once, then "Waking up the table…", then the app.
 - [ ] The Azure portal shows both budget alerts, 0–1 replicas, and the free SQL offer with "continue with charges".
 
@@ -144,7 +146,7 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
    - **Frontend:** sign-in, profile, campaign, character and session screens against the stubs.
 3. *Sequential:* integrate; Playwright with two browser contexts (register, create, join by code).
 
-**Needs from the project owner:** a Google OAuth client with `localhost` and production redirect URIs, and its secret in Container Apps.
+**Needs from the project owner:** a Google OAuth client with `localhost`, phone test (`dev.oreanas-office.otressler.de`) and production redirect URIs, and its secret in Container Apps.
 
 **Manual gate**
 

@@ -32,6 +32,7 @@ There is only one deployed environment: production, which scales to zero between
 - `tests/Server.Tests`: xUnit tests; integration tests use Testcontainers, so Docker must run.
 - `infra/`: Bicep templates. Only the project owner provisions Azure; Claude writes templates and summarises resources and cost first (`knowledge/decisions/hosting.md`).
 - Local development: `pwsh scripts/dev.ps1` (SQL Server and Azurite in Docker, backend on :5080, Vite on :5173 forwarding `/api` and `/hubs`).
+- Phone tests: `pwsh scripts/phone.ps1` runs the production container behind a local Traefik at `https://dev.oreanas-office.otressler.de` (home network only, INWX credentials in `.env`); `-Stop` stops it.
 - Backend tests: `dotnet test`. Frontend: `npm test` and `npm run test:e2e` in `src/web`.
 - API types: building the server writes `src/web/src/api/openapi.json`; `npm run gen:api` turns it into `schema.d.ts`.
 - EF migrations: `dotnet ef migrations add <Name> --project src/Server --output-dir Data/Migrations`.

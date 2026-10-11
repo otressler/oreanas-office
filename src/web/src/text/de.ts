@@ -27,6 +27,16 @@ export const de = {
     retry: 'Erneut versuchen',
   },
 
+  install: {
+    button: 'App installieren',
+    iosTitle: 'Als App installieren',
+    /** Followed by the share symbol. */
+    iosShare: 'Tippe auf „Teilen“',
+    iosShareMenu: 'Je nach Ansicht steckt es im Menü „…“.',
+    iosAdd: 'Wähle „Zum Home-Bildschirm“ und dann „Hinzufügen“.',
+    close: 'Schließen',
+  },
+
   update: {
     message: 'Eine neue Version ist bereit.',
     reload: 'Neu laden',

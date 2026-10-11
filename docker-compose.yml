@@ -1,6 +1,8 @@
 # Local development services. scripts/dev.ps1 starts them, or `docker compose up -d`.
 # The `app` profile runs the production container against the same services,
 # for smoke tests: `docker compose --profile app up --build`.
+# The `phone` profile adds Traefik with a Let's Encrypt certificate for phone tests
+# on the home network: `pwsh scripts/phone.ps1`.
 services:
   sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -31,6 +33,33 @@ services:
     ports:
       - "8080:8080"
 
+  traefik:
+    profiles: [phone]
+    image: traefik:v3
+    depends_on: [app]
+    command:
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --entrypoints.websecure.address=:443
+      # DNS challenge: the laptop isn't reachable from the internet, so Let's
+      # Encrypt checks a TXT record that Traefik creates through the INWX API.
+      - --certificatesresolvers.inwx.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.inwx.acme.dnschallenge=true
+      - --certificatesresolvers.inwx.acme.dnschallenge.provider=inwx
+    environment:
+      # From .env (never commit). INWX_SHARED_SECRET only if the account uses 2FA.
+      INWX_USERNAME: ${INWX_USERNAME:-}
+      INWX_PASSWORD: ${INWX_PASSWORD:-}
+      INWX_SHARED_SECRET: ${INWX_SHARED_SECRET:-}
+    # Public resolvers, so the DNS challenge sees the TXT record and not a cached
+    # answer from the router.
+    dns: [1.1.1.1, 8.8.8.8]
+    ports:
+      - "443:443"
+    volumes:
+      - ./docker/traefik:/etc/traefik/dynamic:ro
+      - traefik-acme:/letsencrypt
+
 volumes:
   sql-data:
   azurite-data:
+  traefik-acme:

@@ -7,6 +7,7 @@ export const text = {
   notFoundTitle: 'Diese Seite gibt es nicht',
   wakingTitle: 'Der Tisch wird geweckt…',
   offlineTitle: 'Keine Verbindung',
+  installButton: 'App installieren',
 }
 
 type HealthState = 'ok' | 'waking'
