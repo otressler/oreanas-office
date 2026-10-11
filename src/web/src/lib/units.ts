@@ -25,3 +25,29 @@ const meterNumber = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 })
 export function formatMeters(squares: number): string {
   return de.units.meters(meterNumber.format(squaresToMeters(squares)))
 }
+
+const meterInputNumber = new Intl.NumberFormat('de-DE', {
+  maximumFractionDigits: 1,
+  useGrouping: false,
+})
+
+/** Squares as the value of a meter input field, without unit: 5 → "7,5". */
+export function formatMetersInput(squares: number): string {
+  return meterInputNumber.format(squaresToMeters(squares))
+}
+
+/**
+ * Meters as typed by a person: "9", "7,5", "7.5" or "7,5 m". Returns null for
+ * anything that isn't a non-negative number. Rounding to squares is separate
+ * (metersToSquares), so a form can say what the value will become.
+ */
+export function parseMeters(input: string): number | null {
+  const normalized = input.trim().replace(/\s*m$/i, '').replace(',', '.')
+  if (!/^(\d+(\.\d*)?|\.\d+)$/.test(normalized)) return null
+  return Number(normalized)
+}
+
+/** True when the meters are a whole number of squares, so nothing is rounded off. */
+export function isWholeSquares(meters: number): boolean {
+  return Math.abs(squaresToMeters(metersToSquares(meters)) - meters) < 1e-9
+}

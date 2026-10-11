@@ -1,12 +1,21 @@
 import { expect, test } from '@playwright/test'
+import { MockBackend } from './mockBackend.ts'
 import { mockHealth, shellHeader, text } from './support.ts'
 
-test('renders the shell and the home page when the server is awake', async ({ page, context }) => {
+// Signed out throughout: the app's first page is then the sign-in page.
+test.beforeEach(async ({ context }) => {
+  await new MockBackend().attach(context)
+})
+
+test('renders the shell and the sign-in page when the server is awake', async ({
+  page,
+  context,
+}) => {
   const health = await mockHealth(context, 'ok')
   await page.goto('/')
 
   await expect(shellHeader(page)).toBeVisible()
-  await expect(page.getByRole('heading', { name: text.homeTitle })).toBeVisible()
+  await expect(page.getByRole('heading', { name: text.signInTitle })).toBeVisible()
   await expect(page.getByText(text.wakingTitle)).toHaveCount(0)
   await expect(page).toHaveTitle(text.appName)
   expect(health.calls).toEqual(['ok'])
@@ -19,7 +28,7 @@ test('shows a German not-found page for unknown addresses', async ({ page, conte
   await expect(shellHeader(page)).toBeVisible()
   await expect(page.getByRole('heading', { name: text.notFoundTitle })).toBeVisible()
   await page.getByRole('link', { name: 'Zur Startseite' }).click()
-  await expect(page.getByRole('heading', { name: text.homeTitle })).toBeVisible()
+  await expect(page.getByRole('heading', { name: text.signInTitle })).toBeVisible()
 })
 
 test('shows the waking screen while the server answers 503, then the app', async ({
@@ -31,10 +40,10 @@ test('shows the waking screen while the server answers 503, then the app', async
 
   await expect(shellHeader(page)).toBeVisible()
   await expect(page.getByRole('heading', { name: text.wakingTitle })).toBeVisible()
-  await expect(page.getByRole('heading', { name: text.homeTitle })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: text.signInTitle })).toHaveCount(0)
 
   health.set('ok')
-  await expect(page.getByRole('heading', { name: text.homeTitle })).toBeVisible()
+  await expect(page.getByRole('heading', { name: text.signInTitle })).toBeVisible()
   await expect(page.getByText(text.wakingTitle)).toHaveCount(0)
 
   // Once awake, the app stops asking.
@@ -49,7 +58,7 @@ test("offers installing when the browser does, and opens the browser's dialog", 
 }) => {
   await mockHealth(context, 'ok')
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: text.homeTitle })).toBeVisible()
+  await expect(page.getByRole('heading', { name: text.signInTitle })).toBeVisible()
 
   // Headless Chromium doesn't offer installing by itself, so fire its event with
   // a fake dialog that records the call.
