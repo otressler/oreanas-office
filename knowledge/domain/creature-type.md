@@ -15,7 +15,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `campaignId` | → [Campaign](/domain/campaign.md) | One bestiary per campaign for now |
 | `name` | string | e.g. "Goblin" |
 | `size` | enum | Sets the token footprint ([creature size](/rules/creature-size.md)) |
-| `speed` | int, squares | For the DM's movement hint. Entered and shown in meters: 6 squares = 9 m ([movement rules](/rules/movement-distance.md)) |
+| `speed` | int, squares | Default speed for the reach highlight; a hint, never a limit. Entered and shown in meters: 6 squares = 9 m. Any input is accepted and rounded down to whole squares ([movement rules](/rules/movement-distance.md)) |
 | `appearance` | text | Short visual description that feeds the icon prompt |
 | `iconAssetId` | → [Asset](/domain/asset.md), nullable | One icon per type ([token icons](/features/token-icons.md)) |
 | `notes` | text | DM-only notes |

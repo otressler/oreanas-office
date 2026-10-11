@@ -24,12 +24,12 @@ The next stage starts only after the gate passes. Gate findings are fixed inside
 | 1 | 1 | Walking skeleton | The empty app runs locally and in production, installs as a PWA and wakes from zero |
 | 2 | 1 | Accounts and campaigns | Two people sign in, one joins the other's campaign, and both stay signed in across restarts |
 | 3 | 1 | Board on screen | A hand-made map shows up on every phone with grid, tokens, zoom and pan |
-| 4 | 1 | Live table | Players and the DM move tokens with a distance preview, live on all devices |
+| 4 | 1 | Live table | Players and the DM move tokens with a distance preview and reach highlight, live on all devices |
 | 5 | 2 | Offline map editor | The DM builds a map on a laptop with no connection |
 | 6 | 2 | Bestiary, encounter prep and sync | The DM preps a whole encounter offline, syncs it and runs it |
 | 7 | 3 | AI backgrounds | The editor generates backgrounds, the DM picks one, and the board shows it |
 | 8 | 3 | Token icons and portraits | Creatures get generated icons, characters get portraits |
-| 9 | 4 | Measuring tools | Ruler, area templates and reachable-cell shading |
+| 9 | 4 | Measuring tools | Ruler and area templates |
 | 10 | 4 | DM control at the table | Pings, hidden tokens, and HP and conditions |
 
 Phase 1 of the roadmap is done after stage 4, phase 2 after stage 6, phase 3 after stage 8 and phase 4 after stage 10.
@@ -54,6 +54,7 @@ Phase 1 of the roadmap is done after stage 4, phase 2 after stage 6, phase 3 aft
 - **Shared files belong to the integrator:** `Program.cs`, the `DbContext`, EF migrations, `package.json` and lock files, the generated API types, the app router and the editor's tool registry. Each backend feature registers itself through its own extension method (`builder.AddTableHub()`), so wiring it in is a one-line merge.
 - **Migrations are created only by the integrator**, once, after the lanes are merged. Two worktrees generating migrations always conflict in the model snapshot.
 - **Packages are added in the contract step**, so lanes never touch lock files.
+- **Releases stay backward compatible once production is confirmed** (after the stage 1 gate): additive API and hub changes, expand-then-contract migrations, versioned stored documents ([backward compatibility](/decisions/backward-compatibility.md)). Lane briefs say so, and the stage review checks it.
 - **Lanes don't edit `knowledge/`.** If a lane finds a gap in the spec, it says so in its report, and the integrator asks the project owner (the rule in the project's `CLAUDE.md`: code and knowledge must not silently disagree).
 - **Only one agent at a time may call the Foundry image deployment.** It allows 2 requests per minute, and rejected requests count ([image generation approach](/decisions/image-generation-approach.md)). Lanes test against a fake image client.
 
@@ -134,6 +135,7 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 - [Sessions](/domain/session.md): create, choose the DM, make active (only one per campaign), end.
 - Landing page: your campaigns, and the active session of each.
 - Shared helpers: squares ↔ meters and locale-aware formatting.
+- Compatibility safeguards: the server announces the oldest app version it supports and older apps must reload; CI fails on breaking OpenAPI changes against `main` ([backward compatibility](/decisions/backward-compatibility.md)).
 
 **Order**
 
@@ -190,7 +192,8 @@ Completes roadmap phase 1.
 **Feature set**
 
 - Distance: one pure TypeScript function returning squares, A* with every step one square, no corner cutting, difficult terrain and water doubled, blocked cells and features, whole footprints for large tokens ([movement distance](/rules/movement-distance.md)). Unit tests from the rule's examples plus edge cases.
-- Phone controls: tap a token, tap a target to see the path and "7.5 / 9 m", tap again to confirm ([playable map](/features/playable-map.md)).
+- Phone controls: tap a token, tap a target to see the path and "7,5 / 9 m", tap again to confirm ([playable map](/features/playable-map.md)).
+- Reach highlight: the selected token's reachable cells within its default speed are shaded. One distance calculation from the token gives both the highlight and the preview for any target. Never a limit ([speed](/rules/movement-distance.md)).
 - SignalR hub, one group per encounter: permission check, save the move and its history, then broadcast ([realtime sync](/decisions/realtime-sync.md)). Optimistic moves with rollback when rejected.
 - Undo your own last move; the DM moves any token.
 - Connection lifecycle: disconnect when the app goes to the background, reconnect and reload the board when visible, drop connections idle for 30 minutes, a small connection indicator, and the waking screen when a reconnect hits a cold start.
@@ -209,6 +212,7 @@ Completes roadmap phase 1.
 - [ ] Three or more phones and the DM laptop on production. A move shows up on the other devices within about a second.
 - [ ] A player can't move another player's character or a creature; the DM can move anything.
 - [ ] The preview matches the rule examples: 3 straight + 2 diagonal = 7.5 m; with one difficult square 9 m; no path through a wall corner.
+- [ ] Selecting a 9 m character shades the cells within 6 squares, walls and difficult terrain included; a target outside the shading still shows its distance and can be confirmed.
 - [ ] Undo works on a phone after a mistaken tap.
 - [ ] Lock a phone for a minute and unlock it: it reconnects and shows the current board.
 - [ ] Leave everything closed until the app scales to zero; reopen: waking screen, then the correct board.
@@ -318,15 +322,14 @@ Completes roadmap phase 3. Reuses the stage 7 queue, so it is smaller.
 
 # Stage 9 — Measuring tools
 
-**Feature set:** a ruler between any two points; area templates (cone, sphere, line, cube) sized in meters; shading of the cells the selected token can reach with its speed, as a hint only ([playable map](/features/playable-map.md)). Sharing follows question 12.
+**Feature set:** a ruler between any two points; area templates (cone, sphere, line, cube) sized in meters ([playable map](/features/playable-map.md)). Sharing follows question 12. The reach highlight moved to stage 4.
 
-**Order:** a short sequential step for the shared "overlay" message type on the hub, then three parallel lanes (ruler, templates, reach shading), each its own board layer. Reach shading reuses the stage 4 pathfinding.
+**Order:** a short sequential step for the shared "overlay" message type on the hub, then two parallel lanes (ruler, templates), each its own board layer.
 
 **Manual gate**
 
 - [ ] Measure a ranged attack on a phone; the reading matches counting squares by hand.
 - [ ] Place a 4.5 m cone and a 6 m sphere; they cover the expected cells, and everyone sees them.
-- [ ] Reach shading matches the distance preview for the same token.
 
 # Stage 10 — DM control at the table
 

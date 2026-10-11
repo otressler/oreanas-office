@@ -27,10 +27,10 @@ Each player uses their own device, sees the current board and moves their charac
 8. Undo your own last move.
 9. Installable as a PWA. The app opens instantly from cache and shows "Waking up the table…" while the server starts ([hosting](/decisions/hosting.md), [offline prep](/decisions/offline-prep-pwa.md)).
 10. Disconnect when the app goes to the background and reconnect when it's visible again ([realtime sync](/decisions/realtime-sync.md)).
+11. **Reach highlight**: when a token is selected, shade the cells it can reach within its default speed. A hint only: moves beyond it are allowed, and the distance preview still shows the distance to any target ([speed](/rules/movement-distance.md)).
 
 # Nice to have (phase 4)
 
-- Shading for the cells reachable with the token's speed. A hint only, not enforced.
 - Ruler between any two points, for ranged attacks.
 - Area templates: cone, sphere, line, cube.
 - Ping: tap and hold to flash a spot for everyone.

@@ -25,15 +25,23 @@ The group plays D&D 5e (2024) ([rules edition](/decisions/rules-edition.md)).
 - **Tokens**: moving through other tokens is allowed. The app doesn't judge this, the table does.
 - The path is the cheapest route (A* pathfinding). For large creatures, the whole footprint must fit along it ([creature size](/rules/creature-size.md)).
 
+# Speed
+
+Speed is a hint, never a limit. The project owner set this on 2026-10-11: the app doesn't simulate D&D, so it shows distances and the table decides.
+
+- **Any speed is accepted.** Input is never rejected. A speed that isn't a multiple of 1.5 m is rounded down to whole squares (10 m → 6 squares, shown as 9 m afterwards), because a partial square can't be entered.
+- **Speed only drives the highlight.** When a token is selected, the cells it can reach within its default speed are shaded. The distance to any other target is still shown, inside or outside the shaded area.
+- **Speed modifiers aren't modelled.** Dashing, spells, conditions and other bonuses or penalties are applied by the table. The shading always uses the default speed of the [character](/domain/character.md) or [creature type](/domain/creature-type.md).
+
 # Display
 
-Show the total in meters next to the target square, for example "7.5 m". If the token's speed is known, show "7.5 / 9 m". Never block a move.
+Show the total in meters next to the target square, for example "7,5 m". If the token's speed is known, show "7,5 / 9 m". Never block a move, including moves beyond the speed.
 
 # Examples
 
 | Move | Squares | Shown |
 |------|---------|-------|
-| 3 squares straight + 2 diagonal, plain floor | 5 | **7.5 m** |
+| 3 squares straight + 2 diagonal, plain floor | 5 | **7,5 m** |
 | Same, with one straight square difficult terrain | 6 | **9 m** |
 | Diagonal past the corner of a wall | Not allowed. The path goes around: 2 straight steps = 2 | **3 m** |
 
@@ -46,4 +54,3 @@ Distance is calculated only in the frontend ([frontend stack](/decisions/fronten
 - **Corners**: is a diagonal blocked when only one of the two side cells is blocked, or only when both are? The current reading is "either one". Confirm it at the table.
 - **Elevation**: does climbing or jumping between heights cost extra, or is height only shown? For now, show it and don't count it.
 - **Flying**: should a flying token ignore terrain costs and blocked cells?
-- **Speeds that aren't a multiple of 1.5 m**: when someone enters such a speed (for example 10 m), the app currently rounds down to whole squares (10 m → 6 squares), because a partial square can't be entered. Confirm, or reject such input instead.

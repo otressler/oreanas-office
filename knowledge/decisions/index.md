@@ -8,6 +8,7 @@
 - [Rules edition](rules-edition.md) - The group plays D&D 5e (2024): every step costs one square (1.5 m), no corner cutting
 - [Play setting](play-setting.md) - In person, remote, and mixed sessions are all supported
 - [UI language](ui-language.md) - The interface is German only; more languages are a backlog idea
+- [Backward compatibility](backward-compatibility.md) - Once production is confirmed, releases keep working with older open app versions and existing data
 
 # Proposed
 

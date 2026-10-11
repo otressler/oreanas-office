@@ -25,6 +25,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 
 ```json
 {
+  "schemaVersion": 1,
   "cells": [
     { "x": 0, "y": 0, "terrain": "floor", "elevation": 0 }
   ],
@@ -41,6 +42,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 - **`terrain`**: `void` (not part of the map) | `floor` | `difficult` | `water` | `wall`. The walkable area is everything that isn't `void` or `wall`.
 - **`elevation`**: height in meters (one decimal) relative to the map's base level. Unlike distances, it isn't tied to whole squares. Shown to players. How it affects movement is an open question in the [movement rules](/rules/movement-distance.md).
 - **`features`**: the few important objects (bridge, pillar, door, stairs…). `kind` is free text, which also feeds the image prompt. The footprint is a rectangle in cells.
+- **`schemaVersion`**: the layout format version. Older layouts are upgraded when loaded ([backward compatibility](/decisions/backward-compatibility.md)).
 - **`entrances`**: `entrance` | `exit` | `both`, on edge cells.
 
 # Notes
