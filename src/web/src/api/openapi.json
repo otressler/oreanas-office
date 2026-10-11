@@ -1215,11 +1215,7 @@
             "$ref": "#/components/schemas/CreatureSize"
           },
           "speedSquares": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           }
         }
@@ -1254,11 +1250,7 @@
             "$ref": "#/components/schemas/CreatureSize"
           },
           "speedSquares": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "canEdit": {

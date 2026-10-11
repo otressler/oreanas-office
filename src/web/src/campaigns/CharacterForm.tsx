@@ -37,7 +37,7 @@ export function CharacterForm({
   const [name, setName] = useState(character?.name ?? '')
   const [size, setSize] = useState<CreatureSize>(character?.size ?? 'medium')
   const [speed, setSpeed] = useState(
-    formatMetersInput(Number(character?.speedSquares ?? DEFAULT_SPEED_SQUARES)),
+    formatMetersInput(character?.speedSquares ?? DEFAULT_SPEED_SQUARES),
   )
   const [speedError, setSpeedError] = useState(false)
 

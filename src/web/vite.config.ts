@@ -6,8 +6,9 @@ import { defineConfig } from 'vitest/config'
 // Calm dark "table" colour; keep in sync with --color-table in src/index.css.
 const TABLE_COLOR = '#14161b'
 
-// The ASP.NET Core backend during local development (scripts/dev.ps1).
-const BACKEND = 'http://localhost:5080'
+// The ASP.NET Core backend during local development (scripts/dev.ps1). The
+// real-backend Playwright mode points it elsewhere; `vite preview` uses the same proxy.
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:5080'
 
 // https://vite.dev/config/
 export default defineConfig({

@@ -1248,7 +1248,7 @@ export interface components {
             name: string;
             size: components["schemas"]["CreatureSize"];
             /** Format: int32 */
-            speedSquares: number | string;
+            speedSquares: number;
         };
         CharacterResponse: {
             /** Format: uuid */
@@ -1259,7 +1259,7 @@ export interface components {
             name: string;
             size: components["schemas"]["CreatureSize"];
             /** Format: int32 */
-            speedSquares: number | string;
+            speedSquares: number;
             canEdit: boolean;
         };
         CreateCampaignRequest: {

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using OreanasOffice.Server.Data;
 
 namespace OreanasOffice.Server.Accounts;
 
@@ -21,7 +23,7 @@ public static class TestingEndpoints
     }
 
     private static async Task<Ok<CreatedInviteResponse>> CreateInvite(
-        Invites invites, UserManager<AppUser> users, TimeProvider time, HttpRequest request)
+        Invites invites, UserManager<AppUser> users, AppDbContext db, TimeProvider time, HttpRequest request)
     {
         var creator = await users.FindByEmailAsync(CreatorEmail);
         if (creator is null)
@@ -34,9 +36,22 @@ public static class TestingEndpoints
                 CreatedAt = time.GetUtcNow(),
             };
 
-            // Parallel test workers may race to create it; then the other one won.
-            if (!(await users.CreateAsync(creator)).Succeeded)
+            // Parallel test workers may race to create it, and then the other one
+            // won: either Identity's duplicate check or the unique index says so.
+            // A failed insert stays tracked, so forget it before looking again.
+            bool created;
+            try
             {
+                created = (await users.CreateAsync(creator)).Succeeded;
+            }
+            catch (DbUpdateException)
+            {
+                created = false;
+            }
+
+            if (!created)
+            {
+                db.ChangeTracker.Clear();
                 creator = await users.FindByEmailAsync(CreatorEmail)
                     ?? throw new InvalidOperationException("The E2E invite creator couldn't be created.");
             }

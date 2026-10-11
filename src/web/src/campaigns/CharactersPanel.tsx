@@ -64,7 +64,7 @@ function CharacterRow({ character, onEdit }: { character: Character; onEdit: () 
       </div>
       <div className="flex flex-col text-sm text-dim">
         <span>{de.sizes[character.size]}</span>
-        <span>{de.characters.speedValue(formatMeters(Number(character.speedSquares)))}</span>
+        <span>{de.characters.speedValue(formatMeters(character.speedSquares))}</span>
       </div>
       {character.canEdit && (
         <Button
