@@ -209,6 +209,7 @@ In the portal: the database's Overview shows "Free monthly vCore amount" and its
 - **"Continue with charges" can't be undone.** A free database set to bill over its allowance can't be switched back to "pause until next month".
 - **Free SQL databases**: up to 10 per subscription, all in one region. A deleted free database frees its slot after up to an hour.
 - **Re-deploying** without `deploy.ps1` (or without `CONTAINER_IMAGE`) rolls the app back to the placeholder image. Re-run CI or deploy with the script.
+- **Don't run `deploy.ps1` while CI deploys.** The script reads the live image when it starts. If CI switches to a new image during the run, the script puts the older one back (this happened on 2026-10-11). Wait until the CI run on `main` has finished, or re-run its `deploy` job afterwards.
 - **Custom domain and manual deployments.** `main.bicepparam` binds the certificate only when `CUSTOM_DOMAIN_CERTIFICATE_EXISTS` is `true`, which `deploy.ps1` sets. A manual `az deployment group create` without it unbinds the certificate, and the custom domain stops serving HTTPS until the next `deploy.ps1` run.
 - **Recreating the environment** gives it a new default host name and verification ID, and deletes the certificate. Update the CNAME and TXT records (step 8) before deploying again.
 - **Recreating the container app** gives it a new identity. Re-run `grant-app-access.sql` (after `DROP USER [oreanas-office];`) and the role assignment in step 6.
