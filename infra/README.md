@@ -8,7 +8,7 @@ Files:
 |------|------------|
 | `main.bicep`, `modules/*.bicep` | The resources below |
 | `main.bicepparam` | Parameters. Secrets and personal values come from environment variables, never from the file |
-| `deploy.ps1` | Deploys the template and keeps the live container image (see step 4) |
+| `deploy.ps1` | Deploys the template, keeps the live container image and binds the custom domain's certificate (see step 4 and step 8) |
 | `sql/grant-app-access.sql` | Gives the app's managed identity access to the database (step 5) |
 
 ## Resources and monthly cost
@@ -25,6 +25,7 @@ Planned use: two 12-hour sessions plus about 10 hours of prep a month, so about 
 | Log Analytics workspace | `log-oreanas` | PerGB2018, 30 days retention, daily cap 0.1 GB | **$0**. The first 5 GB a month per billing account are free, and the cap allows at most about 3 GB. Beyond 5 GB: $2.99/GB. 31 days of retention are included | [pricing](https://azure.microsoft.com/pricing/details/monitor/) |
 | Budgets | `budget-10`, `budget-30` | Monthly, on the resource group, email at 100 % actual and 100 % forecast | $0 | |
 | Role assignment | | Storage Blob Data Contributor for the app's identity on the storage account | $0 | |
+| Custom domain and managed certificate | `oreanas-office.otressler.de`, `cert-oreanas-office` | Host name on the app, free DigiCert certificate in the environment, renewed by Azure, validated by CNAME | $0. Custom domains and managed certificates are free in Container Apps; the domain is already registered at INWX | [custom domains](https://learn.microsoft.com/azure/container-apps/custom-domains-managed-certificates) |
 | *Outside Azure:* GitHub Container Registry | `ghcr.io/otressler/oreanas-office` | Private or public package | $0. GitHub says Container registry storage and bandwidth are currently free | [GitHub Packages billing](https://docs.github.com/billing/concepts/product-billing/github-packages) |
 | **Total** | | | **about $0–1 a month** | |
 
@@ -104,7 +105,7 @@ $spId     = az ad sp create --id $clientId --query id --output tsv
 {
   "name": "github-main",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:otressler/oreanas-office:ref:refs/heads/main",
+  "subject": "repo:otressler@19148386/oreanas-office@1413688368:ref:refs/heads/main",
   "audiences": ["api://AzureADTokenExchange"]
 }
 '@ | Set-Content federated-credential.json
@@ -120,6 +121,8 @@ foreach ($scope in $appResourceId, $envResourceId) {
         --role Contributor --scope $scope
 }
 ```
+
+GitHub puts the owner's and the repository's numeric IDs into the token's subject (`otressler@19148386`, `oreanas-office@1413688368`), so a deleted and recreated repository with the same name can't deploy. The subject has to match character for character. If a login fails with `AADSTS700213`, the `azure/login` step prints the subject it presented; put that into the credential.
 
 This identity can change the container app (its image, settings, secrets) and its Container Apps environment, and nothing else. It can't read the database, the storage account or other resources.
 
@@ -137,6 +140,35 @@ gh variable set DEPLOY_ENABLED        --body true
 ```
 
 Or set them in GitHub under Settings → Secrets and variables → Actions → Variables. None of them are secret. The next push to `main` builds the image, pushes it to `ghcr.io/otressler/oreanas-office` (tagged with the commit SHA and `latest`) and switches the app to it. To pause deployments, set `DEPLOY_ENABLED` to `false`.
+
+### 8. Custom domain
+
+The app answers at `https://oreanas-office.otressler.de` (`customDomainName` in `main.bicepparam`). Azure only serves a host name it knows, so this needs DNS records at INWX and a deployment.
+
+**On a brand-new setup**, the environment and its default host name don't exist before the first deployment. Comment out `customDomainName` for the first `deploy.ps1` run in step 4, then come back here.
+
+Read the two values from Azure:
+
+```powershell
+$rg = 'rg-ot-oreanasoffice-prod-001'
+az containerapp show --name oreanas-office --resource-group $rg --query properties.configuration.ingress.fqdn --output tsv
+az containerapp env show --name cae-oreanas --resource-group $rg --query properties.customDomainConfiguration.customDomainVerificationId --output tsv
+```
+
+Create these records for `otressler.de` at INWX:
+
+| Type | Name | Value |
+|------|------|-------|
+| CNAME | `oreanas-office` | the app's default host name (first command) |
+| TXT | `asuid.oreanas-office` | the verification ID (second command) |
+
+The template validates the certificate through the CNAME, which is Microsoft's recommended setup for a subdomain. An A record to the environment's IP would need HTTP validation instead. Check that both resolve (`Resolve-DnsName oreanas-office.otressler.de`, `Resolve-DnsName asuid.oreanas-office.otressler.de -Type TXT`), then deploy:
+
+```powershell
+pwsh infra/deploy.ps1 -ResourceGroup rg-ot-oreanasoffice-prod-001
+```
+
+If the certificate doesn't exist yet, `deploy.ps1` deploys twice: the first run adds the host name and waits while Azure issues the certificate (a few minutes), the second binds it. Later runs bind it directly. The Azure address keeps working alongside the custom domain.
 
 ## Checks after deploying
 
@@ -159,6 +191,11 @@ az sql db show --resource-group $rg --server $sql --name OreanasOffice `
 
 # Budgets: budget-10 and budget-30
 az consumption budget list --resource-group $rg --output table
+
+# Custom domain: bindingType SniEnabled, certificate Succeeded
+az containerapp show --name oreanas-office --resource-group $rg --query properties.configuration.ingress.customDomains
+az containerapp env certificate list --name cae-oreanas --resource-group $rg --managed-certificates-only `
+    --query "[].{name:name, subject:properties.subjectName, state:properties.provisioningState}" --output table
 ```
 
 In the portal: the database's Overview shows "Free monthly vCore amount" and its status (Online or Paused). Cost Management → Budgets shows both budgets. The container app's Metrics → Replica count should drop to 0 between sessions.
@@ -172,6 +209,8 @@ In the portal: the database's Overview shows "Free monthly vCore amount" and its
 - **"Continue with charges" can't be undone.** A free database set to bill over its allowance can't be switched back to "pause until next month".
 - **Free SQL databases**: up to 10 per subscription, all in one region. A deleted free database frees its slot after up to an hour.
 - **Re-deploying** without `deploy.ps1` (or without `CONTAINER_IMAGE`) rolls the app back to the placeholder image. Re-run CI or deploy with the script.
+- **Custom domain and manual deployments.** `main.bicepparam` binds the certificate only when `CUSTOM_DOMAIN_CERTIFICATE_EXISTS` is `true`, which `deploy.ps1` sets. A manual `az deployment group create` without it unbinds the certificate, and the custom domain stops serving HTTPS until the next `deploy.ps1` run.
+- **Recreating the environment** gives it a new default host name and verification ID, and deletes the certificate. Update the CNAME and TXT records (step 8) before deploying again.
 - **Recreating the container app** gives it a new identity. Re-run `grant-app-access.sql` (after `DROP USER [oreanas-office];`) and the role assignment in step 6.
 - **Budget start date** defaults to the first of the month you deploy in. If a later re-deploy is rejected because the start date changed, pass the original one: `az deployment group create --name main --resource-group rg-ot-oreanasoffice-prod-001 --parameters infra/main.bicepparam --parameters budgetStartDate=2026-10-01` (with `CONTAINER_IMAGE` set to the live image).
 - **Storage without shared keys.** The portal's storage browser needs Microsoft Entra sign-in and a data role for you (for example Storage Blob Data Reader). You don't need it for normal use.

@@ -6,6 +6,12 @@ using 'main.bicep'
 // on 2026-10-11. The database, storage and logs stay in the resource group's region (Frankfurt).
 param appLocation = 'westeurope'
 
+// Needs a CNAME oreanas-office → the app's default host name and a TXT record
+// asuid.oreanas-office with the environment's verification id (see infra/README.md).
+// Deploy with infra/deploy.ps1: it requests the certificate and binds it.
+param customDomainName = 'oreanas-office.otressler.de'
+param customDomainCertificateExists = bool(readEnvironmentVariable('CUSTOM_DOMAIN_CERTIFICATE_EXISTS', 'false'))
+
 param sqlEntraAdminLogin = readEnvironmentVariable('SQL_ENTRA_ADMIN_LOGIN')
 param sqlEntraAdminObjectId = readEnvironmentVariable('SQL_ENTRA_ADMIN_OBJECT_ID')
 param sqlClientIpAddress = readEnvironmentVariable('SQL_CLIENT_IP', '')

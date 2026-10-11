@@ -74,7 +74,7 @@ jobs:
       packages: write
       id-token: write
     # No "environment:" here: it would change the OIDC subject to repo:...:environment:<name>,
-    # and the federated credential is for repo:otressler/oreanas-office:ref:refs/heads/main.
+    # and the federated credential is for repo:otressler@19148386/oreanas-office@1413688368:ref:refs/heads/main.
     concurrency:
       group: deploy-production
       cancel-in-progress: false

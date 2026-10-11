@@ -146,7 +146,7 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
    - **Frontend:** sign-in, profile, campaign, character and session screens against the stubs.
 3. *Sequential:* integrate; Playwright with two browser contexts (register, create, join by code).
 
-**Needs from the project owner:** a Google OAuth client with `localhost`, phone test (`dev.oreanas-office.otressler.de`) and production redirect URIs, and its secret in Container Apps.
+**Needs from the project owner:** a Google OAuth client with `localhost`, phone test (`dev.oreanas-office.otressler.de`) and production (`oreanas-office.otressler.de`) redirect URIs, and its secret in Container Apps.
 
 **Manual gate**
 

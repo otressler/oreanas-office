@@ -41,6 +41,12 @@ param budgetStartDate string = utcNow('yyyy-MM-01')
 @description('Log Analytics daily ingestion cap in GB (a string, because Bicep has no decimals).')
 param logDailyQuotaGb string = '0.1'
 
+@description('Optional custom host name for the app, for example oreanas-office.otressler.de. Needs a CNAME to appFqdn and a TXT record asuid.<host> with customDomainVerificationId. Empty for none.')
+param customDomainName string = ''
+
+@description('Whether the app\'s managed certificate already exists. infra/deploy.ps1 sets this; false on the first deployment with a custom domain.')
+param customDomainCertificateExists bool = false
+
 var suffix = uniqueString(resourceGroup().id)
 var appName = '${baseName}-office'
 var databaseName = 'OreanasOffice'
@@ -91,6 +97,8 @@ module app 'modules/app.bicep' = {
     // No password: the app signs in with its system-assigned managed identity.
     databaseConnectionString: 'Server=tcp:${sql.outputs.serverFqdn},1433;Database=${sql.outputs.databaseName};Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;Connect Timeout=30'
     blobServiceUri: storage.outputs.blobEndpoint
+    customDomainName: customDomainName
+    customDomainCertificateExists: customDomainCertificateExists
   }
 }
 
@@ -113,11 +121,23 @@ module budgets 'modules/budgets.bicep' = {
   }
 }
 
-@description('Public address of the app.')
-output appUrl string = 'https://${app.outputs.fqdn}'
+@description('Public address of the app: the custom domain if there is one.')
+output appUrl string = 'https://${empty(customDomainName) ? app.outputs.fqdn : customDomainName}'
 
-@description('Host name of the app.')
+@description('Default host name of the app (the CNAME target for a custom domain).')
 output appFqdn string = app.outputs.fqdn
+
+@description('Custom host name, empty for none.')
+output customDomainName string = customDomainName
+
+@description('Value of the TXT record asuid.<custom host> that proves you own the domain.')
+output customDomainVerificationId string = app.outputs.customDomainVerificationId
+
+@description('Name of the app\'s managed certificate in the Container Apps environment.')
+output certificateName string = app.outputs.certificateName
+
+@description('Container Apps environment name.')
+output environmentName string = app.outputs.environmentName
 
 @description('Container app name; also the display name of its managed identity (use it in grant-app-access.sql).')
 output appName string = app.outputs.name

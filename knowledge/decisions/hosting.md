@@ -91,6 +91,7 @@ The templates are in `infra/`, with the owner's step-by-step guide in `infra/REA
 - **Placeholder image:** the first deployment runs a public ASP.NET sample image on port 8080 until CI pushes the real one. Re-deploying the template with `infra/deploy.ps1` keeps whichever image is live.
 - **Sign-in to Azure services:** the app uses its system-assigned managed identity for SQL (Entra-only, no passwords) and Blob Storage (shared keys turned off).
 - **CI deployments:** GitHub Actions signs in with OIDC (no stored Azure secret) and may change only the container app and its Container Apps environment. Deployment is switched on with the repository variable `DEPLOY_ENABLED`.
+- **Custom domain:** the app answers at `https://oreanas-office.otressler.de`, a CNAME at INWX to the app's Azure host name, with a free managed certificate from Container Apps. The project owner chose the subdomain on 2026-10-11. It's the production address for Google sign-in from stage 2 on. `infra/deploy.ps1` deploys twice the first time: once to add the host name and request the certificate, once to bind it.
 - **Health probes:** Container Apps keeps its default TCP probes. `/api/health` returns 503 while the database resumes, so it must never be a probe.
 - **Budgets** cover only the app's resource group, so they don't include Foundry image costs if those live elsewhere.
 
