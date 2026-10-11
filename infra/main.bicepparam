@@ -2,6 +2,10 @@
 // they come from environment variables when you deploy (see infra/README.md).
 using 'main.bicep'
 
+// The app runs in West Europe (Amsterdam): Container Apps had no capacity in Germany West Central
+// on 2026-10-11. The database, storage and logs stay in the resource group's region (Frankfurt).
+param appLocation = 'westeurope'
+
 param sqlEntraAdminLogin = readEnvironmentVariable('SQL_ENTRA_ADMIN_LOGIN')
 param sqlEntraAdminObjectId = readEnvironmentVariable('SQL_ENTRA_ADMIN_OBJECT_ID')
 param sqlClientIpAddress = readEnvironmentVariable('SQL_CLIENT_IP', '')

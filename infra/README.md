@@ -13,11 +13,11 @@ Files:
 
 ## Resources and monthly cost
 
-Planned use: two 12-hour sessions plus about 10 hours of prep a month, so about 34 active hours. Prices are retail list prices for **Germany West Central in USD**, taken from the [Azure Retail Prices API](https://prices.azure.com/api/retail/prices) on 2026-10-11. Free grants are from the linked docs.
+Planned use: two 12-hour sessions plus about 10 hours of prep a month, so about 34 active hours. **Regions:** the Container Apps environment and the app run in **West Europe** (Amsterdam), everything else in **Germany West Central** (Frankfurt). Container Apps had no capacity in Frankfurt on 2026-10-11 (`AKSCapacityHeavyUsage`). Prices are retail list prices in USD for the resource's region, taken from the [Azure Retail Prices API](https://prices.azure.com/api/retail/prices) on 2026-10-11. Free grants are from the linked docs.
 
 | Resource | Name | Tier and settings | Expected cost | Source |
 |----------|------|-------------------|---------------|--------|
-| Container Apps environment | `cae-oreanas` | Consumption only (no workload profiles), logs to Log Analytics | $0. No fee unless you add dedicated profiles, private endpoints or planned maintenance, which this template doesn't | [billing](https://learn.microsoft.com/azure/container-apps/billing) |
+| Container Apps environment | `cae-oreanas` | West Europe. Consumption only (the default "Consumption" workload profile, no dedicated profiles), logs to Log Analytics in Frankfurt | $0. No fee unless you add dedicated profiles, private endpoints or planned maintenance, which this template doesn't | [billing](https://learn.microsoft.com/azure/container-apps/billing) |
 | Container app | `oreanas-office` | 0.5 vCPU, 1 GiB, 0–1 replicas, external HTTPS ingress on port 8080, system-assigned identity | **$0**. 34 h uses about 61,000 vCPU-s and 122,000 GiB-s, about a third of the free grant (180,000 vCPU-s, 360,000 GiB-s, 2 M requests per subscription per month). Without the grant it would be about $1.84 ($0.000024/vCPU-s, $0.000003/GiB-s) | [pricing](https://azure.microsoft.com/pricing/details/container-apps/), [billing](https://learn.microsoft.com/azure/container-apps/billing) |
 | Azure SQL logical server | `sql-oreanas-<suffix>` | Microsoft Entra-only sign-in (you are the admin), TLS 1.2, firewall: Azure services, plus your IP if you set one | $0 | |
 | Azure SQL database | `OreanasOffice` | **Free offer**: serverless General Purpose Gen5, 0.5–1 vCore, auto-pause after 60 min, 32 GB, local backup redundancy, "continue using database for additional charges" when the free amount is used up | **$0**. 34 h at 0.5 vCore is about 61,000 vCore-s, plus up to about 13,000 for the hour before each pause, under the free 100,000. Beyond that: $0.574 per vCore-hour (about $0.16 per 1,000 vCore-s) | [free offer](https://learn.microsoft.com/azure/azure-sql/database/free-offer) |
@@ -46,10 +46,10 @@ foreach ($ns in 'Microsoft.App', 'Microsoft.OperationalInsights', 'Microsoft.Sql
 
 ### 2. Create the resource group
 
-Germany West Central (Frankfurt) is the closest region. All free SQL databases in a subscription share one region, so if you already have a free database elsewhere, use that region.
+Germany West Central (Frankfurt) is the closest region. The app itself goes to West Europe (`appLocation` in `main.bicepparam`), see above. All free SQL databases in a subscription share one region, so if you already have a free database elsewhere, use that region.
 
 ```powershell
-az group create --name rg-oreanas-office --location germanywestcentral
+az group create --name rg-ot-oreanasoffice-prod-001 --location germanywestcentral
 ```
 
 ### 3. Decide how Azure pulls the image
@@ -69,16 +69,16 @@ $env:SQL_CLIENT_IP             = (Invoke-RestMethod https://api.ipify.org)   # l
 $env:GHCR_USERNAME             = 'otressler'                                 # private package only
 $env:GHCR_TOKEN                = '<classic PAT with read:packages>'          # private package only
 
-pwsh infra/deploy.ps1 -ResourceGroup rg-oreanas-office -WhatIf   # preview
-pwsh infra/deploy.ps1 -ResourceGroup rg-oreanas-office
+pwsh infra/deploy.ps1 -ResourceGroup rg-ot-oreanasoffice-prod-001 -WhatIf   # preview
+pwsh infra/deploy.ps1 -ResourceGroup rg-ot-oreanasoffice-prod-001
 ```
 
-`deploy.ps1` runs `az deployment group create --name main --resource-group rg-oreanas-office --parameters infra/main.bicepparam`. If the app already exists, it first sets `CONTAINER_IMAGE` to the image that's live now. **Always deploy with the script**, or set `CONTAINER_IMAGE` yourself. Otherwise a re-deploy switches the app back to the placeholder image (`mcr.microsoft.com/dotnet/samples:aspnetapp`, a public sample that listens on 8080 like our app).
+`deploy.ps1` runs `az deployment group create --name main --resource-group rg-ot-oreanasoffice-prod-001 --parameters infra/main.bicepparam`. If the app already exists, it first sets `CONTAINER_IMAGE` to the image that's live now. **Always deploy with the script**, or set `CONTAINER_IMAGE` yourself. Otherwise a re-deploy switches the app back to the placeholder image (`mcr.microsoft.com/dotnet/samples:aspnetapp`, a public sample that listens on 8080 like our app).
 
 Keep the outputs. You need `appUrl`, `sqlServerFqdn` and `appName` next. To see them again:
 
 ```powershell
-az deployment group show --resource-group rg-oreanas-office --name main --query properties.outputs
+az deployment group show --resource-group rg-ot-oreanasoffice-prod-001 --name main --query properties.outputs
 ```
 
 ### 5. Give the app access to the database
@@ -96,7 +96,7 @@ The first connection may take up to a minute while the paused database resumes. 
 ### 6. Let GitHub Actions deploy (OIDC, no stored Azure secret)
 
 ```powershell
-$rg       = 'rg-oreanas-office'
+$rg       = 'rg-ot-oreanasoffice-prod-001'
 $clientId = az ad app create --display-name oreanas-office-github --query appId --output tsv
 $spId     = az ad sp create --id $clientId --query id --output tsv
 
@@ -131,7 +131,7 @@ With the [GitHub CLI](https://cli.github.com/), from the repository folder:
 gh variable set AZURE_CLIENT_ID       --body $clientId
 gh variable set AZURE_TENANT_ID       --body (az account show --query tenantId --output tsv)
 gh variable set AZURE_SUBSCRIPTION_ID --body (az account show --query id --output tsv)
-gh variable set AZURE_RESOURCE_GROUP  --body rg-oreanas-office
+gh variable set AZURE_RESOURCE_GROUP  --body rg-ot-oreanasoffice-prod-001
 gh variable set AZURE_CONTAINER_APP   --body oreanas-office
 gh variable set DEPLOY_ENABLED        --body true
 ```
@@ -141,7 +141,7 @@ Or set them in GitHub under Settings → Secrets and variables → Actions → V
 ## Checks after deploying
 
 ```powershell
-$rg = 'rg-oreanas-office'
+$rg = 'rg-ot-oreanasoffice-prod-001'
 
 # The app answers (the first request after a pause can take up to a minute)
 Invoke-WebRequest "<appUrl>/api/health" -SkipHttpErrorCheck | Select-Object StatusCode, Content
@@ -165,6 +165,7 @@ In the portal: the database's Overview shows "Free monthly vCore amount" and its
 
 ## Known caveats
 
+- **Two regions.** The app in Amsterdam talks to the database in Frankfurt: a few milliseconds more per query, and data transfer between the regions at about $0.02/GB (cents at most). To bring the app back to Frankfurt later, delete the container app and its environment, set `appLocation` to `germanywestcentral` (or remove it) and deploy again. The app then gets a new identity, see "Recreating the container app" below.
 - **Budgets only cover this resource group.** If the Foundry image model lives in another resource group, its costs don't count towards these budgets. Budgets only alert and never stop anything, and Azure's cost data lags by up to a day.
 - **Cold start.** The first request after a quiet period starts the container (seconds) and resumes the database (up to about a minute). `/api/health` answers 503 during that time. This is why no probe points at it: the template keeps Container Apps' default TCP probes.
 - **Scale to zero needs quiet.** Any open connection or periodic request keeps the container running and the database awake. Close SQL tools (SSMS, the portal query editor) when you're done, or they keep the database from pausing.
@@ -172,7 +173,7 @@ In the portal: the database's Overview shows "Free monthly vCore amount" and its
 - **Free SQL databases**: up to 10 per subscription, all in one region. A deleted free database frees its slot after up to an hour.
 - **Re-deploying** without `deploy.ps1` (or without `CONTAINER_IMAGE`) rolls the app back to the placeholder image. Re-run CI or deploy with the script.
 - **Recreating the container app** gives it a new identity. Re-run `grant-app-access.sql` (after `DROP USER [oreanas-office];`) and the role assignment in step 6.
-- **Budget start date** defaults to the first of the month you deploy in. If a later re-deploy is rejected because the start date changed, pass the original one: `az deployment group create --name main --resource-group rg-oreanas-office --parameters infra/main.bicepparam --parameters budgetStartDate=2026-10-01` (with `CONTAINER_IMAGE` set to the live image).
+- **Budget start date** defaults to the first of the month you deploy in. If a later re-deploy is rejected because the start date changed, pass the original one: `az deployment group create --name main --resource-group rg-ot-oreanasoffice-prod-001 --parameters infra/main.bicepparam --parameters budgetStartDate=2026-10-01` (with `CONTAINER_IMAGE` set to the live image).
 - **Storage without shared keys.** The portal's storage browser needs Microsoft Entra sign-in and a data role for you (for example Storage Blob Data Reader). You don't need it for normal use.
 - **Log cap.** If logs ever reach 0.1 GB in a day, ingestion stops until the next day. That's deliberate; raise `logDailyQuotaGb` if you need more while debugging.
 - **The GitHub token from step 3 expires.** After that, new revisions can't pull the image. Create a new token and run step 4 again.

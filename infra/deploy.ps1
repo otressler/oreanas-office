@@ -6,7 +6,7 @@
 #   $env:GHCR_USERNAME             = '<github user>'        # optional, private package only
 #   $env:GHCR_TOKEN                = '<PAT with read:packages>'   # optional, private package only
 #   $env:SQL_CLIENT_IP             = '<your public IP>'      # optional
-#   pwsh infra/deploy.ps1 -ResourceGroup rg-oreanas-office
+#   pwsh infra/deploy.ps1 -ResourceGroup rg-ot-oreanasoffice-prod-001
 #
 # If the container app already exists, the image it runs now is kept (CONTAINER_IMAGE),
 # so a re-deploy doesn't roll the app back to the placeholder image.

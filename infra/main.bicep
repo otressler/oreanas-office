@@ -5,6 +5,9 @@ targetScope = 'resourceGroup'
 @description('Azure region. Defaults to the resource group\'s region.')
 param location string = resourceGroup().location
 
+@description('Region of the Container Apps environment and the app. Defaults to location. Can differ because Container Apps had no capacity in Germany West Central on 2026-10-11.')
+param appLocation string = location
+
 @description('Base name used for the resources.')
 @minLength(3)
 @maxLength(20)
@@ -78,7 +81,7 @@ module app 'modules/app.bicep' = {
   name: 'app'
   dependsOn: [logging]
   params: {
-    location: location
+    location: appLocation
     environmentName: 'cae-${baseName}'
     appName: appName
     logAnalyticsWorkspaceName: logAnalyticsWorkspaceName

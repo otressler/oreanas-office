@@ -86,7 +86,7 @@ Image generation on Microsoft Foundry is paid per image and isn't part of hostin
 
 The templates are in `infra/`, with the owner's step-by-step guide in `infra/README.md`. Choices made while writing them:
 
-- **Region:** Germany West Central (Frankfurt), the closest to the players.
+- **Region:** Germany West Central (Frankfurt), the closest to the players, for the resource group, database, storage and logs. The Container Apps environment and the app run in **West Europe** (Amsterdam), because Container Apps had no capacity in Frankfurt during the first deployment on 2026-10-11 (`AKSCapacityHeavyUsage`). The project owner chose this over retrying or moving everything. The cost is a few milliseconds per database query and cents of data transfer between the regions. The parameter `appLocation` in `infra/main.bicepparam` sets the app's region.
 - **Database size:** the free serverless database is capped at 1 vCore (0.5 minimum), so a busy session can't use up the free allowance twice as fast.
 - **Placeholder image:** the first deployment runs a public ASP.NET sample image on port 8080 until CI pushes the real one. Re-deploying the template with `infra/deploy.ps1` keeps whichever image is live.
 - **Sign-in to Azure services:** the app uses its system-assigned managed identity for SQL (Entra-only, no passwords) and Blob Storage (shared keys turned off).
