@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 
 namespace OreanasOffice.Server.Tests;
@@ -17,5 +18,6 @@ public sealed class AppFactory(string databaseConnectionString, string storageCo
             ["ConnectionStrings:Database"] = databaseConnectionString,
             ["ConnectionStrings:Storage"] = storageConnectionString,
         }));
+        builder.ConfigureTestServices(services => services.AddTestAuth());
     }
 }

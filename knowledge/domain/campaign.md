@@ -14,7 +14,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 | `id` | id | |
 | `name` | string | |
 | `defaultDmUserId` | → [User](/domain/user.md) | New sessions start with this DM |
-| `activeSessionId` | → [Session](/domain/session.md), nullable | At most one active session |
+| `activeSessionId` | → [Session](/domain/session.md), nullable | At most one active session. Not stored as a column: it is the session with `status: active`, and a unique index in the database allows at most one per campaign |
 | `joinCode` | string | Players join with it ([auth decision](/decisions/auth.md)). Six characters without look-alikes (no 0/O, 1/I); any `dm` member can replace it with a new one, which makes the old one stop working |
 | `createdAt` | timestamp | |
 
