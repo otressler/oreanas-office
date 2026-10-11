@@ -63,6 +63,10 @@ New packages on ghcr.io are private. Choose one:
 ### 4. Deploy the template
 
 ```powershell
+# Either fill in .env.prod (copy .env.prod.example in the repository root; gitignored) ...
+Copy-Item .env.prod.example .env.prod   # then edit it
+
+# ... or set the variables in the shell (these win over .env.prod):
 $env:SQL_ENTRA_ADMIN_LOGIN     = az ad signed-in-user show --query userPrincipalName --output tsv
 $env:SQL_ENTRA_ADMIN_OBJECT_ID = az ad signed-in-user show --query id --output tsv
 $env:BUDGET_CONTACT_EMAIL      = 'you@example.com'
@@ -77,7 +81,7 @@ pwsh infra/deploy.ps1 -ResourceGroup rg-ot-oreanasoffice-prod-001 -WhatIf   # pr
 pwsh infra/deploy.ps1 -ResourceGroup rg-ot-oreanasoffice-prod-001
 ```
 
-`deploy.ps1` runs `az deployment group create --name main --resource-group rg-ot-oreanasoffice-prod-001 --parameters infra/main.bicepparam`. If the app already exists, it first sets `CONTAINER_IMAGE` to the image that's live now. **Always deploy with the script**, or set `CONTAINER_IMAGE` yourself. Otherwise a re-deploy switches the app back to the placeholder image (`mcr.microsoft.com/dotnet/samples:aspnetapp`, a public sample that listens on 8080 like our app).
+`deploy.ps1` first reads `.env.prod` if it exists (`-EnvFile <path>` for another file), without overwriting variables already set in the shell, and lists the names it took from the file (never the values). An empty line like `GHCR_TOKEN=` counts as not set. It then runs `az deployment group create --name main --resource-group rg-ot-oreanasoffice-prod-001 --parameters infra/main.bicepparam`. If the app already exists, it first sets `CONTAINER_IMAGE` to the image that's live now. **Always deploy with the script**, or set `CONTAINER_IMAGE` yourself. Otherwise a re-deploy switches the app back to the placeholder image (`mcr.microsoft.com/dotnet/samples:aspnetapp`, a public sample that listens on 8080 like our app).
 
 Keep the outputs. You need `appUrl`, `sqlServerFqdn` and `appName` next. To see them again:
 
