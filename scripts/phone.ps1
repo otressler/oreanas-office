@@ -20,6 +20,9 @@ One-time setup:
   add otressler.de to its DNS rebind protection exceptions.
 - .env in the repository root (gitignored): INWX_USERNAME and INWX_PASSWORD, plus
   INWX_SHARED_SECRET if the INWX account uses 2FA.
+  For sign-in with Google and the site admin, also GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+  and ADMIN_EMAIL (the client needs the redirect URI
+  https://dev.oreanas-office.otressler.de/api/auth/google/callback).
 - Firewall: allow inbound TCP 443 from the home network. On Windows, as admin:
   New-NetFirewallRule -DisplayName "Oreanas Office 443" -Direction Inbound -Protocol TCP -LocalPort 443 -Action Allow -Profile Private
 

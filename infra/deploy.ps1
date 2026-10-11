@@ -3,6 +3,9 @@
 #   $env:SQL_ENTRA_ADMIN_LOGIN     = 'you@example.com'
 #   $env:SQL_ENTRA_ADMIN_OBJECT_ID = '<your Entra object id>'
 #   $env:BUDGET_CONTACT_EMAIL      = 'you@example.com'
+#   $env:GOOGLE_CLIENT_ID          = '<Google OAuth client id>'
+#   $env:GOOGLE_CLIENT_SECRET      = '<Google OAuth client secret>'
+#   $env:ADMIN_EMAIL               = '<the site admin Google address>'
 #   $env:GHCR_USERNAME             = '<github user>'        # optional, private package only
 #   $env:GHCR_TOKEN                = '<PAT with read:packages>'   # optional, private package only
 #   $env:SQL_CLIENT_IP             = '<your public IP>'      # optional
@@ -21,7 +24,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
-foreach ($name in 'SQL_ENTRA_ADMIN_LOGIN', 'SQL_ENTRA_ADMIN_OBJECT_ID', 'BUDGET_CONTACT_EMAIL') {
+foreach ($name in 'SQL_ENTRA_ADMIN_LOGIN', 'SQL_ENTRA_ADMIN_OBJECT_ID', 'BUDGET_CONTACT_EMAIL', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'ADMIN_EMAIL') {
     if (-not [Environment]::GetEnvironmentVariable($name)) { throw "Set `$env:$name first (see infra/README.md)." }
 }
 

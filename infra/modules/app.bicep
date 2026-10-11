@@ -34,6 +34,16 @@ param customDomainName string
 @description('Whether the managed certificate for customDomainName already exists. See infra/deploy.ps1.')
 param customDomainCertificateExists bool
 
+@description('Google OAuth client id. Empty turns Google sign-in off.')
+param googleClientId string
+
+@description('Google OAuth client secret.')
+@secure()
+param googleClientSecret string
+
+@description('The site admin\'s Google address. Empty for no admin.')
+param adminEmail string
+
 resource workspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
   name: logAnalyticsWorkspaceName
 }
@@ -55,6 +65,7 @@ resource environment 'Microsoft.App/managedEnvironments@2025-07-01' = {
 }
 
 var usePrivateRegistry = !empty(ghcrToken)
+var useGoogle = !empty(googleClientId) && !empty(googleClientSecret)
 
 // A managed certificate can only be issued for a host name the app already has, and the app can
 // only bind a certificate that exists. So the first deployment with a custom domain adds the host
@@ -93,14 +104,24 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
             ]
           : []
       }
-      secrets: usePrivateRegistry
-        ? [
-            {
-              name: 'ghcr-token'
-              value: ghcrToken
-            }
-          ]
-        : []
+      secrets: concat(
+        usePrivateRegistry
+          ? [
+              {
+                name: 'ghcr-token'
+                value: ghcrToken
+              }
+            ]
+          : [],
+        useGoogle
+          ? [
+              {
+                name: 'google-client-secret'
+                value: googleClientSecret
+              }
+            ]
+          : []
+      )
       registries: usePrivateRegistry
         ? [
             {
@@ -120,20 +141,42 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
             cpu: json('0.5')
             memory: '1Gi'
           }
-          env: [
-            {
-              name: 'ASPNETCORE_ENVIRONMENT'
-              value: 'Production'
-            }
-            {
-              name: 'ConnectionStrings__Database'
-              value: databaseConnectionString
-            }
-            {
-              name: 'Storage__BlobServiceUri'
-              value: blobServiceUri
-            }
-          ]
+          env: concat(
+            [
+              {
+                name: 'ASPNETCORE_ENVIRONMENT'
+                value: 'Production'
+              }
+              {
+                name: 'ConnectionStrings__Database'
+                value: databaseConnectionString
+              }
+              {
+                name: 'Storage__BlobServiceUri'
+                value: blobServiceUri
+              }
+            ],
+            useGoogle
+              ? [
+                  {
+                    name: 'Authentication__Google__ClientId'
+                    value: googleClientId
+                  }
+                  {
+                    name: 'Authentication__Google__ClientSecret'
+                    secretRef: 'google-client-secret'
+                  }
+                ]
+              : [],
+            empty(adminEmail)
+              ? []
+              : [
+                  {
+                    name: 'Admin__Email'
+                    value: adminEmail
+                  }
+                ]
+          )
           // No probes on purpose: Container Apps then uses its default TCP startup, liveness and
           // readiness probes on port 8080. Never point any probe at /api/health: it answers 503
           // for up to a minute while a paused database resumes, which would hold back or restart

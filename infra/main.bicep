@@ -47,6 +47,16 @@ param customDomainName string = ''
 @description('Whether the app\'s managed certificate already exists. infra/deploy.ps1 sets this; false on the first deployment with a custom domain.')
 param customDomainCertificateExists bool = false
 
+@description('Google OAuth client id for "Sign in with Google". Empty turns Google sign-in off.')
+param googleClientId string = ''
+
+@description('Google OAuth client secret. Stored as a Container Apps secret.')
+@secure()
+param googleClientSecret string = ''
+
+@description('The site admin\'s Google address (Admin:Email). Becomes admin on its first verified Google sign-in.')
+param adminEmail string = ''
+
 var suffix = uniqueString(resourceGroup().id)
 var appName = '${baseName}-office'
 var databaseName = 'OreanasOffice'
@@ -99,6 +109,9 @@ module app 'modules/app.bicep' = {
     blobServiceUri: storage.outputs.blobEndpoint
     customDomainName: customDomainName
     customDomainCertificateExists: customDomainCertificateExists
+    googleClientId: googleClientId
+    googleClientSecret: googleClientSecret
+    adminEmail: adminEmail
   }
 }
 

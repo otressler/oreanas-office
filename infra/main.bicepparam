@@ -18,6 +18,12 @@ param sqlClientIpAddress = readEnvironmentVariable('SQL_CLIENT_IP', '')
 
 param budgetContactEmail = readEnvironmentVariable('BUDGET_CONTACT_EMAIL')
 
+// Sign-in with Google and the site admin (knowledge/decisions/auth.md). infra/deploy.ps1 requires
+// all three, so a re-deploy can't silently switch Google sign-in off.
+param googleClientId = readEnvironmentVariable('GOOGLE_CLIENT_ID', '')
+param googleClientSecret = readEnvironmentVariable('GOOGLE_CLIENT_SECRET', '')
+param adminEmail = readEnvironmentVariable('ADMIN_EMAIL', '')
+
 // Private ghcr.io package: user name + PAT with read:packages. Leave both unset if the package is public.
 param ghcrUsername = readEnvironmentVariable('GHCR_USERNAME', '')
 param ghcrToken = readEnvironmentVariable('GHCR_TOKEN', '')

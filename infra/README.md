@@ -66,6 +66,9 @@ New packages on ghcr.io are private. Choose one:
 $env:SQL_ENTRA_ADMIN_LOGIN     = az ad signed-in-user show --query userPrincipalName --output tsv
 $env:SQL_ENTRA_ADMIN_OBJECT_ID = az ad signed-in-user show --query id --output tsv
 $env:BUDGET_CONTACT_EMAIL      = 'you@example.com'
+$env:GOOGLE_CLIENT_ID          = '<Google OAuth client id>'                  # Google Cloud Console → Google Auth Platform → Clients
+$env:GOOGLE_CLIENT_SECRET      = '<Google OAuth client secret>'
+$env:ADMIN_EMAIL               = '<your Google address>'                     # becomes site admin on its first Google sign-in
 $env:SQL_CLIENT_IP             = (Invoke-RestMethod https://api.ipify.org)   # lets you run step 5 from this machine
 $env:GHCR_USERNAME             = 'otressler'                                 # private package only
 $env:GHCR_TOKEN                = '<classic PAT with read:packages>'          # private package only
@@ -226,5 +229,8 @@ In the portal: the database's Overview shows "Free monthly vCore amount" and its
 | `ASPNETCORE_ENVIRONMENT` | `Production` |
 | `ConnectionStrings__Database` | `Server=tcp:<server>.database.windows.net,1433;Database=OreanasOffice;Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;Connect Timeout=30` (no password) |
 | `Storage__BlobServiceUri` | `https://<account>.blob.core.windows.net/` (the app creates the `dataprotection` container if it's missing) |
+| `Authentication__Google__ClientId` | The Google OAuth client id. Its redirect URIs must include `https://oreanas-office.otressler.de/api/auth/google/callback` |
+| `Authentication__Google__ClientSecret` | Reference to the Container Apps secret `google-client-secret` |
+| `Admin__Email` | The site admin's Google address ([auth](../knowledge/decisions/auth.md)) |
 
 `ConnectionStrings__Storage` and `AZURE_CLIENT_ID` are deliberately not set. The app uses `DefaultAzureCredential` with the system-assigned identity.

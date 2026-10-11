@@ -30,6 +30,10 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__Database: "Server=sql,1433;Database=OreanasOffice;User Id=sa;Password=Local_Dev_Only_1;TrustServerCertificate=True"
       ConnectionStrings__Storage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      # From .env (never commit). Without them Google sign-in is off and nobody is admin.
+      Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+      Authentication__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
+      Admin__Email: ${ADMIN_EMAIL:-}
     ports:
       - "8080:8080"
 
