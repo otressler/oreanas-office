@@ -22,8 +22,11 @@ public sealed class AppFixture : IAsyncLifetime
     // The app against the healthy containers. Tests may create more with CreateApp.
     public AppFactory App { get; private set; } = null!;
 
-    public AppFactory CreateApp(string? databaseConnectionString = null) =>
-        new(databaseConnectionString ?? DatabaseConnectionString, StorageConnectionString, WebRoot);
+    public AppFactory CreateApp(
+        string? databaseConnectionString = null,
+        IReadOnlyDictionary<string, string?>? configuration = null,
+        string environment = AppFactory.TestingEnvironment) =>
+        new(databaseConnectionString ?? DatabaseConnectionString, StorageConnectionString, WebRoot, configuration, environment);
 
     public async Task InitializeAsync()
     {

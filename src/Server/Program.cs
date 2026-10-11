@@ -38,6 +38,11 @@ app.MapCampaignEndpoints();
 app.MapCharacterEndpoints();
 app.MapSessionEndpoints();
 
+if (app.Environment.IsEnvironment(TestingEndpoints.Environment))
+{
+    app.MapTestingEndpoints();
+}
+
 app.Run();
 
 public partial class Program;
