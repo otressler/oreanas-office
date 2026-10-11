@@ -54,7 +54,6 @@ Phase 1 of the roadmap is done after stage 4, phase 2 after stage 6, phase 3 aft
 - **Shared files belong to the integrator:** `Program.cs`, the `DbContext`, EF migrations, `package.json` and lock files, the generated API types, the app router and the editor's tool registry. Each backend feature registers itself through its own extension method (`builder.AddTableHub()`), so wiring it in is a one-line merge.
 - **Migrations are created only by the integrator**, once, after the lanes are merged. Two worktrees generating migrations always conflict in the model snapshot.
 - **Packages are added in the contract step**, so lanes never touch lock files.
-- **Releases stay backward compatible once production is confirmed** (after the stage 1 gate): additive API and hub changes, expand-then-contract migrations, versioned stored documents ([backward compatibility](/decisions/backward-compatibility.md)). Lane briefs say so, and the stage review checks it.
 - **Lanes don't edit `knowledge/`.** If a lane finds a gap in the spec, it says so in its report, and the integrator asks the project owner (the rule in the project's `CLAUDE.md`: code and knowledge must not silently disagree).
 - **Only one agent at a time may call the Foundry image deployment.** It allows 2 requests per minute, and rejected requests count ([image generation approach](/decisions/image-generation-approach.md)). Lanes test against a fake image client.
 
@@ -135,7 +134,6 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 - [Sessions](/domain/session.md): create, choose the DM, make active (only one per campaign), end.
 - Landing page: your campaigns, and the active session of each.
 - Shared helpers: squares ↔ meters and locale-aware formatting.
-- Compatibility safeguards: the server announces the oldest app version it supports and older apps must reload; CI fails on breaking OpenAPI changes against `main` ([backward compatibility](/decisions/backward-compatibility.md)).
 
 **Order**
 

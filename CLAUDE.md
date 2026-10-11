@@ -15,8 +15,6 @@ The app uses meters, never feet. One square is 1.5 m. Store distances and speeds
 
 There is only one deployed environment: production, which scales to zero between sessions. Development happens locally. See `knowledge/decisions/hosting.md`. Never assume the server is always running: nothing important lives only in memory, and nothing polls the database.
 
-Once the project owner has confirmed production (the stage 1 gate), every change must stay backward compatible with older app versions still open on devices and with existing data. See `knowledge/decisions/backward-compatibility.md`.
-
 ## Project knowledge lives in `knowledge/`
 
 `knowledge/` is an Open Knowledge Format (OKF v0.2) bundle that holds the spec: domain model, features, game rules and decisions.
