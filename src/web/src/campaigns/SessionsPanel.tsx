@@ -6,6 +6,7 @@ import type { Campaign, Member, Session } from '../api/types'
 import {
   Badge,
   Button,
+  ButtonLink,
   ErrorAlert,
   LoadError,
   Loading,
@@ -17,6 +18,7 @@ import { formatDate, todayIso } from '../lib/dates'
 import { de } from '../text/de'
 import { campaignKeys, useSessions } from './queries'
 import { limits } from '../lib/limits'
+import { EndEncounterButton } from '../encounters/EndEncounterButton'
 
 /**
  * Game nights of the campaign. `dm` members create them; the session DM or the
@@ -190,6 +192,29 @@ function SessionRow({
       <span className="text-sm text-dim">
         {formatDate(session.date)} · {de.sessions.dmName(session.dmDisplayName)}
       </span>
+      {session.activeEncounter && (
+        <div className="flex flex-col gap-2 border-l-2 border-candle pl-3">
+          <span className="text-xs font-semibold tracking-wide text-candle uppercase">
+            {de.encounters.running}
+          </span>
+          <span className="text-parchment">{session.activeEncounter.name}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <ButtonLink
+              variant="primary"
+              to={`/kampagnen/${campaignId}/kampf/${session.activeEncounter.id}`}
+            >
+              {de.encounters.toFight}
+            </ButtonLink>
+            {session.isSessionDm && (
+              <EndEncounterButton
+                campaignId={campaignId}
+                sessionId={session.id}
+                encounterId={session.activeEncounter.id}
+              />
+            )}
+          </div>
+        </div>
+      )}
       {session.canManage && open && (
         <div className="flex flex-wrap gap-2">
           {session.status === 'planned' && (

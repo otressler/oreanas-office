@@ -3,6 +3,7 @@
 // to it has its own sign-in (like its own cookie), so a spec can play several
 // people at once. Behaviour follows the API contract in src/api/schema.d.ts.
 import { randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import type { BrowserContext, Request, Route } from '@playwright/test'
 import type { components } from '../src/api/schema.js'
 
@@ -53,6 +54,42 @@ interface Session {
   createdByUserId: string
 }
 
+interface CreatureType {
+  id: string
+  campaignId: string
+  name: string
+  size: S['CreatureSize']
+  speedSquares: number
+}
+
+interface Token {
+  id: string
+  kind: S['TokenKind']
+  characterId: string | null
+  creatureTypeId: string | null
+  label: string
+  x: number
+  y: number
+  elevation: number
+}
+
+interface Encounter {
+  id: string
+  campaignId: string
+  sessionId: string | null
+  name: string
+  status: S['EncounterStatus']
+  map: S['BoardMap']
+  tokens: Token[]
+  createdAt: string
+}
+
+/** Reads one of the app's sample maps (src/samples/maps), e.g. "gorge-crossing". */
+export function sampleMap(id: string): S['ImportMapRequest'] {
+  const file = new URL(`../src/samples/maps/${id}.json`, import.meta.url)
+  return JSON.parse(readFileSync(file, 'utf8')) as S['ImportMapRequest']
+}
+
 /** A reply: status and JSON body (none for 204). */
 type Reply = [number, unknown?]
 
@@ -66,6 +103,8 @@ export class MockBackend {
   readonly campaigns: Campaign[] = []
   readonly characters: Character[] = []
   readonly sessions: Session[] = []
+  readonly creatureTypes: CreatureType[] = []
+  readonly encounters: Encounter[] = []
   googleEnabled = false
   private readonly signedIn = new Map<BrowserContext, string | null>()
 
@@ -107,6 +146,53 @@ export class MockBackend {
     }
     this.campaigns.push(campaign)
     return campaign
+  }
+
+  addMember(campaign: Campaign, user: User, role: S['CampaignRole'] = 'player') {
+    campaign.members.push({ userId: user.id, role, joinedAt: new Date().toISOString() })
+  }
+
+  addCharacter(campaign: Campaign, owner: User, name: string, fields: Partial<Character> = {}) {
+    const character: Character = {
+      id: randomUUID(),
+      campaignId: campaign.id,
+      ownerUserId: owner.id,
+      name,
+      size: 'medium',
+      speedSquares: 6,
+      ...fields,
+    }
+    this.characters.push(character)
+    return character
+  }
+
+  addSession(campaign: Campaign, dm: User, status: S['SessionStatus'] = 'active'): Session {
+    const session: Session = {
+      id: randomUUID(),
+      campaignId: campaign.id,
+      title: 'Sitzung 1',
+      date: new Date().toISOString().slice(0, 10),
+      status,
+      dmUserId: dm.id,
+      createdByUserId: dm.id,
+    }
+    this.sessions.push(session)
+    return session
+  }
+
+  /** Imports a map file; with `start`, starts it in that session with characters placed. */
+  addEncounter(
+    campaign: Campaign,
+    file: S['ImportMapRequest'],
+    start?: { session: Session; characters: S['CharacterPlacement'][] },
+  ): Encounter {
+    const result = this.importMap(campaign, file)
+    if (!('id' in result)) throw new Error(`Import failed: ${JSON.stringify(result)}`)
+    if (start) {
+      const reply = this.startEncounter(campaign, start.session, result, start.characters)
+      if (reply[0] !== 200) throw new Error(`Start failed: ${JSON.stringify(reply)}`)
+    }
+    return result
   }
 
   /** Signs a browser context in as `user`, as if it had the cookie already. */
@@ -335,6 +421,66 @@ export class MockBackend {
       this.sessions.push(session)
       return [201, this.sessionResponse(session, campaign, me.id)]
     }
+    if (path === `${base}/encounters` && method === 'GET') {
+      if (!isDm) return [403]
+      const order: S['EncounterStatus'][] = ['active', 'ready', 'draft', 'ended']
+      return [
+        200,
+        this.encounters
+          .filter((e) => e.campaignId === campaign.id)
+          .sort(
+            (a, b) =>
+              order.indexOf(a.status) - order.indexOf(b.status) ||
+              b.createdAt.localeCompare(a.createdAt),
+          )
+          .map((e) => this.encounterSummary(e)),
+      ]
+    }
+    if (path === `${base}/encounters/import` && method === 'POST') {
+      if (!isDm) return [403]
+      const result = this.importMap(campaign, body as unknown as S['ImportMapRequest'])
+      return 'id' in result ? [201, this.encounterSummary(result)] : result
+    }
+    if ((params = match(`${base}/encounters/:encounterId/board`)) && method === 'GET') {
+      const encounter = this.encounters.find(
+        (e) => e.id === params!.encounterId && e.campaignId === campaign.id,
+      )
+      // Players see only the running fight of the running session.
+      const visible =
+        encounter &&
+        (isDm ||
+          (encounter.status === 'active' &&
+            encounter.sessionId === this.activeSession(campaign)?.id))
+      if (!visible) return [404]
+      return [200, this.boardResponse(encounter, me.id)]
+    }
+    if (
+      (params = match(`${base}/sessions/:sessionId/encounters/:encounterId/:action`)) &&
+      method === 'POST'
+    ) {
+      const session = this.sessions.find(
+        (s) => s.id === params!.sessionId && s.campaignId === campaign.id,
+      )
+      if (!session) return [404]
+      if (session.dmUserId !== me.id) return [403]
+      const encounter = this.encounters.find(
+        (e) => e.id === params!.encounterId && e.campaignId === campaign.id,
+      )
+      if (!encounter) return [404]
+      if (params.action === 'start') {
+        const characters = (body.characters ?? []) as S['CharacterPlacement'][]
+        return this.startEncounter(campaign, session, encounter, characters)
+      }
+      if (params.action === 'end') {
+        if (encounter.sessionId !== session.id) return [404]
+        if (encounter.status !== 'active' && encounter.status !== 'ended') {
+          return error('encounterNotActive', undefined, 409)
+        }
+        encounter.status = 'ended'
+        return [200, this.encounterSummary(encounter)]
+      }
+      return [404]
+    }
     if ((params = match(`${base}/sessions/:sessionId/:action`))) {
       const session = this.sessions.find(
         (s) => s.id === params!.sessionId && s.campaignId === campaign.id,
@@ -350,6 +496,9 @@ export class MockBackend {
         session.status = 'active'
       } else if (params.action === 'end' && method === 'POST') {
         session.status = 'ended'
+        // Ending a session ends its fight.
+        const fight = this.activeEncounter(session)
+        if (fight) fight.status = 'ended'
       } else if (params.action === 'dm' && method === 'PUT') {
         if (session.status === 'ended') return error('sessionEnded', undefined, 409)
         const userId = String(body.userId)
@@ -362,6 +511,230 @@ export class MockBackend {
     }
 
     return [404]
+  }
+
+  // ---- Encounters --------------------------------------------------------------
+
+  /**
+   * The import file (knowledge/domain/battle-map.md): the main rules with the
+   * server's error codes and fields, not every check.
+   */
+  private importMap(campaign: Campaign, file: S['ImportMapRequest']): Encounter | Reply {
+    const name = String(file.name ?? '').trim()
+    if (!name) return error('nameInvalid', 'name')
+    for (const side of ['width', 'height'] as const) {
+      const value = file[side]
+      if (!Number.isInteger(value) || value < 1 || value > 40) return error('mapSizeInvalid', side)
+    }
+    const { width, height } = file
+    const layoutFile = file.layout ?? { cells: [] }
+    if ((layoutFile.schemaVersion ?? 1) !== 1) {
+      return error('layoutVersionUnsupported', 'layout.schemaVersion')
+    }
+    const inside = (x: number, y: number) => x >= 0 && y >= 0 && x < width && y < height
+    const seen = new Set<string>()
+    const cells: S['LayoutCell'][] = []
+    for (const [i, cell] of (layoutFile.cells ?? []).entries()) {
+      const key = `${cell.x},${cell.y}`
+      if (!inside(cell.x, cell.y) || seen.has(key))
+        return error('cellInvalid', `layout.cells[${i}]`)
+      seen.add(key)
+      cells.push({ x: cell.x, y: cell.y, terrain: cell.terrain, elevation: cell.elevation ?? 0 })
+    }
+    const features: S['LayoutFeature'][] = []
+    for (const [i, f] of (layoutFile.features ?? []).entries()) {
+      const fits = f.w >= 1 && f.h >= 1 && inside(f.x, f.y) && inside(f.x + f.w - 1, f.y + f.h - 1)
+      if (!f.kind || !fits) return error('featureInvalid', `layout.features[${i}]`)
+      features.push({
+        id: f.id ?? `f${i + 1}`,
+        kind: f.kind,
+        label: f.label ?? f.kind,
+        x: f.x,
+        y: f.y,
+        w: f.w,
+        h: f.h,
+        elevation: f.elevation ?? 0,
+        blocksMovement: f.blocksMovement ?? false,
+      })
+    }
+    const entrances: S['LayoutEntrance'][] = (layoutFile.entrances ?? []).map((e, i) => ({
+      id: e.id ?? `e${i + 1}`,
+      kind: e.kind,
+      label: e.label ?? e.kind,
+      cells: e.cells,
+    }))
+    const encounter: Encounter = {
+      id: randomUUID(),
+      campaignId: campaign.id,
+      sessionId: null,
+      name,
+      status: 'ready',
+      map: {
+        id: randomUUID(),
+        name,
+        width,
+        height,
+        layout: { schemaVersion: 1, cells, features, entrances },
+        backgroundUrl: null,
+      },
+      tokens: [],
+      createdAt: new Date().toISOString(),
+    }
+
+    const types = this.creatureTypes.filter((t) => t.campaignId === campaign.id)
+    const newTypes: CreatureType[] = []
+    const counts = new Map<string, number>()
+    for (const [i, creature] of (file.creatures ?? []).entries()) {
+      const typeName = String(creature.type ?? '').trim()
+      let type = [...types, ...newTypes].find(
+        (t) => t.name.toLowerCase() === typeName.toLowerCase(),
+      )
+      if (!type) {
+        if (!typeName || !creature.size || creature.speedMeters == null) {
+          return error('creatureTypeInvalid', `creatures[${i}]`)
+        }
+        type = {
+          id: randomUUID(),
+          campaignId: campaign.id,
+          name: typeName,
+          size: creature.size,
+          speedSquares: Math.floor(creature.speedMeters / 1.5 + 1e-9),
+        }
+        newTypes.push(type)
+      }
+      const sizes = [...this.creatureTypes, ...newTypes]
+      if (!this.canPlace(encounter, type.size, creature.x, creature.y, sizes)) {
+        return error('placementInvalid', `creatures[${i}]`)
+      }
+      const number = (counts.get(type.id) ?? 0) + 1
+      counts.set(type.id, number)
+      encounter.tokens.push({
+        id: randomUUID(),
+        kind: 'creature',
+        characterId: null,
+        creatureTypeId: type.id,
+        label: creature.label ?? `${type.name} ${number}`,
+        x: creature.x,
+        y: creature.y,
+        elevation: elevation(encounter.map, type.size, creature.x, creature.y),
+      })
+    }
+    this.creatureTypes.push(...newTypes)
+    this.encounters.push(encounter)
+    return encounter
+  }
+
+  private startEncounter(
+    campaign: Campaign,
+    session: Session,
+    encounter: Encounter,
+    placements: S['CharacterPlacement'][],
+  ): Reply {
+    if (session.status !== 'active') return error('sessionNotActive', undefined, 409)
+    if (encounter.status !== 'ready') return error('encounterNotReady', undefined, 409)
+    if (this.activeEncounter(session)) return error('anotherEncounterActive', undefined, 409)
+    const placed: Encounter = { ...encounter, tokens: [...encounter.tokens] }
+    for (const [i, placement] of placements.entries()) {
+      const character = this.characters.find(
+        (c) => c.id === placement.characterId && c.campaignId === campaign.id,
+      )
+      const twice = placements.findIndex((p) => p.characterId === placement.characterId) !== i
+      if (!character || twice) return error('characterInvalid', `characters[${i}]`)
+      if (!this.canPlace(placed, character.size, placement.x, placement.y, this.creatureTypes)) {
+        return error('placementInvalid', `characters[${i}]`)
+      }
+      placed.tokens.push({
+        id: randomUUID(),
+        kind: 'character',
+        characterId: character.id,
+        creatureTypeId: null,
+        label: character.name,
+        x: placement.x,
+        y: placement.y,
+        elevation: elevation(encounter.map, character.size, placement.x, placement.y),
+      })
+    }
+    // All or nothing, like the server's transaction.
+    encounter.tokens = placed.tokens
+    encounter.status = 'active'
+    encounter.sessionId = session.id
+    return [200, this.encounterSummary(encounter)]
+  }
+
+  /** The placement rule (knowledge/domain/encounter.md), as board/geometry.ts has it. */
+  private canPlace(
+    encounter: Encounter,
+    size: S['CreatureSize'],
+    x: number,
+    y: number,
+    types: CreatureType[],
+  ): boolean {
+    const cells = footprint(size, x, y)
+    if (!cells.every(([cx, cy]) => walkable(encounter.map, cx, cy))) return false
+    const taken = new Set(
+      encounter.tokens.flatMap((token) =>
+        footprint(this.tokenStats(token, types).size, token.x, token.y).map(
+          ([tx, ty]) => `${tx},${ty}`,
+        ),
+      ),
+    )
+    return cells.every(([cx, cy]) => !taken.has(`${cx},${cy}`))
+  }
+
+  /** Size and speed come from the character or the creature type. */
+  private tokenStats(token: Token, types = this.creatureTypes) {
+    const source =
+      token.kind === 'character'
+        ? this.characters.find((c) => c.id === token.characterId)
+        : types.find((t) => t.id === token.creatureTypeId)
+    return { size: source!.size, speedSquares: source!.speedSquares }
+  }
+
+  private activeEncounter(session: Session): Encounter | undefined {
+    return this.encounters.find((e) => e.sessionId === session.id && e.status === 'active')
+  }
+
+  private activeEncounterSummary(session: Session): S['ActiveEncounterSummary'] | null {
+    const encounter = this.activeEncounter(session)
+    return encounter ? { id: encounter.id, name: encounter.name } : null
+  }
+
+  private encounterSummary(encounter: Encounter): S['EncounterSummaryResponse'] {
+    return {
+      id: encounter.id,
+      name: encounter.name,
+      status: encounter.status,
+      battleMapId: encounter.map.id,
+      width: encounter.map.width,
+      height: encounter.map.height,
+      creatureCount: encounter.tokens.filter((t) => t.kind === 'creature').length,
+      sessionId: encounter.sessionId,
+      createdAt: encounter.createdAt,
+    }
+  }
+
+  private boardResponse(encounter: Encounter, userId: string): S['BoardStateResponse'] {
+    const session = this.sessions.find((s) => s.id === encounter.sessionId)
+    const campaignCharacters = this.characters.filter((c) => c.campaignId === encounter.campaignId)
+    return {
+      encounterId: encounter.id,
+      campaignId: encounter.campaignId,
+      sessionId: encounter.sessionId,
+      name: encounter.name,
+      status: encounter.status,
+      map: encounter.map,
+      tokens: encounter.tokens.map((token) => {
+        const character = campaignCharacters.find((c) => c.id === token.characterId)
+        return {
+          ...token,
+          ...this.tokenStats(token),
+          ownerUserId: character?.ownerUserId ?? null,
+          // Ring colours follow the order characters joined the campaign.
+          colorIndex: character ? campaignCharacters.indexOf(character) : null,
+        }
+      }),
+      isSessionDm: encounter.status === 'active' && session?.dmUserId === userId,
+    }
   }
 
   // ---- Helpers ---------------------------------------------------------------
@@ -421,7 +794,7 @@ export class MockBackend {
             date: active.date,
             dmUserId: active.dmUserId,
             dmDisplayName: this.displayName(active.dmUserId),
-            activeEncounter: null,
+            activeEncounter: this.activeEncounterSummary(active),
           }
         : null,
     }
@@ -455,9 +828,50 @@ export class MockBackend {
       dmDisplayName: this.displayName(session.dmUserId),
       canManage: canManage(session, campaign, userId),
       isSessionDm: session.dmUserId === userId,
-      activeEncounter: null,
+      activeEncounter: this.activeEncounterSummary(session),
     }
   }
+}
+
+const FOOTPRINT: Record<S['CreatureSize'], number> = {
+  tiny: 1,
+  small: 1,
+  medium: 1,
+  large: 2,
+  huge: 3,
+  gargantuan: 4,
+}
+
+/** Every cell a token of this size covers with its top-left corner at (x, y). */
+function footprint(size: S['CreatureSize'], x: number, y: number): [number, number][] {
+  const n = FOOTPRINT[size]
+  const cells: [number, number][] = []
+  for (let dy = 0; dy < n; dy++) for (let dx = 0; dx < n; dx++) cells.push([x + dx, y + dy])
+  return cells
+}
+
+/** The topmost feature covering a cell: later features lie on top. */
+function featureAt(map: S['BoardMap'], x: number, y: number) {
+  return map.layout.features.findLast((f) => x >= f.x && y >= f.y && x < f.x + f.w && y < f.y + f.h)
+}
+
+function walkable(map: S['BoardMap'], x: number, y: number): boolean {
+  if (x < 0 || y < 0 || x >= map.width || y >= map.height) return false
+  const feature = featureAt(map, x, y)
+  if (feature) return !feature.blocksMovement
+  const terrain = map.layout.cells.find((c) => c.x === x && c.y === y)?.terrain ?? 'void'
+  return terrain !== 'void' && terrain !== 'wall'
+}
+
+/** A placed token's elevation: the highest under its footprint, counting bridges. */
+function elevation(map: S['BoardMap'], size: S['CreatureSize'], x: number, y: number): number {
+  return Math.max(
+    ...footprint(size, x, y).map(([cx, cy]) => {
+      const feature = featureAt(map, cx, cy)
+      if (feature && !feature.blocksMovement) return feature.elevation
+      return map.layout.cells.find((c) => c.x === cx && c.y === cy)?.elevation ?? 0
+    }),
+  )
 }
 
 function error(code: ErrorCode, field?: string, status = 400): Reply {
