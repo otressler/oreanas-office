@@ -7,7 +7,8 @@ namespace OreanasOffice.Server.Maps;
 // be left out of the file; the import fills them in:
 //   SchemaVersion → 1, Elevation → 0, Features and Entrances → empty,
 //   feature Id → "f1", "f2"…, entrance Id → "e1"…, Label → Kind, BlocksMovement → false.
-// Width and Height are 1–40 (MapSizeInvalid). Cells outside the grid or listed twice
+// Width and Height are 1–40 (MapSizeInvalid). Texts longer than their column (scene,
+// kinds, labels) fail with TextTooLong. Cells outside the grid or listed twice
 // fail with CellInvalid, and so on; the error's Field is the JSON path of the
 // offending entry, e.g. "layout.cells[12]" or "creatures[0]".
 public record ImportMapRequest(

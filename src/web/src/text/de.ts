@@ -248,6 +248,7 @@ export const de = {
     notADm: 'Diese Person gehört nicht zur Spielleitung der Kampagne.',
     anotherSessionActive: 'In dieser Kampagne läuft schon eine Sitzung. Beende sie zuerst.',
     sessionEnded: 'Diese Sitzung ist schon beendet.',
+    textTooLong: 'Ein Text in der Datei ist zu lang.',
     mapSizeInvalid: 'Eine Karte ist 1 bis 40 Felder breit und hoch.',
     layoutVersionUnsupported: 'Diese Kartendatei stammt aus einer neueren Version der App.',
     cellInvalid: 'Ein Feld liegt außerhalb der Karte oder steht doppelt in der Datei.',

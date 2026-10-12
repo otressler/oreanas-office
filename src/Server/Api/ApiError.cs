@@ -35,6 +35,7 @@ public enum ApiErrorCode
     SessionEnded,
 
     // Map imports. Field is the JSON path of the offending entry, e.g. "layout.cells[12]".
+    TextTooLong,
     MapSizeInvalid,
     LayoutVersionUnsupported,
     CellInvalid,
