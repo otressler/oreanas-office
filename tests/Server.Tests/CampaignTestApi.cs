@@ -99,12 +99,22 @@ public static class CampaignTestApi
         return await response.ReadAsync<EncounterSummaryResponse>(HttpStatusCode.Created);
     }
 
-    public static Task<HttpResponseMessage> StartEncounterAsync(
-        this Person dm, Guid campaignId, Guid sessionId, Guid encounterId, params CharacterPlacement[] characters) =>
-        dm.Client.PostAsJsonAsync(
+    // A fight starts with at least one character. Without placements, the DM brings a
+    // new character of their own and puts it at (0, 1), free on TestMaps.Gorge.
+    public static async Task<HttpResponseMessage> StartEncounterAsync(
+        this Person dm, Guid campaignId, Guid sessionId, Guid encounterId, params CharacterPlacement[] characters)
+    {
+        if (characters.Length == 0)
+        {
+            var standIn = await dm.CreateCharacterAsync(campaignId, "Wache");
+            characters = [new CharacterPlacement(standIn.Id, 0, 1)];
+        }
+
+        return await dm.Client.PostAsJsonAsync(
             $"/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/{encounterId}/start",
             new StartEncounterRequest([.. characters]),
             Json);
+    }
 
     public static Task<HttpResponseMessage> EndEncounterAsync(this Person dm, Guid campaignId, Guid sessionId, Guid encounterId) =>
         dm.Client.PostAsync($"/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/{encounterId}/end", null);

@@ -33,7 +33,7 @@ public static class CharacterEndpoints
         var characters = await Responses(
                 db.Characters.Where(c => c.CampaignId == campaignId).OrderBy(c => c.Name), userId, isDm)
             .ToListAsync(cancellationToken);
-        return TypedResults.Ok(characters);
+        return TypedResults.Ok(await WithColorsAsync(db, campaignId, characters, cancellationToken));
     }
 
     // Owned by the signed-in user.
@@ -125,9 +125,11 @@ public static class CharacterEndpoints
         AppDbContext db, Guid campaignId, Guid characterId, Guid userId, CancellationToken cancellationToken)
     {
         var isDm = await db.IsCampaignDmAsync(campaignId, userId, cancellationToken);
-        return await Responses(db.Characters.Where(c => c.Id == characterId), userId, isDm).SingleAsync(cancellationToken);
+        var character = await Responses(db.Characters.Where(c => c.Id == characterId), userId, isDm).SingleAsync(cancellationToken);
+        return (await WithColorsAsync(db, campaignId, [character], cancellationToken))[0];
     }
 
+    // ColorIndex is filled in afterwards (WithColorsAsync).
     private static IQueryable<CharacterResponse> Responses(IQueryable<Character> characters, Guid userId, bool isDm) =>
         characters.Select(c => new CharacterResponse(
             c.Id,
@@ -137,5 +139,12 @@ public static class CharacterEndpoints
             c.Size,
             c.SpeedSquares,
             isDm || c.OwnerUserId == userId,
-            c.Campaign.Characters.Count(o => o.CreatedAt < c.CreatedAt)));
+            0));
+
+    private static async Task<List<CharacterResponse>> WithColorsAsync(
+        AppDbContext db, Guid campaignId, List<CharacterResponse> characters, CancellationToken cancellationToken)
+    {
+        var colors = await db.CharacterColorIndexesAsync(campaignId, cancellationToken);
+        return [.. characters.Select(c => c with { ColorIndex = colors[c.Id] })];
+    }
 }

@@ -92,10 +92,10 @@ test('the DM starts a fight on the gorge crossing and a player lands on it', asy
     'Ilse',
   ])
 
-  // Oreana ends the fight; Mira sees it's over after a reload.
+  // Oreana ends the fight; after a reload Mira sees it isn't running any more.
   await oreana.getByRole('button', { name: 'Kampf beenden' }).click()
   await oreana.getByRole('button', { name: 'Ja, beenden' }).click()
   await expect(oreana).toHaveURL(/\/kampagnen\/[^/]+$/)
   await mira.reload()
-  await expect(mira.getByText('Dieser Kampf ist vorbei')).toBeVisible()
+  await expect(mira.getByText('Dieser Kampf läuft gerade nicht')).toBeVisible()
 })

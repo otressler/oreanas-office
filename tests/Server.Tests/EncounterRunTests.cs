@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OreanasOffice.Server.Api;
@@ -153,7 +154,7 @@ public sealed class EncounterRunTests(AppFixture fixture)
     }
 
     [Fact]
-    public async Task Characters_must_belong_to_the_campaign_and_take_part_once()
+    public async Task At_least_one_character_takes_part_and_each_belongs_to_the_campaign_once()
     {
         var table = await fixture.App.CreateEncounterTableAsync();
         var thorin = await table.Player.CreateCharacterAsync(table.CampaignId, "Thorin");
@@ -170,7 +171,12 @@ public sealed class EncounterRunTests(AppFixture fixture)
             table.Encounter.Id,
             new CharacterPlacement(thorin.Id, 0, 0),
             new CharacterPlacement(thorin.Id, 1, 0));
+        var nobody = await table.Dm.Client.PostAsJsonAsync(
+            $"/api/campaigns/{table.CampaignId}/sessions/{table.Session.Id}/encounters/{table.Encounter.Id}/start",
+            new StartEncounterRequest([]),
+            Json);
 
+        await nobody.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.CharacterInvalid, "characters");
         await foreign.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.CharacterInvalid, "characters[0]");
         await unknown.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.CharacterInvalid, "characters[0]");
         await twice.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.CharacterInvalid, "characters[1]");

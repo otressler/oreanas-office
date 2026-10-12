@@ -265,7 +265,8 @@ public static class MapImport
             }
 
             var id = NullIfEmpty(entrance.Id);
-            var label = NullIfEmpty(entrance.Label) ?? entrance.Kind.ToString().ToLowerInvariant();
+            // No label stays empty: the board names the kind in German itself.
+            var label = NullIfEmpty(entrance.Label) ?? "";
             if (label.Length > TextMaxLength || id?.Length > TextMaxLength)
             {
                 return new ApiError(ApiErrorCode.TextTooLong, field);

@@ -129,7 +129,7 @@ public sealed class MapImportTests
             ],
             map.Layout.Features);
         Assert.Equal(
-            [("e2", EntranceKind.Both, "both"), ("e1", EntranceKind.Exit, "Pfad")],
+            [("e2", EntranceKind.Both, ""), ("e1", EntranceKind.Exit, "Pfad")],
             map.Layout.Entrances.Select(e => (e.Id, e.Kind, e.Label)));
         Assert.Equal([0, 4], map.Layout.Entrances[0].Cells.Single());
     }

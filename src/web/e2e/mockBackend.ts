@@ -560,7 +560,7 @@ export class MockBackend {
     const entrances: S['LayoutEntrance'][] = (layoutFile.entrances ?? []).map((e, i) => ({
       id: e.id ?? `e${i + 1}`,
       kind: e.kind,
-      label: e.label ?? e.kind,
+      label: e.label ?? '',
       cells: e.cells,
     }))
     const encounter: Encounter = {
@@ -633,6 +633,7 @@ export class MockBackend {
     if (session.status !== 'active') return error('sessionNotActive', undefined, 409)
     if (encounter.status !== 'ready') return error('encounterNotReady', undefined, 409)
     if (this.activeEncounter(session)) return error('anotherEncounterActive', undefined, 409)
+    if (placements.length === 0) return error('characterInvalid', 'characters')
     const placed: Encounter = { ...encounter, tokens: [...encounter.tokens] }
     for (const [i, placement] of placements.entries()) {
       const character = this.characters.find(

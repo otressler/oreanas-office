@@ -16,7 +16,7 @@ const text = {
   running: 'Kampf läuft',
   end: 'Kampf beenden',
   endConfirm: 'Ja, beenden',
-  over: 'Dieser Kampf ist vorbei',
+  notRunning: 'Dieser Kampf läuft gerade nicht',
   homeTitle: 'Deine Kampagnen',
   fileLabel: 'Datei wählen',
   cellInvalid: 'Ein Feld liegt außerhalb der Karte oder steht doppelt in der Datei.',
@@ -128,7 +128,10 @@ test('a player opening the app lands on the running fight', async ({ page, conte
   await expect(page.getByRole('link', { name: text.toFight })).toBeVisible()
 })
 
-test('the DM ends the fight; afterwards players see it is over', async ({ page, context }) => {
+test('the DM ends the fight; afterwards players see it isn’t running', async ({
+  page,
+  context,
+}) => {
   const { oreana, mira, campaign, encounter } = runningFight()
   backend.signIn(context, oreana)
 
@@ -147,5 +150,5 @@ test('the DM ends the fight; afterwards players see it is over', async ({ page, 
 
   backend.signIn(context, mira)
   await page.goto(`/kampagnen/${campaign.id}/kampf/${encounter.id}`)
-  await expect(page.getByRole('heading', { name: text.over })).toBeVisible()
+  await expect(page.getByRole('heading', { name: text.notRunning })).toBeVisible()
 })

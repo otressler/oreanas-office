@@ -2,7 +2,8 @@
 import { useMemo, useState } from 'react'
 import type { BoardState } from '../../api/types'
 import { Board } from '../Board'
-import { buildGrid, canPlace, cellKey } from '../geometry'
+import { freeCells } from '../../encounters/placement'
+import { buildGrid } from '../geometry'
 
 const fixtures = import.meta.glob<{ default: unknown }>('../fixtures/*.board.json', {
   eager: true,
@@ -13,22 +14,16 @@ function fixture(name: string): BoardState {
   return (entry ?? Object.entries(fixtures)[0]!)[1].default as BoardState
 }
 
-function freeCells(board: BoardState): Set<string> {
-  const grid = buildGrid(board.map)
-  const cells = new Set<string>()
-  for (let y = 0; y < board.map.height; y++)
-    for (let x = 0; x < board.map.width; x++)
-      if (canPlace(grid, board.tokens, 'medium', x, y)) cells.add(cellKey(x, y))
-  return cells
-}
-
 const params = new URLSearchParams(location.search)
 
 export function Lab() {
   const board = useMemo(() => fixture(params.get('fixture') ?? 'gorge-crossing'), [])
   const selected = board.tokens.find((token) => token.label === params.get('select'))?.id
   const highlight = useMemo(
-    () => (params.get('highlight') === 'free' ? freeCells(board) : undefined),
+    () =>
+      params.get('highlight') === 'free'
+        ? freeCells(buildGrid(board.map), board.tokens, { id: '', size: 'medium' })
+        : undefined,
     [board],
   )
   const [log, setLog] = useState('')

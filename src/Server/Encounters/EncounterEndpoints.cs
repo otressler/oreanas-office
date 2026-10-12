@@ -139,17 +139,7 @@ public static class EncounterEndpoints
             })
             .ToListAsync(cancellationToken);
 
-        // Ring colours follow the order characters were added to the campaign, counted
-        // the same way as CharacterResponse.ColorIndex.
-        var characterCreated = await db.Characters
-            .Where(c => c.CampaignId == campaignId)
-            .Select(c => new { c.Id, c.CreatedAt })
-            .ToListAsync(cancellationToken);
-        int ColorIndex(Guid characterId)
-        {
-            var created = characterCreated.Single(c => c.Id == characterId).CreatedAt;
-            return characterCreated.Count(c => c.CreatedAt < created);
-        }
+        var colors = await db.CharacterColorIndexesAsync(campaignId, cancellationToken);
 
         var board = new BoardStateResponse(
             encounter.Id,
@@ -171,7 +161,7 @@ public static class EncounterEndpoints
                     t.Elevation,
                     (t.Kind == TokenKind.Character ? t.CharacterSize : t.TypeSize) ?? CreatureSize.Medium,
                     t.Speed,
-                    t.CharacterId is { } characterId ? ColorIndex(characterId) : null)),
+                    t.CharacterId is { } characterId ? colors[characterId] : null)),
             ],
             encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId);
         return TypedResults.Ok(board);
@@ -207,7 +197,13 @@ public static class EncounterEndpoints
             return TypedResults.Conflict(conflict);
         }
 
+        // Nobody can join the board later in stage 3, so a fight starts with at least one character.
         var placements = request.Characters ?? [];
+        if (placements.Count == 0)
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.CharacterInvalid, "characters"));
+        }
+
         var ids = placements.Select(p => p?.CharacterId ?? Guid.Empty).ToList();
         var sizes = await db.Characters
             .Where(c => c.CampaignId == campaignId && ids.Contains(c.Id))

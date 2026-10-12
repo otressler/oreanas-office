@@ -274,12 +274,21 @@ export const de = {
     overTitle: 'Dieser Kampf ist vorbei',
     overBody:
       'Die Spielleitung hat ihn beendet. Auf der Kampagnenseite siehst du, wie es weitergeht.',
+    notRunningTitle: 'Dieser Kampf läuft gerade nicht',
+    notRunningBody:
+      'Er hat noch nicht begonnen, ist schon vorbei, oder der Link stimmt nicht. Auf der Kampagnenseite siehst du den laufenden Kampf.',
 
     import: {
       title: 'Karte importieren',
       samplesTitle: 'Beispielkarten',
       samplesBody: 'Fertige Karten mit Gegnern, gut zum Ausprobieren.',
       sampleSize: (width: number, height: number) => `${width} × ${height} Felder`,
+      sampleNames: {
+        'gorge-crossing': 'Schluchtübergang',
+        crypt: 'Alte Gruft',
+        'river-ford': 'Furt am Fluss',
+        'open-field': 'Weite Ebene',
+      },
       fileTitle: 'Eigene Datei',
       fileBody: 'Eine Kartendatei im JSON-Format, wie sie die Beispielkarten nutzen.',
       fileLabel: 'Datei wählen',

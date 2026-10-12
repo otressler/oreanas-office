@@ -97,6 +97,37 @@ export function footprintCells(size: CreatureSize, x: number, y: number): GridPo
   return cells
 }
 
+/** Every cell under a token, as cellKey strings. `ignoreTokenId` leaves out the token being moved. */
+export function occupiedCells(
+  tokens: ReadonlyArray<Pick<BoardToken, 'id' | 'x' | 'y' | 'size'>>,
+  ignoreTokenId?: string,
+): Set<string> {
+  const taken = new Set<string>()
+  for (const token of tokens) {
+    if (token.id === ignoreTokenId) continue
+    for (const cell of footprintCells(token.size, token.x, token.y))
+      taken.add(cellKey(cell.x, cell.y))
+  }
+  return taken
+}
+
+/**
+ * The placement rule against cells already taken (occupiedCells): the whole footprint
+ * is inside the map on walkable cells and on none of them. Checking many cells, build
+ * the taken set once and call this per cell.
+ */
+export function fitsAt(
+  grid: MapGrid,
+  taken: ReadonlySet<string>,
+  size: CreatureSize,
+  x: number,
+  y: number,
+): boolean {
+  return footprintCells(size, x, y).every(
+    (cell) => grid.walkable(cell.x, cell.y) && !taken.has(cellKey(cell.x, cell.y)),
+  )
+}
+
 /**
  * The placement rule: the whole footprint is inside the map on walkable cells and
  * overlaps no other token. `ignoreTokenId` leaves out the token being moved.
@@ -109,15 +140,7 @@ export function canPlace(
   y: number,
   ignoreTokenId?: string,
 ): boolean {
-  const cells = footprintCells(size, x, y)
-  if (!cells.every((cell) => grid.walkable(cell.x, cell.y))) return false
-  const taken = new Set<string>()
-  for (const token of tokens) {
-    if (token.id === ignoreTokenId) continue
-    for (const cell of footprintCells(token.size, token.x, token.y))
-      taken.add(cellKey(cell.x, cell.y))
-  }
-  return cells.every((cell) => !taken.has(cellKey(cell.x, cell.y)))
+  return fitsAt(grid, occupiedCells(tokens, ignoreTokenId), size, x, y)
 }
 
 /** A placed token's elevation: the highest elevation under its footprint. */

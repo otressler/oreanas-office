@@ -29,7 +29,7 @@ describe('EncounterPage', () => {
     expect(screen.queryByRole('button', { name: de.encounters.end })).not.toBeInTheDocument()
   })
 
-  it('says the fight is over when a player gets 404', async () => {
+  it('says the fight isn’t running when a player gets 404', async () => {
     mockApi({
       'GET /api/auth/me': json(200, testUser),
       'GET /api/campaigns/:id/encounters/:eid/board': () => json(404),
@@ -37,7 +37,7 @@ describe('EncounterPage', () => {
     renderApp(fightPath)
 
     expect(
-      await screen.findByRole('heading', { name: de.encounters.overTitle }),
+      await screen.findByRole('heading', { name: de.encounters.notRunningTitle }),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: de.encounters.back })).toBeInTheDocument()
   })

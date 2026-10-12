@@ -11,4 +11,19 @@ public static class CampaignQueries
         this AppDbContext db, Guid campaignId, Guid userId, CancellationToken cancellationToken) =>
         db.CampaignMembers.AnyAsync(
             m => m.CampaignId == campaignId && m.UserId == userId && m.Role == CampaignRole.Dm, cancellationToken);
+
+    // Ring colours (knowledge/domain/token.md): each character's place in the order
+    // characters were added to the campaign, 0, 1, 2…, by character id. The character
+    // list and the board both use this, so the setup screen shows the fight's colours.
+    public static async Task<Dictionary<Guid, int>> CharacterColorIndexesAsync(
+        this AppDbContext db, Guid campaignId, CancellationToken cancellationToken)
+    {
+        var ids = await db.Characters
+            .Where(c => c.CampaignId == campaignId)
+            .OrderBy(c => c.CreatedAt)
+            .ThenBy(c => c.Id)
+            .Select(c => c.Id)
+            .ToListAsync(cancellationToken);
+        return ids.Select((id, index) => (id, index)).ToDictionary(p => p.id, p => p.index);
+    }
 }

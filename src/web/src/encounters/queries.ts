@@ -72,6 +72,7 @@ export function useImportMap(campaignId: string) {
 }
 
 export function useStartEncounter(campaignId: string, sessionId: string, encounterId: string) {
+  const queryClient = useQueryClient()
   const invalidate = useInvalidateFights(campaignId)
   return useMutation({
     mutationFn: (characters: CharacterPlacement[]) =>
@@ -84,8 +85,13 @@ export function useStartEncounter(campaignId: string, sessionId: string, encount
           },
         ),
       ),
-    // Not awaited: the caller navigates away at once.
-    onSuccess: () => void invalidate(),
+    // The cached board is the setup screen's: ready, without the characters. Dropping
+    // it makes the fight page load the started board instead of showing the old one.
+    // The rest isn't awaited: the caller navigates away at once.
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: encounterKeys.board(campaignId, encounterId) })
+      void invalidate()
+    },
   })
 }
 

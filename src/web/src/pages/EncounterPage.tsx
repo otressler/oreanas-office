@@ -7,6 +7,8 @@ import { FightScreen } from '../encounters/FightScreen'
 import { useBoard } from '../encounters/queries'
 import { de } from '../text/de'
 
+const t = de.encounters
+
 /**
  * /kampagnen/:campaignId/kampf/:encounterId — the running fight's board, for
  * players and the DM. Loads once and again on focus or reconnect, never on a timer
@@ -17,11 +19,16 @@ export function EncounterPage() {
   const navigate = useNavigate()
   const board = useBoard(campaignId, encounterId)
 
-  // Players get 404 once the fight has ended; DMs still see it, marked ended.
-  const over =
-    board.data?.status === 'ended' ||
-    (board.error instanceof ApiRequestError && board.error.status === 404)
-  if (over) return <FightOver campaignId={campaignId} />
+  // An ended fight is over for everyone. Players get 404 for a fight that isn't
+  // running (ended, not started yet, or a wrong link); DMs get the board itself.
+  if (board.data?.status === 'ended') {
+    return <FightMessage campaignId={campaignId} title={t.overTitle} body={t.overBody} />
+  }
+  if (board.error instanceof ApiRequestError && board.error.status === 404) {
+    return (
+      <FightMessage campaignId={campaignId} title={t.notRunningTitle} body={t.notRunningBody} />
+    )
+  }
 
   if (board.isPending || board.isError) {
     return (
@@ -60,13 +67,21 @@ export function EncounterPage() {
   )
 }
 
-function FightOver({ campaignId }: { campaignId: string }) {
+function FightMessage({
+  campaignId,
+  title,
+  body,
+}: {
+  campaignId: string
+  title: string
+  body: string
+}) {
   return (
     <div className="flex flex-col items-start gap-3 pb-8">
-      <PageTitle>{de.encounters.overTitle}</PageTitle>
-      <p className="text-dim">{de.encounters.overBody}</p>
+      <PageTitle>{title}</PageTitle>
+      <p className="text-dim">{body}</p>
       <ButtonLink variant="primary" to={`/kampagnen/${campaignId}`}>
-        {de.encounters.back}
+        {t.back}
       </ButtonLink>
     </div>
   )

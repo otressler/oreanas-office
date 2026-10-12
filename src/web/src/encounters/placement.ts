@@ -3,8 +3,9 @@
 // The placement rule itself lives in board/geometry.ts, shared with the server's.
 import type { BoardState, BoardToken, Character, LayoutEntrance } from '../api/types'
 import {
-  canPlace,
   cellKey,
+  fitsAt,
+  occupiedCells,
   placementElevation,
   type GridPoint,
   type MapGrid,
@@ -57,10 +58,10 @@ export function freeCells(
   character: Pick<Character, 'id' | 'size'>,
 ): Set<string> {
   const cells = new Set<string>()
-  const ignore = setupTokenId(character.id)
+  const taken = occupiedCells(tokens, setupTokenId(character.id))
   for (let y = 0; y < grid.height; y++) {
     for (let x = 0; x < grid.width; x++) {
-      if (canPlace(grid, tokens, character.size, x, y, ignore)) cells.add(cellKey(x, y))
+      if (fitsAt(grid, taken, character.size, x, y)) cells.add(cellKey(x, y))
     }
   }
   return cells
@@ -89,14 +90,14 @@ export function autoPlace(
   // Stable sort: equal distances keep reading order.
   candidates.sort((a, b) => a.distance - b.distance)
 
-  const taken: Pick<BoardToken, 'id' | 'x' | 'y' | 'size'>[] = [...tokens]
+  const placed: Pick<BoardToken, 'id' | 'x' | 'y' | 'size'>[] = [...tokens]
   const result = new Map<string, GridPoint | null>()
   for (const character of characters) {
     const id = setupTokenId(character.id)
-    const others = taken.filter((token) => token.id !== id)
-    const spot = candidates.find((cell) => canPlace(grid, others, character.size, cell.x, cell.y))
+    const taken = occupiedCells(placed, id)
+    const spot = candidates.find((cell) => fitsAt(grid, taken, character.size, cell.x, cell.y))
     result.set(character.id, spot ? { x: spot.x, y: spot.y } : null)
-    if (spot) taken.push({ id, x: spot.x, y: spot.y, size: character.size })
+    if (spot) placed.push({ id, x: spot.x, y: spot.y, size: character.size })
   }
   return result
 }

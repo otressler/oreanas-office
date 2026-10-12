@@ -1,8 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Characters;
+using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Rules;
 using static OreanasOffice.Server.Tests.CampaignTestApi;
 
@@ -24,6 +27,30 @@ public sealed class CharacterTests(AppFixture fixture)
         Assert.Equal(
             new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, 5, CanEdit: true, ColorIndex: 0),
             character);
+    }
+
+    // Ring colours follow the order characters were added; two added at the same
+    // moment still get different colours.
+    [Fact]
+    public async Task Characters_get_distinct_colour_indexes_in_the_order_they_were_added()
+    {
+        var (_, player, otherPlayer, campaignId) = await CreatePartyAsync();
+        var first = await CreateCharacterAsync(player, campaignId, "Zelda");
+        var second = await CreateCharacterAsync(otherPlayer, campaignId, "Arwen");
+        var third = await CreateCharacterAsync(player, campaignId, "Mira");
+        using (var scope = fixture.App.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var sameMoment = DateTimeOffset.UtcNow;
+            await db.Characters
+                .Where(c => c.Id == second.Id || c.Id == third.Id)
+                .ExecuteUpdateAsync(set => set.SetProperty(c => c.CreatedAt, sameMoment));
+        }
+
+        var colors = (await ListAsync(player, campaignId)).ToDictionary(c => c.Id, c => c.ColorIndex);
+
+        Assert.Equal(0, colors[first.Id]);
+        Assert.Equal([1, 2], new[] { colors[second.Id], colors[third.Id] }.Order());
     }
 
     [Fact]
