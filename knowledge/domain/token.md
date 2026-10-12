@@ -21,7 +21,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `elevation` | decimal, meters | Defaults to the cell's elevation. Changeable for flying or climbing |
 | `hidden` | bool | Later: visible only to the DM until revealed |
 
-Size, speed and image come from the linked character or creature type.
+Size, speed and image come from the linked character or creature type. On the board, a character's token has a ring in a fixed colour picked by the order characters were added to the campaign; creatures share one red ring.
 
 # Who can move it
 

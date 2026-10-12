@@ -11,7 +11,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 
 | Size | Cells | Notes |
 |------|-------|-------|
-| Tiny | 1×1 | The rules let several Tiny creatures share a square. The app simplifies this to one cell, and overlapping is allowed anyway |
+| Tiny | 1×1 | The rules let several Tiny creatures share a square. The app simplifies this to one cell. Moves never forbid overlapping; only placing tokens when a fight is imported or started keeps them apart ([encounter](/domain/encounter.md)) |
 | Small | 1×1 | |
 | Medium | 1×1 | |
 | Large | 2×2 | |
