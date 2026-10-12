@@ -15,7 +15,8 @@ public static class MapImport
     // Tokens store elevation as decimal(6,1); a map's heights stay well inside it.
     public const decimal MaxElevation = 10000;
 
-    // Feature kinds and labels, entrance labels and ids; creature labels fit a token's.
+    // Feature kinds, labels and ids, entrance labels and ids, and creature labels: as
+    // long as a token's label, since the board shows them the same way.
     private const int TextMaxLength = Token.LabelMaxLength;
 
     // Meters per square (knowledge/rules/movement-distance.md).
