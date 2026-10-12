@@ -70,6 +70,7 @@ else {
     $defaultEnvFile = Join-Path (Split-Path $PSScriptRoot -Parent) '.env.prod'
     if (Test-Path -LiteralPath $defaultEnvFile) { Import-EnvFile $defaultEnvFile }
 }
+$env:SQL_CLIENT_IP = (Invoke-RestMethod https://api.ipify.org)
 
 foreach ($name in 'SQL_ENTRA_ADMIN_LOGIN', 'SQL_ENTRA_ADMIN_OBJECT_ID', 'BUDGET_CONTACT_EMAIL', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'ADMIN_EMAIL') {
     if (-not [Environment]::GetEnvironmentVariable($name)) { throw "Set $name in .env.prod or `$env:$name (see infra/README.md)." }
