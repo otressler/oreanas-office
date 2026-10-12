@@ -291,7 +291,7 @@ export const de = {
       notPlaced: 'Noch nicht aufgestellt',
       pickCharacter:
         'Hake die Charaktere an, die mitkämpfen, und tippe einen an, um ihn aufzustellen.',
-      pickCell: (name: string) => `Tippe auf ein helles Feld, um ${name} dorthin zu stellen.`,
+      pickCell: (name: string) => `Tippe auf ein markiertes Feld, um ${name} dorthin zu stellen.`,
       noRoom: (name: string) => `Für ${name} ist dort kein Platz.`,
       autoPlace: 'Automatisch aufstellen',
       autoPlaceFull: 'Für einige Charaktere ist kein freier Platz mehr.',
