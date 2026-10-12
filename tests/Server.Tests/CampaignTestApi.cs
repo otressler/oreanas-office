@@ -6,12 +6,16 @@ using Microsoft.Extensions.DependencyInjection;
 using OreanasOffice.Server.Accounts;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Campaigns;
+using OreanasOffice.Server.Characters;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Encounters;
+using OreanasOffice.Server.Maps;
+using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Sessions;
 
 namespace OreanasOffice.Server.Tests;
 
-// Shortcuts for the campaign, character and session tests: a campaign with a DM
+// Shortcuts for the campaign, character, session and encounter tests: a campaign with a DM
 // and players, and JSON that matches the API (camelCase enums).
 public static class CampaignTestApi
 {
@@ -74,6 +78,39 @@ public static class CampaignTestApi
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<SessionResponse>(Json))!;
     }
+
+    public static async Task<SessionResponse> ActivateSessionAsync(this Person dm, Guid campaignId, Guid sessionId)
+    {
+        var response = await dm.Client.PostAsync($"/api/campaigns/{campaignId}/sessions/{sessionId}/activate", null);
+        return await response.ReadAsync<SessionResponse>(HttpStatusCode.OK);
+    }
+
+    public static async Task<CharacterResponse> CreateCharacterAsync(
+        this Person owner, Guid campaignId, string name, CreatureSize size = CreatureSize.Medium, int speedSquares = 6)
+    {
+        var response = await owner.Client.PostAsJsonAsync(
+            $"/api/campaigns/{campaignId}/characters", new CharacterRequest(name, size, speedSquares), Json);
+        return await response.ReadAsync<CharacterResponse>(HttpStatusCode.Created);
+    }
+
+    public static async Task<EncounterSummaryResponse> ImportMapAsync(this Person dm, Guid campaignId, ImportMapRequest? map = null)
+    {
+        var response = await dm.Client.PostAsJsonAsync($"/api/campaigns/{campaignId}/encounters/import", map ?? TestMaps.Gorge(), Json);
+        return await response.ReadAsync<EncounterSummaryResponse>(HttpStatusCode.Created);
+    }
+
+    public static Task<HttpResponseMessage> StartEncounterAsync(
+        this Person dm, Guid campaignId, Guid sessionId, Guid encounterId, params CharacterPlacement[] characters) =>
+        dm.Client.PostAsJsonAsync(
+            $"/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/{encounterId}/start",
+            new StartEncounterRequest([.. characters]),
+            Json);
+
+    public static Task<HttpResponseMessage> EndEncounterAsync(this Person dm, Guid campaignId, Guid sessionId, Guid encounterId) =>
+        dm.Client.PostAsync($"/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/{encounterId}/end", null);
+
+    public static Task<HttpResponseMessage> GetBoardAsync(this Person person, Guid campaignId, Guid encounterId) =>
+        person.Client.GetAsync($"/api/campaigns/{campaignId}/encounters/{encounterId}/board");
 
     public static async Task<T> ReadAsync<T>(this HttpResponseMessage response, HttpStatusCode expected)
     {

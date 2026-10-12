@@ -142,13 +142,27 @@ public static class SessionEndpoints
         return TypedResults.Ok(await LoadAsync(db, sessionId, user.GetUserId(), cancellationToken));
     }
 
-    // Planned or active → ended. Already ended: unchanged.
+    // Planned or active → ended. Already ended: unchanged. The session's active
+    // encounter ends with it, in the same transaction.
     private static async Task<Ok<SessionResponse>> EndSession(
-        Guid campaignId, Guid sessionId, ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken)
+        Guid campaignId,
+        Guid sessionId,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        TimeProvider time,
+        CancellationToken cancellationToken)
     {
-        await db.Sessions
-            .Where(s => s.Id == sessionId && s.CampaignId == campaignId && s.Status != SessionStatus.Ended)
-            .ExecuteUpdateAsync(set => set.SetProperty(s => s.Status, SessionStatus.Ended), cancellationToken);
+        var strategy = db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            await db.Sessions
+                .Where(s => s.Id == sessionId && s.CampaignId == campaignId && s.Status != SessionStatus.Ended)
+                .ExecuteUpdateAsync(set => set.SetProperty(s => s.Status, SessionStatus.Ended), cancellationToken);
+            await EncounterEndpoints.EndActiveAsync(
+                db.Encounters.Where(e => e.SessionId == sessionId), time.GetUtcNow(), cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        });
 
         return TypedResults.Ok(await LoadAsync(db, sessionId, user.GetUserId(), cancellationToken));
     }

@@ -21,6 +21,8 @@
   <ItemGroup>
     <!-- The sample maps the frontend offers; import tests read them from SampleMaps/. -->
     <None Include="..\..\src\web\src\samples\maps\*.json" LinkBase="SampleMaps" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The frontend's board fixtures for the sample maps; import tests compare against them. -->
+    <None Include="..\..\src\web\src\board\fixtures\*.board.json" LinkBase="BoardFixtures" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
