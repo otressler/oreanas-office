@@ -4,9 +4,13 @@ import { MembersPanel } from '../campaigns/MembersPanel'
 import { useCampaign } from '../campaigns/queries'
 import { SessionsPanel } from '../campaigns/SessionsPanel'
 import { Badge, LoadError, Loading, PageTitle } from '../components/ui'
+import { EncountersPanel } from '../encounters/EncountersPanel'
 import { de } from '../text/de'
 
-/** /kampagnen/:campaignId — sessions first, since that's what game night needs. */
+/**
+ * /kampagnen/:campaignId — sessions first, since that's what game night needs;
+ * then the fights, which only `dm` members see.
+ */
 export function CampaignPage() {
   const { campaignId = '' } = useParams()
   const campaign = useCampaign(campaignId)
@@ -27,6 +31,7 @@ export function CampaignPage() {
         <Badge>{de.roles[campaign.data.myRole]}</Badge>
       </div>
       <SessionsPanel campaign={campaign.data} />
+      {campaign.data.myRole === 'dm' && <EncountersPanel campaign={campaign.data} />}
       <CharactersPanel campaignId={campaign.data.id} />
       <MembersPanel campaign={campaign.data} />
     </div>

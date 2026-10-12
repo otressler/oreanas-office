@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { api } from '../api/client'
 import { unwrap } from '../api/errors'
@@ -8,6 +8,7 @@ import { campaignKeys, useCampaigns } from '../campaigns/queries'
 import {
   Badge,
   Button,
+  ButtonLink,
   ErrorAlert,
   LoadError,
   Loading,
@@ -22,6 +23,7 @@ import { limits } from '../lib/limits'
 /** The landing page: your campaigns, joining one by code, creating one. */
 export function HomePage() {
   const campaigns = useCampaigns()
+  useLandOnFight(campaigns.data)
 
   return (
     <div className="flex flex-col pb-8">
@@ -47,13 +49,65 @@ export function HomePage() {
   )
 }
 
+const LANDED_KEY = 'oreana.landedOnFight'
+
+/**
+ * Players opening the app land on the running fight (knowledge/implementation-plan.md,
+ * stage 3): when exactly one campaign has one, go there. Once per browser tab, so
+ * the back button and later visits to the landing page stay here.
+ */
+function useLandOnFight(campaigns: CampaignSummary[] | undefined) {
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!campaigns) return
+    const fights = campaigns.flatMap((c) => {
+      const fight = c.activeSession?.activeEncounter
+      return fight ? [`/kampagnen/${c.id}/kampf/${fight.id}`] : []
+    })
+    if (fights.length !== 1) return
+    try {
+      if (sessionStorage.getItem(LANDED_KEY)) return
+      sessionStorage.setItem(LANDED_KEY, '1')
+    } catch {
+      // Without storage (private mode, blocked site data) there is no "once": stay here.
+      return
+    }
+    void navigate(fights[0]!)
+  }, [campaigns, navigate])
+}
+
 function CampaignCard({ campaign }: { campaign: CampaignSummary }) {
   const session = campaign.activeSession
+  const fight = session?.activeEncounter
   return (
-    <Link
-      to={`/kampagnen/${campaign.id}`}
-      className="flex flex-col gap-2 rounded-xl border border-line bg-panel p-4 hover:border-candle"
-    >
+    <div className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4 has-[>a:hover]:border-candle">
+      <CampaignCardLink campaign={campaign} />
+      {fight && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-l-2 border-candle pl-3">
+          <div className="flex min-w-0 flex-col">
+            <span className="text-xs font-semibold tracking-wide text-candle uppercase">
+              {de.encounters.running}
+            </span>
+            <span className="text-parchment">{fight.name}</span>
+          </div>
+          <ButtonLink
+            variant="primary"
+            className="ml-auto"
+            to={`/kampagnen/${campaign.id}/kampf/${fight.id}`}
+          >
+            {de.encounters.toFight}
+          </ButtonLink>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** The card's main part; the fight link sits beside it, since links can't nest. */
+function CampaignCardLink({ campaign }: { campaign: CampaignSummary }) {
+  const session = campaign.activeSession
+  return (
+    <Link to={`/kampagnen/${campaign.id}`} className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-lg font-semibold text-parchment">{campaign.name}</span>
         <Badge>{de.roles[campaign.myRole]}</Badge>

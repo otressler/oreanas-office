@@ -1,0 +1,98 @@
+// Test data for the encounter screens, to feed the mocked API.
+import type { BoardState, Character, Encounter, Session } from '../api/types'
+import { testUser } from '../test/api'
+
+export const ids = {
+  campaign: 'c0000000-0000-0000-0000-000000000001',
+  session: 's0000000-0000-0000-0000-000000000001',
+  encounter: 'e0000000-0000-0000-0000-000000000001',
+}
+
+/** A 4 × 2 clearing: a wall at 3,1 and a goblin at 3,0, so six free cells. */
+export function smallBoard(fields: Partial<BoardState> = {}): BoardState {
+  const cells = [0, 1].flatMap((y) =>
+    [0, 1, 2, 3].map((x) => ({
+      x,
+      y,
+      terrain: x === 3 && y === 1 ? ('wall' as const) : ('floor' as const),
+      elevation: 0,
+    })),
+  )
+  return {
+    encounterId: ids.encounter,
+    campaignId: ids.campaign,
+    sessionId: null,
+    name: 'Kleine Lichtung',
+    status: 'ready',
+    map: {
+      id: 'm1',
+      name: 'Kleine Lichtung',
+      width: 4,
+      height: 2,
+      layout: { schemaVersion: 1, cells, features: [], entrances: [] },
+      backgroundUrl: null,
+    },
+    tokens: [
+      {
+        id: 't1',
+        kind: 'creature',
+        characterId: null,
+        creatureTypeId: 'goblin',
+        ownerUserId: null,
+        label: 'Goblin 1',
+        x: 3,
+        y: 0,
+        elevation: 0,
+        size: 'small',
+        speedSquares: 6,
+        colorIndex: null,
+      },
+    ],
+    isSessionDm: false,
+    ...fields,
+  }
+}
+
+export function character(name: string, fields: Partial<Character> = {}): Character {
+  return {
+    id: `ch-${name}`,
+    ownerUserId: testUser.id,
+    ownerDisplayName: testUser.displayName,
+    name,
+    size: 'medium',
+    speedSquares: 6,
+    canEdit: true,
+    ...fields,
+  }
+}
+
+export function session(fields: Partial<Session> = {}): Session {
+  return {
+    id: ids.session,
+    title: 'Sitzung 1',
+    date: '2026-10-12',
+    status: 'active',
+    dmUserId: testUser.id,
+    dmDisplayName: testUser.displayName,
+    createdByUserId: testUser.id,
+    canManage: true,
+    isSessionDm: true,
+    activeEncounter: null,
+    ...fields,
+  }
+}
+
+export function encounter(fields: Partial<Encounter> = {}): Encounter {
+  return {
+    id: ids.encounter,
+    name: 'Kleine Lichtung',
+    status: 'ready',
+    battleMapId: 'm1',
+    width: 4,
+    height: 2,
+    creatureCount: 1,
+    sessionId: null,
+    createdAt: '2026-10-12T18:00:00Z',
+    ...fields,
+  }
+}

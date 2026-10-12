@@ -221,6 +221,90 @@ export const de = {
     ended: 'Beendet',
   } satisfies Record<SessionStatus, string>,
 
+  encounterStatus: {
+    draft: 'Entwurf',
+    ready: 'Bereit',
+    active: 'Läuft',
+    ended: 'Vorbei',
+    // Inline import keeps the shared import line untouched for parallel lanes.
+  } satisfies Record<import('../api/types').EncounterStatus, string>,
+
+  encounters: {
+    title: 'Kämpfe',
+    empty: 'Noch keine Kämpfe. Importiere eine Karte, um einen vorzubereiten.',
+    importMap: 'Karte importieren',
+    /** Grid size in squares, then meters, e.g. "20 × 12 Felder (30 m × 18 m)". */
+    gridSize: (width: number, height: number, widthMeters: string, heightMeters: string) =>
+      `${width} × ${height} Felder (${widthMeters} × ${heightMeters})`,
+    creatures: (count: number) => (count === 1 ? '1 Kreatur' : `${count} Kreaturen`),
+    setUp: 'Aufstellen und starten',
+    needsSession:
+      'Bereite Kämpfe startet die Spielleitung der laufenden Sitzung. Läuft keine, starte zuerst eine Sitzung.',
+    oneAtATime:
+      'In der laufenden Sitzung läuft schon ein Kampf. Beende ihn, bevor du den nächsten startest.',
+    toFight: 'Zum Kampf',
+    running: 'Kampf läuft',
+    end: 'Kampf beenden',
+    endQuestion: 'Kampf für alle beenden?',
+    endConfirm: 'Ja, beenden',
+    back: 'Zur Kampagne',
+    overTitle: 'Dieser Kampf ist vorbei',
+    overBody:
+      'Die Spielleitung hat ihn beendet. Auf der Kampagnenseite siehst du, wie es weitergeht.',
+
+    import: {
+      title: 'Karte importieren',
+      samplesTitle: 'Beispielkarten',
+      samplesBody: 'Fertige Karten mit Gegnern, gut zum Ausprobieren.',
+      sampleSize: (width: number, height: number) => `${width} × ${height} Felder`,
+      fileTitle: 'Eigene Datei',
+      fileBody: 'Eine Kartendatei im JSON-Format, wie sie die Beispielkarten nutzen.',
+      fileLabel: 'Datei wählen',
+      fileDrop: 'oder hierher ziehen',
+      importing: (name: string) => `${name} wird importiert…`,
+      unreadable: 'Diese Datei lässt sich nicht lesen. Ist es wirklich eine JSON-Datei?',
+      notAMap: 'Diese Datei ist keine Kartendatei.',
+      /** Where in the file the server found the problem; `place` comes from `field`. */
+      where: (place: string) => `Stelle in der Datei: ${place}`,
+      field: {
+        name: 'Name der Karte',
+        width: 'Breite',
+        height: 'Höhe',
+        scene: 'Szene',
+        vibe: 'Stimmung',
+        lighting: 'Licht',
+        layout: 'Layout',
+        schemaVersion: 'Version des Layouts',
+        cell: (n: number) => `Feld ${n} in der Liste der Felder`,
+        feature: (n: number) => `Objekt ${n} in der Liste der Objekte`,
+        entrance: (n: number) => `Eingang ${n} in der Liste der Ein- und Ausgänge`,
+        creature: (n: number) => `Kreatur ${n} in der Liste der Kreaturen`,
+      },
+    },
+
+    setup: {
+      title: (name: string) => `Aufstellen: ${name}`,
+      charactersTitle: 'Wer kämpft mit?',
+      noCharacters: 'Die Kampagne hat noch keine Charaktere.',
+      takesPart: (name: string) => `${name} kämpft mit`,
+      placed: 'Steht',
+      notPlaced: 'Noch nicht aufgestellt',
+      pickCharacter:
+        'Hake die Charaktere an, die mitkämpfen, und tippe einen an, um ihn aufzustellen.',
+      pickCell: (name: string) => `Tippe auf ein helles Feld, um ${name} dorthin zu stellen.`,
+      noRoom: (name: string) => `Für ${name} ist dort kein Platz.`,
+      autoPlace: 'Automatisch aufstellen',
+      autoPlaceFull: 'Für einige Charaktere ist kein freier Platz mehr.',
+      start: 'Kampf starten',
+      noneTicked: 'Hake mindestens einen Charakter an.',
+      unplaced: (names: string) => `Noch nicht aufgestellt: ${names}`,
+      /** The server rejected one character; `name` is that character. */
+      concerns: (name: string) => `Betrifft: ${name}`,
+      notSessionDm: 'Diesen Kampf startet die Spielleitung der laufenden Sitzung.',
+      notReady: 'Dieser Kampf läuft schon oder ist vorbei.',
+    },
+  },
+
   /** One text per error code the API can send. A new code is a type error here. */
   errors: {
     inviteInvalid:
