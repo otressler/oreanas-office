@@ -66,7 +66,8 @@ def load(path, feature_specs):
         doc = json.loads(text)
         w, h = doc["width"], doc["height"]
         layout = doc.get("layout", doc)
-        grid = [["floor"] * w for _ in range(h)]
+        # Cells missing from the layout are void (knowledge/domain/battle-map.md).
+        grid = [["void"] * w for _ in range(h)]
         for c in layout.get("cells", []):
             grid[c["y"]][c["x"]] = c.get("terrain", "floor")
         return grid, layout.get("features", []), layout.get("entrances", []), doc

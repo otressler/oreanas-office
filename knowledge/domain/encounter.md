@@ -25,6 +25,18 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 # Lifecycle
 
 1. **draft:** the DM builds it in the [map editor](/features/dm-map-editor.md).
-2. **ready:** the map image is chosen and creatures are placed.
-3. **active:** linked to the active session and set as `Session.activeEncounterId`. Players see it on the [playable map](/features/playable-map.md).
-4. **ended:** read-only. Kept so the same map can be reused.
+2. **ready:** the map image is chosen and creatures are placed. An imported encounter starts here, because the [import file](/domain/battle-map.md) is already complete.
+3. **active:** the session DM starts it in the active session (see Starting). Players see it on the [playable map](/features/playable-map.md) from then on.
+4. **ended:** the session DM ends it, and everyone returns to the session page. Ending a session also ends its active encounter. An ended encounter is read-only. To fight on the same map again, the DM creates a new encounter from it.
+
+# Who does what
+
+- Any `dm` member of the campaign prepares encounters: imports maps now, uses the editor later. Prepared encounters are visible only to `dm` members.
+- Only the session DM starts and ends an encounter ([session](/domain/session.md)).
+- A session has at most one active encounter. Like the active session, it isn't stored as a column: it is the encounter with `status: active`, and a unique index allows at most one per session.
+
+# Starting
+
+Starting is a setup screen for the session DM. They tick the characters taking part and place each one by tapping the character and then a cell. Placing and starting are one step: the character tokens are created together with the switch to `active`, so players never see half-placed tokens. Characters who join later, and any change of position, use normal moves.
+
+**Placement rule:** the token's whole footprint ([creature size](/rules/creature-size.md)) lies inside the map on walkable cells, and it doesn't overlap another token. A cell is walkable if its terrain isn't `void` or `wall` and no feature with `blocksMovement: true` covers it. A feature with `blocksMovement: false` makes the cells under it walkable, whatever the terrain (the bridge over the gorge; [implementation plan](/implementation-plan.md), question 6). The token's elevation is the highest elevation under its footprint, counting such a feature's elevation.

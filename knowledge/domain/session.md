@@ -18,13 +18,13 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 | `dmUserId` | → [User](/domain/user.md) | Defaults to `Campaign.defaultDmUserId` |
 | `createdByUserId` | → [User](/domain/user.md) | Kept separate from the DM |
 | `status` | enum `planned` \| `active` \| `ended` | |
-| `activeEncounterId` | → [Encounter](/domain/encounter.md), nullable | At most one active encounter |
+| `activeEncounterId` | → [Encounter](/domain/encounter.md), nullable | At most one active encounter. Not stored as a column: it is the encounter with `status: active` and this `sessionId`, and a unique index in the database allows at most one per session |
 
 # Rules
 
 - Any `dm` member of the campaign can create a session ([campaign member](/domain/campaign-member.md)).
 - The session DM or the campaign's default DM makes it active, changes its DM to another `dm` member, and ends it. This is the only right the default DM has over a session they don't run: it keeps a session from getting stuck when its DM is absent.
-- Only one session per campaign is active (`Campaign.activeSessionId`).
+- Only one session per campaign is active (`Campaign.activeSessionId`). Ending a session ends its active encounter.
 - Only the session DM can start and end encounters, move creature tokens and other players' characters, and see hidden tokens.
 - Everyone else in the campaign is a player for this session, including the default DM and other `dm` members. The campaign role doesn't grant any action at the table.
 

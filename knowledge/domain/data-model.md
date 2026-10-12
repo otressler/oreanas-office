@@ -39,8 +39,9 @@ erDiagram
 
 # "Only one active" rules
 
-- A campaign has at most one active session: `Campaign.activeSessionId`.
-- A session has at most one active encounter: `Session.activeEncounterId`.
+- A campaign has at most one active session: `Campaign.activeSessionId`, the session with `status: active`.
+- A session has at most one active encounter: `Session.activeEncounterId`, the encounter with `status: active`.
+- Neither is a column. A filtered unique index in the database allows only one of each, so two DMs pressing "start" at once can't both win.
 - Players opening the app land on the active encounter of their campaign's active session.
 
 # Changes from the original proposal

@@ -30,12 +30,12 @@ Let the DM build a fight quickly. This is not a full level editor: the DM places
 
 # Notes
 
+- Characters aren't placed in the editor. The session DM places them when starting the [encounter](/domain/encounter.md), once it's known who plays.
 - Works on a laptop first. DMs prepare at a desk, and phone editing isn't needed.
 - The map is playable even before an image exists, using the plain layout rendering.
 
 # Open questions
 
 - Largest grid size to support. This affects image resolution ([image generation approach](/decisions/image-generation-approach.md)).
-- Should the DM place starting positions for characters, or do players place themselves?
 
 [^brief]: Original project brief

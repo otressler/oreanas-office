@@ -71,7 +71,7 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 2 | Where does the code live? | Stage 1 | **Answered:** the GitHub repository `otressler/oreanas-office` |
 | 3 | Who provisions Azure? | Stage 1 | **Answered:** only the project owner. Claude writes the templates and gives a summary of every resource and its cost before each provisioning ([hosting](/decisions/hosting.md)) |
 | 4 | [Persistence](/decisions/persistence.md) and [realtime sync](/decisions/realtime-sync.md) are only proposed, but stages 2–4 build them | Stage 2 / Stage 4 | **Persistence answered:** accepted as written. Realtime sync is decided at the start of stage 4, after the board exists: last move wins, only confirmed moves are sent, idle connections drop after 30 minutes |
-| 5 | When an encounter starts, how do characters get onto the board? ([DM map editor](/features/dm-map-editor.md) open question) | Stage 3 | The DM ticks which characters take part; their tokens appear on the entrance cells, and players move them from there |
+| 5 | When an encounter starts, how do characters get onto the board? ([DM map editor](/features/dm-map-editor.md) open question) | Stage 3 | **Answered:** the session DM ticks the characters and places each one on a setup screen; starting creates their tokens ([encounter](/domain/encounter.md)) |
 | 6 | The sample "Gorge crossing" map has its bridge over `void` cells, but `void` blocks movement and a feature with `blocksMovement: false` doesn't make cells walkable ([battle map](/domain/battle-map.md), [movement rules](/rules/movement-distance.md)) | Stage 4 | A non-blocking feature makes its footprint walkable at the feature's elevation, whatever the terrain below |
 | 7 | Corner rule: does one blocked side cell block a diagonal? | Stage 4 | Yes, either side blocks (the current reading) |
 | 8 | Elevation and flying in the distance preview | Stage 4 | Elevation is shown but not counted; flying gets no special rule |
@@ -86,7 +86,7 @@ These are open or only proposed in the knowledge base. Each has a default that t
 
 Runs alongside stages 1–6. It needs only the `image-assets` skill and no app code.
 
-- Author 3–4 sample layouts that cover the hard cases: an edge-heavy dungeon, a large open field near 40 cells, a wide map near 3:1, and the existing gorge crossing. The same JSON files become the sample maps in stage 3.
+- Use the sample maps from stage 3 as layouts. They cover the hard cases: an edge-heavy dungeon, a large open field near 40 cells, a wide map near 3:1, and the gorge crossing.
 - Generate each at low quality, then medium; check the fit with `check_alignment.py`; regenerate with prompt fixes where needed.
 - Record cost and time per image and quality level in the [image budget](/decisions/image-budget.md).
 
@@ -165,8 +165,8 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 **Feature set**
 
 - [Battle maps](/domain/battle-map.md), [encounters](/domain/encounter.md) and [tokens](/domain/token.md) in the database. Creature types exist with name, size and speed only (the bestiary UI comes in stage 6).
-- Until the editor exists: the DM imports a layout JSON file or picks one of the T0 sample maps. The import creates the map, the encounter and its creature tokens.
-- The session DM starts and ends an encounter in the active session, with characters placed as decided in question 5. Players opening the app land on the active encounter.
+- Until the editor exists: a `dm` member imports a layout JSON file or picks one of the sample maps ([import file](/domain/battle-map.md)). The import creates the map, the encounter in status `ready` and its creature tokens. Cells missing from the file are `void`.
+- The session DM starts and ends an encounter in the active session. Starting is a setup screen: tick the characters and place each one ([encounter](/domain/encounter.md)). Players opening the app land on the active encounter.
 - `GET` board state: one document with the layout, tokens and their sizes. Stage 4 reuses it for reconnects.
 - Konva board: the plain textured rendering of the layout (the permanent fallback for missing images), features and entrances, the grid drawn by the app, tokens as circles with the first letter and a coloured ring, footprints by [creature size](/rules/creature-size.md).
 - Pinch to zoom, drag to pan, fit to screen. Tap a cell or token to see terrain and elevation in meters.
@@ -177,7 +177,7 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 2. *Parallel, three lanes:*
    - **Backend:** import with validation, encounter start and end, character placement, board state, landing route.
    - **Board renderer:** layers, gestures and tap info, built against fixture JSON only. It is the largest lane and doesn't depend on the others.
-   - **DM screens:** import a map, create, start and end an encounter, pick the characters.
+   - **DM screens:** import a map or pick a sample, the setup screen that picks and places the characters, start and end an encounter.
 3. *Sequential:* integrate; Playwright screenshots at phone and laptop sizes; a 40×40 performance check.
 
 **Manual gate**
