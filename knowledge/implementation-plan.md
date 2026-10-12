@@ -24,7 +24,7 @@ The next stage starts only after the gate passes. Gate findings are fixed inside
 | 1 | 1 | Walking skeleton | The empty app runs locally and in production, installs as a PWA and wakes from zero |
 | 2 | 1 | Accounts and campaigns | Two people sign in, one joins the other's campaign, and both stay signed in across restarts |
 | 3 | 1 | Board on screen | A hand-made map shows up on every phone with grid, tokens, zoom and pan |
-| 4 | 1 | Live table | Players and the DM move tokens with a distance preview and reach highlight, live on all devices |
+| 4 | 1 | Live table | Players and the DM move tokens, live on all devices |
 | 5 | 2 | Offline map editor | The DM builds a map on a laptop with no connection |
 | 6 | 2 | Bestiary, encounter prep and sync | The DM preps a whole encounter offline, syncs it and runs it |
 | 7 | 3 | AI backgrounds | The editor generates backgrounds, the DM picks one, and the board shows it |
@@ -70,11 +70,11 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 1 | UI language | Stage 1 | **Answered:** German only ([UI language](/decisions/ui-language.md)); more languages are in the [backlog](/backlog.md) |
 | 2 | Where does the code live? | Stage 1 | **Answered:** the GitHub repository `otressler/oreanas-office` |
 | 3 | Who provisions Azure? | Stage 1 | **Answered:** only the project owner. Claude writes the templates and gives a summary of every resource and its cost before each provisioning ([hosting](/decisions/hosting.md)) |
-| 4 | [Persistence](/decisions/persistence.md) and [realtime sync](/decisions/realtime-sync.md) are only proposed, but stages 2–4 build them | Stage 2 / Stage 4 | **Persistence answered:** accepted as written. Realtime sync is decided at the start of stage 4, after the board exists: last move wins, only confirmed moves are sent, idle connections drop after 30 minutes |
+| 4 | [Persistence](/decisions/persistence.md) and [realtime sync](/decisions/realtime-sync.md) are only proposed, but stages 2–4 build them | Stage 2 / Stage 4 | **Answered:** persistence accepted as written. Realtime sync accepted at the start of stage 4: last move wins, only confirmed moves are sent, undo only your own last move while it is the token's latest, moving off while disconnected, idle connections drop after 30 minutes ([realtime sync](/decisions/realtime-sync.md)) |
 | 5 | When an encounter starts, how do characters get onto the board? ([DM map editor](/features/dm-map-editor.md) open question) | Stage 3 | **Answered:** the session DM ticks the characters and places each one on a setup screen; starting creates their tokens ([encounter](/domain/encounter.md)) |
-| 6 | The sample "Gorge crossing" map has its bridge over `void` cells, but `void` blocks movement and a feature with `blocksMovement: false` doesn't make cells walkable ([battle map](/domain/battle-map.md), [movement rules](/rules/movement-distance.md)) | Stage 4 | A non-blocking feature makes its footprint walkable at the feature's elevation, whatever the terrain below |
-| 7 | Corner rule: does one blocked side cell block a diagonal? | Stage 4 | Yes, either side blocks (the current reading) |
-| 8 | Elevation and flying in the distance preview | Stage 4 | Elevation is shown but not counted; flying gets no special rule |
+| 6 | The sample "Gorge crossing" map has its bridge over `void` cells, but `void` blocks movement and a feature with `blocksMovement: false` doesn't make cells walkable ([battle map](/domain/battle-map.md), [movement rules](/rules/movement-distance.md)) | Stage 3 | **Answered** for placement and moves: a non-blocking feature makes its footprint walkable at the feature's elevation, whatever the terrain below ([encounter](/domain/encounter.md)). For paths it is deferred with the distance rules |
+| 7 | Corner rule: does one blocked side cell block a diagonal? | Deferred | **Deferred:** distance rules are out of the proof of concept. The current reading stays "either side blocks" |
+| 8 | Elevation and flying in the distance preview | Deferred | **Deferred** with the distance rules |
 | 9 | [Offline prep and PWA](/decisions/offline-prep-pwa.md) is only proposed | Stage 5 | Accept as written |
 | 10 | Largest grid size | Stage 5 | 40×40, which the [frontend stack](/decisions/frontend-stack.md) sizes for |
 | 11 | [Image budget](/decisions/image-budget.md) | Stage 7 | Set after T0 records the cost per image |
@@ -192,31 +192,29 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 
 Completes roadmap phase 1.
 
+Distance rules are out of the proof of concept: no path, no distance preview and no reach highlight. They come back at a later, not yet scheduled stage ([playable map](/features/playable-map.md)).
+
 **Feature set**
 
-- Distance: one pure TypeScript function returning squares, A* with every step one square, no corner cutting, difficult terrain and water doubled, blocked cells and features, whole footprints for large tokens ([movement distance](/rules/movement-distance.md)). Unit tests from the rule's examples plus edge cases.
-- Phone controls: tap a token, tap a target to see the path and "7,5 / 9 m", tap again to confirm ([playable map](/features/playable-map.md)).
-- Reach highlight: the selected token's reachable cells within its default speed are shaded. One distance calculation from the token gives both the highlight and the preview for any target. Never a limit ([speed](/rules/movement-distance.md)).
-- SignalR hub, one group per encounter: permission check, save the move and its history, then broadcast ([realtime sync](/decisions/realtime-sync.md)). Optimistic moves with rollback when rejected.
-- Undo your own last move; the session DM moves any token. Other `dm` members of the campaign, the default DM included, move only their own characters ([session](/domain/session.md)).
-- Connection lifecycle: disconnect when the app goes to the background, reconnect and reload the board when visible, drop connections idle for 30 minutes, a small connection indicator, and the waking screen when a reconnect hits a cold start.
+- Phone controls: tap a token, tap a target cell to see the token there as a preview, tap again to confirm ([playable map](/features/playable-map.md)). Only cells the token may stand on are accepted: its whole footprint on walkable cells, overlapping other tokens allowed ([realtime sync](/decisions/realtime-sync.md)).
+- SignalR hub, one group per encounter: permission and target check, save the move and its history, then broadcast. Only confirmed moves are sent. Optimistic moves with rollback when rejected. On other devices the token slides to its new cell in about 200 ms.
+- Undo your own last move, only while it is still that token's latest move. The session DM moves any token but undoes only their own moves. Other `dm` members of the campaign, the default DM included, move only their own characters ([session](/domain/session.md)).
+- Connection lifecycle: disconnect when the app goes to the background, reconnect and reload the board when visible, drop connections idle for 30 minutes, a small connection indicator, moving switched off while disconnected, and the waking screen when a reconnect hits a cold start.
 
 **Order**
 
 1. *Sequential:* hub contract as a C# interface with matching TypeScript types and a test that checks the method names match; the move history table.
-2. *Parallel, three lanes:*
-   - **Pathfinding:** pure function and tests. It needs nothing from stage 3, so it can start as soon as stage 3's contract step is done, in parallel with stage 3's lanes.
-   - **Hub backend:** permissions, save before broadcast, undo, idle timeout, integration tests with two SignalR clients.
-   - **Board interaction:** the select, preview and confirm state machine, path drawing, optimistic updates, connection lifecycle.
+2. *Parallel, two lanes:*
+   - **Hub backend:** permissions, target check, save before broadcast, undo, idle timeout, integration tests with two SignalR clients.
+   - **Board interaction:** the select, preview and confirm state machine, optimistic updates, the slide animation, connection lifecycle and indicator.
 3. *Sequential:* integrate; Playwright with a player and a DM context: live sync, a rejected move by the wrong player, undo, reconnect.
 
 **Manual gate (a rehearsal with real devices)**
 
 - [ ] Three or more phones and the DM laptop on production. A move shows up on the other devices within about a second.
 - [ ] A player can't move another player's character or a creature; the DM can move anything.
-- [ ] The preview matches the rule examples: 3 straight + 2 diagonal = 7.5 m; with one difficult square 9 m; no path through a wall corner.
-- [ ] Selecting a 9 m character shades the cells within 6 squares, walls and difficult terrain included; a target outside the shading still shows its distance and can be confirmed.
-- [ ] Undo works on a phone after a mistaken tap.
+- [ ] A token can't be put on a wall or into the gorge, but can stand on the bridge and on another token.
+- [ ] Undo works on a phone after a mistaken tap, and is gone once someone else has moved that token.
 - [ ] Lock a phone for a minute and unlock it: it reconnects and shows the current board.
 - [ ] Leave everything closed until the app scales to zero; reopen: waking screen, then the correct board.
 
@@ -227,7 +225,7 @@ Completes roadmap phase 1.
 - Dexie (IndexedDB) storage for battle maps, with a version number and a "changed" flag per item, ready for stage 6 sync.
 - Editor for laptops: new map N×M up to the grid limit; terrain brush with single cell, rectangle and fill; elevation painting; features with footprint, kind, label, elevation and "blocks movement"; entrances and exits on edge cells; scene, vibe and lighting text ([DM map editor](/features/dm-map-editor.md)).
 - Undo and redo inside the editor.
-- Preview with the stage 3 renderer and a test move with the stage 4 pathfinding.
+- Preview with the stage 3 renderer, and a test placement with the stage 4 target check.
 - Works completely offline, with the editor routes in the cached app shell. Export and import of the layout JSON stays as a tool.
 
 **Order**
@@ -243,7 +241,7 @@ Completes roadmap phase 1.
 
 - [ ] With the laptop in airplane mode, build the gorge crossing from scratch in under ten minutes.
 - [ ] Close the browser, reopen it offline: the map is still there.
-- [ ] The test move goes around walls and over the bridge, not through the gorge.
+- [ ] A test token stands on the bridge but not on a wall or in the gorge.
 - [ ] Undo and redo behave as expected while painting.
 
 # Stage 6 — Bestiary, encounter prep and sync
@@ -325,7 +323,7 @@ Completes roadmap phase 3. Reuses the stage 7 queue, so it is smaller.
 
 # Stage 9 — Measuring tools
 
-**Feature set:** a ruler between any two points; area templates (cone, sphere, line, cube) sized in meters ([playable map](/features/playable-map.md)). Sharing follows question 12. The reach highlight moved to stage 4.
+**Feature set:** a ruler between any two points; area templates (cone, sphere, line, cube) sized in meters ([playable map](/features/playable-map.md)). Sharing follows question 12. The reach highlight and distance preview are deferred with the distance rules (see stage 4).
 
 **Order:** a short sequential step for the shared "overlay" message type on the hub, then two parallel lanes (ruler, templates), each its own board layer.
 

@@ -29,11 +29,11 @@ Size, speed and image come from the linked character or creature type. On the bo
 - `creature` tokens: the session DM only.
 - Later, in local mode: a table view device moves every `character` token, whoever owns it. In bring-your-own-device mode it can't move any ([backlog](/backlog.md)).
 
-There are no turn-order or distance restrictions ([overview](/overview.md)).
+There are no turn-order or distance restrictions ([overview](/overview.md)). The only check is the target: the whole footprint inside the map on walkable cells, as for [placement](/domain/encounter.md), except that tokens may overlap ([realtime sync](/decisions/realtime-sync.md)).
 
 # Move history
 
-Every move is recorded as `{ tokenId, from, to, byUserId, at }`. This gives an "undo last move", which matters on phones where taps go wrong. Moves are broadcast to everyone in real time ([realtime sync](/decisions/realtime-sync.md)).
+Every move is recorded as `{ tokenId, from, to, byUserId, at }`. This gives an "undo last move", which matters on phones where taps go wrong: a user undoes only their own last move, and only while it is still that token's latest move. Moves are broadcast to everyone in real time ([realtime sync](/decisions/realtime-sync.md)).
 
 # Later
 

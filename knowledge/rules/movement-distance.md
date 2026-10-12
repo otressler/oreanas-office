@@ -51,6 +51,8 @@ Distance is calculated only in the frontend ([frontend stack](/decisions/fronten
 
 # Open questions
 
+Deferred together with the distance preview: the proof of concept has no distance rules ([playable map](/features/playable-map.md)). They're answered when movement comes back.
+
 - **Corners**: is a diagonal blocked when only one of the two side cells is blocked, or only when both are? The current reading is "either one". Confirm it at the table.
 - **Elevation**: does climbing or jumping between heights cost extra, or is height only shown? For now, show it and don't count it.
 - **Flying**: should a flying token ignore terrain costs and blocked cells?
