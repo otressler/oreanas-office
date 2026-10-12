@@ -13,7 +13,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 |-------|------|-------|
 | `campaignId` | → [Campaign](/domain/campaign.md) | Key, together with `userId` |
 | `userId` | → [User](/domain/user.md) | |
-| `role` | enum `dm` \| `player` | `dm` members may run sessions and edit maps |
+| `role` | enum `dm` \| `player` | `dm` members may be chosen to run a session and prepare maps and encounters. Actions at the table belong to the session DM alone ([session](/domain/session.md)) |
 | `joinedAt` | timestamp | |
 
 # Notes

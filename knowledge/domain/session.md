@@ -23,10 +23,10 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 # Rules
 
 - Any `dm` member of the campaign can create a session ([campaign member](/domain/campaign-member.md)).
-- The session DM or the campaign's default DM makes it active, changes its DM to another `dm` member, and ends it.
+- The session DM or the campaign's default DM makes it active, changes its DM to another `dm` member, and ends it. This is the only right the default DM has over a session they don't run: it keeps a session from getting stuck when its DM is absent.
 - Only one session per campaign is active (`Campaign.activeSessionId`).
-- The session DM can start and end encounters, move every token, and see hidden tokens.
-- Everyone else in the campaign is a player for this session.
+- Only the session DM can start and end encounters, move creature tokens and other players' characters, and see hidden tokens.
+- Everyone else in the campaign is a player for this session, including the default DM and other `dm` members. The campaign role doesn't grant any action at the table.
 
 # Notes
 

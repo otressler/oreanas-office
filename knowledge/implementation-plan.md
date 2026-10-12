@@ -166,7 +166,7 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 
 - [Battle maps](/domain/battle-map.md), [encounters](/domain/encounter.md) and [tokens](/domain/token.md) in the database. Creature types exist with name, size and speed only (the bestiary UI comes in stage 6).
 - Until the editor exists: the DM imports a layout JSON file or picks one of the T0 sample maps. The import creates the map, the encounter and its creature tokens.
-- Start and end an encounter in the active session, with characters placed as decided in question 5. Players opening the app land on the active encounter.
+- The session DM starts and ends an encounter in the active session, with characters placed as decided in question 5. Players opening the app land on the active encounter.
 - `GET` board state: one document with the layout, tokens and their sizes. Stage 4 reuses it for reconnects.
 - Konva board: the plain textured rendering of the layout (the permanent fallback for missing images), features and entrances, the grid drawn by the app, tokens as circles with the first letter and a coloured ring, footprints by [creature size](/rules/creature-size.md).
 - Pinch to zoom, drag to pan, fit to screen. Tap a cell or token to see terrain and elevation in meters.
@@ -198,7 +198,7 @@ Completes roadmap phase 1.
 - Phone controls: tap a token, tap a target to see the path and "7,5 / 9 m", tap again to confirm ([playable map](/features/playable-map.md)).
 - Reach highlight: the selected token's reachable cells within its default speed are shaded. One distance calculation from the token gives both the highlight and the preview for any target. Never a limit ([speed](/rules/movement-distance.md)).
 - SignalR hub, one group per encounter: permission check, save the move and its history, then broadcast ([realtime sync](/decisions/realtime-sync.md)). Optimistic moves with rollback when rejected.
-- Undo your own last move; the DM moves any token.
+- Undo your own last move; the session DM moves any token. Other `dm` members of the campaign, the default DM included, move only their own characters ([session](/domain/session.md)).
 - Connection lifecycle: disconnect when the app goes to the background, reconnect and reload the board when visible, drop connections idle for 30 minutes, a small connection indicator, and the waking screen when a reconnect hits a cold start.
 
 **Order**
