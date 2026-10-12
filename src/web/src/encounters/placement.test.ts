@@ -23,13 +23,14 @@ function character(id: string, fields: Partial<Character> = {}): Character {
     size: 'medium',
     speedSquares: 6,
     canEdit: true,
+    colorIndex: 0,
     ...fields,
   }
 }
 
 describe('withPlacedCharacters', () => {
   it('adds placed characters as tokens and leaves unplaced ones out', () => {
-    const ilse = character('ilse', { name: 'Ilse', size: 'small', speedSquares: 5 })
+    const ilse = character('ilse', { name: 'Ilse', size: 'small', speedSquares: 5, colorIndex: 3 })
     const brom = character('brom')
     const board = withPlacedCharacters(
       gorge,
@@ -54,8 +55,8 @@ describe('withPlacedCharacters', () => {
       elevation: grid.elevation(9, 5),
       size: 'small',
       speedSquares: 5,
-      // Second in the campaign's list.
-      colorIndex: 1,
+      // The server's order, not the list's.
+      colorIndex: 3,
     })
   })
 })

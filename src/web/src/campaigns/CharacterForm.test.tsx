@@ -98,6 +98,7 @@ describe('CharacterForm', () => {
       id: 'ch1',
       ownerUserId: 'u1',
       ownerDisplayName: 'Mira',
+      colorIndex: 0,
       name: 'Brom',
       size: 'medium',
       speedSquares: 5,

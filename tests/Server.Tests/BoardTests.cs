@@ -110,6 +110,13 @@ public sealed class BoardTests(AppFixture fixture)
         Assert.All(board.Tokens.Where(t => t.Kind == TokenKind.Creature), t => Assert.Null(t.CharacterId));
         Assert.Equal([aria.Id, thorin.Id], board.Tokens.Where(t => t.Kind == TokenKind.Character).Select(t => t.CharacterId));
         Assert.All(board.Tokens.Where(t => t.Kind == TokenKind.Character), t => Assert.Null(t.CreatureTypeId));
+
+        // The setup screen colours characters from the character list; both must agree.
+        var characters = await table.Player.Client.GetFromJsonAsync<List<CharacterResponse>>(
+            $"/api/campaigns/{table.CampaignId}/characters", Json);
+        Assert.Equal(
+            board.Tokens.Where(t => t.Kind == TokenKind.Character).Select(t => (t.CharacterId, t.ColorIndex)),
+            characters!.Where(c => c.Id == aria.Id || c.Id == thorin.Id).OrderBy(c => c.Name).Select(c => ((Guid?)c.Id, (int?)c.ColorIndex)));
     }
 
     private static async Task<BoardStateResponse> ReadBoardAsync(Person person, EncounterTable table) =>

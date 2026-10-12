@@ -19,8 +19,8 @@ export function setupTokenId(characterId: string): string {
 }
 
 /**
- * The board with the placed characters as extra tokens. Ring colours follow the
- * campaign's character list; the server assigns the real ones when the fight starts.
+ * The board with the placed characters as extra tokens, in the ring colours the
+ * board will give them once the fight starts.
  */
 export function withPlacedCharacters(
   board: BoardState,
@@ -29,9 +29,9 @@ export function withPlacedCharacters(
   positions: Positions,
 ): BoardState {
   const placed: BoardToken[] = []
-  characters.forEach((character, index) => {
+  for (const character of characters) {
     const position = positions.get(character.id)
-    if (!position) return
+    if (!position) continue
     placed.push({
       id: setupTokenId(character.id),
       kind: 'character',
@@ -44,9 +44,9 @@ export function withPlacedCharacters(
       elevation: placementElevation(grid, character.size, position.x, position.y),
       size: character.size,
       speedSquares: character.speedSquares,
-      colorIndex: index,
+      colorIndex: character.colorIndex,
     })
-  })
+  }
   return { ...board, tokens: [...board.tokens, ...placed] }
 }
 

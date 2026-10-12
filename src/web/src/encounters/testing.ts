@@ -62,6 +62,7 @@ export function character(name: string, fields: Partial<Character> = {}): Charac
     size: 'medium',
     speedSquares: 6,
     canEdit: true,
+    colorIndex: 0,
     ...fields,
   }
 }

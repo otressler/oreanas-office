@@ -139,13 +139,17 @@ public static class EncounterEndpoints
             })
             .ToListAsync(cancellationToken);
 
-        // Ring colours follow the order characters joined the campaign.
-        var characterOrder = await db.Characters
+        // Ring colours follow the order characters were added to the campaign, counted
+        // the same way as CharacterResponse.ColorIndex.
+        var characterCreated = await db.Characters
             .Where(c => c.CampaignId == campaignId)
-            .OrderBy(c => c.CreatedAt)
-            .ThenBy(c => c.Id)
-            .Select(c => c.Id)
+            .Select(c => new { c.Id, c.CreatedAt })
             .ToListAsync(cancellationToken);
+        int ColorIndex(Guid characterId)
+        {
+            var created = characterCreated.Single(c => c.Id == characterId).CreatedAt;
+            return characterCreated.Count(c => c.CreatedAt < created);
+        }
 
         var board = new BoardStateResponse(
             encounter.Id,
@@ -167,7 +171,7 @@ public static class EncounterEndpoints
                     t.Elevation,
                     (t.Kind == TokenKind.Character ? t.CharacterSize : t.TypeSize) ?? CreatureSize.Medium,
                     t.Speed,
-                    t.CharacterId is { } characterId ? characterOrder.IndexOf(characterId) : null)),
+                    t.CharacterId is { } characterId ? ColorIndex(characterId) : null)),
             ],
             encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId);
         return TypedResults.Ok(board);

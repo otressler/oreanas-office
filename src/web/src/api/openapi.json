@@ -1719,7 +1719,8 @@
           "name",
           "size",
           "speedSquares",
-          "canEdit"
+          "canEdit",
+          "colorIndex"
         ],
         "type": "object",
         "properties": {
@@ -1746,6 +1747,10 @@
           },
           "canEdit": {
             "type": "boolean"
+          },
+          "colorIndex": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

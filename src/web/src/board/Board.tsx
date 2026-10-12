@@ -368,7 +368,7 @@ export function Board({
           <div
             ref={infoRef}
             role="status"
-            className="pointer-events-none absolute top-0 left-0 z-10 max-w-60 rounded-lg border border-line bg-panel/95 px-3 py-2 shadow-lg shadow-black/40"
+            className="pointer-events-none absolute top-0 left-0 z-10 max-w-60 rounded-lg border border-line bg-panel px-3 py-2 shadow-lg shadow-black/40"
           >
             <p className="leading-snug font-semibold text-parchment">{infoContent.title}</p>
             {infoContent.details.map((line) => (

@@ -136,5 +136,6 @@ public static class CharacterEndpoints
             c.Name,
             c.Size,
             c.SpeedSquares,
-            isDm || c.OwnerUserId == userId));
+            isDm || c.OwnerUserId == userId,
+            c.Campaign.Characters.Count(o => o.CreatedAt < c.CreatedAt)));
 }

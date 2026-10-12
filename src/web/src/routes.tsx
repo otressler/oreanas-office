@@ -3,11 +3,8 @@ import { RequireAdmin, RequireAuth } from './auth/RequireAuth'
 import { Layout } from './components/Layout'
 import { AdminPage } from './pages/AdminPage'
 import { CampaignPage } from './pages/CampaignPage'
-import { EncounterPage } from './pages/EncounterPage'
-import { EncounterSetupPage } from './pages/EncounterSetupPage'
 import { HomePage } from './pages/HomePage'
 import { InvitePage } from './pages/InvitePage'
-import { MapImportPage } from './pages/MapImportPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PasswordResetPage } from './pages/PasswordResetPage'
 import { ProfilePage } from './pages/ProfilePage'
@@ -27,12 +24,25 @@ export const routes: RouteObject[] = [
           { index: true, element: <HomePage /> },
           { path: 'profil', element: <ProfilePage /> },
           { path: 'kampagnen/:campaignId', element: <CampaignPage /> },
-          { path: 'kampagnen/:campaignId/kampf/:encounterId', element: <EncounterPage /> },
+          // The board pages load on demand: Konva alone would double the app shell.
+          {
+            path: 'kampagnen/:campaignId/kampf/:encounterId',
+            lazy: async () => ({
+              Component: (await import('./pages/EncounterPage')).EncounterPage,
+            }),
+          },
           {
             path: 'kampagnen/:campaignId/sitzungen/:sessionId/kampf/:encounterId/aufstellen',
-            element: <EncounterSetupPage />,
+            lazy: async () => ({
+              Component: (await import('./pages/EncounterSetupPage')).EncounterSetupPage,
+            }),
           },
-          { path: 'kampagnen/:campaignId/karten/importieren', element: <MapImportPage /> },
+          {
+            path: 'kampagnen/:campaignId/karten/importieren',
+            lazy: async () => ({
+              Component: (await import('./pages/MapImportPage')).MapImportPage,
+            }),
+          },
           { element: <RequireAdmin />, children: [{ path: 'admin', element: <AdminPage /> }] },
         ],
       },

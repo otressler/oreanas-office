@@ -1577,6 +1577,8 @@ export interface components {
             /** Format: int32 */
             speedSquares: number;
             canEdit: boolean;
+            /** Format: int32 */
+            colorIndex: number;
         };
         CreateCampaignRequest: {
             name: string;

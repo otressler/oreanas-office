@@ -814,6 +814,10 @@ export class MockBackend {
       ...rest,
       ownerDisplayName: this.displayName(character.ownerUserId),
       canEdit: isDm || character.ownerUserId === userId,
+      // Like the board: the place in the order characters were added to the campaign.
+      colorIndex: this.characters
+        .filter((c) => c.campaignId === character.campaignId)
+        .indexOf(character),
     }
   }
 
