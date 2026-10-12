@@ -1,3 +1,5 @@
+using OreanasOffice.Server.Encounters;
+
 namespace OreanasOffice.Server.Campaigns;
 
 // Request and response types for /api/campaigns.
@@ -5,7 +7,9 @@ namespace OreanasOffice.Server.Campaigns;
 // The landing page: every campaign of the signed-in user and its active session.
 public record CampaignSummaryResponse(Guid Id, string Name, CampaignRole MyRole, ActiveSessionSummary? ActiveSession);
 
-public record ActiveSessionSummary(Guid Id, string Title, DateOnly Date, Guid DmUserId, string DmDisplayName);
+// ActiveEncounter: the fight players land on, if one is running.
+public record ActiveSessionSummary(
+    Guid Id, string Title, DateOnly Date, Guid DmUserId, string DmDisplayName, ActiveEncounterSummary? ActiveEncounter);
 
 public record CreateCampaignRequest(string Name);
 

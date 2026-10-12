@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OreanasOffice.Server.Accounts;
 using OreanasOffice.Server.Campaigns;
+using OreanasOffice.Server.Encounters;
 
 namespace OreanasOffice.Server.Sessions;
 
@@ -30,6 +31,8 @@ public class GameSession
     public Campaign Campaign { get; set; } = null!;
 
     public AppUser Dm { get; set; } = null!;
+
+    public List<Encounter> Encounters { get; } = [];
 }
 
 public enum SessionStatus

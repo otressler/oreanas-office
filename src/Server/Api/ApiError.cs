@@ -33,4 +33,20 @@ public enum ApiErrorCode
     NotADm,
     AnotherSessionActive,
     SessionEnded,
+
+    // Map imports. Field is the JSON path of the offending entry, e.g. "layout.cells[12]".
+    MapSizeInvalid,
+    LayoutVersionUnsupported,
+    CellInvalid,
+    FeatureInvalid,
+    EntranceInvalid,
+    CreatureTypeInvalid,
+    PlacementInvalid,
+
+    // Encounters
+    CharacterInvalid,
+    SessionNotActive,
+    EncounterNotReady,
+    EncounterNotActive,
+    AnotherEncounterActive,
 }

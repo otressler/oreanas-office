@@ -26,7 +26,8 @@ public sealed class SessionTests(AppFixture fixture)
         Assert.Equal($"/api/campaigns/{table.CampaignId}/sessions/{session.Id}", response.Headers.Location?.OriginalString);
         Assert.Equal(
             new SessionResponse(
-                session.Id, "Die Seilbrücke", Saturday, SessionStatus.Planned, table.Dm.Id, "Oreana", table.SecondDm.Id, CanManage: false),
+                session.Id, "Die Seilbrücke", Saturday, SessionStatus.Planned, table.Dm.Id, "Oreana", table.SecondDm.Id,
+                CanManage: false, IsSessionDm: false, ActiveEncounter: null),
             session);
     }
 

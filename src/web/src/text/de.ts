@@ -248,6 +248,20 @@ export const de = {
     notADm: 'Diese Person gehört nicht zur Spielleitung der Kampagne.',
     anotherSessionActive: 'In dieser Kampagne läuft schon eine Sitzung. Beende sie zuerst.',
     sessionEnded: 'Diese Sitzung ist schon beendet.',
+    mapSizeInvalid: 'Eine Karte ist 1 bis 40 Felder breit und hoch.',
+    layoutVersionUnsupported: 'Diese Kartendatei stammt aus einer neueren Version der App.',
+    cellInvalid: 'Ein Feld liegt außerhalb der Karte oder steht doppelt in der Datei.',
+    featureInvalid: 'Ein Objekt auf der Karte ist unvollständig oder ragt über den Rand.',
+    entranceInvalid: 'Ein Ein- oder Ausgang liegt nicht am Rand der Karte.',
+    creatureTypeInvalid:
+      'Für eine neue Kreaturenart fehlen Größe oder Geschwindigkeit, oder ihr Name ist zu lang.',
+    placementInvalid:
+      'Dort ist kein Platz: Die Figur stünde außerhalb der Karte, auf Wand oder Abgrund oder auf einer anderen Figur.',
+    characterInvalid: 'Dieser Charakter gehört nicht zur Kampagne oder ist doppelt dabei.',
+    sessionNotActive: 'Diese Sitzung läuft gerade nicht. Starte sie zuerst.',
+    encounterNotReady: 'Dieser Kampf kann nicht gestartet werden. Er läuft schon oder ist vorbei.',
+    encounterNotActive: 'Dieser Kampf läuft gerade nicht.',
+    anotherEncounterActive: 'In dieser Sitzung läuft schon ein Kampf. Beende ihn zuerst.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Failures without an error code. */

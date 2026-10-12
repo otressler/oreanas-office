@@ -19,6 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The sample maps the frontend offers; import tests read them from SampleMaps/. -->
+    <None Include="..\..\src\web\src\samples\maps\*.json" LinkBase="SampleMaps" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Server\OreanasOffice.Server.csproj" />
   </ItemGroup>
 

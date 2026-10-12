@@ -1196,10 +1196,270 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/campaigns/{campaignId}/encounters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EncounterSummaryResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/encounters/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ImportMapRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EncounterSummaryResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/encounters/{encounterId}/board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    encounterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoardStateResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/{encounterId}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    sessionId: string;
+                    encounterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StartEncounterRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EncounterSummaryResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/{encounterId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    sessionId: string;
+                    encounterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EncounterSummaryResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ActiveEncounterSummary: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
         ActiveSessionSummary: {
             /** Format: uuid */
             id: string;
@@ -1209,15 +1469,63 @@ export interface components {
             /** Format: uuid */
             dmUserId: string;
             dmDisplayName: string;
+            activeEncounter: null | components["schemas"]["ActiveEncounterSummary"];
         };
         ApiError: {
             code: components["schemas"]["ApiErrorCode"];
             field?: null | string;
         };
         /** @enum {unknown} */
-        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded";
+        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive";
         AuthOptionsResponse: {
             googleEnabled: boolean;
+        };
+        BoardMap: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            layout: components["schemas"]["MapLayout"];
+            backgroundUrl: null | string;
+        };
+        BoardStateResponse: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: uuid */
+            campaignId: string;
+            /** Format: uuid */
+            sessionId: null | string;
+            name: string;
+            status: components["schemas"]["EncounterStatus"];
+            map: components["schemas"]["BoardMap"];
+            tokens: components["schemas"]["BoardToken"][];
+            isSessionDm: boolean;
+        };
+        BoardToken: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["TokenKind"];
+            /** Format: uuid */
+            characterId: null | string;
+            /** Format: uuid */
+            creatureTypeId: null | string;
+            /** Format: uuid */
+            ownerUserId: null | string;
+            label: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            /** Format: double */
+            elevation: number;
+            size: components["schemas"]["CreatureSize"];
+            /** Format: int32 */
+            speedSquares: number;
+            /** Format: int32 */
+            colorIndex: null | number;
         };
         CampaignResponse: {
             /** Format: uuid */
@@ -1243,6 +1551,14 @@ export interface components {
         ChangeSessionDmRequest: {
             /** Format: uuid */
             userId: string;
+        };
+        CharacterPlacement: {
+            /** Format: uuid */
+            characterId: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
         };
         CharacterRequest: {
             name: string;
@@ -1281,8 +1597,53 @@ export interface components {
         };
         /** @enum {unknown} */
         CreatureSize: "tiny" | "small" | "medium" | "large" | "huge" | "gargantuan";
+        /** @enum {unknown} */
+        EncounterStatus: "draft" | "ready" | "active" | "ended";
+        EncounterSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            status: components["schemas"]["EncounterStatus"];
+            /** Format: uuid */
+            battleMapId: string;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            /** Format: int32 */
+            creatureCount: number;
+            /** Format: uuid */
+            sessionId: null | string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @enum {unknown} */
+        EntranceKind: "entrance" | "exit" | "both";
         HealthResponse: {
             status: string;
+        };
+        ImportCreature: {
+            type: string;
+            size: null | components["schemas"]["CreatureSize"];
+            /** Format: double */
+            speedMeters: null | number;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            label: null | string;
+        };
+        ImportMapRequest: {
+            name: string;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            scene: null | string;
+            vibe: null | string;
+            lighting: null | string;
+            layout: components["schemas"]["MapLayoutFile"];
+            creatures: null | components["schemas"]["ImportCreature"][];
         };
         InviteResponse: {
             /** Format: uuid */
@@ -1303,9 +1664,85 @@ export interface components {
         JoinCodeResponse: {
             joinCode: string;
         };
+        LayoutCell: {
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            terrain: components["schemas"]["Terrain"];
+            /** Format: double */
+            elevation: number;
+        };
+        LayoutCellFile: {
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            terrain: components["schemas"]["Terrain"];
+            /** Format: double */
+            elevation: null | number;
+        };
+        LayoutEntrance: {
+            id: string;
+            kind: components["schemas"]["EntranceKind"];
+            label: string;
+            cells: number[][];
+        };
+        LayoutEntranceFile: {
+            id: null | string;
+            kind: components["schemas"]["EntranceKind"];
+            label: null | string;
+            cells: number[][];
+        };
+        LayoutFeature: {
+            id: string;
+            kind: string;
+            label: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            /** Format: int32 */
+            w: number;
+            /** Format: int32 */
+            h: number;
+            /** Format: double */
+            elevation: number;
+            blocksMovement: boolean;
+        };
+        LayoutFeatureFile: {
+            id: null | string;
+            kind: string;
+            label: null | string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            /** Format: int32 */
+            w: number;
+            /** Format: int32 */
+            h: number;
+            /** Format: double */
+            elevation: null | number;
+            blocksMovement: null | boolean;
+        };
         LoginRequest: {
             email: string;
             password: string;
+        };
+        MapLayout: {
+            /** Format: int32 */
+            schemaVersion: number;
+            cells: components["schemas"]["LayoutCell"][];
+            features: components["schemas"]["LayoutFeature"][];
+            entrances: components["schemas"]["LayoutEntrance"][];
+        };
+        MapLayoutFile: {
+            /** Format: int32 */
+            schemaVersion: null | number;
+            cells: components["schemas"]["LayoutCellFile"][];
+            features: null | components["schemas"]["LayoutFeatureFile"][];
+            entrances: null | components["schemas"]["LayoutEntranceFile"][];
         };
         MemberResponse: {
             /** Format: uuid */
@@ -1354,9 +1791,18 @@ export interface components {
             /** Format: uuid */
             createdByUserId: string;
             canManage: boolean;
+            isSessionDm: boolean;
+            activeEncounter: null | components["schemas"]["ActiveEncounterSummary"];
         };
         /** @enum {unknown} */
         SessionStatus: "planned" | "active" | "ended";
+        StartEncounterRequest: {
+            characters: components["schemas"]["CharacterPlacement"][];
+        };
+        /** @enum {unknown} */
+        Terrain: "void" | "floor" | "difficult" | "water" | "wall";
+        /** @enum {unknown} */
+        TokenKind: "character" | "creature";
         UpdateProfileRequest: {
             displayName: string;
         };

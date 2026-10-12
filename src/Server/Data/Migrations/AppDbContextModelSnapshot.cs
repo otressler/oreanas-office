@@ -197,6 +197,49 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.ToTable("RegistrationInvites");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Bestiary.CreatureType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Appearance")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Size")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("SpeedSquares")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("CreatureTypes");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Campaigns.Campaign", b =>
                 {
                     b.Property<Guid>("Id")
@@ -290,6 +333,160 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.ToTable("Characters");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.Encounter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BattleMapId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BattleMapId");
+
+                    b.HasIndex("SessionId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Encounters_SessionId_Active")
+                        .HasFilter("[Status] = N'Active'");
+
+                    b.HasIndex("CampaignId", "Status");
+
+                    b.ToTable("Encounters");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.Token", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatureTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Elevation")
+                        .HasPrecision(6, 1)
+                        .HasColumnType("decimal(6,1)");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Hidden")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int>("X")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Y")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("CreatureTypeId");
+
+                    b.HasIndex("EncounterId", "CharacterId")
+                        .IsUnique()
+                        .HasFilter("[CharacterId] IS NOT NULL");
+
+                    b.ToTable("Tokens", t =>
+                        {
+                            t.HasCheckConstraint("CK_Tokens_Kind", "([Kind] = N'Character' AND [CharacterId] IS NOT NULL AND [CreatureTypeId] IS NULL) OR ([Kind] = N'Creature' AND [CreatureTypeId] IS NOT NULL AND [CharacterId] IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Maps.BattleMap", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Layout")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("LayoutJson");
+
+                    b.Property<string>("Lighting")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("Scene")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Vibe")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId");
+
+                    b.ToTable("BattleMaps");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Sessions.GameSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -373,6 +570,17 @@ namespace OreanasOffice.Server.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Bestiary.CreatureType", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Campaigns.Campaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Campaign");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Campaigns.Campaign", b =>
                 {
                     b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
@@ -420,6 +628,68 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.Encounter", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Maps.BattleMap", "BattleMap")
+                        .WithMany()
+                        .HasForeignKey("BattleMapId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Campaigns.Campaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Sessions.GameSession", "Session")
+                        .WithMany("Encounters")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BattleMap");
+
+                    b.Navigation("Campaign");
+
+                    b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.Token", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Characters.Character", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OreanasOffice.Server.Bestiary.CreatureType", "CreatureType")
+                        .WithMany()
+                        .HasForeignKey("CreatureTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OreanasOffice.Server.Encounters.Encounter", "Encounter")
+                        .WithMany("Tokens")
+                        .HasForeignKey("EncounterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("CreatureType");
+
+                    b.Navigation("Encounter");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Maps.BattleMap", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Campaigns.Campaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Campaign");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Sessions.GameSession", b =>
                 {
                     b.HasOne("OreanasOffice.Server.Campaigns.Campaign", "Campaign")
@@ -452,6 +722,16 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Members");
 
                     b.Navigation("Sessions");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.Encounter", b =>
+                {
+                    b.Navigation("Tokens");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Sessions.GameSession", b =>
+                {
+                    b.Navigation("Encounters");
                 });
 #pragma warning restore 612, 618
         }

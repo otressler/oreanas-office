@@ -1019,17 +1019,301 @@
           }
         }
       }
+    },
+    "/api/campaigns/{campaignId}/encounters": {
+      "get": {
+        "tags": [
+          "Encounters"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EncounterSummaryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/encounters/import": {
+      "post": {
+        "tags": [
+          "Encounters"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportMapRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterSummaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/encounters/{encounterId}/board": {
+      "get": {
+        "tags": [
+          "Encounters"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardStateResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/{encounterId}/start": {
+      "post": {
+        "tags": [
+          "Encounters"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartEncounterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterSummaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/{encounterId}/end": {
+      "post": {
+        "tags": [
+          "Encounters"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterSummaryResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ActiveEncounterSummary": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "ActiveSessionSummary": {
         "required": [
           "id",
           "title",
           "date",
           "dmUserId",
-          "dmDisplayName"
+          "dmDisplayName",
+          "activeEncounter"
         ],
         "type": "object",
         "properties": {
@@ -1050,6 +1334,16 @@
           },
           "dmDisplayName": {
             "type": "string"
+          },
+          "activeEncounter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActiveEncounterSummary"
+              }
+            ]
           }
         }
       },
@@ -1091,7 +1385,19 @@
           "dateInvalid",
           "notADm",
           "anotherSessionActive",
-          "sessionEnded"
+          "sessionEnded",
+          "mapSizeInvalid",
+          "layoutVersionUnsupported",
+          "cellInvalid",
+          "featureInvalid",
+          "entranceInvalid",
+          "creatureTypeInvalid",
+          "placementInvalid",
+          "characterInvalid",
+          "sessionNotActive",
+          "encounterNotReady",
+          "encounterNotActive",
+          "anotherEncounterActive"
         ]
       },
       "AuthOptionsResponse": {
@@ -1102,6 +1408,167 @@
         "properties": {
           "googleEnabled": {
             "type": "boolean"
+          }
+        }
+      },
+      "BoardMap": {
+        "required": [
+          "id",
+          "name",
+          "width",
+          "height",
+          "layout",
+          "backgroundUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/MapLayout"
+          },
+          "backgroundUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "BoardStateResponse": {
+        "required": [
+          "encounterId",
+          "campaignId",
+          "sessionId",
+          "name",
+          "status",
+          "map",
+          "tokens",
+          "isSessionDm"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EncounterStatus"
+          },
+          "map": {
+            "$ref": "#/components/schemas/BoardMap"
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardToken"
+            }
+          },
+          "isSessionDm": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BoardToken": {
+        "required": [
+          "id",
+          "kind",
+          "characterId",
+          "creatureTypeId",
+          "ownerUserId",
+          "label",
+          "x",
+          "y",
+          "elevation",
+          "size",
+          "speedSquares",
+          "colorIndex"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TokenKind"
+          },
+          "characterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "creatureTypeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ownerUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "elevation": {
+            "type": "number",
+            "format": "double"
+          },
+          "size": {
+            "$ref": "#/components/schemas/CreatureSize"
+          },
+          "speedSquares": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "colorIndex": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -1198,6 +1665,28 @@
           "userId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "CharacterPlacement": {
+        "required": [
+          "characterId",
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -1325,6 +1814,74 @@
           "gargantuan"
         ]
       },
+      "EncounterStatus": {
+        "enum": [
+          "draft",
+          "ready",
+          "active",
+          "ended"
+        ]
+      },
+      "EncounterSummaryResponse": {
+        "required": [
+          "id",
+          "name",
+          "status",
+          "battleMapId",
+          "width",
+          "height",
+          "creatureCount",
+          "sessionId",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EncounterStatus"
+          },
+          "battleMapId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "creatureCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sessionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EntranceKind": {
+        "enum": [
+          "entrance",
+          "exit",
+          "both"
+        ]
+      },
       "HealthResponse": {
         "required": [
           "status"
@@ -1333,6 +1890,109 @@
         "properties": {
           "status": {
             "type": "string"
+          }
+        }
+      },
+      "ImportCreature": {
+        "required": [
+          "type",
+          "size",
+          "speedMeters",
+          "x",
+          "y",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "size": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CreatureSize"
+              }
+            ]
+          },
+          "speedMeters": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ImportMapRequest": {
+        "required": [
+          "name",
+          "width",
+          "height",
+          "scene",
+          "vibe",
+          "lighting",
+          "layout",
+          "creatures"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scene": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vibe": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lighting": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "layout": {
+            "$ref": "#/components/schemas/MapLayoutFile"
+          },
+          "creatures": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ImportCreature"
+            }
           }
         }
       },
@@ -1399,6 +2059,235 @@
           }
         }
       },
+      "LayoutCell": {
+        "required": [
+          "x",
+          "y",
+          "terrain",
+          "elevation"
+        ],
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "terrain": {
+            "$ref": "#/components/schemas/Terrain"
+          },
+          "elevation": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "LayoutCellFile": {
+        "required": [
+          "x",
+          "y",
+          "terrain",
+          "elevation"
+        ],
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "terrain": {
+            "$ref": "#/components/schemas/Terrain"
+          },
+          "elevation": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "LayoutEntrance": {
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "cells"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EntranceKind"
+          },
+          "label": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        }
+      },
+      "LayoutEntranceFile": {
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "cells"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EntranceKind"
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        }
+      },
+      "LayoutFeature": {
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "x",
+          "y",
+          "w",
+          "h",
+          "elevation",
+          "blocksMovement"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "w": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "h": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "elevation": {
+            "type": "number",
+            "format": "double"
+          },
+          "blocksMovement": {
+            "type": "boolean"
+          }
+        }
+      },
+      "LayoutFeatureFile": {
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "x",
+          "y",
+          "w",
+          "h",
+          "elevation",
+          "blocksMovement"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "w": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "h": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "elevation": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "blocksMovement": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -1411,6 +2300,81 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "MapLayout": {
+        "required": [
+          "schemaVersion",
+          "cells",
+          "features",
+          "entrances"
+        ],
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LayoutCell"
+            }
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LayoutFeature"
+            }
+          },
+          "entrances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LayoutEntrance"
+            }
+          }
+        }
+      },
+      "MapLayoutFile": {
+        "required": [
+          "schemaVersion",
+          "cells",
+          "features",
+          "entrances"
+        ],
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LayoutCellFile"
+            }
+          },
+          "features": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LayoutFeatureFile"
+            }
+          },
+          "entrances": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LayoutEntranceFile"
+            }
           }
         }
       },
@@ -1539,7 +2503,9 @@
           "dmUserId",
           "dmDisplayName",
           "createdByUserId",
-          "canManage"
+          "canManage",
+          "isSessionDm",
+          "activeEncounter"
         ],
         "type": "object",
         "properties": {
@@ -1570,6 +2536,19 @@
           },
           "canManage": {
             "type": "boolean"
+          },
+          "isSessionDm": {
+            "type": "boolean"
+          },
+          "activeEncounter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActiveEncounterSummary"
+              }
+            ]
           }
         }
       },
@@ -1578,6 +2557,35 @@
           "planned",
           "active",
           "ended"
+        ]
+      },
+      "StartEncounterRequest": {
+        "required": [
+          "characters"
+        ],
+        "type": "object",
+        "properties": {
+          "characters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterPlacement"
+            }
+          }
+        }
+      },
+      "Terrain": {
+        "enum": [
+          "void",
+          "floor",
+          "difficult",
+          "water",
+          "wall"
+        ]
+      },
+      "TokenKind": {
+        "enum": [
+          "character",
+          "creature"
         ]
       },
       "UpdateProfileRequest": {
@@ -1639,6 +2647,9 @@
     },
     {
       "name": "Sessions"
+    },
+    {
+      "name": "Encounters"
     }
   ]
 }

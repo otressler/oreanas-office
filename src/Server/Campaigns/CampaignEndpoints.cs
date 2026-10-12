@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Sessions;
 
 namespace OreanasOffice.Server.Campaigns;
@@ -181,7 +182,16 @@ public static class CampaignEndpoints
                 m.Role,
                 m.Campaign.Sessions
                     .Where(s => s.Status == SessionStatus.Active)
-                    .Select(s => new ActiveSessionSummary(s.Id, s.Title, s.Date, s.DmUserId, s.Dm.DisplayName))
+                    .Select(s => new ActiveSessionSummary(
+                        s.Id,
+                        s.Title,
+                        s.Date,
+                        s.DmUserId,
+                        s.Dm.DisplayName,
+                        s.Encounters
+                            .Where(e => e.Status == EncounterStatus.Active)
+                            .Select(e => new ActiveEncounterSummary(e.Id, e.Name))
+                            .FirstOrDefault()))
                     .FirstOrDefault()));
 
     // Only for members; the CampaignMember policy has checked that.

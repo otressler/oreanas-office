@@ -4,6 +4,7 @@ using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Characters;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Health;
 using OreanasOffice.Server.Hosting;
 using OreanasOffice.Server.Sessions;
@@ -37,6 +38,7 @@ app.MapAdminEndpoints();
 app.MapCampaignEndpoints();
 app.MapCharacterEndpoints();
 app.MapSessionEndpoints();
+app.MapEncounterEndpoints();
 
 if (app.Environment.IsEnvironment(TestingEndpoints.Environment))
 {

@@ -421,6 +421,7 @@ export class MockBackend {
             date: active.date,
             dmUserId: active.dmUserId,
             dmDisplayName: this.displayName(active.dmUserId),
+            activeEncounter: null,
           }
         : null,
     }
@@ -453,6 +454,8 @@ export class MockBackend {
       ...rest,
       dmDisplayName: this.displayName(session.dmUserId),
       canManage: canManage(session, campaign, userId),
+      isSessionDm: session.dmUserId === userId,
+      activeEncounter: null,
     }
   }
 }

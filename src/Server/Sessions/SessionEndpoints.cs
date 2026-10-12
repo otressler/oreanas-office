@@ -5,6 +5,7 @@ using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Encounters;
 
 namespace OreanasOffice.Server.Sessions;
 
@@ -204,5 +205,10 @@ public static class SessionEndpoints
             s.DmUserId,
             s.Dm.DisplayName,
             s.CreatedByUserId,
-            s.DmUserId == userId || s.Campaign.DefaultDmUserId == userId));
+            s.DmUserId == userId || s.Campaign.DefaultDmUserId == userId,
+            s.DmUserId == userId,
+            s.Encounters
+                .Where(e => e.Status == EncounterStatus.Active)
+                .Select(e => new ActiveEncounterSummary(e.Id, e.Name))
+                .FirstOrDefault()));
 }

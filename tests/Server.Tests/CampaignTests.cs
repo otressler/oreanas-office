@@ -187,7 +187,7 @@ public sealed class CampaignTests(AppFixture fixture)
         Assert.Null(campaigns[0].ActiveSession);
         Assert.Equal((zeta.Id, CampaignRole.Player), (campaigns[1].Id, campaigns[1].MyRole));
         Assert.Equal(
-            new ActiveSessionSummary(session.Id, "Abend 1", new DateOnly(2026, 10, 17), dm.Id, "Oreana"),
+            new ActiveSessionSummary(session.Id, "Abend 1", new DateOnly(2026, 10, 17), dm.Id, "Oreana", ActiveEncounter: null),
             campaigns[1].ActiveSession);
         Assert.Equal(session.Id, (await player.GetCampaignAsync(zeta.Id)).ActiveSessionId);
     }

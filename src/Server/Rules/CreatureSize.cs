@@ -11,3 +11,15 @@ public enum CreatureSize
     Huge,
     Gargantuan,
 }
+
+public static class CreatureSizes
+{
+    // Cells per side of the square footprint.
+    public static int Footprint(this CreatureSize size) => size switch
+    {
+        CreatureSize.Large => 2,
+        CreatureSize.Huge => 3,
+        CreatureSize.Gargantuan => 4,
+        _ => 1,
+    };
+}

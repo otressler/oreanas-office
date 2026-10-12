@@ -26,6 +26,18 @@ const ALL_CODES = {
   notADm: true,
   anotherSessionActive: true,
   sessionEnded: true,
+  mapSizeInvalid: true,
+  layoutVersionUnsupported: true,
+  cellInvalid: true,
+  featureInvalid: true,
+  entranceInvalid: true,
+  creatureTypeInvalid: true,
+  placementInvalid: true,
+  characterInvalid: true,
+  sessionNotActive: true,
+  encounterNotReady: true,
+  encounterNotActive: true,
+  anotherEncounterActive: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {
