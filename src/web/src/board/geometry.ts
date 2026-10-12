@@ -129,3 +129,21 @@ export function placementElevation(
 ): number {
   return Math.max(...footprintCells(size, x, y).map((cell) => grid.elevation(cell.x, cell.y)))
 }
+
+/**
+ * The token whose footprint covers the cell, as drawn: later tokens lie on top of
+ * earlier ones and the selected token on top of all.
+ */
+export function tokenAt<T extends Pick<BoardToken, 'id' | 'x' | 'y' | 'size'>>(
+  tokens: readonly T[],
+  cell: GridPoint,
+  selectedTokenId?: string | null,
+): T | undefined {
+  const covers = (token: T) => {
+    const n = footprint(token.size)
+    return cell.x >= token.x && cell.y >= token.y && cell.x < token.x + n && cell.y < token.y + n
+  }
+  const selected = tokens.find((token) => token.id === selectedTokenId)
+  if (selected && covers(selected)) return selected
+  return tokens.findLast(covers)
+}

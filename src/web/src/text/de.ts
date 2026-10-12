@@ -199,6 +199,29 @@ export const de = {
     gargantuan: 'Gigantisch',
   } satisfies Record<CreatureSize, string>,
 
+  board: {
+    /** Accessible name of the board; the name is the encounter's. */
+    label: (name: string) => `Kampfkarte: ${name}`,
+    /** Zooms out until the whole map fits on the screen. */
+    fit: 'Ganze Karte',
+    /** `meters` is already formatted, e.g. "1,5 m". */
+    elevation: (meters: string) => `Höhe ${meters}`,
+    terrain: {
+      void: 'Abgrund',
+      floor: 'Boden',
+      difficult: 'Schwieriges Gelände',
+      water: 'Wasser',
+      wall: 'Wand',
+    } satisfies Record<import('../api/types').Terrain, string>,
+    entranceKinds: {
+      entrance: 'Eingang',
+      exit: 'Ausgang',
+      both: 'Ein- und Ausgang',
+    } satisfies Record<import('../api/types').LayoutEntrance['kind'], string>,
+    /** An entrance cell, e.g. "Eingang: Waldweg". */
+    entrance: (kind: string, label: string) => (label ? `${kind}: ${label}` : kind),
+  },
+
   sessions: {
     title: 'Sitzungen',
     empty: 'Noch keine Sitzungen.',
