@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   SQUARE_METERS,
+  formatElevation,
   formatMeters,
   formatMetersInput,
   isWholeSquares,
@@ -103,5 +104,20 @@ describe('formatMetersInput', () => {
     for (const squares of [0, 1, 5, 6, 7, 1001]) {
       expect(metersToSquares(parseMeters(formatMetersInput(squares))!)).toBe(squares)
     }
+  })
+})
+
+describe('formatElevation', () => {
+  it('shows meters with one decimal in German format', () => {
+    expect(formatElevation(1.5)).toBe('1,5 m')
+    expect(formatElevation(0)).toBe('0 m')
+    expect(formatElevation(4)).toBe('4 m')
+    expect(formatElevation(2.25)).toBe('2,3 m')
+    expect(formatElevation(-3)).toBe('-3 m')
+  })
+
+  it('never shows a negative zero', () => {
+    expect(formatElevation(-0)).toBe('0 m')
+    expect(formatElevation(-0.04)).toBe('0 m')
   })
 })

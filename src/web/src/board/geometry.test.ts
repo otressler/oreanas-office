@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { BoardState } from '../api/types'
 import gorgeFixture from './fixtures/gorge-crossing.board.json'
-import { buildGrid, canPlace, footprint, footprintCells, placementElevation } from './geometry'
+import {
+  buildGrid,
+  canPlace,
+  footprint,
+  footprintCells,
+  placementElevation,
+  tokenAt,
+} from './geometry'
 
 const gorge = gorgeFixture as BoardState
 const grid = buildGrid(gorge.map)
@@ -122,5 +129,23 @@ describe('placementElevation', () => {
     })
     expect(placementElevation(hill, 'large', 0, 0)).toBe(2.5)
     expect(placementElevation(hill, 'medium', 1, 0)).toBe(1)
+  })
+})
+
+describe('tokenAt', () => {
+  const tokens = [
+    { id: 'ogre', x: 2, y: 2, size: 'large' as const },
+    { id: 'goblin', x: 3, y: 3, size: 'small' as const },
+  ]
+
+  it('finds a token anywhere on its footprint', () => {
+    expect(tokenAt(tokens, { x: 2, y: 3 })?.id).toBe('ogre')
+    expect(tokenAt(tokens, { x: 4, y: 4 })).toBeUndefined()
+  })
+
+  it('prefers the token drawn on top: later in the list, or the selected one', () => {
+    expect(tokenAt(tokens, { x: 3, y: 3 })?.id).toBe('goblin')
+    expect(tokenAt(tokens, { x: 3, y: 3 }, 'ogre')?.id).toBe('ogre')
+    expect(tokenAt(tokens, { x: 2, y: 2 }, 'goblin')?.id).toBe('ogre')
   })
 })

@@ -1,0 +1,19 @@
+// Dev-only harness for looking at <Board> without the backend: /board-lab.html in
+// `npx vite`, never part of the production build (that bundles index.html only).
+//
+// Query parameters:
+//   fixture=gorge-crossing | crypt | river-ford | open-field (default gorge-crossing)
+//   select=<token label>   draws that token as selected
+//   highlight=free         shades every free walkable cell, like the setup screen
+//   handlers=1             passes onCellTap/onTokenTap and logs the taps
+//   header=1               puts the board under a 56 px bar, as on the app's pages
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import '../../index.css'
+import { Lab } from './Lab'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <Lab />
+  </StrictMode>,
+)

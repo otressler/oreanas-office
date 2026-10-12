@@ -26,6 +26,16 @@ export function formatMeters(squares: number): string {
   return de.units.meters(meterNumber.format(squaresToMeters(squares)))
 }
 
+/**
+ * An elevation in meters, e.g. 1.5 → "1,5 m", 0 → "0 m". Unlike distances it isn't
+ * tied to whole squares (knowledge/domain/battle-map.md); one decimal is shown.
+ */
+export function formatElevation(meters: number): string {
+  // Adding 0 turns -0 into 0, so a tiny negative value never shows as "-0 m".
+  const rounded = Math.round(meters * 10) / 10 + 0
+  return de.units.meters(meterNumber.format(rounded))
+}
+
 const meterInputNumber = new Intl.NumberFormat('de-DE', {
   maximumFractionDigits: 1,
   useGrouping: false,
