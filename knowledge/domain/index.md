@@ -15,6 +15,6 @@
 
 - [Encounter](encounter.md) - One fight: a battle map plus the tokens on it
 - [Battle map](battle-map.md) - Grid layout (terrain, elevation, features, entrances), scene description and background image
-- [Creature type](creature-type.md) - Reusable monster template with size, speed and icon
+- [Creature type](creature-type.md) - Reusable monster template with size and icon
 - [Token](token.md) - A character or creature placed on an encounter's grid
 - [Asset](asset.md) - A generated or uploaded image: map background or token icon

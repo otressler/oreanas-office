@@ -224,6 +224,7 @@ Distance rules are out of the proof of concept: no path, no distance preview and
 
 **Feature set**
 
+- First, remove speed from the code: the character form and list, the setup screen, creature types and the database column. The map import ignores `speedMeters` ([character](/domain/character.md)).
 - Dexie (IndexedDB) storage for battle maps, with a version number and a "changed" flag per item, ready for stage 6 sync.
 - Editor for laptops: new map N×M up to the grid limit; terrain brush with single cell, rectangle and fill; elevation painting; features with footprint, kind, label, elevation and "blocks movement"; entrances and exits on edge cells; scene, vibe and lighting text ([DM map editor](/features/dm-map-editor.md)).
 - Undo and redo inside the editor.
@@ -256,26 +257,30 @@ Completes roadmap phase 2.
 
 **Feature set**
 
-- [Creature types](/domain/creature-type.md): create from the editor while placing, with size, speed in meters, appearance and DM notes.
+- [Creature types](/domain/creature-type.md): create from the editor while placing, with name, size, appearance and DM notes.
 - Place creatures by clicking cells, numbered automatically ("Goblin 1", "Goblin 2"). Save the [encounter](/domain/encounter.md) as draft or ready.
 - Sync button: push and pull battle maps, encounters and creature types with version numbers; a conflict dialog that asks which version to keep and never merges ([offline prep](/decisions/offline-prep-pwa.md)). Automatic sync before starting an encounter.
-- Starting an encounter from the editor replaces the stage 3 import as the normal path.
+- Starting an encounter from the editor replaces the stage 3 import as the normal path; the import stays as a tool. Starting saves a copy of the map layout on the encounter ([encounter](/domain/encounter.md)).
+- "Ready" is set by hand and needs every creature validly placed. Encounters and creature types are archived and brought back, never deleted. Tokens keep the size they were placed with ([token](/domain/token.md)).
+- Sync also runs automatically when leaving the editor and when the connection comes back.
 - Map store: add a copy of a map from another campaign, with the store's rules on which maps it offers ([battle map](/domain/battle-map.md)). Needs a connection.
 - Campaigns created offline: no join code, invites hidden, synced before their maps. Changes the server rejects at sync, such as after losing `dm` rights, are shown, never dropped. A warning before signing out with unsynced changes ([offline prep](/decisions/offline-prep-pwa.md)).
 
 **Order**
 
-1. *Sequential:* write the sync protocol (per-item versions, "changed since", a conflict reply carrying the server copy) into the offline prep concept for the project owner to approve; then endpoint stubs and types.
+1. *Sequential:* the [sync protocol](/decisions/offline-prep-pwa.md) is approved (2026-10-14). Write the endpoint stubs and types for push and the per-campaign pull list, the `Version` and `archivedAt` columns, the encounter's layout copy and the token's `size`, and the shared check test cases.
 2. *Parallel, three lanes:*
-   - **Sync backend:** endpoints and concurrency tests.
-   - **Sync client:** the Dexie change queue, push and pull, the conflict dialog.
+   - **Sync backend:** push with per-item answers, the pull list, rights and ID checks, concurrency and retry tests.
+   - **Sync client:** the Dexie change queue, push and pull, the conflict and rejection dialogs, the status in the editor header, Web Locks.
    - **Bestiary and placement:** creature type UI, placement, auto-numbering.
-3. *Sequential:* integrate; Playwright with two browser profiles editing the same map.
+3. *Sequential:* integrate; Playwright with two browser profiles editing the same map, a lost push answer, and an encounter started while it was edited offline.
 
 **Manual gate**
 
 - [ ] Prepare a complete encounter offline, go online, sync, start it: the phones show it.
-- [ ] Place three goblins: they're labelled Goblin 1 to 3.
+- [ ] Place three goblins: they're labelled Goblin 1 to 3. Remove Goblin 2 and place another: it's Goblin 4.
+- [ ] Run an encounter, end it, then move a wall on its map: the ended encounter still shows the old layout. A ready encounter with a goblin on the new wall is flagged and can't start.
+- [ ] Make the Goblin type Large: placed goblins stay Small, a new one is Large.
 - [ ] Edit the same map in two browsers and sync both: the second gets the conflict dialog, and nothing is merged silently.
 - [ ] In a second campaign, add the gorge crossing from the store: it appears as a copy and is gone from that campaign's store. Archive the copy and add the map again: the archived copy comes back.
 - [ ] Create a campaign offline and build a map in it: no invite or join code is offered. Go online and sync: the campaign gets a join code and the map is on the server.

@@ -67,13 +67,13 @@ Until the [map editor](/features/dm-map-editor.md) exists, a `dm` member of the 
   "scene": "rope bridge over a misty gorge", "vibe": "tense, windy", "lighting": "overcast morning",
   "layout": { "schemaVersion": 1, "cells": [], "features": [], "entrances": [] },
   "creatures": [
-    { "type": "Goblin", "size": "small", "speedMeters": 9, "x": 3, "y": 4 }
+    { "type": "Goblin", "size": "small", "x": 3, "y": 4 }
   ]
 }
 ```
 
 - `width` and `height` are at most 40 cells for now ([implementation plan](/implementation-plan.md), question 10). A layout without `schemaVersion` is version 1.
-- `creatures` is optional. `type` is matched by name against the campaign's creature types, ignoring case. An existing type keeps its size and speed. A new type is created from the first entry that names it, which must then give `size` and `speedMeters` (rounded down to whole squares like any speed input). An optional `label` replaces the automatic "Goblin 1".
+- `creatures` is optional. `type` is matched by name against the campaign's creature types, ignoring case. An existing type keeps its size. A new type is created from the first entry that names it, which must then give `size`. A `speedMeters` field from older files is ignored. An optional `label` replaces the automatic "Goblin 1".
 - Creatures must stand on free walkable cells, as for [placement](/domain/encounter.md).
 - A file that breaks any rule is rejected as a whole, with a German message that names the offending entry.
 

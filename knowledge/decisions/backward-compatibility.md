@@ -25,7 +25,7 @@ The PWA never reloads itself when a new version arrives. It shows a banner and t
 2. **Old clients ignore what they don't know.** The frontend ignores unknown fields and messages instead of failing.
 3. **Database migrations expand, then contract.** Add columns and tables first. Drop or rename only in a later release, after the code no longer uses them. A migration never loses production data. Migrations run on startup, so each one must also work with the previous app version still running against the same database.
 4. **Stored documents carry a version.** The [battle map](/domain/battle-map.md) layout and the IndexedDB drafts have a `schemaVersion`. Readers upgrade old versions when loading; nothing rewrites them in bulk.
-5. **A way out when compatibility can't be kept.** The server announces the oldest app version it still supports. An older app shows the update banner as required ("Bitte neu laden") instead of offering "Später". Use this rarely.
+5. **A way out when compatibility can't be kept.** The server announces the oldest app version it still supports. An older app shows the update banner as required ("Bitte neu laden") instead of offering "Später". Use this rarely. The offline prep sync uses the same minimum from stage 6 on, already before compatibility is enforced ([offline prep](/decisions/offline-prep-pwa.md)).
 6. **Checked automatically.** CI compares the OpenAPI document with the one on `main` and fails on breaking changes. Each code review checks migrations and hub messages for compatibility.
 
 Rules 5 and 6 are built when enforcement starts.

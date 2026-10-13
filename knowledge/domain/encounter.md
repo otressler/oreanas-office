@@ -17,6 +17,8 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 | `battleMapId` | → [Battle map](/domain/battle-map.md) | |
 | `name` | string | e.g. "Goblin ambush" |
 | `status` | enum `draft` \| `ready` \| `active` \| `ended` | |
+| `layout` | JSON document, nullable | A copy of the battle map's layout, saved when the encounter starts. The live fight and the ended encounter use this copy, so later edits to the map never change them |
+| `archivedAt` | timestamp, nullable | Set when a `dm` member archives the encounter |
 
 # Contains
 
@@ -25,13 +27,15 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 # Lifecycle
 
 1. **draft:** the DM builds it in the [map editor](/features/dm-map-editor.md).
-2. **ready:** the map image is chosen and creatures are placed. An imported encounter starts here, because the [import file](/domain/battle-map.md) is already complete.
+2. **ready:** a `dm` member marks it ready by hand. Every creature must be validly placed; an image isn't needed, since the plain rendering works. Only ready encounters can be started. An imported encounter starts here, because the [import file](/domain/battle-map.md) is already complete.
 3. **active:** the session DM starts it in the active session (see Starting). Players see it on the [playable map](/features/playable-map.md) from then on.
 4. **ended:** the session DM ends it, and everyone returns to the session page. Ending a session also ends its active encounter. An ended encounter is read-only. To fight on the same map again, the DM creates a new encounter from it.
 
 # Who does what
 
 - Any `dm` member of the campaign prepares encounters: imports maps now, uses the editor later. Prepared encounters are visible only to `dm` members.
+- Encounters are never deleted. A `dm` member archives one and can bring it back. An archived encounter can't be started.
+- **When the map changes:** draft and ready encounters use the current map. The editor marks creatures that now stand where they may not, and the encounter can't be marked ready or started until they're moved. Active and ended encounters keep their own copy of the layout.
 - Only the session DM starts and ends an encounter ([session](/domain/session.md)).
 - A session has at most one active encounter. Like the active session, it isn't stored as a column: it is the encounter with `status: active`, and a unique index allows at most one per session.
 

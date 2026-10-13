@@ -45,6 +45,6 @@ The app has two parts:
 | Encounter | One fight: a battle map plus the tokens on it. The brief calls this a "fight". |
 | Battle map | The grid layout and its generated background image. Can be reused across encounters. |
 | Token | Anything standing on the board: a character or a creature. |
-| Creature type | A reusable monster template such as "Goblin", with size, speed and icon. |
+| Creature type | A reusable monster template such as "Goblin", with size and icon. |
 
 [^brief]: Original project brief

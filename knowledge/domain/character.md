@@ -15,7 +15,6 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `ownerUserId` | → [User](/domain/user.md) | Only the owner (and the DM) can move this character's token |
 | `campaignId` | → [Campaign](/domain/campaign.md) | Characters are campaign-specific |
 | `name` | string | |
-| `speed` | int, squares | Default walking speed for the reach highlight; a hint, never a limit. Entered and shown in meters: 6 squares = 9 m. Any input is accepted and rounded down to whole squares ([movement rules](/rules/movement-distance.md)) |
 | `size` | enum | See [creature size](/rules/creature-size.md); usually Medium or Small |
 | `tokenAssetId` | → [Asset](/domain/asset.md), nullable | Generated or uploaded portrait ([token icons](/features/token-icons.md)) |
 
@@ -25,4 +24,4 @@ A player creates and edits their own characters. Every `dm` member of the campai
 
 # Notes
 
-Deliberately thin: only what the board needs. Full character sheets are a possible [campaign manager](/roadmap.md) feature, not part of the battle map app.
+Deliberately thin: only what the board needs. Speed is out until the [distance rules](/backlog.md) come back (project owner, 2026-10-14). Full character sheets are a possible [campaign manager](/roadmap.md) feature, not part of the battle map app.

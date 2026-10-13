@@ -16,12 +16,13 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `kind` | enum `character` \| `creature` | |
 | `characterId` | → [Character](/domain/character.md), nullable | Set when `kind = character` |
 | `creatureTypeId` | → [Creature type](/domain/creature-type.md), nullable | Set when `kind = creature` |
-| `label` | string | e.g. "Goblin 3". Auto-numbered per creature type |
+| `size` | enum | Copied from the character or creature type when the token is created. Changing the type's size later affects only new tokens ([creature size](/rules/creature-size.md)) |
+| `label` | string | e.g. "Goblin 3". Numbered automatically per creature type within the encounter: the next number after the highest one, so a removed "Goblin 2" isn't reused. The DM can rename any label |
 | `x`, `y` | int, cells | Top-left cell of the footprint |
 | `elevation` | decimal, meters | Defaults to the cell's elevation. Changeable for flying or climbing |
 | `hidden` | bool | Later: visible only to the DM until revealed |
 
-Size, speed and image come from the linked character or creature type. On the board, a character's token has a ring in a fixed colour picked by the order characters were added to the campaign; creatures share one red ring.
+The image comes from the linked character or creature type. On the board, a character's token has a ring in a fixed colour picked by the order characters were added to the campaign; creatures share one red ring.
 
 # Who can move it
 

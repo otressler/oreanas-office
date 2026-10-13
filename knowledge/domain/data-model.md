@@ -52,7 +52,7 @@ The brief proposed User, Character, Campaign, Session, Fight and Creature.[^brie
 | Original | Now | Why |
 |----------|-----|-----|
 | Fight | [Battle map](/domain/battle-map.md) + [Encounter](/domain/encounter.md) | A map is reusable; an encounter is one fight on it. DMs prepare encounters before game night, so an encounter belongs to the campaign and is linked to a session when it runs. |
-| Creature | [Creature type](/domain/creature-type.md) + [Token](/domain/token.md) | "Goblin" (size, speed, icon) is defined once; "Goblin 3 at (4,7)" is a token. Icons are generated per type, as the brief asks. |
+| Creature | [Creature type](/domain/creature-type.md) + [Token](/domain/token.md) | "Goblin" (size, icon) is defined once; "Goblin 3 at (4,7)" is a token. Icons are generated per type, as the brief asks. |
 | — | [Token](/domain/token.md) also for characters | Characters and creatures stand on the board the same way, so moving and syncing works the same for both. |
 | — | [Campaign member](/domain/campaign-member.md) | Who belongs to a campaign, and in which role, is stored once instead of per session. |
 | Session DM = creator | `Session.dmUserId` and `Session.createdByUserId` kept separate | The brief says the DM can vary per session. The person who creates the session isn't always the one running it. |

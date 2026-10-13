@@ -29,6 +29,7 @@ Let the DM build a fight quickly. This is not a full level editor: the DM places
 10. Work offline: everything except image generation works without a connection and syncs on demand ([offline prep](/decisions/offline-prep-pwa.md)).
 11. A map list per campaign: open a map to edit it later, duplicate it to adjust a copy, archive it, or bring an archived map back. Maps are never deleted ([battle map](/domain/battle-map.md)).
 12. A map store: add a copy of a map from another campaign ([battle map](/domain/battle-map.md)).
+13. Import and export of the map file stays as a tool. An import is created on the server and reaches the editor with the next sync ([battle map](/domain/battle-map.md)).
 
 # Notes
 

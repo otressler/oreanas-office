@@ -27,6 +27,8 @@ The group plays D&D 5e (2024) ([rules edition](/decisions/rules-edition.md)).
 
 # Speed
 
+**Removed for now.** On 2026-10-14 the project owner took the speed field off [characters](/domain/character.md) and [creature types](/domain/creature-type.md) until the distance rules come back from the [backlog](/backlog.md). The rules below are kept for that point.
+
 Speed is a hint, never a limit. The project owner set this on 2026-10-11: the app doesn't simulate D&D, so it shows distances and the table decides.
 
 - **Any speed is accepted.** Input is never rejected. A speed that isn't a multiple of 1.5 m is rounded down to whole squares (10 m → 6 squares, shown as 9 m afterwards), because a partial square can't be entered.
