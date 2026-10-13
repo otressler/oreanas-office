@@ -5,7 +5,7 @@ description: The server holds the board state and pushes confirmed token moves t
 tags: [decision, realtime, architecture]
 decision: accepted
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-12T20:46:29Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-13T22:20:29Z }
 ---
 
 # Decision
@@ -22,6 +22,17 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-12T20:46:29Z }
 - **Reconnects**: after a reconnect, including after a cold start, the device reloads the full board state instead of replaying missed events. Boards are small, so this is cheap.
 - **Background tabs**: the client closes its connection when the app goes to the background and reconnects when it's visible again. The server drops connections idle for 30 minutes. Both stop a forgotten tab from keeping the container awake.
 - **On other devices** a moved token slides to its new cell in about 200 ms rather than jumping, so people notice what changed.
+
+# As built (stage 4)
+
+- **Hub**: `/hubs/table`. A device calls `JoinEncounter`, `MoveToken`, `UndoMove` and `MarkActive`; the server sends `TokenMoved`, `EncounterEnded` and `IdleTimeout`. The message types and method names are in `openapi.json`, so the frontend's types come from the same document as the API's.
+- **Versions**: every move and undo raises the token's version. A device keeps whichever position has the higher version, so a move that arrives before a reloaded board isn't lost. Saving a move requires the version it read: two moves of the same token never interleave, and the later one wins.
+- **Order on every (re)connect**: join the encounter's group, then reload the board.
+- **Undo** is available while the user's latest move in the encounter isn't undone, the token still has that move's version, and the user may still move the token. The board tells each user whether they have one.
+- **End of a fight**: when the session DM ends it, or the session ends, every device gets `EncounterEnded` and shows that the fight is over.
+- **Idle**: "idle" means no call from the device. Touching the screen sends `MarkActive` at most once a minute, so someone who only watches stays connected. After 30 minutes without either, the server sends `IdleTimeout` and closes the connection a second later. The device then shows "Pausiert – tippe, um weiterzuspielen" and reconnects only when someone touches it or brings the app back.
+- **Reconnects** retry after 0, 1, 2 and 5 seconds, then every 10 seconds, and not at all while the device is offline. When an attempt fails, the app checks whether the server is waking and shows the waking screen if it is.
+- **Phone controls**: while a token is selected, every tap except one on that token picks a target, even a cell with another token on it, so the session DM can stack tokens too. To take a different token, the person lets go of the selected one first (tap it again, "Abbrechen" or Escape). Tapping a target previews it; tapping the preview again or "Hierhin" confirms.
 
 # Alternatives considered
 

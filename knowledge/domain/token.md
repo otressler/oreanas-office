@@ -33,7 +33,7 @@ There are no turn-order or distance restrictions ([overview](/overview.md)). The
 
 # Move history
 
-Every move is recorded as `{ tokenId, from, to, byUserId, at }`. This gives an "undo last move", which matters on phones where taps go wrong: a user undoes only their own last move, and only while it is still that token's latest move. Moves are broadcast to everyone in real time ([realtime sync](/decisions/realtime-sync.md)).
+Every move is recorded as `{ tokenId, from, to, byUserId, at, version }`, positions with their elevation; undoing a move marks it undone. The token itself counts its moves and undos in a `version`, which devices use to tell the newer position ([realtime sync](/decisions/realtime-sync.md)). This gives an "undo last move", which matters on phones where taps go wrong: a user undoes only their own last move, and only while it is still that token's latest move. Moves are broadcast to everyone in real time ([realtime sync](/decisions/realtime-sync.md)).
 
 # Later
 
