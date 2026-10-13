@@ -74,6 +74,17 @@ interface Token {
   version: number
 }
 
+/** One move in the history (knowledge/domain/token.md, "Move history"). */
+interface TokenMove {
+  encounterId: string
+  tokenId: string
+  byUserId: string
+  from: { x: number; y: number }
+  /** The token's version after the move. */
+  version: number
+  undone: boolean
+}
+
 interface Encounter {
   id: string
   campaignId: string
@@ -106,6 +117,7 @@ export class MockBackend {
   readonly sessions: Session[] = []
   readonly creatureTypes: CreatureType[] = []
   readonly encounters: Encounter[] = []
+  readonly moves: TokenMove[] = []
   googleEnabled = false
   private readonly signedIn = new Map<BrowserContext, string | null>()
 
@@ -199,6 +211,11 @@ export class MockBackend {
   /** Signs a browser context in as `user`, as if it had the cookie already. */
   signIn(context: BrowserContext, user: User) {
     this.signedIn.set(context, user.id)
+  }
+
+  /** Who is signed in on this browser context, if anyone. */
+  userId(context: BrowserContext): string | null {
+    return this.signedIn.get(context) ?? null
   }
 
   /** Answers /api/** for this context (pages and service worker). */
@@ -738,8 +755,108 @@ export class MockBackend {
         }
       }),
       isSessionDm: encounter.status === 'active' && session?.dmUserId === userId,
-      undoableMove: null,
+      undoableMove: this.undoableMove(encounter, userId),
     }
+  }
+
+  // ---- Live table (the hub's checks; e2e/mockHub.ts carries the messages) -------
+
+  /** Whether the user may join the encounter's group: a member, while it runs. */
+  joinEncounter(userId: string | null, encounterId: string): S['HubResult'] {
+    const encounter = this.encounters.find((e) => e.id === encounterId)
+    const campaign = encounter && this.campaigns.find((c) => c.id === encounter.campaignId)
+    if (!encounter || !campaign || !userId || !memberOf(campaign, userId)) {
+      return { error: 'tokenNotFound' }
+    }
+    return { error: encounter.status === 'active' ? null : 'encounterNotActive' }
+  }
+
+  /**
+   * MoveToken (knowledge/decisions/realtime-sync.md): the session DM moves any token,
+   * others their own characters; the whole footprint on walkable cells, overlapping
+   * other tokens allowed. Records the move for undo.
+   */
+  moveToken(userId: string | null, request: S['MoveTokenRequest']): S['MoveResult'] {
+    const encounter = this.encounters.find((e) => e.tokens.some((t) => t.id === request.tokenId))
+    const campaign = encounter && this.campaigns.find((c) => c.id === encounter.campaignId)
+    if (!encounter || !campaign || !userId || !memberOf(campaign, userId)) {
+      return refused('tokenNotFound')
+    }
+    if (encounter.status !== 'active') return refused('encounterNotActive')
+    const token = encounter.tokens.find((t) => t.id === request.tokenId)!
+    const isSessionDm = this.sessions.find((s) => s.id === encounter.sessionId)?.dmUserId === userId
+    const owner = this.characters.find((c) => c.id === token.characterId)?.ownerUserId
+    if (!isSessionDm && !(token.kind === 'character' && owner === userId)) {
+      return refused('notYourToken')
+    }
+    const { size } = this.tokenStats(token)
+    const fits = footprint(size, request.x, request.y).every(([x, y]) =>
+      walkable(encounter.map, x, y),
+    )
+    if (!fits) return refused('targetInvalid')
+    this.moves.push({
+      encounterId: encounter.id,
+      tokenId: token.id,
+      byUserId: userId,
+      from: { x: token.x, y: token.y },
+      version: token.version + 1,
+      undone: false,
+    })
+    return { error: null, move: this.place(encounter, token, request.x, request.y, userId, false) }
+  }
+
+  /** UndoMove: the user's own last move in the encounter, while it is the token's latest. */
+  undoMove(userId: string | null, encounterId: string): S['MoveResult'] {
+    const joined = this.joinEncounter(userId, encounterId)
+    if (joined.error) return refused(joined.error)
+    const encounter = this.encounters.find((e) => e.id === encounterId)!
+    const last = this.lastMove(encounter, userId!)
+    const token = last && encounter.tokens.find((t) => t.id === last.tokenId)
+    if (!last || !token || last.undone || token.version !== last.version) {
+      return refused('nothingToUndo')
+    }
+    last.undone = true
+    return {
+      error: null,
+      move: this.place(encounter, token, last.from.x, last.from.y, userId!, true),
+    }
+  }
+
+  private lastMove(encounter: Encounter, userId: string): TokenMove | undefined {
+    return this.moves.findLast((m) => m.encounterId === encounter.id && m.byUserId === userId)
+  }
+
+  private place(
+    encounter: Encounter,
+    token: Token,
+    x: number,
+    y: number,
+    userId: string,
+    undo: boolean,
+  ): S['TokenMovedEvent'] {
+    token.x = x
+    token.y = y
+    token.elevation = elevation(encounter.map, this.tokenStats(token).size, x, y)
+    token.version += 1
+    return {
+      encounterId: encounter.id,
+      tokenId: token.id,
+      x,
+      y,
+      elevation: token.elevation,
+      version: token.version,
+      byUserId: userId,
+      undo,
+    }
+  }
+
+  /** The user's move the board offers to undo: their last, while it is the token's latest. */
+  private undoableMove(encounter: Encounter, userId: string): S['UndoableMove'] | null {
+    const last = this.lastMove(encounter, userId)
+    const token = last && !last.undone && encounter.tokens.find((t) => t.id === last.tokenId)
+    return last && token && token.version === last.version
+      ? { tokenId: token.id, version: last.version }
+      : null
   }
 
   // ---- Helpers ---------------------------------------------------------------
@@ -881,6 +998,11 @@ function elevation(map: S['BoardMap'], size: S['CreatureSize'], x: number, y: nu
       return map.layout.cells.find((c) => c.x === cx && c.y === cy)?.elevation ?? 0
     }),
   )
+}
+
+/** A move or undo the hub turns down. The generated type has `move` non-null; the server sends null. */
+function refused(code: ErrorCode): S['MoveResult'] {
+  return { error: code, move: null } as unknown as S['MoveResult']
 }
 
 function error(code: ErrorCode, field?: string, status = 400): Reply {

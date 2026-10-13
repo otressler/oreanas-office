@@ -36,6 +36,38 @@ export const text = {
   activeStatus: 'Läuft',
   activeSessionLabel: 'Läuft gerade',
   profileLink: (name: string) => `Profil von ${name}`,
+  // The live table (de.table and the move error codes).
+  pickTarget: (name: string) => `${name}: Tippe auf das Feld, auf das die Figur soll.`,
+  confirmHint: (name: string) => `${name} hierhin? Tippe noch einmal darauf zum Bestätigen.`,
+  confirmMove: 'Hierhin',
+  undo: 'Rückgängig',
+  invalidTarget: 'Dort kann die Figur nicht stehen. Wähle ein anderes Feld.',
+  movingOff: 'Ohne Verbindung zum Tisch lassen sich keine Figuren bewegen.',
+  reconnecting: 'Verbindung weg – verbinde neu…',
+  idle: 'Pausiert – tippe, um weiterzuspielen',
+  notYourToken: 'Diese Figur darfst du nicht bewegen.',
+}
+
+/** The screen position of a cell's centre on the board, read from the Konva stage's transform. */
+export async function cellCentre(page: Page, x: number, y: number) {
+  const surface = await page.locator('[data-board-surface]').boundingBox()
+  const stage = await page.evaluate(() => {
+    const s = (
+      window as unknown as { Konva: { stages: { x(): number; y(): number; scaleX(): number }[] } }
+    ).Konva.stages[0]!
+    return { x: s.x(), y: s.y(), scale: s.scaleX() }
+  })
+  const cell = 64 * stage.scale
+  return {
+    x: surface!.x + stage.x + (x + 0.5) * cell,
+    y: surface!.y + stage.y + (y + 0.5) * cell,
+  }
+}
+
+/** Taps (clicks) a cell of the board. */
+export async function tapCell(page: Page, x: number, y: number) {
+  const point = await cellCentre(page, x, y)
+  await page.mouse.click(point.x, point.y)
 }
 
 type HealthState = 'ok' | 'waking'

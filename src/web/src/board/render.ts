@@ -600,6 +600,8 @@ export interface TokenDrawOptions {
   /** CSS pixels per world unit. */
   cssScale: number
   marker?: Marker | null
+  /** A see-through copy of a token at its previewed target, drawn on top. */
+  ghost?: BoardToken | null
 }
 
 /** Below this radius in CSS pixels a token is drawn as a plain coloured dot. */
@@ -672,11 +674,31 @@ function drawSelection(ctx: CanvasRenderingContext2D, token: BoardToken, cssScal
   ctx.stroke()
 }
 
-/** Tokens in list order, the selected one on top, plus the info box's marker. */
+/** A move's preview: the token half see-through with a dashed candle frame. */
+function drawGhost(ctx: CanvasRenderingContext2D, token: BoardToken, cssScale: number) {
+  const n = footprint(token.size)
+  ctx.save()
+  ctx.globalAlpha = 0.6
+  drawToken(ctx, token, cssScale)
+  ctx.restore()
+  const inset = 2 / cssScale
+  ctx.setLineDash([7 / cssScale, 5 / cssScale])
+  ctx.strokeStyle = CANDLE_STRONG
+  ctx.lineWidth = 2.5 / cssScale
+  ctx.strokeRect(
+    token.x * CELL + inset,
+    token.y * CELL + inset,
+    n * CELL - 2 * inset,
+    n * CELL - 2 * inset,
+  )
+  ctx.setLineDash([])
+}
+
+/** Tokens in list order, the selected one on top, then a preview, plus the info box's marker. */
 export function drawTokens(
   ctx: CanvasRenderingContext2D,
   tokens: readonly BoardToken[],
-  { selectedTokenId, cssScale, marker }: TokenDrawOptions,
+  { selectedTokenId, cssScale, marker, ghost }: TokenDrawOptions,
 ): void {
   ctx.save()
   let selected: BoardToken | undefined
@@ -688,6 +710,7 @@ export function drawTokens(
     drawToken(ctx, selected, cssScale)
     drawSelection(ctx, selected, cssScale)
   }
+  if (ghost) drawGhost(ctx, ghost, cssScale)
   if (marker) {
     const inset = 1.5 / cssScale
     ctx.setLineDash([6 / cssScale, 4 / cssScale])

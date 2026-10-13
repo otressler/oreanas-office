@@ -3,6 +3,7 @@
 // land in test-results/board/ for a person to look at; nothing compares pixels.
 import { expect, test, type Page } from '@playwright/test'
 import { MockBackend, sampleMap } from './mockBackend.ts'
+import { cellCentre, tapCell } from './support.ts'
 
 let backend: MockBackend
 
@@ -30,28 +31,7 @@ function fight(mapId: string, placements: (index: number) => { x: number; y: num
 async function openFight(page: Page, setup: ReturnType<typeof fight>) {
   backend.signIn(page.context(), setup.player)
   await page.goto(`/kampagnen/${setup.campaign.id}/kampf/${setup.encounter.id}`)
-  await expect(page.locator('[data-board-surface] canvas')).toBeVisible()
-}
-
-/** The screen position of a cell's centre, read from the Konva stage's transform. */
-async function cellCentre(page: Page, x: number, y: number) {
-  const surface = await page.locator('[data-board-surface]').boundingBox()
-  const stage = await page.evaluate(() => {
-    const s = (
-      window as unknown as { Konva: { stages: { x(): number; y(): number; scaleX(): number }[] } }
-    ).Konva.stages[0]!
-    return { x: s.x(), y: s.y(), scale: s.scaleX() }
-  })
-  const cell = 64 * stage.scale
-  return {
-    x: surface!.x + stage.x + (x + 0.5) * cell,
-    y: surface!.y + stage.y + (y + 0.5) * cell,
-  }
-}
-
-async function tapCell(page: Page, x: number, y: number) {
-  const point = await cellCentre(page, x, y)
-  await page.mouse.click(point.x, point.y)
+  await expect(page.locator('[data-board-surface] canvas').first()).toBeVisible()
 }
 
 const shot = (page: Page, name: string) =>
@@ -149,14 +129,14 @@ test('the 40×38 field with a crowd draws fast enough for a phone', async ({ pag
   expect(zoomedIn).toBeLessThan(8)
 })
 
-/** The median time of 30 full redraws of the board's layer. */
+/** The median time of 30 full redraws of the board's layers (map and tokens). */
 async function drawTimes(page: Page) {
   return page.evaluate(() => {
-    const layer = (window as any).Konva.stages[0].getLayers()[0]
+    const stage = (window as any).Konva.stages[0]
     const times: number[] = []
     for (let i = 0; i < 30; i++) {
       const start = performance.now()
-      layer.draw()
+      stage.draw()
       times.push(performance.now() - start)
     }
     times.sort((a, b) => a - b)

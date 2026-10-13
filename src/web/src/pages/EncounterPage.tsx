@@ -1,18 +1,19 @@
 import { useNavigate, useParams } from 'react-router'
 import { ApiRequestError } from '../api/errors'
-import { Board } from '../board/Board'
 import { ButtonLink, LoadError, Loading, PageTitle } from '../components/ui'
 import { EndEncounterButton } from '../encounters/EndEncounterButton'
 import { FightScreen } from '../encounters/FightScreen'
 import { useBoard } from '../encounters/queries'
+import { FightTable } from '../table/FightTable'
 import { de } from '../text/de'
 
 const t = de.encounters
 
 /**
  * /kampagnen/:campaignId/kampf/:encounterId — the running fight's board, for
- * players and the DM. Loads once and again on focus or reconnect, never on a timer
- * (knowledge/decisions/hosting.md); live moves arrive in stage 4.
+ * players and the DM, with the live table (table/FightTable.tsx). The board loads
+ * once and again after every (re)connect of the table, never on a timer
+ * (knowledge/decisions/hosting.md); moves in between arrive over the table hub.
  */
 export function EncounterPage() {
   const { campaignId = '', encounterId = '' } = useParams()
@@ -46,9 +47,9 @@ export function EncounterPage() {
 
   const { sessionId, isSessionDm, status } = board.data
   return (
-    <FightScreen
+    <FightTable
       campaignId={campaignId}
-      title={board.data.name}
+      board={board.data}
       actions={
         isSessionDm &&
         sessionId &&
@@ -61,9 +62,7 @@ export function EncounterPage() {
           />
         )
       }
-    >
-      <Board board={board.data} className="min-h-0 flex-1" />
-    </FightScreen>
+    />
   )
 }
 

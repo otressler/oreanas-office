@@ -337,6 +337,32 @@ export const de = {
     },
   },
 
+  /** The live table on the fight page: moving tokens, undo and the connection. */
+  table: {
+    /** The connection indicator in the top bar; visible text only while not connected. */
+    status: {
+      connecting: 'Verbinde…',
+      connected: 'Verbunden',
+      reconnecting: 'Verbindung weg – verbinde neu…',
+      offline: 'Offline – Bewegen geht gerade nicht',
+      paused: 'Pausiert',
+      idle: 'Pausiert – tippe, um weiterzuspielen',
+      // Inline import keeps the shared import line untouched for parallel lanes.
+    } satisfies Record<import('../table/connection').TableStatus, string>,
+    /** A token is selected; `name` is its label. */
+    pickTarget: (name: string) => `${name}: Tippe auf das Feld, auf das die Figur soll.`,
+    /** The preview is shown. */
+    confirmHint: (name: string) => `${name} hierhin? Tippe noch einmal darauf zum Bestätigen.`,
+    confirm: 'Hierhin',
+    cancel: 'Abbrechen',
+    undo: 'Rückgängig',
+    invalidTarget: 'Dort kann die Figur nicht stehen. Wähle ein anderes Feld.',
+    movingOff: 'Ohne Verbindung zum Tisch lassen sich keine Figuren bewegen.',
+    /** The move got no answer (the connection broke); the token is back. */
+    moveFailed: 'Der Zug ist nicht angekommen. Die Figur steht wieder auf ihrem Feld.',
+    undoFailed: 'Das Rückgängigmachen ist nicht angekommen. Versuch es bitte noch einmal.',
+  },
+
   /** One text per error code the API can send. A new code is a type error here. */
   errors: {
     inviteInvalid:

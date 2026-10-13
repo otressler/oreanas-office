@@ -29,7 +29,7 @@ export function FakeBoard({
           key={token.id}
           type="button"
           aria-pressed={token.id === selectedTokenId}
-          onClick={() => onTokenTap?.(token)}
+          onClick={() => onTokenTap?.(token, { x: token.x, y: token.y })}
         >
           {`Figur ${token.label} auf ${token.x},${token.y}`}
         </button>

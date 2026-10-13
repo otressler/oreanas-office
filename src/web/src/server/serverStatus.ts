@@ -9,6 +9,11 @@
 // - also stops for good when the server reports an error it can't recover
 //   from by waiting, so a broken server isn't kept awake either.
 //
+// recheckServer() runs the same probe loop again once the server was ready, when
+// the live table can't reconnect: the server may have scaled to zero since. The
+// status stays `ready` while the first probe runs, so a quick answer shows nothing;
+// a failing probe switches to `waking` and the gate takes over as above.
+//
 // The status lives in a small store so any later screen can read it.
 import { create } from 'zustand'
 import { checkHealth } from './health'
@@ -53,6 +58,16 @@ export function startServerGate(): void {
   stopCurrent = runGate()
 }
 
+/**
+ * Probes the server again after it was ready, e.g. when the live table can't
+ * reconnect. Does nothing while a probe loop runs or before the server was ready.
+ */
+export function recheckServer(): void {
+  const { status } = useServerStatus.getState()
+  if (stopCurrent || status !== 'ready') return
+  stopCurrent = runGate({ recheck: true })
+}
+
 /** Stops probing and forgets the status. For tests. */
 export function resetServerGate(): void {
   stopCurrent?.()
@@ -60,7 +75,7 @@ export function resetServerGate(): void {
   useServerStatus.setState({ status: 'checking' })
 }
 
-function runGate(): () => void {
+function runGate({ recheck = false } = {}): () => void {
   const setStatus = (status: ServerStatus) => useServerStatus.setState({ status })
   const getStatus = () => useServerStatus.getState().status
 
@@ -70,10 +85,13 @@ function runGate(): () => void {
   let waitingForVisible = false
   let retryTimer: ReturnType<typeof setTimeout> | undefined
 
-  setStatus('checking')
-  const graceTimer = setTimeout(() => {
-    if (getStatus() === 'checking') setStatus('waking')
-  }, GRACE_MS)
+  // A recheck keeps showing the app until a probe fails; no grace period needed.
+  if (!recheck) setStatus('checking')
+  const graceTimer = recheck
+    ? undefined
+    : setTimeout(() => {
+        if (getStatus() === 'checking') setStatus('waking')
+      }, GRACE_MS)
 
   function attempt() {
     retryTimer = undefined
@@ -101,7 +119,8 @@ function runGate(): () => void {
         return
       }
       failures += 1
-      if (getStatus() === 'offline' && navigator.onLine) setStatus('waking')
+      const current = getStatus()
+      if ((current === 'offline' && navigator.onLine) || current === 'ready') setStatus('waking')
       retryTimer = setTimeout(attempt, retryDelay(failures))
     })
   }
