@@ -1,11 +1,14 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Encounters;
+using OreanasOffice.Server.Table;
 
 namespace OreanasOffice.Server.Sessions;
 
@@ -143,26 +146,43 @@ public static class SessionEndpoints
     }
 
     // Planned or active → ended. Already ended: unchanged. The session's active
-    // encounter ends with it, in the same transaction.
+    // encounter ends with it, in the same transaction, and its table hears
+    // EncounterEnded after the commit.
     private static async Task<Ok<SessionResponse>> EndSession(
         Guid campaignId,
         Guid sessionId,
         ClaimsPrincipal user,
         AppDbContext db,
         TimeProvider time,
+        [FromServices] IHubContext<TableHub, ITableClient> table,
         CancellationToken cancellationToken)
     {
         var strategy = db.Database.CreateExecutionStrategy();
-        await strategy.ExecuteAsync(async () =>
+        var ended = await strategy.ExecuteAsync(async () =>
         {
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             await db.Sessions
                 .Where(s => s.Id == sessionId && s.CampaignId == campaignId && s.Status != SessionStatus.Ended)
                 .ExecuteUpdateAsync(set => set.SetProperty(s => s.Status, SessionStatus.Ended), cancellationToken);
-            await EncounterEndpoints.EndActiveAsync(
-                db.Encounters.Where(e => e.SessionId == sessionId), time.GetUtcNow(), cancellationToken);
+            var now = time.GetUtcNow();
+            List<Guid> endedNow = [];
+            if (await EncounterEndpoints.EndActiveAsync(db.Encounters.Where(e => e.SessionId == sessionId), now, cancellationToken) > 0)
+            {
+                // The encounters this call ended carry its timestamp.
+                endedNow = await db.Encounters
+                    .Where(e => e.SessionId == sessionId && e.Status == EncounterStatus.Ended && e.EndedAt == now)
+                    .Select(e => e.Id)
+                    .ToListAsync(cancellationToken);
+            }
+
             await transaction.CommitAsync(cancellationToken);
+            return endedNow;
         });
+
+        foreach (var encounterId in ended)
+        {
+            await table.Clients.Group(TableHub.GroupName(encounterId)).EncounterEnded(encounterId);
+        }
 
         return TypedResults.Ok(await LoadAsync(db, sessionId, user.GetUserId(), cancellationToken));
     }

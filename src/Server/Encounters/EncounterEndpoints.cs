@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
@@ -8,6 +10,7 @@ using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Sessions;
+using OreanasOffice.Server.Table;
 
 namespace OreanasOffice.Server.Encounters;
 
@@ -141,6 +144,9 @@ public static class EncounterEndpoints
             .ToListAsync(cancellationToken);
 
         var colors = await db.CharacterColorIndexesAsync(campaignId, cancellationToken);
+        var undoable = encounter.Status == EncounterStatus.Active
+            ? await TableMoves.UndoableMoveAsync(db, encounterId, userId, encounter.SessionDmUserId, cancellationToken)
+            : null;
 
         var board = new BoardStateResponse(
             encounter.Id,
@@ -166,8 +172,7 @@ public static class EncounterEndpoints
                     t.Version)),
             ],
             encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId,
-            // Contract stub: the hub lane fills this in.
-            null);
+            undoable);
         return TypedResults.Ok(board);
     }
 
@@ -310,13 +315,15 @@ public static class EncounterEndpoints
 
     // Active → ended. Already ended: unchanged. 404 unless the encounter ran in this
     // session; EncounterNotActive for one that hasn't started (a draft or ready
-    // encounter of the campaign, which belongs to no session yet).
+    // encounter of the campaign, which belongs to no session yet). The devices at the
+    // table hear EncounterEnded once the fight has actually ended.
     private static async Task<Results<Ok<EncounterSummaryResponse>, NotFound, Conflict<ApiError>>> EndEncounter(
         Guid campaignId,
         Guid sessionId,
         Guid encounterId,
         AppDbContext db,
         TimeProvider time,
+        [FromServices] IHubContext<TableHub, ITableClient> table,
         CancellationToken cancellationToken)
     {
         var encounter = await db.Encounters
@@ -333,9 +340,10 @@ public static class EncounterEndpoints
             return TypedResults.Conflict(new ApiError(ApiErrorCode.EncounterNotActive));
         }
 
-        if (encounter.Status == EncounterStatus.Active)
+        if (encounter.Status == EncounterStatus.Active
+            && await EndActiveAsync(db.Encounters.Where(e => e.Id == encounterId), time.GetUtcNow(), cancellationToken) > 0)
         {
-            await EndActiveAsync(db.Encounters.Where(e => e.Id == encounterId), time.GetUtcNow(), cancellationToken);
+            await table.Clients.Group(TableHub.GroupName(encounterId)).EncounterEnded(encounterId);
         }
 
         return TypedResults.Ok(await Summaries(db.Encounters.Where(e => e.Id == encounterId)).SingleAsync(cancellationToken));
