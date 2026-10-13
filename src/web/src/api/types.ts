@@ -31,3 +31,12 @@ export type LayoutCell = Schemas['LayoutCell']
 export type LayoutFeature = Schemas['LayoutFeature']
 export type LayoutEntrance = Schemas['LayoutEntrance']
 export type Terrain = Schemas['Terrain']
+export type UndoableMove = Schemas['UndoableMove']
+
+// The live table's SignalR messages (src/web/src/table/hub.ts).
+export type MoveTokenRequest = Schemas['MoveTokenRequest']
+export type TokenMovedEvent = Schemas['TokenMovedEvent']
+export type HubResult = Schemas['HubResult']
+export type MoveResult = Schemas['MoveResult']
+export type TableHubMethod = Schemas['TableHubMethod']
+export type TableClientMethod = Schemas['TableClientMethod']

@@ -57,6 +57,7 @@ describe('withPlacedCharacters', () => {
       speedSquares: 5,
       // The server's order, not the list's.
       colorIndex: 3,
+      version: 0,
     })
   })
 })

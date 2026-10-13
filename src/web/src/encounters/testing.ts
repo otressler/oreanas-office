@@ -46,9 +46,11 @@ export function smallBoard(fields: Partial<BoardState> = {}): BoardState {
         size: 'small',
         speedSquares: 6,
         colorIndex: null,
+        version: 0,
       },
     ],
     isSessionDm: false,
+    undoableMove: null,
     ...fields,
   }
 }

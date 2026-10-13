@@ -7,6 +7,7 @@ using OreanasOffice.Server.Characters;
 using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Sessions;
+using OreanasOffice.Server.Table;
 
 namespace OreanasOffice.Server.Data;
 
@@ -31,6 +32,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityUser
     public DbSet<Encounter> Encounters => Set<Encounter>();
 
     public DbSet<Token> Tokens => Set<Token>();
+
+    public DbSet<TokenMove> TokenMoves => Set<TokenMove>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

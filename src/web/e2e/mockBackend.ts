@@ -71,6 +71,7 @@ interface Token {
   x: number
   y: number
   elevation: number
+  version: number
 }
 
 interface Encounter {
@@ -617,6 +618,7 @@ export class MockBackend {
         x: creature.x,
         y: creature.y,
         elevation: elevation(encounter.map, type.size, creature.x, creature.y),
+        version: 0,
       })
     }
     this.creatureTypes.push(...newTypes)
@@ -653,6 +655,7 @@ export class MockBackend {
         x: placement.x,
         y: placement.y,
         elevation: elevation(encounter.map, character.size, placement.x, placement.y),
+        version: 0,
       })
     }
     // All or nothing, like the server's transaction.
@@ -735,6 +738,7 @@ export class MockBackend {
         }
       }),
       isSessionDm: encounter.status === 'active' && session?.dmUserId === userId,
+      undoableMove: null,
     }
   }
 

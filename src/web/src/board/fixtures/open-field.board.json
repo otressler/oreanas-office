@@ -9308,7 +9308,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 8,
-   "colorIndex": null
+   "colorIndex": null,
+   "version": 0
   },
   {
    "id": "85f8e63c-058a-5342-81e4-1c30b84acdf8",
@@ -9322,7 +9323,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 8,
-   "colorIndex": null
+   "colorIndex": null,
+   "version": 0
   },
   {
    "id": "c675deb4-a808-5dc0-9eac-2c26798850f0",
@@ -9336,7 +9338,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 8,
-   "colorIndex": null
+   "colorIndex": null,
+   "version": 0
   },
   {
    "id": "48b4053d-87e4-5831-b80e-5e087e139e37",
@@ -9350,7 +9353,8 @@
    "elevation": 1.3,
    "size": "medium",
    "speedSquares": 8,
-   "colorIndex": null
+   "colorIndex": null,
+   "version": 0
   },
   {
    "id": "9fae554e-84df-50b6-948f-9508c00041fc",
@@ -9364,7 +9368,8 @@
    "elevation": 0.0,
    "size": "large",
    "speedSquares": 8,
-   "colorIndex": null
+   "colorIndex": null,
+   "version": 0
   },
   {
    "id": "2e210077-28c5-56c2-8a87-5d22fd87c582",
@@ -9378,7 +9383,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 0
+   "colorIndex": 0,
+   "version": 0
   },
   {
    "id": "82c01f66-1a71-5516-a3a4-5f43cdddf1ec",
@@ -9392,7 +9398,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 1
+   "colorIndex": 1,
+   "version": 0
   },
   {
    "id": "7032fd66-1251-5ada-a52e-8fcc373ee490",
@@ -9406,7 +9413,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 2
+   "colorIndex": 2,
+   "version": 0
   },
   {
    "id": "d0ec66bc-40f3-5d25-a302-6e4c9c31d3a8",
@@ -9420,7 +9428,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 3
+   "colorIndex": 3,
+   "version": 0
   },
   {
    "id": "41faa6fd-f493-5eae-a425-9359a2e8cc6d",
@@ -9434,7 +9443,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 4
+   "colorIndex": 4,
+   "version": 0
   },
   {
    "id": "c257125f-261a-5ad3-9682-d0d3b13494a7",
@@ -9448,7 +9458,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 5
+   "colorIndex": 5,
+   "version": 0
   },
   {
    "id": "6be42e24-e8f3-59fa-b3ed-a8948790d254",
@@ -9462,7 +9473,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 6
+   "colorIndex": 6,
+   "version": 0
   },
   {
    "id": "f689cc62-af5a-5f62-94d0-69c5815ba505",
@@ -9476,7 +9488,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 7
+   "colorIndex": 7,
+   "version": 0
   },
   {
    "id": "bb718c61-d212-5ccd-b761-504ce3ab1300",
@@ -9490,7 +9503,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 8
+   "colorIndex": 8,
+   "version": 0
   },
   {
    "id": "0f8bc96e-5f5b-59a9-89af-63e7a278f7be",
@@ -9504,7 +9518,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 9
+   "colorIndex": 9,
+   "version": 0
   },
   {
    "id": "1b9286bc-b8a8-5af9-80ec-95b2a9947a1a",
@@ -9518,7 +9533,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 10
+   "colorIndex": 10,
+   "version": 0
   },
   {
    "id": "f6956e88-7c8a-5a12-abba-0b87695084fd",
@@ -9532,7 +9548,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 11
+   "colorIndex": 11,
+   "version": 0
   },
   {
    "id": "fa475cf9-60ca-5843-81f3-8679cc95d18b",
@@ -9546,7 +9563,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 12
+   "colorIndex": 12,
+   "version": 0
   },
   {
    "id": "4d1b5317-fb7b-518a-95b7-ddb4d3a723f7",
@@ -9560,7 +9578,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 13
+   "colorIndex": 13,
+   "version": 0
   },
   {
    "id": "a5700716-ecd0-5329-be4d-4ab620376c3a",
@@ -9574,7 +9593,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 14
+   "colorIndex": 14,
+   "version": 0
   },
   {
    "id": "73a5243f-5ce7-5fb4-9965-a34c977073c4",
@@ -9588,8 +9608,10 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 15
+   "colorIndex": 15,
+   "version": 0
   }
  ],
- "isSessionDm": false
+ "isSessionDm": false,
+ "undoableMove": null
 }

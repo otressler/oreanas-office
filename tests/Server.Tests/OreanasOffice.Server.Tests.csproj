@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Testcontainers.Azurite" Version="4.16.0" />
     <PackageReference Include="Testcontainers.MsSql" Version="4.16.0" />
@@ -23,6 +24,8 @@
     <None Include="..\..\src\web\src\samples\maps\*.json" LinkBase="SampleMaps" CopyToOutputDirectory="PreserveNewest" />
     <!-- The frontend's board fixtures for the sample maps; import tests compare against them. -->
     <None Include="..\..\src\web\src\board\fixtures\*.board.json" LinkBase="BoardFixtures" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The OpenAPI document the frontend generates its types from; the hub contract test reads it. -->
+    <None Include="..\..\src\web\src\api\openapi.json" Link="openapi.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

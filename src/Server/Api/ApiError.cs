@@ -50,4 +50,10 @@ public enum ApiErrorCode
     EncounterNotReady,
     EncounterNotActive,
     AnotherEncounterActive,
+
+    // The live table (hub results)
+    TokenNotFound,
+    NotYourToken,
+    TargetInvalid,
+    NothingToUndo,
 }

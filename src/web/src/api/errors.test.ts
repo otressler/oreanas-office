@@ -39,6 +39,10 @@ const ALL_CODES = {
   encounterNotReady: true,
   encounterNotActive: true,
   anotherEncounterActive: true,
+  tokenNotFound: true,
+  notYourToken: true,
+  targetInvalid: true,
+  nothingToUndo: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

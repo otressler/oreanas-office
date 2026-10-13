@@ -35,6 +35,11 @@ public class Token
     // Later: visible only to the session DM until revealed.
     public bool Hidden { get; set; }
 
+    // Counts moves and undos, starting at 0 when placed. Devices keep the position with
+    // the higher version; saving a move requires the version it read (last move wins,
+    // but two moves never interleave). See knowledge/decisions/realtime-sync.md.
+    public int Version { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public Encounter Encounter { get; set; } = null!;
@@ -56,6 +61,7 @@ internal sealed class TokenConfiguration : IEntityTypeConfiguration<Token>
     {
         token.Property(t => t.Label).HasMaxLength(Token.LabelMaxLength);
         token.Property(t => t.Elevation).HasPrecision(6, 1);
+        token.Property(t => t.Version).IsConcurrencyToken();
         token.HasOne(t => t.Encounter).WithMany(e => e.Tokens).HasForeignKey(t => t.EncounterId).OnDelete(DeleteBehavior.Cascade);
 
         // Characters and creature types are deleted with their campaign, which already

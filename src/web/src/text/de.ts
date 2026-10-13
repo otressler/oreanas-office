@@ -379,6 +379,12 @@ export const de = {
     encounterNotReady: 'Dieser Kampf kann nicht gestartet werden. Er läuft schon oder ist vorbei.',
     encounterNotActive: 'Dieser Kampf läuft gerade nicht.',
     anotherEncounterActive: 'In dieser Sitzung läuft schon ein Kampf. Beende ihn zuerst.',
+    tokenNotFound: 'Diese Figur oder diesen Kampf gibt es hier nicht mehr.',
+    notYourToken: 'Diese Figur darfst du nicht bewegen.',
+    targetInvalid:
+      'Dort kann die Figur nicht stehen: außerhalb der Karte, auf einer Wand oder über einem Abgrund.',
+    nothingToUndo:
+      'Da gibt es nichts mehr rückgängig zu machen. Vielleicht hat jemand die Figur inzwischen bewegt.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Failures without an error code. */

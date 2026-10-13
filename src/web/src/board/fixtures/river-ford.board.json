@@ -2568,7 +2568,8 @@
    "elevation": 1.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": null
+   "colorIndex": null,
+   "version": 0
   },
   {
    "id": "311c734f-f0e3-5348-b12d-9f8a934cbd82",
@@ -2582,7 +2583,8 @@
    "elevation": 1.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": null
+   "colorIndex": null,
+   "version": 0
   },
   {
    "id": "90d48e16-77a7-5f60-b2b9-a5c1de02ae28",
@@ -2596,7 +2598,8 @@
    "elevation": 1.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": null
+   "colorIndex": null,
+   "version": 0
   },
   {
    "id": "2b2c6078-01de-591f-97c1-262c77141f82",
@@ -2610,7 +2613,8 @@
    "elevation": 1.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": null
+   "colorIndex": null,
+   "version": 0
   },
   {
    "id": "c2a47ebc-0d7e-58cc-8857-10a350bcbe02",
@@ -2624,7 +2628,8 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 6,
-   "colorIndex": 0
+   "colorIndex": 0,
+   "version": 0
   },
   {
    "id": "0dd47582-2bd4-53ae-8b3e-d45309fc4eee",
@@ -2638,8 +2643,10 @@
    "elevation": 0.0,
    "size": "medium",
    "speedSquares": 8,
-   "colorIndex": 2
+   "colorIndex": 2,
+   "version": 0
   }
  ],
- "isSessionDm": false
+ "isSessionDm": false,
+ "undoableMove": null
 }

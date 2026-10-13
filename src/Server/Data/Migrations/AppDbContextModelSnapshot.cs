@@ -415,6 +415,10 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
                     b.Property<int>("X")
                         .HasColumnType("int");
 
@@ -532,6 +536,63 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasIndex("CampaignId", "Date");
 
                     b.ToTable("Sessions", (string)null);
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Table.TokenMove", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("FromElevation")
+                        .HasPrecision(6, 1)
+                        .HasColumnType("decimal(6,1)");
+
+                    b.Property<int>("FromX")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FromY")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ToElevation")
+                        .HasPrecision(6, 1)
+                        .HasColumnType("decimal(6,1)");
+
+                    b.Property<int>("ToX")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ToY")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("UndoneAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ByUserId");
+
+                    b.HasIndex("TokenId", "Id");
+
+                    b.HasIndex("EncounterId", "ByUserId", "Id");
+
+                    b.ToTable("TokenMoves");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
@@ -713,6 +774,23 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Campaign");
 
                     b.Navigation("Dm");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Table.TokenMove", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("ByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Encounters.Token", "Token")
+                        .WithMany()
+                        .HasForeignKey("TokenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Token");
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Campaigns.Campaign", b =>

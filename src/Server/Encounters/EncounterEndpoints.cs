@@ -136,6 +136,7 @@ public static class EncounterEndpoints
                 CharacterSize = (CreatureSize?)t.Character!.Size,
                 TypeSize = (CreatureSize?)t.CreatureType!.Size,
                 Speed = t.Kind == TokenKind.Creature ? t.CreatureType!.SpeedSquares : t.Character!.SpeedSquares,
+                t.Version,
             })
             .ToListAsync(cancellationToken);
 
@@ -161,9 +162,12 @@ public static class EncounterEndpoints
                     t.Elevation,
                     (t.Kind == TokenKind.Character ? t.CharacterSize : t.TypeSize) ?? CreatureSize.Medium,
                     t.Speed,
-                    t.CharacterId is { } characterId ? colors[characterId] : null)),
+                    t.CharacterId is { } characterId ? colors[characterId] : null,
+                    t.Version)),
             ],
-            encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId);
+            encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId,
+            // Contract stub: the hub lane fills this in.
+            null);
         return TypedResults.Ok(board);
     }
 

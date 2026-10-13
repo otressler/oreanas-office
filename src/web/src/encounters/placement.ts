@@ -46,6 +46,7 @@ export function withPlacedCharacters(
       size: character.size,
       speedSquares: character.speedSquares,
       colorIndex: character.colorIndex,
+      version: 0,
     })
   }
   return { ...board, tokens: [...board.tokens, ...placed] }

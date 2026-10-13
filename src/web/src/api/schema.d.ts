@@ -1476,7 +1476,7 @@ export interface components {
             field?: null | string;
         };
         /** @enum {unknown} */
-        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive";
+        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo";
         AuthOptionsResponse: {
             googleEnabled: boolean;
         };
@@ -1503,6 +1503,7 @@ export interface components {
             map: components["schemas"]["BoardMap"];
             tokens: components["schemas"]["BoardToken"][];
             isSessionDm: boolean;
+            undoableMove: null | components["schemas"]["UndoableMove"];
         };
         BoardToken: {
             /** Format: uuid */
@@ -1526,6 +1527,8 @@ export interface components {
             speedSquares: number;
             /** Format: int32 */
             colorIndex: null | number;
+            /** Format: int32 */
+            version: number;
         };
         CampaignResponse: {
             /** Format: uuid */
@@ -1623,6 +1626,10 @@ export interface components {
         EntranceKind: "entrance" | "exit" | "both";
         HealthResponse: {
             status: string;
+        };
+        HubResult: {
+            /** @enum {unknown} */
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | null;
         };
         ImportCreature: {
             type: string;
@@ -1763,6 +1770,35 @@ export interface components {
             hasPassword: boolean;
             hasGoogle: boolean;
         };
+        MoveResult: {
+            /** @enum {unknown} */
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | null;
+            move: {
+                /** Format: uuid */
+                encounterId: string;
+                /** Format: uuid */
+                tokenId: string;
+                /** Format: int32 */
+                x: number;
+                /** Format: int32 */
+                y: number;
+                /** Format: double */
+                elevation: number;
+                /** Format: int32 */
+                version: number;
+                /** Format: uuid */
+                byUserId: string;
+                undo: boolean;
+            };
+        };
+        MoveTokenRequest: {
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+        };
         RegisterRequest: {
             inviteToken: string;
             displayName: string;
@@ -1801,10 +1837,37 @@ export interface components {
         StartEncounterRequest: {
             characters: components["schemas"]["CharacterPlacement"][];
         };
+        /** @enum {string} */
+        TableClientMethod: "EncounterEnded" | "IdleTimeout" | "TokenMoved";
+        /** @enum {string} */
+        TableHubMethod: "JoinEncounter" | "MarkActive" | "MoveToken" | "UndoMove";
         /** @enum {unknown} */
         Terrain: "void" | "floor" | "difficult" | "water" | "wall";
         /** @enum {unknown} */
         TokenKind: "character" | "creature";
+        TokenMovedEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            /** Format: double */
+            elevation: number;
+            /** Format: int32 */
+            version: number;
+            /** Format: uuid */
+            byUserId: string;
+            undo: boolean;
+        };
+        UndoableMove: {
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: int32 */
+            version: number;
+        };
         UpdateProfileRequest: {
             displayName: string;
         };
