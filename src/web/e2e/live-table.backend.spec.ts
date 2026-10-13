@@ -1,7 +1,8 @@
 // Runs against the real backend (`npm run test:e2e:backend`): the stage 4 gate on two
 // devices. Oreana runs the fight on the gorge crossing and Mira plays Ilse. A move shows
 // up live on the other device, Mira can't take the goblin, undo works until someone
-// else moves the token, and a device that was offline catches up when it reconnects.
+// else moves the token, a device that was offline catches up when it reconnects, and
+// tokens may share a cell.
 import { randomUUID } from 'node:crypto'
 import { expect, test, type Browser, type Page } from '@playwright/test'
 import { tapCell, text } from './support.ts'
@@ -70,17 +71,19 @@ async function startFight(browser: Browser, page: Page) {
   return { oreana, mira }
 }
 
-/** Where Ilse stands on the server. */
-async function ilse(page: Page) {
+/** Where a token stands on the server. */
+async function position(page: Page, label: string) {
   const url = page
     .url()
     .replace(/\/kampagnen\/([^/]+)\/kampf\/([^/]+)$/, '/api/campaigns/$1/encounters/$2/board')
   const board = (await page.evaluate(async (u) => (await fetch(u)).json(), url)) as {
     tokens: { label: string; x: number; y: number }[]
   }
-  const token = board.tokens.find((t) => t.label === 'Ilse')!
+  const token = board.tokens.find((t) => t.label === label)!
   return { x: token.x, y: token.y }
 }
+
+const ilse = (page: Page) => position(page, 'Ilse')
 
 /** Select the token on (x, y), then tap the target twice: preview and confirm. */
 async function move(page: Page, from: [number, number], to: [number, number], name: string) {
@@ -92,15 +95,23 @@ async function move(page: Page, from: [number, number], to: [number, number], na
   await expect(page.getByText(text.confirmHint(name))).toHaveCount(0)
 }
 
-/** The device sees Ilse on (x, y): tapping that cell selects her. Escape lets go again. */
+/**
+ * The device sees Ilse on (x, y): tapping that cell selects her. Taps again while the
+ * board is still catching up (a slide, or the reload after a reconnect). Escape lets go.
+ */
 async function seesIlseAt(page: Page, x: number, y: number) {
-  await tapCell(page, x, y)
-  await expect(page.getByText(text.pickTarget('Ilse'))).toBeVisible()
+  await expect(async () => {
+    await page.keyboard.press('Escape')
+    await tapCell(page, x, y)
+    await expect(page.getByText(text.pickTarget('Ilse'))).toBeVisible({ timeout: 1_000 })
+  }).toPass({ timeout: 10_000 })
   await page.keyboard.press('Escape')
   await expect(page.getByText(text.pickTarget('Ilse'))).toHaveCount(0)
 }
 
 test('players and the DM move tokens live on both devices', async ({ browser, page }) => {
+  // Two devices through registration, setup and a dozen moves: longer than the default.
+  test.setTimeout(120_000)
   const { oreana, mira } = await startFight(browser, page)
   expect(await ilse(mira)).toEqual({ x: 0, y: 5 })
 
@@ -139,4 +150,8 @@ test('players and the DM move tokens live on both devices', async ({ browser, pa
   await mira.context().setOffline(false)
   await expect(indicator(mira)).toHaveAttribute('data-status', 'connected', { timeout: 30_000 })
   await seesIlseAt(mira, 5, 10)
+
+  // Tokens may share a cell: the DM puts the goblin onto Ilse.
+  await move(oreana, [14, 4], [5, 10], 'Goblin 1')
+  await expect.poll(() => position(oreana, 'Goblin 1')).toEqual({ x: 5, y: 10 })
 })

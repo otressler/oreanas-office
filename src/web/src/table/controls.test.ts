@@ -161,12 +161,14 @@ describe('tapBoard', () => {
     expect(tapBoard(preview, at(1, 3), dm).confirm).toEqual({ tokenId: 'ogre', x: 1, y: 2 })
   })
 
-  it('deselects on the selected token, and switches to another movable token', () => {
+  it('deselects on the selected token, and targets another token it may move too', () => {
     const selected: Controls = { mode: 'selected', tokenId: 'hero' }
     expect(tapBoard(selected, at(0, 0, hero), context()).controls).toEqual(IDLE)
+    // The session DM may move every token, and still stacks them.
     expect(tapBoard(selected, at(2, 2, sidekick), context()).controls).toEqual({
-      mode: 'selected',
-      tokenId: 'sidekick',
+      mode: 'preview',
+      tokenId: 'hero',
+      target: { x: 2, y: 2 },
     })
   })
 

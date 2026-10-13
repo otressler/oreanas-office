@@ -1,6 +1,7 @@
 // Phone controls for moving tokens (knowledge/features/playable-map.md, "Phone
 // controls"): tap a token to select it, tap a cell to see it there as a preview, tap
-// the preview again to confirm. Pure functions; the fight page keeps the state and
+// the preview again to confirm. While a token is selected, every other tap picks a
+// target, even on another token. Pure functions; the fight page keeps the state and
 // sends the confirmed move. Who may move what follows knowledge/domain/token.md, where
 // a token may stand follows knowledge/decisions/realtime-sync.md: the whole footprint
 // inside the map on walkable cells (a bridge counts), overlapping tokens allowed.
@@ -126,9 +127,10 @@ export function tapBoard(controls: Controls, tap: Tap, context: TapContext): Tap
     }
   }
   if (tap.token?.id === selected.id) return { controls: IDLE }
-  if (movable) return { controls: { mode: 'selected', tokenId: movable.id } }
 
-  // Any other cell, also one with a token this person can't move: tokens may overlap.
+  // Any other cell is a target, also one with another token on it: tokens may overlap,
+  // and the session DM, who may move every token, must be able to stack them too. To
+  // take another token, let go of this one first.
   const target = chooseTarget(grid, selected.size, tap.cell)
   if (!target) return { controls: current, hint: 'invalidTarget' }
   return { controls: { mode: 'preview', tokenId: selected.id, target } }
