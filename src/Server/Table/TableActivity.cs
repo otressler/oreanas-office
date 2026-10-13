@@ -97,9 +97,23 @@ public sealed class TableIdleTimeout(
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                foreach (var connection in activity.TakeIdle(options.Value.IdleTimeout))
+                var idle = activity.TakeIdle(options.Value.IdleTimeout);
+                if (idle.Count == 0)
                 {
-                    await DropAsync(connection);
+                    continue;
+                }
+
+                foreach (var connection in idle)
+                {
+                    await NotifyAsync(connection);
+                }
+
+                // Closing at once could cut off the message, and a device that never got
+                // it would reconnect and keep the container awake.
+                await Task.Delay(CloseDelay, time, stoppingToken);
+                foreach (var connection in idle)
+                {
+                    connection.Abort();
                 }
             }
         }
@@ -108,7 +122,9 @@ public sealed class TableIdleTimeout(
         }
     }
 
-    private async Task DropAsync(HubCallerContext connection)
+    private static readonly TimeSpan CloseDelay = TimeSpan.FromSeconds(1);
+
+    private async Task NotifyAsync(HubCallerContext connection)
     {
         try
         {
@@ -116,10 +132,8 @@ public sealed class TableIdleTimeout(
         }
         catch (Exception ex)
         {
-            // The connection may be gone already; it is closed below either way.
+            // The connection may be gone already; it is closed either way.
             logger.LogDebug(ex, "Could not send IdleTimeout to {ConnectionId}", connection.ConnectionId);
         }
-
-        connection.Abort();
     }
 }
