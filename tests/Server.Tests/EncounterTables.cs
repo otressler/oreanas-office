@@ -1,3 +1,4 @@
+using System.Net;
 using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Sessions;
 using static OreanasOffice.Server.Tests.CampaignTestApi;
@@ -9,6 +10,15 @@ namespace OreanasOffice.Server.Tests;
 // as a Ready encounter.
 public sealed record EncounterTable(
     Person Dm, Person SecondDm, Person Player, Guid CampaignId, SessionResponse Session, EncounterSummaryResponse Encounter);
+
+// The gorge fight running (TestMaps.Gorge): Brom's Thorin at (0, 0), Yara's Aria at
+// (0, 2), the small goblin at (5, 1) and the Large ogre at (1, 3). Ids of their tokens.
+public sealed record RunningFight(EncounterTable Table, Guid Thorin, Guid Aria, Guid Goblin, Guid Ogre)
+{
+    public Guid CampaignId => Table.CampaignId;
+
+    public Guid EncounterId => Table.Encounter.Id;
+}
 
 public static class EncounterTables
 {
@@ -30,5 +40,28 @@ public static class EncounterTables
 
         var encounter = await dm.ImportMapAsync(campaign.Id);
         return new EncounterTable(dm, secondDm, player, campaign.Id, session, encounter);
+    }
+
+    public static async Task<RunningFight> StartFightAsync(this AppFactory app)
+    {
+        var table = await app.CreateEncounterTableAsync();
+        var thorin = await table.Player.CreateCharacterAsync(table.CampaignId, "Thorin");
+        var aria = await table.SecondDm.CreateCharacterAsync(table.CampaignId, "Aria");
+        var started = await table.Dm.StartEncounterAsync(
+            table.CampaignId,
+            table.Session.Id,
+            table.Encounter.Id,
+            new CharacterPlacement(thorin.Id, 0, 0),
+            new CharacterPlacement(aria.Id, 0, 2));
+        Assert.Equal(HttpStatusCode.OK, started.StatusCode);
+
+        var board = await (await table.Dm.GetBoardAsync(table.CampaignId, table.Encounter.Id))
+            .ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
+        return new RunningFight(
+            table,
+            board.Tokens.Single(t => t.CharacterId == thorin.Id).Id,
+            board.Tokens.Single(t => t.CharacterId == aria.Id).Id,
+            board.Tokens.Single(t => (t.X, t.Y) == (5, 1)).Id,
+            board.Tokens.Single(t => (t.X, t.Y) == (1, 3)).Id);
     }
 }

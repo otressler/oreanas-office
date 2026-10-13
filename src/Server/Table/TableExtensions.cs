@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.SignalR;
+using OreanasOffice.Server.Hosting;
 
 namespace OreanasOffice.Server.Table;
 
@@ -10,7 +12,16 @@ public static class TableExtensions
     public static WebApplicationBuilder AddTable(this WebApplicationBuilder builder)
     {
         builder.Services.Configure<TableOptions>(builder.Configuration.GetSection(TableOptions.Section));
+        builder.Services.AddScoped<TableMoves>();
+        builder.Services.AddSingleton<TableActivity>();
+        builder.Services.AddSingleton<TableActivityFilter>();
+        if (!BuildTime.IsGeneratingOpenApiDocument)
+        {
+            builder.Services.AddHostedService<TableIdleTimeout>();
+        }
+
         builder.Services.AddSignalR()
+            .AddHubOptions<TableHub>(options => options.AddFilter<TableActivityFilter>())
             .AddJsonProtocol(options =>
             {
                 options.PayloadSerializerOptions.NumberHandling = JsonNumberHandling.Strict;

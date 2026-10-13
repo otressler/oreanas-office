@@ -1,0 +1,217 @@
+using Microsoft.EntityFrameworkCore;
+using OreanasOffice.Server.Api;
+using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Encounters;
+using OreanasOffice.Server.Maps;
+using OreanasOffice.Server.Rules;
+
+namespace OreanasOffice.Server.Table;
+
+// The live table's rules (knowledge/decisions/realtime-sync.md, domain/token.md): who
+// may join and move, where a token may stand, and undo. The hub calls these and
+// broadcasts what they return. Every call reads the roles from the database, so a new
+// session DM applies at once.
+//
+// Moves and undos aren't cancelled when the caller's connection drops: a move that
+// reached the database must still be broadcast.
+public sealed class TableMoves(AppDbContext db, TimeProvider time)
+{
+    // Token.Version is a concurrency token: a save that lost the race to another move
+    // of the same token reads the token again and repeats the checks. Two moves never
+    // interleave, and the last one saved wins.
+    private const int SaveAttempts = 5;
+
+    // Any campaign member, while the encounter is active.
+    public async Task<ApiErrorCode?> JoinAsync(Guid userId, Guid encounterId, CancellationToken cancellationToken)
+    {
+        var encounter = await Encounter(encounterId, userId).SingleOrDefaultAsync(cancellationToken);
+        return encounter switch
+        {
+            null or { IsMember: false } => ApiErrorCode.TokenNotFound,
+            { Status: not EncounterStatus.Active } => ApiErrorCode.EncounterNotActive,
+            _ => null,
+        };
+    }
+
+    // Checks in this order: the token exists in a campaign of the caller (TokenNotFound),
+    // its encounter is active (EncounterNotActive), the caller may move it (NotYourToken),
+    // the footprint stands on walkable cells inside the map (TargetInvalid). Tokens may
+    // overlap; there are no distance or turn checks.
+    public async Task<MoveResult> MoveAsync(Guid userId, MoveTokenRequest? request)
+    {
+        if (request is null)
+        {
+            return new MoveResult(ApiErrorCode.TokenNotFound, null);
+        }
+
+        for (var attempt = 1; ; attempt++)
+        {
+            db.ChangeTracker.Clear();
+            var found = await db.Tokens
+                .Where(t => t.Id == request.TokenId)
+                .Select(t => new
+                {
+                    Token = t,
+                    IsMember = db.CampaignMembers.Any(m => m.CampaignId == t.Encounter.CampaignId && m.UserId == userId),
+                    t.Encounter.Status,
+                    SessionDmUserId = (Guid?)t.Encounter.Session!.DmUserId,
+                    OwnerUserId = (Guid?)t.Character!.OwnerUserId,
+                    CharacterSize = (CreatureSize?)t.Character!.Size,
+                    TypeSize = (CreatureSize?)t.CreatureType!.Size,
+                    t.Encounter.BattleMap.Width,
+                    t.Encounter.BattleMap.Height,
+                    t.Encounter.BattleMap.Layout,
+                })
+                .SingleOrDefaultAsync();
+            if (found is null || !found.IsMember)
+            {
+                return new MoveResult(ApiErrorCode.TokenNotFound, null);
+            }
+
+            if (found.Status != EncounterStatus.Active)
+            {
+                return new MoveResult(ApiErrorCode.EncounterNotActive, null);
+            }
+
+            var token = found.Token;
+            if (!MayMove(userId, found.SessionDmUserId, token.Kind, found.OwnerUserId))
+            {
+                return new MoveResult(ApiErrorCode.NotYourToken, null);
+            }
+
+            var size = found.TypeSize ?? found.CharacterSize ?? CreatureSize.Medium;
+            var grid = new MapGrid(found.Width, found.Height, found.Layout);
+            if (!MapGrid.FootprintCells(size, request.X, request.Y).All(cell => grid.Walkable(cell.X, cell.Y)))
+            {
+                return new MoveResult(ApiErrorCode.TargetInvalid, null);
+            }
+
+            var move = new TokenMove
+            {
+                EncounterId = token.EncounterId,
+                TokenId = token.Id,
+                ByUserId = userId,
+                FromX = token.X,
+                FromY = token.Y,
+                FromElevation = token.Elevation,
+                ToX = request.X,
+                ToY = request.Y,
+                ToElevation = grid.PlacementElevation(size, request.X, request.Y),
+                Version = token.Version + 1,
+                At = time.GetUtcNow(),
+            };
+            token.X = move.ToX;
+            token.Y = move.ToY;
+            token.Elevation = move.ToElevation;
+            token.Version = move.Version;
+            db.TokenMoves.Add(move);
+
+            // The token and its history row land in one SaveChanges, so in one transaction.
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException) when (attempt < SaveAttempts)
+            {
+                continue;
+            }
+
+            return new MoveResult(null, Event(token, userId, undo: false));
+        }
+    }
+
+    // Puts the caller's latest move in the encounter back, while it isn't undone and the
+    // token still has the move's version. Only that one move: an undone move stays the
+    // caller's latest, so a second undo finds nothing. The session DM undoes only their
+    // own moves, as the query only looks at the caller's.
+    public async Task<MoveResult> UndoAsync(Guid userId, Guid encounterId)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            db.ChangeTracker.Clear();
+            var encounter = await Encounter(encounterId, userId).SingleOrDefaultAsync();
+            if (encounter is null || !encounter.IsMember)
+            {
+                return new MoveResult(ApiErrorCode.TokenNotFound, null);
+            }
+
+            if (encounter.Status != EncounterStatus.Active)
+            {
+                return new MoveResult(ApiErrorCode.EncounterNotActive, null);
+            }
+
+            var latest = await LatestMove(db.TokenMoves, encounterId, userId).FirstOrDefaultAsync();
+            if (UndoError(latest, userId, encounter.SessionDmUserId) is { } error)
+            {
+                return new MoveResult(error, null);
+            }
+
+            var (move, token) = (latest!.Move, latest.Token);
+            token.X = move.FromX;
+            token.Y = move.FromY;
+            token.Elevation = move.FromElevation;
+            token.Version++;
+            move.UndoneAt = time.GetUtcNow();
+
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException) when (attempt < SaveAttempts)
+            {
+                continue;
+            }
+
+            return new MoveResult(null, Event(token, userId, undo: true));
+        }
+    }
+
+    // The board's UndoableMove: the move UndoAsync would put back now, or null. Only
+    // asked for an active encounter.
+    public static async Task<UndoableMove?> UndoableMoveAsync(
+        AppDbContext db, Guid encounterId, Guid userId, Guid? sessionDmUserId, CancellationToken cancellationToken)
+    {
+        var latest = await LatestMove(db.TokenMoves.AsNoTracking(), encounterId, userId).FirstOrDefaultAsync(cancellationToken);
+        return UndoError(latest, userId, sessionDmUserId) is null
+            ? new UndoableMove(latest!.Move.TokenId, latest.Move.Version)
+            : null;
+    }
+
+    // The session DM moves any token; everyone else, other `dm` members and the
+    // campaign's default DM included, only characters they own (knowledge/domain/session.md).
+    private static bool MayMove(Guid userId, Guid? sessionDmUserId, TokenKind kind, Guid? ownerUserId) =>
+        userId == sessionDmUserId || (kind == TokenKind.Character && ownerUserId == userId);
+
+    private static ApiErrorCode? UndoError(LatestTokenMove? latest, Guid userId, Guid? sessionDmUserId)
+    {
+        if (latest is null || latest.Move.UndoneAt is not null || latest.Token.Version != latest.Move.Version)
+        {
+            return ApiErrorCode.NothingToUndo;
+        }
+
+        // The caller may have lost the right since, e.g. the session went to another DM.
+        return MayMove(userId, sessionDmUserId, latest.Token.Kind, latest.OwnerUserId) ? null : ApiErrorCode.NotYourToken;
+    }
+
+    // The caller's move with the highest id in the encounter, with its token.
+    private static IQueryable<LatestTokenMove> LatestMove(IQueryable<TokenMove> moves, Guid encounterId, Guid userId) =>
+        moves
+            .Where(m => m.EncounterId == encounterId && m.ByUserId == userId)
+            .OrderByDescending(m => m.Id)
+            .Select(m => new LatestTokenMove(m, m.Token, (Guid?)m.Token.Character!.OwnerUserId));
+
+    private IQueryable<EncounterAccess> Encounter(Guid encounterId, Guid userId) =>
+        db.Encounters
+            .Where(e => e.Id == encounterId)
+            .Select(e => new EncounterAccess(
+                db.CampaignMembers.Any(m => m.CampaignId == e.CampaignId && m.UserId == userId),
+                e.Status,
+                (Guid?)e.Session!.DmUserId));
+
+    private static TokenMovedEvent Event(Token token, Guid userId, bool undo) =>
+        new(token.EncounterId, token.Id, token.X, token.Y, token.Elevation, token.Version, userId, undo);
+
+    private sealed record EncounterAccess(bool IsMember, EncounterStatus Status, Guid? SessionDmUserId);
+
+    private sealed record LatestTokenMove(TokenMove Move, Token Token, Guid? OwnerUserId);
+}
