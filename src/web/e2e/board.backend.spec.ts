@@ -68,13 +68,13 @@ test('the DM starts a fight on the gorge crossing and a player lands on it', asy
   await oreana.getByRole('button', { name: 'Automatisch aufstellen' }).click()
   await oreana.getByRole('button', { name: 'Kampf starten' }).click()
   await expect(oreana.getByRole('button', { name: 'Kampf beenden' })).toBeVisible()
-  await expect(oreana.locator('[data-board-surface] canvas')).toBeVisible()
+  await expect(oreana.locator('[data-board-surface] canvas').first()).toBeVisible()
 
   // Mira opens the app and lands on the fight, without the DM's controls.
   await mira.goto('/')
   await expect(mira).toHaveURL(/\/kampf\//)
   await expect(mira.getByRole('heading', { name: 'Schluchtübergang' })).toBeVisible()
-  await expect(mira.locator('[data-board-surface] canvas')).toBeVisible()
+  await expect(mira.locator('[data-board-surface] canvas').first()).toBeVisible()
   await expect(mira.getByRole('button', { name: 'Kampf beenden' })).toHaveCount(0)
 
   // The board Mira gets has her character and the four creatures.

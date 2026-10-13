@@ -1002,7 +1002,7 @@ function elevation(map: S['BoardMap'], size: S['CreatureSize'], x: number, y: nu
 
 /** A move or undo the hub turns down. The generated type has `move` non-null; the server sends null. */
 function refused(code: ErrorCode): S['MoveResult'] {
-  return { error: code, move: null } as unknown as S['MoveResult']
+  return { error: code, move: null }
 }
 
 function error(code: ErrorCode, field?: string, status = 400): Reply {

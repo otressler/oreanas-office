@@ -2,8 +2,8 @@
 // campaigns/queries.ts), so invalidating ['campaign', id] refreshes these too.
 //
 // Nothing here polls: the server scales to zero between sessions
-// (knowledge/decisions/hosting.md). The board reloads on focus and reconnect;
-// live updates arrive in stage 4.
+// (knowledge/decisions/hosting.md). The fight page keeps the board current over the
+// table hub and reloads it after every (re)connect (table/connection.ts).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
 import { unwrap } from '../api/errors'
@@ -30,10 +30,14 @@ export function useEncounters(campaignId: string, { enabled = true } = {}) {
   })
 }
 
-/** Everything needed to draw an encounter. A player gets 404 once it has ended. */
+/**
+ * Everything needed to draw an encounter. A player gets 404 once it has ended. Not
+ * reloaded on focus: the table connection reloads it when the app is visible again.
+ */
 export function useBoard(campaignId: string, encounterId: string) {
   return useQuery({
     queryKey: encounterKeys.board(campaignId, encounterId),
+    refetchOnWindowFocus: false,
     queryFn: () =>
       unwrap(
         api.GET('/api/campaigns/{campaignId}/encounters/{encounterId}/board', {

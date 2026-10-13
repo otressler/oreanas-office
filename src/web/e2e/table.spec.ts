@@ -1,7 +1,7 @@
 // Stage 4's live table against a fake hub (mockHub.ts) at phone and laptop sizes: tap
 // to select, preview and confirm, the rollback of a refused move, a move by someone
 // else sliding in, undo, and the connection indicator with moving switched off.
-// The real hub and two-device sync run in table.backend.spec.ts.
+// The real hub and two-device sync run in live-table.backend.spec.ts.
 import { expect, test, type Page } from '@playwright/test'
 import { MockBackend, sampleMap } from './mockBackend.ts'
 import { MockHub } from './mockHub.ts'

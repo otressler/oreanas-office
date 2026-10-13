@@ -117,10 +117,7 @@ export function deferred<T>() {
   return { promise, resolve }
 }
 
-/**
- * A refused move or undo. The generated MoveResult type says `move` is never null,
- * but the server sends null with an error (src/Server/Table/TableContracts.cs).
- */
+/** A refused move or undo: an error code and no move. */
 export function refused(error: NonNullable<MoveResult['error']>): MoveResult {
-  return { error, move: null } as unknown as MoveResult
+  return { error, move: null }
 }

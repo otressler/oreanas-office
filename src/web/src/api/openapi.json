@@ -2561,50 +2561,14 @@
             ]
           },
           "move": {
-            "required": [
-              "encounterId",
-              "tokenId",
-              "x",
-              "y",
-              "elevation",
-              "version",
-              "byUserId",
-              "undo"
-            ],
-            "type": "object",
-            "properties": {
-              "encounterId": {
-                "type": "string",
-                "format": "uuid"
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TokenMovedEvent"
               },
-              "tokenId": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "x": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "y": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "elevation": {
-                "type": "number",
-                "format": "double"
-              },
-              "version": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "byUserId": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "undo": {
-                "type": "boolean"
+              {
+                "type": "null"
               }
-            }
+            ]
           }
         }
       },

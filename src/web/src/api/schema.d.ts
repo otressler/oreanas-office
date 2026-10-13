@@ -1773,23 +1773,7 @@ export interface components {
         MoveResult: {
             /** @enum {unknown} */
             error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | null;
-            move: {
-                /** Format: uuid */
-                encounterId: string;
-                /** Format: uuid */
-                tokenId: string;
-                /** Format: int32 */
-                x: number;
-                /** Format: int32 */
-                y: number;
-                /** Format: double */
-                elevation: number;
-                /** Format: int32 */
-                version: number;
-                /** Format: uuid */
-                byUserId: string;
-                undo: boolean;
-            };
+            move: components["schemas"]["TokenMovedEvent"] | null;
         };
         MoveTokenRequest: {
             /** Format: uuid */

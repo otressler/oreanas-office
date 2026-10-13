@@ -20,6 +20,16 @@ public sealed class TableOpenApi : IOpenApiDocumentTransformer
             document.AddComponent(type.Name, await context.GetOrCreateSchemaAsync(type, null, cancellationToken));
         }
 
+        // The generator inlines MoveResult.Move and drops its nullability; it is null
+        // whenever Error is set.
+        if (document.Components?.Schemas?[nameof(MoveResult)] is OpenApiSchema result && result.Properties is { } properties)
+        {
+            properties["move"] = new OpenApiSchema
+            {
+                OneOf = [new OpenApiSchemaReference(nameof(TokenMovedEvent), document), new OpenApiSchema { Type = JsonSchemaType.Null }],
+            };
+        }
+
         document.AddComponent("TableHubMethod", MethodNames<ITableHub>());
         document.AddComponent("TableClientMethod", MethodNames<ITableClient>());
     }
