@@ -26,6 +26,7 @@ erDiagram
     CAMPAIGN ||--o{ ENCOUNTER : "prepares"
     SESSION |o--o{ ENCOUNTER : "runs"
     BATTLE_MAP ||--o{ ENCOUNTER : "used by"
+    BATTLE_MAP |o--o{ BATTLE_MAP : "copied from"
     ENCOUNTER ||--o{ TOKEN : "places"
     CHARACTER |o--o{ TOKEN : "appears as"
     CREATURE_TYPE |o--o{ TOKEN : "appears as"

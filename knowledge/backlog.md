@@ -35,6 +35,12 @@ They all follow the [overview](/overview.md) principle "show, don't enforce", an
 | **Distance rules** | The distance preview (path and length in meters while choosing a target) and the reach highlight of the cells within a token's speed. | Designed in the [movement rules](/rules/movement-distance.md) and the [playable map](/features/playable-map.md), then taken out of the proof of concept at the start of stage 4 as too complicated for now. Corners, elevation and flying are still open there. |
 | **Remove tokens** | A defeated or departed token can be faded out or laid down instead of deleted, so the board keeps its history. The DM can also delete it. | Needs a state on the [token](/domain/token.md), for example `active`, `down` or `removed`. |
 
+# Preparing
+
+| Idea | What it does | Notes |
+|------|--------------|-------|
+| **Publishing maps** | A DM chooses which of their maps appear in the map store. Unpublished maps stay in their campaign. | Until then, every map that isn't archived is in the store ([battle map](/domain/battle-map.md)). |
+
 # Running the session
 
 | Idea | What it does | Notes |

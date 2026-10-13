@@ -54,7 +54,7 @@ The grid is the source of truth and the picture is decoration. The model paints 
 
 Observed so far: the model follows the guide's regions closely, including stepped river shapes and wall rectangles. It tends to dress up edges (it turned a solid black border row into grass), so name edge regions explicitly when they matter.
 
-Grids wider than 3:1 must be padded with void or split into tiles. Above about 40 cells on the long edge, cells drop below ~96 px; still fine on phones, but say so.
+Grids wider than 3:1 are padded to 3:1 with void, and the prompt asks for dead terrain or darkness there. Above about 40 cells on the long edge, cells drop below ~96 px; still fine on phones, but say so.
 
 ## Token icons and portraits
 

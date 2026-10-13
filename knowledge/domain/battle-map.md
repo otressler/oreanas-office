@@ -14,12 +14,22 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `id` | id | |
 | `campaignId` | → [Campaign](/domain/campaign.md) | |
 | `name` | string | |
-| `width`, `height` | int, cells | The N×M grid the DM chooses. One cell is always 1.5 m ([movement rules](/rules/movement-distance.md)) |
+| `width`, `height` | int, cells | The N×M grid the DM chooses, at most 40 each. One cell is always 1.5 m ([movement rules](/rules/movement-distance.md)) |
 | `layout` | JSON document | See below. Stored as one document, not a table of cells ([persistence](/decisions/persistence.md)) |
 | `scene` | text | What the place is: "rope bridge over a misty gorge" |
 | `vibe` | text | Mood: "tense, overcast, wind" |
 | `lighting` | text | e.g. "dusk", "torchlight" |
 | `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The chosen generated image. Other versions stay as assets |
+| `copiedFromMapId` | → Battle map, nullable | The map this one was duplicated or added from. Set once and never changed |
+| `archivedAt` | timestamp, nullable | Set when a `dm` member archives the map |
+
+# Map list, archive and store
+
+- **Map list.** `dm` members of the campaign see its maps, open one to edit it, and duplicate or archive it. Players don't see the list.
+- **Archive, never delete.** Only `dm` members archive a map, and they can bring it back from the archived maps in the list. An archived map can't be picked for a new encounter and isn't offered in other campaigns' stores. Encounters that already use it keep working. Archiving only sets a field, so it syncs like any other change ([offline prep](/decisions/offline-prep-pwa.md)).
+- **Duplicate.** A copy in the same campaign, for a map that needs only small changes to be used again. It gets a new id and `copiedFromMapId`. Later changes to either map don't reach the other.
+- **Store.** Maps from other campaigns. Adding one makes a copy in the campaign with `copiedFromMapId` set; the source stays as it is. The store leaves out the campaign's own maps, maps the campaign already has an unarchived copy of, and copies made from the campaign's own maps. If the campaign's copy is archived, the store still offers the map, and adding it brings the archived copy back instead of making a new one. For now every map that isn't archived is in the store, whoever made it; choosing which maps to publish is in the [backlog](/backlog.md). The store needs a connection.
+- **What a copy takes:** name, size, layout, scene, vibe and lighting. Encounters and their creatures aren't copied. Whether the background image comes along is decided in stage 7 of the [implementation plan](/implementation-plan.md).
 
 # Layout document
 

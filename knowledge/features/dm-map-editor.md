@@ -17,7 +17,7 @@ Let the DM build a fight quickly. This is not a full level editor: the DM places
 
 # Requirements
 
-1. Create a [battle map](/domain/battle-map.md) with a chosen grid size N×M.
+1. Create a [battle map](/domain/battle-map.md) with a chosen grid size N×M, up to 40×40.
 2. Paint terrain per cell with a brush: walkable floor, difficult terrain, water, wall, or `void` (not part of the map). Tools: single cell, rectangle, fill.
 3. Place important objects ("features") with a rectangular footprint: bridge, pillar, door, stairs and so on. Each has a label, an elevation and a "blocks movement" switch.
 4. Set height levels: paint elevation (in meters) onto cells, and give features their own elevation (a bridge above a gorge).
@@ -27,15 +27,13 @@ Let the DM build a fight quickly. This is not a full level editor: the DM places
 8. Start [AI map generation](/features/ai-map-generation.md), compare versions and pick a background.
 9. Save as an [encounter](/domain/encounter.md) for a later session.
 10. Work offline: everything except image generation works without a connection and syncs on demand ([offline prep](/decisions/offline-prep-pwa.md)).
+11. A map list per campaign: open a map to edit it later, duplicate it to adjust a copy, archive it, or bring an archived map back. Maps are never deleted ([battle map](/domain/battle-map.md)).
+12. A map store: add a copy of a map from another campaign ([battle map](/domain/battle-map.md)).
 
 # Notes
 
 - Characters aren't placed in the editor. The session DM places them when starting the [encounter](/domain/encounter.md), once it's known who plays.
 - Works on a laptop first. DMs prepare at a desk, and phone editing isn't needed.
 - The map is playable even before an image exists, using the plain layout rendering.
-
-# Open questions
-
-- Largest grid size to support. This affects image resolution ([image generation approach](/decisions/image-generation-approach.md)).
 
 [^brief]: Original project brief

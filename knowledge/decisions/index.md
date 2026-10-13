@@ -10,10 +10,10 @@
 - [UI language](ui-language.md) - The interface is German only; more languages are a backlog idea
 - [Persistence](persistence.md) - Azure SQL Database (free offer) with EF Core, map layout as a JSON document, images in Blob Storage
 - [Realtime sync](realtime-sync.md) - The server holds the board state and pushes confirmed moves over in-process SignalR in a single, scale-to-zero instance
+- [Offline prep and PWA](offline-prep-pwa.md) - Installable PWA; the DM preps offline and syncs on demand, live play needs the server
 
 # Proposed
 
-- [Offline prep and PWA](offline-prep-pwa.md) - Installable PWA; the DM preps offline and syncs on demand, live play needs the server
 - [Image generation approach](image-generation-approach.md) - The grid is the source of truth; AI paints from a colour-coded guide image
 - [Backward compatibility](backward-compatibility.md) - Not enforced yet; once the project owner says so, releases keep working with older open app versions and existing data
 

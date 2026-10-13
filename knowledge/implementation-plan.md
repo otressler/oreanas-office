@@ -75,12 +75,14 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 6 | The sample "Gorge crossing" map has its bridge over `void` cells, but `void` blocks movement and a feature with `blocksMovement: false` doesn't make cells walkable ([battle map](/domain/battle-map.md), [movement rules](/rules/movement-distance.md)) | Stage 3 | **Answered** for placement and moves: a non-blocking feature makes its footprint walkable at the feature's elevation, whatever the terrain below ([encounter](/domain/encounter.md)). For paths it is deferred with the distance rules |
 | 7 | Corner rule: does one blocked side cell block a diagonal? | Deferred | **Deferred:** distance rules are out of the proof of concept. The current reading stays "either side blocks" |
 | 8 | Elevation and flying in the distance preview | Deferred | **Deferred** with the distance rules |
-| 9 | [Offline prep and PWA](/decisions/offline-prep-pwa.md) is only proposed | Stage 5 | Accept as written |
-| 10 | Largest grid size | Stage 5 | 40×40, which the [frontend stack](/decisions/frontend-stack.md) sizes for |
+| 9 | [Offline prep and PWA](/decisions/offline-prep-pwa.md) is only proposed | Stage 5 | **Answered:** accepted, including campaigns created offline (question 15). The stage 6 sync protocol is still approved separately |
+| 10 | Largest grid size | Stage 5 | **Answered:** 40×40. A map wider than 3:1 gets padding painted as dead terrain or darkness ([image generation approach](/decisions/image-generation-approach.md)) |
 | 11 | [Image budget](/decisions/image-budget.md) | Stage 7 | Set after T0 records the cost per image |
 | 12 | Are ruler and area templates shared with everyone, or only on the measuring device? | Stage 9 | Shared, like pings, and not saved |
 | 13 | What "HP and conditions" means, and how it relates to status rings in the [backlog](/backlog.md) | Stage 10 | Designed with the project owner at the start of stage 10 |
 | 14 | How do images reach the browser: public blob container, short-lived signed links, or through the app? ([persistence](/decisions/persistence.md)) | Stage 7 | Short-lived signed links, so one campaign's images stay private |
+| 15 | Can campaigns be created offline? | Stage 6 | **Answered:** yes, only creating; no join code, members, characters or sessions until it syncs ([offline prep](/decisions/offline-prep-pwa.md)). Built with sync in stage 6 |
+| 16 | Does a copy from the map store take the chosen background image? ([battle map](/domain/battle-map.md)) | Stage 7 | Yes, the copy points to the same image asset |
 
 # T0 — Image spike (parallel track)
 
@@ -227,6 +229,9 @@ Distance rules are out of the proof of concept: no path, no distance preview and
 - Undo and redo inside the editor.
 - Preview with the stage 3 renderer, and a test placement with the stage 4 target check.
 - Works completely offline, with the editor routes in the cached app shell. Export and import of the layout JSON stays as a tool.
+- Map list per campaign: open a map to edit it, duplicate it, archive it and bring it back. Nothing is deleted ([battle map](/domain/battle-map.md)).
+- Offline storage per user, with GUIDs made in the browser, a request to keep the storage, and a "not synced yet" mark. A copy of the user's campaigns from the last time online, so maps can be built for them offline ([offline prep](/decisions/offline-prep-pwa.md)).
+- Maps built here stay in the browser until stage 6 adds sync; stage 6 follows right after this gate.
 
 **Order**
 
@@ -243,6 +248,7 @@ Distance rules are out of the proof of concept: no path, no distance preview and
 - [ ] Close the browser, reopen it offline: the map is still there.
 - [ ] A test token stands on the bridge but not on a wall or in the gorge.
 - [ ] Undo and redo behave as expected while painting.
+- [ ] Duplicate the gorge crossing and change the copy: the original stays as it was. Archive the copy: it can no longer be picked. Bring it back: it can be picked again.
 
 # Stage 6 — Bestiary, encounter prep and sync
 
@@ -254,6 +260,8 @@ Completes roadmap phase 2.
 - Place creatures by clicking cells, numbered automatically ("Goblin 1", "Goblin 2"). Save the [encounter](/domain/encounter.md) as draft or ready.
 - Sync button: push and pull battle maps, encounters and creature types with version numbers; a conflict dialog that asks which version to keep and never merges ([offline prep](/decisions/offline-prep-pwa.md)). Automatic sync before starting an encounter.
 - Starting an encounter from the editor replaces the stage 3 import as the normal path.
+- Map store: add a copy of a map from another campaign, with the store's rules on which maps it offers ([battle map](/domain/battle-map.md)). Needs a connection.
+- Campaigns created offline: no join code, invites hidden, synced before their maps. Changes the server rejects at sync, such as after losing `dm` rights, are shown, never dropped. A warning before signing out with unsynced changes ([offline prep](/decisions/offline-prep-pwa.md)).
 
 **Order**
 
@@ -269,6 +277,8 @@ Completes roadmap phase 2.
 - [ ] Prepare a complete encounter offline, go online, sync, start it: the phones show it.
 - [ ] Place three goblins: they're labelled Goblin 1 to 3.
 - [ ] Edit the same map in two browsers and sync both: the second gets the conflict dialog, and nothing is merged silently.
+- [ ] In a second campaign, add the gorge crossing from the store: it appears as a copy and is gone from that campaign's store. Archive the copy and add the map again: the archived copy comes back.
+- [ ] Create a campaign offline and build a map in it: no invite or join code is offered. Go online and sync: the campaign gets a join code and the map is on the server.
 
 # Stage 7 — AI backgrounds
 
@@ -276,7 +286,7 @@ Needs the T0 gate and the image budget (question 11).
 
 **Feature set**
 
-- Server-side guide renderer, a C# port of the skill's `render_guide.py` with the same colours and legend, and the prompt builder from the skill's prompt templates ([AI map generation](/features/ai-map-generation.md)).
+- Server-side guide renderer, a C# port of the skill's `render_guide.py` with the same colours and legend, and the prompt builder from the skill's prompt templates ([AI map generation](/features/ai-map-generation.md)). Maps wider than 3:1 are padded, and the prompt asks for dead terrain or darkness in the padding ([image generation approach](/decisions/image-generation-approach.md)).
 - Foundry client with the local size checks.
 - Job queue in the database: [asset](/domain/asset.md) rows `queued → running → done | failed`, one worker that runs jobs one at a time within 2 requests per minute and honours 429 waits. The worker is woken when a job is added and on startup, never by polling ([hosting](/decisions/hosting.md)).
 - Images in Blob Storage, a "done" notification to the editor over SignalR, a version gallery, picking `backgroundAssetId`, and the budget limit enforced.
