@@ -139,6 +139,8 @@ test('the DM ends the fight; afterwards players see it isn’t running', async (
   const sessions = panel(page, text.sessionsTitle)
   await expect(sessions).toContainText(text.running)
   await sessions.getByRole('link', { name: text.toFight }).click()
+  // The fight page loads lazily; the campaign page has its own end button meanwhile.
+  await expect(page.getByTestId('board')).toBeVisible()
 
   await page.getByRole('button', { name: text.end }).click()
   await page.getByRole('button', { name: text.endConfirm }).click()

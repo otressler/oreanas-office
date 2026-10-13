@@ -2,7 +2,14 @@ import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { de } from '../text/de'
 import { ServerGate } from './ServerGate'
-import { ATTEMPT_TIMEOUT_MS, GRACE_MS, resetServerGate, retryDelay } from './serverStatus'
+import {
+  ATTEMPT_TIMEOUT_MS,
+  GRACE_MS,
+  recheckServer,
+  resetServerGate,
+  retryDelay,
+  useServerStatus,
+} from './serverStatus'
 
 const CHILD = 'Der Spieltisch'
 
@@ -241,5 +248,55 @@ describe('ServerGate', () => {
     act(() => setHidden(false))
     await advance(0)
     expect(child()).toBeInTheDocument()
+  })
+
+  describe('recheckServer', () => {
+    async function readyGate() {
+      fetchMock.mockResolvedValueOnce(ok())
+      renderGate()
+      await advance(0)
+      expect(child()).toBeInTheDocument()
+    }
+
+    it('keeps the children while a quick probe answers ok', async () => {
+      await readyGate()
+      fetchMock.mockReturnValueOnce(
+        new Promise((resolve) => setTimeout(() => resolve(ok()), GRACE_MS * 2)),
+      )
+
+      act(() => recheckServer())
+      await advance(GRACE_MS)
+      expect(child()).toBeInTheDocument()
+      expect(wakingScreen()).not.toBeInTheDocument()
+
+      await advance(GRACE_MS)
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(useServerStatus.getState().status).toBe('ready')
+      // Ready again is final.
+      await advance(60_000)
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+    })
+
+    it('shows the waking screen when the probe fails, and the children again once ok', async () => {
+      await readyGate()
+      fetchMock.mockResolvedValueOnce(waking(503)).mockResolvedValue(ok())
+
+      act(() => recheckServer())
+      await advance(0)
+      expect(wakingScreen()).toBeInTheDocument()
+      expect(child()).not.toBeInTheDocument()
+
+      await advance(retryDelay(1))
+      expect(child()).toBeInTheDocument()
+    })
+
+    it('does nothing while a probe loop runs or before the server was ready', async () => {
+      fetchMock.mockReturnValue(new Promise(() => {}))
+      renderGate()
+      await advance(0)
+      recheckServer()
+      await advance(0)
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
   })
 })

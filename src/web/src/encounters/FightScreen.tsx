@@ -10,11 +10,14 @@ import { de } from '../text/de'
 export function FightScreen({
   campaignId,
   title,
+  status,
   actions,
   children,
 }: {
   campaignId: string
   title: ReactNode
+  /** Small, next to the title: the live table's connection indicator. */
+  status?: ReactNode
   actions?: ReactNode
   children: ReactNode
 }) {
@@ -30,6 +33,7 @@ export function FightScreen({
           <span className="hidden sm:inline">{de.encounters.back}</span>
         </Link>
         <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-parchment">{title}</h1>
+        {status}
         {actions}
       </header>
       {children}

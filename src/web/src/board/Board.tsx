@@ -3,9 +3,12 @@
 // fit-to-screen. Owned by the board renderer lane; this is the contract other
 // screens build against.
 //
-// Drawing happens in two Konva shapes with plain canvas calls (render.ts): the map
-// (terrain, highlight, grid, labels) and the tokens. Pan and zoom only change the
-// stage transform and redraw; React re-renders only when the props or the info box change.
+// Drawing happens in two Konva layers, each one shape with plain canvas calls
+// (render.ts): the map (terrain, highlight, grid, labels) and the tokens. Pan and zoom
+// only change the stage transform and redraw; React re-renders only when the props or
+// the info box change. With `slide`, a token whose position changes glides to its new
+// cell in about 200 ms (knowledge/decisions/realtime-sync.md): only the token layer
+// redraws per animation frame, without a React render.
 import type Konva from 'konva'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Layer, Shape, Stage } from 'react-konva'
@@ -42,15 +45,25 @@ export interface BoardProps {
   board: BoardState
   /**
    * A tap on a cell: a short touch or click, never the end of a pan or pinch.
-   * Without this handler the board shows the cell's terrain and elevation itself.
+   * Without this handler, or when it returns false, the board shows the cell's
+   * terrain and elevation itself.
    */
-  onCellTap?: (cell: GridPoint) => void
-  /** A tap on a token. Without this handler the board shows the token's details itself. */
-  onTokenTap?: (token: BoardToken) => void
+  onCellTap?: (cell: GridPoint) => boolean | void
+  /**
+   * A tap on a token, with the tapped cell (a large token covers several). Without
+   * this handler, or when it returns false, the board shows the token's details itself.
+   */
+  onTokenTap?: (token: BoardToken, cell: GridPoint) => boolean | void
   /** Cells shaded as targets, as cellKey(x, y) strings: free cells on the setup screen, reach in stage 4. */
   highlight?: ReadonlySet<string>
   /** A token drawn as selected. */
   selectedTokenId?: string | null
+  /** A see-through copy of a token at another top-left cell: the preview of a move. */
+  ghost?: { tokenId: string; x: number; y: number } | null
+  /** Tokens glide to a new position instead of jumping (not with reduced motion). */
+  slide?: boolean
+  /** Tokens that jump even with `slide`: the device's own move, already shown at its target. */
+  instantTokenIds?: ReadonlySet<string>
   /** The board fills its container; the page gives it a size. */
   className?: string
 }
@@ -73,6 +86,9 @@ export function Board({
   onTokenTap,
   highlight,
   selectedTokenId,
+  ghost,
+  slide = false,
+  instantTokenIds,
   className,
 }: BoardProps) {
   const { width, height, layout, id: mapId } = board.map
@@ -211,9 +227,8 @@ export function Board({
       const cell = screenToCell(v, point)
       const token = tokenAt(board.tokens, cell, selectedTokenId)
       if (token) {
-        if (onTokenTap) {
+        if (onTokenTap && onTokenTap(token, cell) !== false) {
           setInfo(null)
-          onTokenTap(token)
         } else {
           setInfo((current) =>
             current?.kind === 'token' && current.id === token.id
@@ -224,9 +239,8 @@ export function Board({
         return
       }
       const inside = cell.x >= 0 && cell.y >= 0 && cell.x < scene.width && cell.y < scene.height
-      if (inside && onCellTap) {
+      if (inside && onCellTap && onCellTap(cell) !== false) {
         setInfo(null)
-        onCellTap(cell)
         return
       }
       // Tapping void, outside the map or the same cell again closes the box.
@@ -335,11 +349,67 @@ export function Board({
   )
 
   const tokens = board.tokens
+  const ghostToken = useMemo(() => {
+    const token = ghost && tokens.find((t) => t.id === ghost.tokenId)
+    return token ? { ...token, x: ghost.x, y: ghost.y } : null
+  }, [ghost, tokens])
+
+  // Slides: where each token stood at the last render, and the tokens on their way.
+  const tokenLayerRef = useRef<Konva.Layer>(null)
+  const lastPositions = useRef(new Map<string, GridPoint>())
+  const slides = useRef(new Map<string, Slide>())
+  const frame = useRef(0)
+
+  useLayoutEffect(() => {
+    const now = performance.now()
+    const animate = slide && !prefersReducedMotion()
+    const positions = new Map<string, GridPoint>()
+    for (const token of tokens) {
+      positions.set(token.id, { x: token.x, y: token.y })
+      const before = lastPositions.current.get(token.id)
+      if (!before || (before.x === token.x && before.y === token.y)) continue
+      if (!animate || instantTokenIds?.has(token.id)) {
+        slides.current.delete(token.id)
+        continue
+      }
+      // From where it is drawn now, so a slide cut short by another move doesn't jump.
+      const from = slidingAt(slides.current.get(token.id), before, now)
+      slides.current.set(token.id, { fromX: from.x, fromY: from.y, start: now })
+    }
+    lastPositions.current = positions
+    if (slides.current.size === 0 || frame.current) return
+    const tick = () => {
+      const time = performance.now()
+      for (const [id, s] of slides.current)
+        if (time - s.start >= SLIDE_MS) slides.current.delete(id)
+      tokenLayerRef.current?.batchDraw()
+      frame.current = slides.current.size > 0 ? requestAnimationFrame(tick) : 0
+    }
+    frame.current = requestAnimationFrame(tick)
+  }, [tokens, slide, instantTokenIds])
+
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(frame.current)
+      frame.current = 0
+    },
+    [],
+  )
+
   // A new function per render redraws the tokens; renders only follow prop or info changes.
+  // Animation frames redraw the token layer with it, reading the slides from the ref.
   const drawTokenShape = (con: Konva.Context) => {
     const ctx = con._context
     const cssScale = ctx.getTransform().a / con.canvas.getPixelRatio()
-    drawTokens(ctx, tokens, { selectedTokenId, cssScale, marker })
+    const now = performance.now()
+    const drawn =
+      slides.current.size > 0
+        ? tokens.map((token) => {
+            const at = slidingAt(slides.current.get(token.id), token, now)
+            return at === token ? token : { ...token, x: at.x, y: at.y }
+          })
+        : tokens
+    drawTokens(ctx, drawn, { selectedTokenId, cssScale, marker, ghost: ghostToken })
   }
 
   return (
@@ -358,6 +428,8 @@ export function Board({
             <Stage ref={stageRef} width={size.width} height={size.height} listening={false}>
               <Layer listening={false}>
                 <Shape sceneFunc={drawMapShape} listening={false} />
+              </Layer>
+              <Layer ref={tokenLayerRef} listening={false}>
                 <Shape sceneFunc={drawTokenShape} listening={false} />
               </Layer>
             </Stage>
@@ -390,6 +462,39 @@ export function Board({
       </div>
     </div>
   )
+}
+
+/** How long a token takes to glide to its new cell. */
+export const SLIDE_MS = 200
+
+/** A token gliding from (fromX, fromY), in cells, since `start` (performance.now()). */
+interface Slide {
+  fromX: number
+  fromY: number
+  start: number
+}
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
+/** Where a token heading for `to` is drawn at `now`: `to` itself once the slide is over. */
+function slidingAt<T extends GridPoint>(
+  slide: Slide | undefined,
+  to: T,
+  now: number,
+): T | GridPoint {
+  if (!slide) return to
+  const t = (now - slide.start) / SLIDE_MS
+  if (t >= 1) return to
+  const eased = 1 - (1 - Math.max(0, t)) ** 3
+  return {
+    x: slide.fromX + (to.x - slide.fromX) * eased,
+    y: slide.fromY + (to.y - slide.fromY) * eased,
+  }
 }
 
 /** Four corners pointing outwards. */
