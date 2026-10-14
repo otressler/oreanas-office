@@ -96,7 +96,8 @@ test('the DM starts a fight on the gorge crossing and a player lands on it', asy
   // Oreana ends the fight; after a reload Mira sees it isn't running any more.
   await oreana.getByRole('button', { name: 'Kampf beenden' }).click()
   await oreana.getByRole('button', { name: 'Ja, beenden' }).click()
-  await expect(oreana).toHaveURL(/\/kampagnen\/[^/]+$/)
+  // Back on the session page (knowledge/features/session-planning.md).
+  await expect(oreana).toHaveURL(/\/kampagnen\/[^/]+\/sitzungen\/[^/]+$/)
   await mira.reload()
   await expect(mira.getByText('Dieser Kampf läuft gerade nicht')).toBeVisible()
 })
