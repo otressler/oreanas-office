@@ -91,7 +91,8 @@ public static class GuideRenderer
 
     // Renders the layout at the measured frame, so the model can be asked for exactly this
     // size. Padding cells are void and stay void, because they touch the frame edge. Cell
-    // positions in the legend count from the map's own top-left cell, as in the layout.
+    // positions in the legend count in the picture the model sees, so on a padded map they
+    // are shifted by the padding.
     public static MapGuide Render(int width, int height, MapLayout layout, int targetPixels = 1536)
     {
         var frame = Measure(width, height, targetPixels);
@@ -185,7 +186,7 @@ public static class GuideRenderer
                 }
             }
 
-            var text = $"{style.Name} at column {Span(f.X, f.W)}, row {Span(f.Y, f.H)} = {f.Kind}";
+            var text = $"{style.Name} at column {Span(fx, f.W)}, row {Span(fy, f.H)} = {f.Kind}";
             if (!string.IsNullOrEmpty(f.Label) && f.Label != f.Kind)
             {
                 text += $" (\"{f.Label}\")";

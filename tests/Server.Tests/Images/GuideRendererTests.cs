@@ -160,6 +160,18 @@ public sealed class GuideRendererTests
     }
 
     [Fact]
+    public void Legend_positions_count_in_the_padded_picture()
+    {
+        // 40 × 10 is padded to 40 × 14 with two rows above the map: the model sees the map's
+        // first row as row 3 of the picture.
+        var layout = new MapLayout(1, [], [new LayoutFeature("f1", "bridge", "bridge", 4, 0, 3, 1, 0m, false)], []);
+
+        var guide = GuideRenderer.Render(40, 10, layout);
+
+        Assert.Contains("brown at column 5-7, row 3 = bridge", guide.Legend);
+    }
+
+    [Fact]
     public void Feature_colours_run_through_the_spares_then_fall_back_to_yellow()
     {
         string[] kinds = ["a", "b", "c", "d", "e", "f", "g", "h"];
