@@ -158,6 +158,185 @@ export const de = {
     createHint: 'Du wirst ihre Spielleitung.',
   },
 
+  /** The stages of knowledge/implementation-plan.md, told for the people at the table. */
+  roadmap: {
+    title: 'Fahrplan',
+    link: 'Fahrplan',
+    intro:
+      "So wächst Oreana's Office, Stufe für Stufe. Termine gibt es keine: Eine Stufe ist fertig, wenn sie am echten Tisch funktioniert.",
+    stage: (number: number) => `Stufe ${number}`,
+    done: 'Fertig',
+    next: 'Als Nächstes',
+    phases: [
+      {
+        title: 'Spielbarer Tisch',
+        goal: 'Eine Karte, die alle am Tisch auf dem eigenen Handy sehen und bespielen.',
+        stages: [
+          {
+            number: 1,
+            title: 'Grundgerüst',
+            items: [
+              'Die App läuft im Browser und lässt sich auf dem Handy installieren.',
+              'Zwischen den Spielabenden schläft der Server und wird beim Öffnen geweckt.',
+              'Alles auf Deutsch, mit deutschen Zahlen und Datumsangaben.',
+            ],
+          },
+          {
+            number: 2,
+            title: 'Konten und Kampagnen',
+            items: [
+              'Anmelden mit eigenem Konto oder mit Google, und lange angemeldet bleiben.',
+              'Registrieren über einen Einladungslink.',
+              'Kampagnen mit Beitrittscode, Mitgliedern und Spielleitung.',
+              'Charaktere und Sitzungen.',
+            ],
+          },
+          {
+            number: 3,
+            title: 'Das Spielfeld',
+            items: [
+              'Kampfkarten mit Raster, Gelände, Objekten und Figuren auf jedem Gerät.',
+              'Mit zwei Fingern zoomen, verschieben, die ganze Karte zeigen.',
+              'Ein Tipp auf ein Feld zeigt Gelände und Höhe in Metern.',
+              'Die Spielleitung startet einen Kampf und stellt die Charaktere auf.',
+            ],
+          },
+          {
+            number: 4,
+            title: 'Der lebendige Tisch',
+            items: [
+              'Figur antippen, Ziel wählen, bestätigen: Alle sehen den Zug sofort.',
+              'Ein Pfeil zeigt den anderen, wohin jemand gerade ziehen will.',
+              'Den eigenen letzten Zug rückgängig machen.',
+              'Nach dem Entsperren des Handys verbindet sich die App von selbst wieder.',
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Karteneditor',
+        goal: 'Die Spielleitung baut ihre Kämpfe selbst, auch ohne Internet.',
+        stages: [
+          {
+            number: 5,
+            title: 'Karten bauen, auch offline',
+            items: [
+              'Karten am Laptop bauen, ganz ohne Verbindung.',
+              'Gelände und Höhen malen, Objekte, Ein- und Ausgänge setzen, die Szene beschreiben.',
+              'Rückgängig und Wiederholen, Karten an jedem Rand vergrößern oder verkleinern.',
+              'Kartenliste: Karten duplizieren, archivieren und zurückholen.',
+            ],
+          },
+          {
+            number: 6,
+            title: 'Kreaturen, Kampfvorbereitung und Abgleich',
+            items: [
+              'Kreaturenarten anlegen und auf der Karte platzieren, automatisch nummeriert: Goblin 1, Goblin 2 …',
+              'Kämpfe offline vorbereiten und als Entwurf oder bereit speichern.',
+              'Mit dem Server abgleichen. Bei Konflikten fragt die App, welche Fassung bleibt.',
+              'Kämpfe direkt aus dem Editor starten.',
+              'Karten aus anderen Kampagnen übernehmen.',
+              'Kampagnen auch offline anlegen.',
+            ],
+          },
+        ],
+      },
+      {
+        title: 'KI-Bilder',
+        goal: 'Karten und Figuren sehen gut aus.',
+        stages: [
+          {
+            number: 7,
+            title: 'Gemalte Hintergründe',
+            items: [
+              'Ein Bildmodell malt aus der Karte einen Hintergrund, passend zum Raster.',
+              'Mehrere Fassungen erzeugen, vergleichen und eine auswählen.',
+              'Ohne Bild bleibt die gezeichnete Karte: Der Kampf ist immer spielbar.',
+            ],
+          },
+          {
+            number: 8,
+            title: 'Figurenbilder und Porträts',
+            items: [
+              'Jede Kreaturenart bekommt ein gemaltes Symbol, alle im gleichen Stil.',
+              'Porträts für Charaktere: erzeugen lassen oder vom Handy hochladen.',
+              'Figuren zeigen ihr Bild im farbigen Ring.',
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Extras am Tisch',
+        goal: 'Kämpfe laufen flüssiger.',
+        stages: [
+          {
+            number: 9,
+            title: 'Messen',
+            items: [
+              'Ein Lineal zwischen zwei Punkten, in Metern.',
+              'Flächen für Zauber: Kegel, Kugel, Linie und Würfel.',
+            ],
+          },
+          {
+            number: 10,
+            title: 'Spielleitung am Tisch',
+            items: [
+              'Ping: Lange drücken lässt die Stelle auf allen Bildschirmen aufleuchten.',
+              'Verborgene Figuren, die nur die Spielleitung sieht, bis sie sie aufdeckt.',
+              'Trefferpunkte und Zustände.',
+            ],
+          },
+        ],
+      },
+    ],
+    later: {
+      title: 'Danach',
+      intro: 'Gute Ideen, die noch keiner Stufe zugeordnet sind.',
+      groups: [
+        {
+          title: 'Gemeinsamer Tisch',
+          items: [
+            'Ein Gerät in der Tischmitte zeigt die Karte für alle.',
+            'Beitreten per QR-Code.',
+            'Sehen, wer gerade dabei ist.',
+          ],
+        },
+        {
+          title: 'Mehr auf dem Spielfeld',
+          items: [
+            'Laufwege und Reichweite beim Ziehen.',
+            'Freihand zeichnen, Statusringe an Figuren und auf Feldern.',
+            'Teile der Karte nach und nach aufdecken.',
+            'Kreaturen mitten im Kampf auftauchen lassen und Figuren vom Feld nehmen.',
+          ],
+        },
+        {
+          title: 'Die Sitzung leiten',
+          items: [
+            'Mehrere Kämpfe pro Sitzung, mit einem Tipp umschalten.',
+            'Rückgängig für die Spielleitung.',
+          ],
+        },
+        {
+          title: 'Für Spielende',
+          items: [
+            'Eigene Farbe und eigenes Porträt.',
+            'Ein Knopf, der die eigene Figur zeigt.',
+            'Kurzes Vibrieren, wenn ein Zug bestätigt ist.',
+          ],
+        },
+        {
+          title: 'Kampagnenverwaltung',
+          items: [
+            'NPCs, Orte und Fraktionen.',
+            'Sitzungsnotizen.',
+            'Mehr zu den Charakteren als nur ihre Figur.',
+          ],
+        },
+      ],
+    },
+  },
+
   roles: {
     dm: 'Spielleitung',
     player: 'Spieler',

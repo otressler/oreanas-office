@@ -9,6 +9,7 @@ import { InvitePage } from './pages/InvitePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PasswordResetPage } from './pages/PasswordResetPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { RoadmapPage } from './pages/RoadmapPage'
 import { SignInPage } from './pages/SignInPage'
 import { ServerGateOutlet } from './server/ServerGate'
 
@@ -54,6 +55,8 @@ export const routes: RouteObject[] = [
           { path: '*', element: <NotFoundPage /> },
         ],
       },
+      // Static text: open to everyone and never wakes the server.
+      { path: 'fahrplan', element: <RoadmapPage /> },
       // The map pages work offline and never wake the server
       // (knowledge/decisions/offline-prep-pwa.md). Their code is in the cached app shell.
       {
