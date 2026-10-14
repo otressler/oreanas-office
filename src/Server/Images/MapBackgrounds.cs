@@ -31,7 +31,9 @@ public static class MapBackgrounds
             !outdated && asset.LayoutHash != mapFingerprint,
             asset.Status == AssetStatus.Failed ? asset.Failure : null,
             asset.CreatedAt,
-            asset.FinishedAt);
+            asset.FinishedAt,
+            asset.RefinedFromAssetId,
+            asset.Instruction);
     }
 
     // Made for the map's current size.

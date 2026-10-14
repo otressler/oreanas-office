@@ -27,6 +27,11 @@ public static class ImageTestApi
     public static Task<HttpResponseMessage> GenerateAsync(this Person person, Guid campaignId, Guid mapId, int mapVersion) =>
         person.Client.PostAsJsonAsync(BackgroundsUrl(campaignId, mapId), new GenerateBackgroundRequest(mapVersion), Json);
 
+    public static Task<HttpResponseMessage> RefineAsync(
+        this Person person, Guid campaignId, Guid mapId, int mapVersion, Guid sourceId, string? instruction) =>
+        person.Client.PostAsJsonAsync(
+            BackgroundsUrl(campaignId, mapId), new GenerateBackgroundRequest(mapVersion, sourceId, instruction), Json);
+
     // Queues a job for the map as the server has it now; it must be accepted.
     public static async Task<MapBackground> QueueAsync(this Person person, Guid campaignId, Guid mapId)
     {

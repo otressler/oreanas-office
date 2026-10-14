@@ -62,6 +62,7 @@ const ALL_CODES = {
   mapChanged: true,
   backgroundNotFound: true,
   backgroundOutdated: true,
+  instructionInvalid: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

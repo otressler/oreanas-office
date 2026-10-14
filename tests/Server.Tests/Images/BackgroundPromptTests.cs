@@ -48,6 +48,33 @@ public sealed class BackgroundPromptTests
     }
 
     [Fact]
+    public void A_refinement_asks_to_change_only_the_instruction_and_to_keep_to_the_layout()
+    {
+        var sample = GuideSamples.Load("gorge-crossing");
+        var guide = GuideRenderer.Render(sample.Width, sample.Height, sample.Layout);
+
+        var prompt = BackgroundPrompt.BuildRefinement("  Die Brücke doppelt so breit  ", sample.Layout, guide);
+
+        Assert.Equal(
+            "Edit the first image, a top-down battle map for a tabletop game. Change only this: Die Brücke doppelt so breit.\n"
+            + "Keep everything else exactly as it is: the same style, colours and lighting, and every region in the same place.\n"
+            + "\n"
+            + "The second image is the colour-coded layout of the same map. The painted map must keep matching it:\n"
+            + "- grey = walkable ground (floor, path, earth, flagstones as fits the scene)\n"
+            + "- ochre = difficult terrain (rubble, undergrowth, mud, shallow scree)\n"
+            + "- dark purple = outside the play area, where nobody can stand: scenery that fits (cliff drop, solid bedrock, darkness, dense forest), never open water or walkable floor\n"
+            + "- brown at column 9-12, row 6-7 = bridge (\"Hängebrücke\")\n"
+            + "- white at column 4, row 3 = pillar (\"Menhir\")\n"
+            + "- magenta = openings at the map edge, painted as the path, doorway or stairs that leads away: Waldweg\n"
+            + "\n"
+            + "Ignore the colours of the layout image: they are only a code for where things are, not colours to paint.\n"
+            + "No ochre, dark purple, white or magenta from the layout may show anywhere in the picture, not even as a tint, glow, haze, light or stain.\n"
+            + Tail,
+            prompt.Replace("\r\n", "\n"));
+        Assert.EndsWith("Change only this: Lauter Nebel!", BackgroundPrompt.BuildRefinement("Lauter Nebel!", sample.Layout, guide).Split('\n')[0]);
+    }
+
+    [Fact]
     public void Only_signal_colours_are_named_and_natural_ones_are_left_to_the_scene()
     {
         // Floor, walls and water are grey, black and blue, which stone and water are anyway.

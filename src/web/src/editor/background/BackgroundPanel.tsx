@@ -28,6 +28,7 @@ import {
   useMapBackgrounds,
   withVersion,
   type MapSize,
+  type Refinement,
 } from './backgrounds'
 import { CompareDialog } from './CompareDialog'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -82,6 +83,8 @@ function OnlinePanel() {
 
   const store = useEditorStore()
   const [confirming, setConfirming] = useState(false)
+  // The finished version the DM is about to refine.
+  const [refining, setRefining] = useState<MapBackground | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<Message>(null)
   const [comparing, setComparing] = useState<string | null>(null)
@@ -93,8 +96,9 @@ function OnlinePanel() {
     onSettled: () => refetch(),
   })
 
-  async function generate() {
+  async function generate(refine?: Refinement) {
     setConfirming(false)
+    setRefining(null)
     setBusy(true)
     setMessage({ kind: 'info', text: t.syncing })
     try {
@@ -114,7 +118,7 @@ function OnlinePanel() {
         setMessage({ kind: 'error', text: t.syncBlocked })
         return
       }
-      const created = await generateBackground(campaignId, mapId, synced.version)
+      const created = await generateBackground(campaignId, mapId, synced.version, refine)
       queryClient.setQueryData<MapBackgrounds>(key, (current) =>
         current ? withVersion(current, created) : current,
       )
@@ -196,6 +200,11 @@ function OnlinePanel() {
                   pickBusy={pick.isPending}
                   onPick={() => pick.mutate(version.id)}
                   onEnlarge={() => setComparing(version.id)}
+                  canRefine={canGenerate}
+                  onRefine={() => {
+                    setMessage(null)
+                    setRefining(version)
+                  }}
                 />
               ))}
             </ul>
@@ -221,6 +230,14 @@ function OnlinePanel() {
           onClose={() => setConfirming(false)}
         />
       )}
+      {refining && (
+        <ConfirmDialog
+          budget={data?.budget}
+          refining
+          onConfirm={(instruction) => void generate({ assetId: refining.id, instruction })}
+          onClose={() => setRefining(null)}
+        />
+      )}
       {comparing && viewable.length > 0 && (
         <CompareDialog
           versions={viewable}
@@ -241,6 +258,8 @@ function Version({
   pickBusy,
   onPick,
   onEnlarge,
+  canRefine,
+  onRefine,
 }: {
   version: MapBackground
   size: MapSize
@@ -248,6 +267,9 @@ function Version({
   pickBusy: boolean
   onPick: () => void
   onEnlarge: () => void
+  /** No job is pending and the budget allows one. */
+  canRefine: boolean
+  onRefine: () => void
 }) {
   const time = formatDateTime(version.createdAt)
   const outdated = isOutdated(version, size)
@@ -284,6 +306,9 @@ function Version({
         {picked && <Badge tone="candle">{t.picked}</Badge>}
         {outdated && <Badge>{t.outdated}</Badge>}
       </div>
+      {version.instruction && (
+        <p className="text-xs text-dim">{t.refinedFrom(version.instruction)}</p>
+      )}
       {version.status === 'failed' && (
         <p className="text-xs text-red-300">
           {version.failure === 'rejected' ? t.rejected : t.failed}
@@ -295,11 +320,18 @@ function Version({
       {!outdated && version.layoutChanged && version.status === 'done' && (
         <p className="text-xs text-dim">{t.layoutChanged}</p>
       )}
-      {!picked && canPick(version, size) && (
-        <div>
-          <Button className="min-h-9 px-3 text-sm" busy={pickBusy} onClick={onPick}>
-            {t.pick}
-          </Button>
+      {(canPick(version, size) || done) && (
+        <div className="flex flex-wrap gap-2">
+          {!picked && canPick(version, size) && (
+            <Button className="min-h-9 px-3 text-sm" busy={pickBusy} onClick={onPick}>
+              {t.pick}
+            </Button>
+          )}
+          {done && !outdated && (
+            <Button className="min-h-9 px-3 text-sm" disabled={!canRefine} onClick={onRefine}>
+              {t.refine.button}
+            </Button>
+          )}
         </div>
       )}
     </li>

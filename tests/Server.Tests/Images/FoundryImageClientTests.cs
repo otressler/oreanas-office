@@ -58,6 +58,21 @@ public sealed class FoundryImageClientTests
     }
 
     [Fact]
+    public async Task A_refinement_sends_the_picture_then_the_guide_as_image_array()
+    {
+        var handler = new Handler(_ => Json(HttpStatusCode.OK, $$"""{ "data": [{ "b64_json": "{{Convert.ToBase64String(Picture)}}" }] }"""));
+        byte[] earlier = [1, 2, 3];
+
+        await Client(handler).EditAsync(Request with { Picture = new ImageInput(earlier, "image/jpeg") }, CancellationToken.None);
+
+        var sent = Assert.Single(handler.Requests);
+        Assert.Equal(
+            [("image[]", "picture.jpg", "image/jpeg"), ("image[]", "guide.png", "image/png")],
+            sent.Files.Select(f => (f.Name, f.FileName, f.ContentType)));
+        Assert.Equal([earlier, Guide], sent.Files.Select(f => f.Content));
+    }
+
+    [Fact]
     public async Task The_content_type_follows_the_requested_format_when_the_answer_doesnt_say()
     {
         var handler = new Handler(_ => Json(HttpStatusCode.OK, $$"""{ "data": [{ "b64_json": "{{Convert.ToBase64String(Picture)}}" }] }"""));

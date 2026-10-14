@@ -13,6 +13,8 @@ public class Asset
 {
     public const int PromptMaxLength = 4000;
 
+    public const int InstructionMaxLength = 500;
+
     public Guid Id { get; set; }
 
     public AssetKind Kind { get; set; }
@@ -73,6 +75,12 @@ public class Asset
 
     // Why the job failed, for the editor; null unless Failed.
     public AssetFailure? Failure { get; set; }
+
+    // A refinement (knowledge/features/ai-map-generation.md, "Refining"): the version it
+    // edits and the DM's instruction. The job sends that picture with the guide.
+    public Guid? RefinedFromAssetId { get; set; }
+
+    public string? Instruction { get; set; }
 
     // Requests sent for this job, failed ones included; the worker gives up after
     // ImageOptions.MaxAttempts.
@@ -137,6 +145,7 @@ internal sealed class AssetConfiguration : IEntityTypeConfiguration<Asset>
         asset.Property(a => a.BlobName).HasMaxLength(200);
         asset.Property(a => a.ContentType).HasMaxLength(100);
         asset.Property(a => a.LayoutHash).HasMaxLength(64);
+        asset.Property(a => a.Instruction).HasMaxLength(Asset.InstructionMaxLength);
         asset.Property(a => a.CostUsd).HasPrecision(10, 6);
         asset.HasOne(a => a.Campaign).WithMany().HasForeignKey(a => a.CampaignId).OnDelete(DeleteBehavior.Cascade);
         asset.HasOne<AppUser>().WithMany().HasForeignKey(a => a.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);

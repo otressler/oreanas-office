@@ -184,6 +184,18 @@ public sealed class ImageJobWorker(
             "Background job {AssetId} for map {MapId} started, attempt {Attempt}", asset.Id, asset.OwnerId, asset.Attempts);
         await NotifyAsync(db, asset, null);
 
+        // A refinement sends the version it edits along with the guide.
+        ImageInput? picture = null;
+        if (asset.RefinedFromAssetId is { } sourceId)
+        {
+            picture = await LoadPictureAsync(db, sourceId, stoppingToken);
+            if (picture is null)
+            {
+                await FailAsync(db, asset, AssetFailure.Error, null, "the version to refine is gone");
+                return;
+            }
+        }
+
         var rateLimitedWaits = 0;
         while (true)
         {
@@ -197,8 +209,17 @@ public sealed class ImageJobWorker(
                 return;
             }
 
+            if (picture is not null && (map.Width != asset.GridWidth || map.Height != asset.GridHeight))
+            {
+                // The map was resized while the job waited: the picture no longer fits it.
+                await FailAsync(db, asset, AssetFailure.Error, map, "the map's size changed, so the version to refine no longer fits");
+                return;
+            }
+
             var guide = GuideRenderer.Render(map.Width, map.Height, map.Layout, _options.GuideTargetPixels);
-            var prompt = BackgroundPrompt.Build(map.Scene, map.Vibe, map.Lighting, map.Layout, guide);
+            var prompt = picture is null
+                ? BackgroundPrompt.Build(map.Scene, map.Vibe, map.Lighting, map.Layout, guide)
+                : BackgroundPrompt.BuildRefinement(asset.Instruction ?? "", map.Layout, guide);
             RecordWhatIsSent(asset, map, guide, prompt);
             await db.SaveChangesAsync(stoppingToken);
 
@@ -208,7 +229,7 @@ public sealed class ImageJobWorker(
                 _lastRequestAt = time.GetUtcNow();
                 result = await client.EditAsync(
                     new ImageEditRequest(
-                        prompt, guide.Png, guide.Width, guide.Height, _options.Quality, _options.OutputFormat, _options.OutputCompression),
+                        prompt, guide.Png, guide.Width, guide.Height, _options.Quality, _options.OutputFormat, _options.OutputCompression, picture),
                     stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -268,6 +289,26 @@ public sealed class ImageJobWorker(
         asset.FrameHeight = guide.FrameHeight;
         asset.LayoutHash = LayoutFingerprint.Of(map.Width, map.Height, map.Layout);
         asset.Prompt = prompt.Length <= Asset.PromptMaxLength ? prompt : prompt[..Asset.PromptMaxLength];
+    }
+
+    // The finished version a refinement edits, read from the asset store; null when it is gone.
+    private async Task<ImageInput?> LoadPictureAsync(AppDbContext db, Guid assetId, CancellationToken cancellationToken)
+    {
+        var source = await db.Assets.AsNoTracking()
+            .Where(a => a.Id == assetId && a.Status == AssetStatus.Done && a.BlobName != null)
+            .Select(a => new { a.BlobName, a.ContentType })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (source is null || await store.OpenReadAsync(source.BlobName!, cancellationToken) is not { } stream)
+        {
+            return null;
+        }
+
+        await using (stream)
+        {
+            using var buffer = new MemoryStream();
+            await stream.CopyToAsync(buffer, cancellationToken);
+            return new ImageInput(buffer.ToArray(), source.ContentType ?? "image/jpeg");
+        }
     }
 
     private async Task WaitForRequestSlotAsync(CancellationToken cancellationToken)

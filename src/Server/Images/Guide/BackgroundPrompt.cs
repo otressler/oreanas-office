@@ -17,6 +17,14 @@ public static partial class BackgroundPrompt
     // code and names the signal colours this guide uses.
     private const string Colours = "Ignore the colours of the input image: they are only a code for where things are, not colours to paint. Take every colour from the scene, mood and lighting alone, so stone looks like stone, water like water and wood like wood.";
     private const string Camera = "Straight-down camera, no perspective, no horizon.";
+
+    // Refining a finished version (knowledge/features/ai-map-generation.md, "Refining"): the
+    // picture comes first, the guide second, so the model changes only what the DM asked for
+    // and keeps to the layout.
+    private const string RefineOpening = "Edit the first image, a top-down battle map for a tabletop game.";
+    private const string RefineKeep = "Keep everything else exactly as it is: the same style, colours and lighting, and every region in the same place.";
+    private const string RefineRules = "The second image is the colour-coded layout of the same map. The painted map must keep matching it:";
+    private const string RefineColours = "Ignore the colours of the layout image: they are only a code for where things are, not colours to paint.";
     private const string NoMarks = "No grid lines, no text, no labels, no frame, no compass.";
 
     // Guide colours that real materials have anyway (floor, wall, water, bridge, tree); all
@@ -40,6 +48,29 @@ public static partial class BackgroundPrompt
             intro.Add(string.Join(' ', parts));
         }
 
+        intro.Add("");
+        intro.Add(Rules);
+        return Assemble(intro, Colours, "guide", layout, guide);
+    }
+
+    // The prompt for refining a finished version: the DM's instruction, then the guide's
+    // legend so the edit keeps to the layout. The picture and the guide go along as images.
+    public static string BuildRefinement(string instruction, MapLayout layout, MapGuide guide)
+    {
+        var text = instruction.Trim();
+        if (text.Length > 0 && !".!?".Contains(text[^1]))
+        {
+            text += ".";
+        }
+
+        List<string> intro = [$"{RefineOpening} Change only this: {text}", RefineKeep, "", RefineRules];
+        return Assemble(intro, RefineColours, "layout", layout, guide);
+    }
+
+    // Legend, elevation and padding lines and the closing rules after `intro`, shortened to
+    // fit Asset.PromptMaxLength. `source` names the guide in the signal colour line.
+    private static string Assemble(List<string> intro, string colours, string source, MapLayout layout, MapGuide guide)
+    {
         // Lines after the legend: elevation in words, then the note about the padding.
         var elevation = layout.Features
             .Where(f => f.Elevation > 0)
@@ -55,10 +86,10 @@ public static partial class BackgroundPrompt
             padding.Add($"The dark purple band along the {sides} lies outside the map: paint it as dead terrain or darkness that fits the scene.");
         }
 
-        var closing = new List<string> { Colours };
+        var closing = new List<string> { colours };
         if (SignalColours(guide.Legend) is { Count: > 0 } signals)
         {
-            closing.Add($"No {Join(signals)} from the guide may show anywhere in the picture, not even as a tint, glow, haze, light or stain.");
+            closing.Add($"No {Join(signals)} from the {source} may show anywhere in the picture, not even as a tint, glow, haze, light or stain.");
         }
 
         closing.Add(Camera);
@@ -108,7 +139,7 @@ public static partial class BackgroundPrompt
     private static string Compose(
         List<string> intro, List<Entry> legend, List<string> elevation, List<string> padding, List<string> closing)
     {
-        var lines = new List<string>(intro) { "", Rules };
+        var lines = new List<string>(intro);
         lines.AddRange(legend.Select(e => $"- {e.Text}"));
         lines.AddRange(elevation);
         lines.AddRange(padding);

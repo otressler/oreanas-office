@@ -133,6 +133,8 @@ export function version(fields: Partial<MapBackground> = {}): MapBackground {
     failure: null,
     createdAt: '2026-10-14T18:30:00Z',
     finishedAt: status === 'done' ? '2026-10-14T18:30:40Z' : null,
+    refinedFromId: null,
+    instruction: null,
     ...fields,
   }
 }
