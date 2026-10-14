@@ -1,0 +1,3598 @@
+{
+  "about": [
+    "Shared test cases for the battle map layout checks (knowledge/domain/battle-map.md, \"Layout document\").",
+    "The editor (src/web/src/editor/validation.ts) runs them now; the server runs the same file from stage 6 on.",
+    "Each case is a map and the problem codes the checks must report for it, in any order, each as often as listed.",
+    "Defaults for fields a case leaves out: name \"Testkarte\"; scene, vibe and lighting \"\"; layout.schemaVersion 1; layout.cells, features and entrances []."
+  ],
+  "cases": [
+    {
+      "name": "an empty map",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "the smallest map",
+      "map": {
+        "width": 1,
+        "height": 1,
+        "layout": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "the largest map",
+      "map": {
+        "width": 40,
+        "height": 40,
+        "layout": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "a map without width",
+      "map": {
+        "width": 0,
+        "height": 8,
+        "layout": {}
+      },
+      "expected": ["mapSizeInvalid"]
+    },
+    {
+      "name": "a map higher than 40 cells",
+      "map": {
+        "width": 10,
+        "height": 41,
+        "layout": {}
+      },
+      "expected": ["mapSizeInvalid"]
+    },
+    {
+      "name": "a map with a fractional width",
+      "map": {
+        "width": 2.5,
+        "height": 8,
+        "layout": {}
+      },
+      "expected": ["mapSizeInvalid"]
+    },
+    {
+      "name": "a newer layout version",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "schemaVersion": 2
+        }
+      },
+      "expected": ["layoutVersionUnsupported"]
+    },
+    {
+      "name": "a blank map name",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "name": "   ",
+        "layout": {}
+      },
+      "expected": ["nameMissing"]
+    },
+    {
+      "name": "a map name of 80 characters",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "layout": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "a map name of 81 characters",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "layout": {}
+      },
+      "expected": ["textTooLong"]
+    },
+    {
+      "name": "a scene of 501 characters",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "scene": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "layout": {}
+      },
+      "expected": ["textTooLong"]
+    },
+    {
+      "name": "a lighting of 500 characters with spaces around",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "lighting": "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  ",
+        "layout": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "a room with listed void, wall, water and difficult cells",
+      "map": {
+        "width": 4,
+        "height": 2,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "void",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "wall",
+              "elevation": 3
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "water",
+              "elevation": -1.5
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "difficult",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0.5
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "a cell right of the grid",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 10,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ]
+        }
+      },
+      "expected": ["cellOutside"]
+    },
+    {
+      "name": "a cell above the grid",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": -1,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ]
+        }
+      },
+      "expected": ["cellOutside"]
+    },
+    {
+      "name": "a cell with a fractional coordinate",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 1.5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ]
+        }
+      },
+      "expected": ["cellOutside"]
+    },
+    {
+      "name": "a cell listed twice",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "wall",
+              "elevation": 0
+            }
+          ]
+        }
+      },
+      "expected": ["cellDuplicate"]
+    },
+    {
+      "name": "a cell listed three times",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ]
+        }
+      },
+      "expected": ["cellDuplicate", "cellDuplicate"]
+    },
+    {
+      "name": "an unknown terrain",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "lava",
+              "elevation": 0
+            }
+          ]
+        }
+      },
+      "expected": ["terrainInvalid"]
+    },
+    {
+      "name": "elevations just inside the limit",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 9999.9
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": -9999.9
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "a cell elevation at the limit",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 10000
+            }
+          ]
+        }
+      },
+      "expected": ["elevationInvalid"]
+    },
+    {
+      "name": "a cell elevation at the negative limit",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": -10000
+            }
+          ]
+        }
+      },
+      "expected": ["elevationInvalid"]
+    },
+    {
+      "name": "a bridge over void",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Brücke",
+              "label": "Hängebrücke",
+              "x": 3,
+              "y": 2,
+              "w": 4,
+              "h": 1,
+              "elevation": 2.5,
+              "blocksMovement": false
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "a door in a wall",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "cells": [
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "wall",
+              "elevation": 0
+            }
+          ],
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Tür",
+              "label": "",
+              "x": 4,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": false
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "a feature filling the whole grid",
+      "map": {
+        "width": 3,
+        "height": 2,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 3,
+              "h": 2,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "a feature without width",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 2,
+              "y": 2,
+              "w": 0,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["featureSizeInvalid"]
+    },
+    {
+      "name": "a feature with a fractional height",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 2,
+              "y": 2,
+              "w": 1,
+              "h": 1.5,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["featureSizeInvalid"]
+    },
+    {
+      "name": "a feature sticking out on the right",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 8,
+              "y": 0,
+              "w": 3,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["featureOutside"]
+    },
+    {
+      "name": "a feature sticking out at the bottom",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 0,
+              "y": 7,
+              "w": 1,
+              "h": 2,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["featureOutside"]
+    },
+    {
+      "name": "a feature above the grid",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 0,
+              "y": -1,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["featureOutside"]
+    },
+    {
+      "name": "two overlapping features",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 1,
+              "y": 1,
+              "w": 3,
+              "h": 2,
+              "elevation": 0,
+              "blocksMovement": true
+            },
+            {
+              "id": "f2",
+              "kind": "Säule",
+              "label": "",
+              "x": 3,
+              "y": 2,
+              "w": 2,
+              "h": 2,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["featureOverlap"]
+    },
+    {
+      "name": "two features side by side",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 1,
+              "y": 1,
+              "w": 2,
+              "h": 2,
+              "elevation": 0,
+              "blocksMovement": true
+            },
+            {
+              "id": "f2",
+              "kind": "Säule",
+              "label": "",
+              "x": 3,
+              "y": 1,
+              "w": 2,
+              "h": 2,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "a feature overlapping two others",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 2,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            },
+            {
+              "id": "f2",
+              "kind": "Säule",
+              "label": "",
+              "x": 3,
+              "y": 0,
+              "w": 2,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            },
+            {
+              "id": "f3",
+              "kind": "Säule",
+              "label": "",
+              "x": 1,
+              "y": 0,
+              "w": 3,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["featureOverlap", "featureOverlap"]
+    },
+    {
+      "name": "two features with the same id",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            },
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 2,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["featureIdDuplicate"]
+    },
+    {
+      "name": "a feature without id",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "",
+              "kind": "Säule",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["idMissing"]
+    },
+    {
+      "name": "a feature with a blank kind",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "  ",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["featureKindMissing"]
+    },
+    {
+      "name": "a feature kind of 40 characters",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "a feature kind of 41 characters",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["textTooLong"]
+    },
+    {
+      "name": "a feature label of 41 characters",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["textTooLong"]
+    },
+    {
+      "name": "a feature id of 41 characters",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "kind": "Säule",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["textTooLong"]
+    },
+    {
+      "name": "a feature elevation at the negative limit",
+      "map": {
+        "width": 10,
+        "height": 8,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1,
+              "elevation": -10000,
+              "blocksMovement": true
+            }
+          ]
+        }
+      },
+      "expected": ["elevationInvalid"]
+    },
+    {
+      "name": "an entrance on the left edge",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [
+                [0, 1],
+                [0, 2]
+              ]
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "an exit in a corner",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "exit",
+              "label": "",
+              "cells": [[5, 3]]
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "entrances on all four edges",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[0, 1]]
+            },
+            {
+              "id": "e2",
+              "kind": "exit",
+              "label": "",
+              "cells": [[5, 2]]
+            },
+            {
+              "id": "e3",
+              "kind": "both",
+              "label": "",
+              "cells": [[2, 0]]
+            },
+            {
+              "id": "e4",
+              "kind": "entrance",
+              "label": "Waldweg",
+              "cells": [[3, 3]]
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "an entrance on a bridge over void at the edge",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Brücke",
+              "label": "",
+              "x": 0,
+              "y": 1,
+              "w": 6,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": false
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[0, 1]]
+            },
+            {
+              "id": "e2",
+              "kind": "exit",
+              "label": "",
+              "cells": [[5, 1]]
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "an entrance on void",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[0, 1]]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceCellNotWalkable"]
+    },
+    {
+      "name": "an entrance on a wall",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "wall",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[0, 1]]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceCellNotWalkable"]
+    },
+    {
+      "name": "an entrance on water and difficult terrain",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "water",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "difficult",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [
+                [0, 1],
+                [0, 2]
+              ]
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "an entrance under a blocking feature",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 2,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [
+                [0, 1],
+                [0, 2]
+              ]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceCellNotWalkable"]
+    },
+    {
+      "name": "an entrance cell inside the map",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [
+                [0, 1],
+                [1, 1]
+              ]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceCellNotOnEdge"]
+    },
+    {
+      "name": "an entrance cell left inside the map after a resize, on void",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[2, 2]]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceCellNotOnEdge", "entranceCellNotWalkable"]
+    },
+    {
+      "name": "an entrance cell outside the grid",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[6, 1]]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceCellOutside"]
+    },
+    {
+      "name": "an entrance cell with one coordinate",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[0]]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceCellOutside"]
+    },
+    {
+      "name": "an entrance without cells",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": []
+            }
+          ]
+        }
+      },
+      "expected": ["entranceEmpty"]
+    },
+    {
+      "name": "an entrance listing a cell twice",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [
+                [0, 1],
+                [0, 1]
+              ]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceCellDuplicate"]
+    },
+    {
+      "name": "a cell in two entrances",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [
+                [0, 1],
+                [0, 2]
+              ]
+            },
+            {
+              "id": "e2",
+              "kind": "exit",
+              "label": "",
+              "cells": [
+                [0, 2],
+                [0, 3]
+              ]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceCellShared"]
+    },
+    {
+      "name": "two entrances with the same id",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[0, 1]]
+            },
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[5, 1]]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceIdDuplicate"]
+    },
+    {
+      "name": "an entrance without id",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[0, 1]]
+            }
+          ]
+        }
+      },
+      "expected": ["idMissing"]
+    },
+    {
+      "name": "an unknown entrance kind",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "door",
+              "label": "",
+              "cells": [[0, 1]]
+            }
+          ]
+        }
+      },
+      "expected": ["entranceKindInvalid"]
+    },
+    {
+      "name": "an entrance label of 41 characters",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "cells": [[0, 1]]
+            }
+          ]
+        }
+      },
+      "expected": ["textTooLong"]
+    },
+    {
+      "name": "a map size out of range skips the position checks",
+      "map": {
+        "width": 0,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 7,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            }
+          ],
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 5,
+              "y": 5,
+              "w": 2,
+              "h": 2,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[2, 2]]
+            }
+          ]
+        }
+      },
+      "expected": ["mapSizeInvalid"]
+    },
+    {
+      "name": "every problem is reported, not only the first",
+      "map": {
+        "width": 6,
+        "height": 4,
+        "layout": {
+          "cells": [
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 0,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 2,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 1,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 2,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 3,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 4,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 5,
+              "y": 3,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 9,
+              "y": 9,
+              "terrain": "floor",
+              "elevation": 0
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "terrain": "lava",
+              "elevation": 0
+            }
+          ],
+          "features": [
+            {
+              "id": "f1",
+              "kind": "Säule",
+              "label": "",
+              "x": 4,
+              "y": 2,
+              "w": 3,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            },
+            {
+              "id": "f2",
+              "kind": "",
+              "label": "",
+              "x": 4,
+              "y": 2,
+              "w": 1,
+              "h": 1,
+              "elevation": 0,
+              "blocksMovement": true
+            }
+          ],
+          "entrances": [
+            {
+              "id": "e1",
+              "kind": "entrance",
+              "label": "",
+              "cells": [[2, 2]]
+            },
+            {
+              "id": "e2",
+              "kind": "entrance",
+              "label": "",
+              "cells": []
+            }
+          ]
+        }
+      },
+      "expected": [
+        "cellOutside",
+        "cellDuplicate",
+        "terrainInvalid",
+        "featureOutside",
+        "featureKindMissing",
+        "featureOverlap",
+        "entranceCellNotOnEdge",
+        "entranceEmpty"
+      ]
+    }
+  ]
+}

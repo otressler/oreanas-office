@@ -474,7 +474,123 @@ export const de = {
   },
 
   /** Features, entrances and layout checks (src/editor/features). */
-  editorFeatures: {},
+  editorFeatures: {
+    tools: {
+      select: 'Auswählen',
+      feature: 'Objekt',
+      entrance: 'Ein- und Ausgang',
+    },
+    /** Suggested feature kinds; editor/features/kinds.ts says which block movement. */
+    kinds: {
+      bridge: 'Brücke',
+      door: 'Tür',
+      stairs: 'Treppe',
+      ladder: 'Leiter',
+      platform: 'Podest',
+      pillar: 'Säule',
+      tree: 'Baum',
+      rock: 'Felsen',
+      crate: 'Kiste',
+      barrel: 'Fass',
+      table: 'Tisch',
+      altar: 'Altar',
+      well: 'Brunnen',
+      wagon: 'Wagen',
+      statue: 'Statue',
+    },
+    kind: 'Art',
+    kindHint: 'Frei wählbar oder aus der Liste. Die Art fließt auch ins Kartenbild ein.',
+    kindMissing: 'Gib an, was für ein Objekt es ist.',
+    label: 'Beschriftung',
+    featureLabelHint: 'Optional, z. B. „Hängebrücke“. Ohne Beschriftung zeigt die Karte die Art.',
+    entranceLabelHint: 'Optional, z. B. „Waldweg“.',
+    elevation: 'Höhe in Metern',
+    elevationHint: 'Eine Nachkommastelle, auch unter null, z. B. 2,5 oder -1.',
+    elevationInvalid: 'Bitte eine Höhe in Metern, z. B. 2,5 oder -1, unter 10.000 m.',
+    blocksMovement: 'Versperrt den Weg',
+    blocksMovementHint:
+      'Figuren können nicht darauf stehen (Säule, Baum). Brücke, Tür und Treppe sind begehbar.',
+    featureHelp:
+      'Ziehe ein Rechteck auf der Karte. Objekte dürfen über Abgrund und Wand liegen, aber nicht über anderen Objekten.',
+    entranceKind: 'Art',
+    entranceHelp:
+      'Ziehe am Kartenrand entlang. Übernommen werden nur Randfelder, auf denen eine Figur stehen kann und die noch zu keinem Ein- oder Ausgang gehören; rot markierte nicht. Ein Klick auf einen vorhandenen wählt ihn aus.',
+    selectHelp:
+      'Klick auf ein Objekt oder einen Ein- oder Ausgang, um es zu bearbeiten. Ziehen verschiebt ein Objekt. Entf löscht, Esc hebt die Auswahl auf.',
+    /** Heading of the selected feature's properties. */
+    featureTitle: (name: string) => `Objekt: ${name}`,
+    /** Position and size of the selected feature. */
+    footprint: 'Lage und Größe in Feldern',
+    x: 'Spalte',
+    y: 'Zeile',
+    w: 'Breite',
+    h: 'Länge',
+    wholeNumber: 'Bitte eine ganze Zahl.',
+    footprintOutside: 'So ragt das Objekt über den Kartenrand.',
+    footprintOverlap: 'So läge das Objekt über einem anderen Objekt.',
+    cellCount: (count: number) => (count === 1 ? '1 Feld' : `${count} Felder`),
+    delete: 'Löschen',
+
+    checks: {
+      title: 'Prüfung',
+      none: 'Keine Probleme',
+      /** Above the list, e.g. "3 Probleme". */
+      count: (count: number) => (count === 1 ? '1 Problem' : `${count} Probleme`),
+      /** Clicking a problem about a feature or an entrance selects it. */
+      selectHint: 'Klick auf ein Problem wählt das Objekt oder den Ein- oder Ausgang aus.',
+      map: 'Karte',
+      /** A feature in a message, e.g. "Objekt „Hängebrücke“". */
+      feature: (name: string) => `Objekt „${name}“`,
+      /** A feature without kind or label, by its top-left cell. */
+      featureAt: (cell: string) => `Objekt bei Feld ${cell}`,
+      /** An entrance in a message, e.g. "Eingang „Waldweg“", or "Ausgang bei Feld 0, 4". */
+      entrance: (kind: string, label: string) => `${kind} „${label}“`,
+      entranceAt: (kind: string, cell: string) => `${kind} bei Feld ${cell}`,
+      cell: (cell: string) => `Feld ${cell}`,
+      fields: {
+        name: 'der Name',
+        scene: 'die Szene',
+        vibe: 'die Stimmung',
+        lighting: 'das Licht',
+        id: 'die Kennung',
+        kind: 'die Art',
+        label: 'die Beschriftung',
+      } satisfies Record<import('../editor/validation').LayoutTextField, string>,
+      problems: {
+        mapSizeInvalid: () => 'Eine Karte ist 1 bis 40 Felder breit und hoch.',
+        layoutVersionUnsupported: () => 'Diese Karte stammt aus einer neueren Version der App.',
+        nameMissing: () => 'Die Karte hat keinen Namen.',
+        textTooLong: (what: string, field: string, max: number) =>
+          `${what}: Hier ist ${field} länger als ${max} Zeichen.`,
+        cellOutside: (what: string) => `${what} liegt außerhalb der Karte.`,
+        cellDuplicate: (what: string) => `${what} steht doppelt in der Karte.`,
+        terrainInvalid: (what: string) => `${what} hat ein unbekanntes Gelände.`,
+        elevationInvalid: (what: string) =>
+          `${what}: Die Höhe muss zwischen -10.000 m und 10.000 m liegen.`,
+        idMissing: (what: string) => `${what} hat keine Kennung.`,
+        featureIdDuplicate: (what: string) =>
+          `${what} hat dieselbe Kennung wie ein anderes Objekt.`,
+        featureKindMissing: (what: string) => `${what}: Es fehlt, was für ein Objekt es ist.`,
+        featureSizeInvalid: (what: string) => `${what} ist kleiner als ein Feld.`,
+        featureOutside: (what: string) => `${what} ragt über den Rand der Karte.`,
+        featureOverlap: (what: string, other: string) => `${what} liegt über ${other}.`,
+        entranceIdDuplicate: (what: string) =>
+          `${what} hat dieselbe Kennung wie ein anderer Ein- oder Ausgang.`,
+        entranceKindInvalid: (what: string) => `${what} hat eine unbekannte Art.`,
+        entranceEmpty: (what: string) => `${what} hat keine Felder.`,
+        entranceCellOutside: (what: string, cell: string) =>
+          `${what}: Feld ${cell} liegt außerhalb der Karte.`,
+        entranceCellNotOnEdge: (what: string, cell: string) =>
+          `${what}: Feld ${cell} liegt nicht am Kartenrand.`,
+        entranceCellNotWalkable: (what: string, cell: string) =>
+          `${what}: Auf Feld ${cell} kann keine Figur stehen.`,
+        entranceCellDuplicate: (what: string, cell: string) =>
+          `${what}: Feld ${cell} steht doppelt darin.`,
+        entranceCellShared: (what: string, cell: string, other: string) =>
+          `${what}: Feld ${cell} gehört schon zu ${other}.`,
+      },
+    },
+  },
 
   /** The map list, scene text, offline pages and file export (src/editor/scene, src/maps). */
   maps: {},
