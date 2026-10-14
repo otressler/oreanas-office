@@ -8,6 +8,7 @@ namespace OreanasOffice.Server.Images.Guide;
 // padding (knowledge/decisions/image-generation-approach.md). Lane: guide and prompt.
 public static class BackgroundPrompt
 {
+    // Contract stub: the scene line only, until the guide and prompt lane writes the template.
     public static string Build(string scene, string vibe, string lighting, MapLayout layout, MapGuide guide) =>
-        throw new NotImplementedException();
+        $"Repaint this colour-coded layout as a top-down battle map. Scene: {scene}. Mood: {vibe}. Lighting: {lighting}.";
 }
