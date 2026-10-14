@@ -28,7 +28,7 @@ public sealed class AppFixture : IAsyncLifetime
         string environment = AppFactory.TestingEnvironment) =>
         new(databaseConnectionString ?? DatabaseConnectionString, StorageConnectionString, WebRoot, configuration, environment);
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await Task.WhenAll(_sql.StartAsync(), _azurite.StartAsync());
 
@@ -41,7 +41,7 @@ public sealed class AppFixture : IAsyncLifetime
         App.StartServer();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await App.DisposeAsync();
         await Task.WhenAll(_sql.DisposeAsync().AsTask(), _azurite.DisposeAsync().AsTask());

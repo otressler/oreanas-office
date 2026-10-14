@@ -25,13 +25,13 @@ public sealed class GoogleSignInTests(AppFixture fixture) : IAsyncLifetime
     private GoogleSignIn Google => ActivatorUtilities.CreateInstance<GoogleSignIn>(
         _scope.ServiceProvider, Options.Create(new AdminOptions { Email = _adminEmail }));
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
         _scope = App.Services.CreateAsyncScope();
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public async Task DisposeAsync() => await _scope.DisposeAsync();
+    public ValueTask DisposeAsync() => _scope.DisposeAsync();
 
     [Fact]
     public async Task A_new_account_needs_an_invite()

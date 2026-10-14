@@ -29,11 +29,11 @@ There is only one deployed environment: production, which scales to zero between
 
 - `src/Server`: ASP.NET Core app (`OreanasOffice.Server`). Features register through extension methods called from `Program.cs`.
 - `src/web`: Vite + React app. Its build goes into the server's `wwwroot` inside the container.
-- `tests/Server.Tests`: xUnit tests; integration tests use Testcontainers, so Docker must run.
+- `tests/Server.Tests`: xUnit v3 tests on Microsoft Testing Platform (`global.json` sets the runner); integration tests use Testcontainers, so Docker must run.
 - `infra/`: Bicep templates. Only the project owner provisions Azure; Claude writes templates and summarises resources and cost first (`knowledge/decisions/hosting.md`).
 - Local development: `pwsh scripts/dev.ps1` (SQL Server and Azurite in Docker, backend on :5080, Vite on :5173 forwarding `/api` and `/hubs`).
 - Phone tests: `pwsh scripts/phone.ps1` runs the production container behind a local Traefik at `https://dev.oreanas-office.otressler.de` (home network only, INWX credentials in `.env`); `-Stop` stops it.
-- Backend tests: `dotnet test`. Frontend: `npm test` and `npm run test:e2e` in `src/web`; `npm run test:e2e:backend` runs the `*.backend.spec.ts` specs against the real backend (E2E environment, Docker needed).
+- Backend tests: `dotnet test` (filter with `dotnet test --filter-class "*.TableHubTests"` or `--filter-method`, not VSTest's `--filter`). Frontend: `npm test` and `npm run test:e2e` in `src/web`; `npm run test:e2e:backend` runs the `*.backend.spec.ts` specs against the real backend (E2E environment, Docker needed).
 - API types: building the server writes `src/web/src/api/openapi.json`; `npm run gen:api` turns it into `schema.d.ts`.
 - EF migrations: `dotnet ef migrations add <Name> --project src/Server --output-dir Data/Migrations`.
 - All interface text is German and lives in `src/web/src/text/de.ts`.
