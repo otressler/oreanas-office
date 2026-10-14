@@ -2,8 +2,7 @@ using OreanasOffice.Server.Rules;
 
 namespace OreanasOffice.Server.Characters;
 
-// Speed is whole squares; the frontend converts meters on input and output.
-public record CharacterRequest(string Name, CreatureSize Size, int SpeedSquares);
+public record CharacterRequest(string Name, CreatureSize Size);
 
 // CanEdit: the signed-in user owns the character or is a `dm` member. ColorIndex: the
 // character's place in the order characters were added to the campaign (0, 1, 2…),
@@ -14,6 +13,5 @@ public record CharacterResponse(
     string OwnerDisplayName,
     string Name,
     CreatureSize Size,
-    int SpeedSquares,
     bool CanEdit,
     int ColorIndex);

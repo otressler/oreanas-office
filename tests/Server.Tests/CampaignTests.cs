@@ -267,10 +267,10 @@ public sealed class CampaignTests(AppFixture fixture)
         var campaign = await dm.CreateCampaignAsync();
         var session = await dm.CreateSessionAsync(campaign.Id);
         var character = await (await dm.Client.PostAsJsonAsync(
-                $"/api/campaigns/{campaign.Id}/characters", new CharacterRequest("Oreana", CreatureSize.Medium, 6), Json))
+                $"/api/campaigns/{campaign.Id}/characters", new CharacterRequest("Oreana", CreatureSize.Medium), Json))
             .ReadAsync<CharacterResponse>(HttpStatusCode.Created);
         var root = $"/api/campaigns/{campaign.Id}";
-        var characterBody = JsonContent.Create(new CharacterRequest("Dieb", CreatureSize.Small, 5), options: Json);
+        var characterBody = JsonContent.Create(new CharacterRequest("Dieb", CreatureSize.Small), options: Json);
         var sessionBody = JsonContent.Create(new CreateSessionRequest("Abend", new DateOnly(2026, 10, 17), null), options: Json);
         var dmBody = JsonContent.Create(new ChangeSessionDmRequest(outsider.Id), options: Json);
 

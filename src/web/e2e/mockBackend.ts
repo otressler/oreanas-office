@@ -41,7 +41,6 @@ interface Character {
   ownerUserId: string
   name: string
   size: S['CreatureSize']
-  speedSquares: number
 }
 
 interface Session {
@@ -59,7 +58,6 @@ interface CreatureType {
   campaignId: string
   name: string
   size: S['CreatureSize']
-  speedSquares: number
 }
 
 interface Token {
@@ -172,7 +170,6 @@ export class MockBackend {
       ownerUserId: owner.id,
       name,
       size: 'medium',
-      speedSquares: 6,
       ...fields,
     }
     this.characters.push(character)
@@ -393,7 +390,6 @@ export class MockBackend {
         ownerUserId: me.id,
         name: String(body.name).trim(),
         size: body.size as S['CreatureSize'],
-        speedSquares: Number(body.speedSquares),
       }
       this.characters.push(character)
       return [201, this.characterResponse(character, me.id, isDm)]
@@ -408,7 +404,6 @@ export class MockBackend {
       if (invalid) return invalid
       character.name = String(body.name).trim()
       character.size = body.size as S['CreatureSize']
-      character.speedSquares = Number(body.speedSquares)
       return [200, this.characterResponse(character, me.id, isDm)]
     }
 
@@ -608,7 +603,7 @@ export class MockBackend {
         (t) => t.name.toLowerCase() === typeName.toLowerCase(),
       )
       if (!type) {
-        if (!typeName || !creature.size || creature.speedMeters == null) {
+        if (!typeName || !creature.size) {
           return error('creatureTypeInvalid', `creatures[${i}]`)
         }
         type = {
@@ -616,7 +611,6 @@ export class MockBackend {
           campaignId: campaign.id,
           name: typeName,
           size: creature.size,
-          speedSquares: Math.floor(creature.speedMeters / 1.5 + 1e-9),
         }
         newTypes.push(type)
       }
@@ -702,13 +696,13 @@ export class MockBackend {
     return cells.every(([cx, cy]) => !taken.has(`${cx},${cy}`))
   }
 
-  /** Size and speed come from the character or the creature type. */
+  /** Size comes from the character or the creature type. */
   private tokenStats(token: Token, types = this.creatureTypes) {
     const source =
       token.kind === 'character'
         ? this.characters.find((c) => c.id === token.characterId)
         : types.find((t) => t.id === token.creatureTypeId)
-    return { size: source!.size, speedSquares: source!.speedSquares }
+    return { size: source!.size }
   }
 
   private activeEncounter(session: Session): Encounter | undefined {
@@ -1019,8 +1013,6 @@ function canManage(session: Session, campaign: Campaign, userId: string): boolea
 
 function validateCharacter(body: Record<string, unknown>): Reply | null {
   if (!String(body.name ?? '').trim()) return error('nameInvalid', 'name')
-  const speed = Number(body.speedSquares)
-  if (!Number.isInteger(speed) || speed < 0) return error('speedInvalid', 'speedSquares')
   return null
 }
 

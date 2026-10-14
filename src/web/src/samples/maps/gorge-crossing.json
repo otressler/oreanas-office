@@ -189,4 +189,4 @@
 {"x":16,"y":11,"terrain":"floor"},
 {"x":17,"y":11,"terrain":"floor"},
 {"x":18,"y":11,"terrain":"floor"},
-{"x":19,"y":11,"terrain":"floor"}],"features":[{"id":"f1","kind":"bridge","label":"Hängebrücke","x":8,"y":5,"w":4,"h":2,"elevation":0,"blocksMovement":false},{"id":"f2","kind":"pillar","label":"Menhir","x":3,"y":2,"w":1,"h":1,"elevation":0,"blocksMovement":true}],"entrances":[{"id":"e1","kind":"entrance","label":"Waldweg","cells":[[0,5],[0,6]]}]},"creatures":[{"type":"Goblin","size":"small","speedMeters":9,"x":14,"y":4},{"type":"Goblin","x":14,"y":7},{"type":"Goblin","x":17,"y":2},{"type":"Oger","size":"large","speedMeters":12,"x":16,"y":5}]}
+{"x":19,"y":11,"terrain":"floor"}],"features":[{"id":"f1","kind":"bridge","label":"Hängebrücke","x":8,"y":5,"w":4,"h":2,"elevation":0,"blocksMovement":false},{"id":"f2","kind":"pillar","label":"Menhir","x":3,"y":2,"w":1,"h":1,"elevation":0,"blocksMovement":true}],"entrances":[{"id":"e1","kind":"entrance","label":"Waldweg","cells":[[0,5],[0,6]]}]},"creatures":[{"type":"Goblin","size":"small","x":14,"y":4},{"type":"Goblin","x":14,"y":7},{"type":"Goblin","x":17,"y":2},{"type":"Oger","size":"large","x":16,"y":5}]}

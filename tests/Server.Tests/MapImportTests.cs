@@ -65,9 +65,6 @@ public sealed class MapImportTests
             { "type null", WithCreature(map, goblin with { Type = null! }), ApiErrorCode.CreatureTypeInvalid, "creatures[3]" },
             { "long type", WithCreature(map, goblin with { Type = long41 }), ApiErrorCode.CreatureTypeInvalid, "creatures[3]" },
             { "new type without size", WithCreature(map, goblin with { Type = "Wolf", Size = null }), ApiErrorCode.CreatureTypeInvalid, "creatures[3]" },
-            { "new type without speed", WithCreature(map, goblin with { Type = "Wolf", SpeedMeters = null }), ApiErrorCode.CreatureTypeInvalid, "creatures[3]" },
-            { "negative speed", WithCreature(map, goblin with { Type = "Wolf", SpeedMeters = -1.5m }), ApiErrorCode.SpeedInvalid, "creatures[3]" },
-            { "speed over 200 squares", WithCreature(map, goblin with { Type = "Wolf", SpeedMeters = 301.5m }), ApiErrorCode.SpeedInvalid, "creatures[3]" },
             { "long label", WithCreature(map, goblin with { X = 0, Y = 0, Label = long41 }), ApiErrorCode.TextTooLong, "creatures[3]" },
             { "on a goblin", WithCreature(map, goblin with { X = 6, Y = 1 }), ApiErrorCode.PlacementInvalid, "creatures[3]" },
             { "on the ogre", WithCreature(map, goblin with { X = 2, Y = 4 }), ApiErrorCode.PlacementInvalid, "creatures[3]" },
@@ -166,14 +163,14 @@ public sealed class MapImportTests
             Creatures =
             [
                 .. map.Creatures!,
-                new ImportCreature("GOBLIN", CreatureSize.Huge, 30, 0, 0, null),
-                new ImportCreature("Wolf", CreatureSize.Medium, 10, 0, 1, null),
+                new ImportCreature("GOBLIN", CreatureSize.Huge, 0, 0, null),
+                new ImportCreature("Wolf", CreatureSize.Medium, 0, 1, null),
             ],
         });
 
         Assert.Equal(
-            [("Goblin", CreatureSize.Small, 6), ("Oger", CreatureSize.Large, 8), ("Wolf", CreatureSize.Medium, 6)],
-            import.NewTypes.Select(t => (t.Name, t.Size, t.SpeedSquares)));
+            [("Goblin", CreatureSize.Small), ("Oger", CreatureSize.Large), ("Wolf", CreatureSize.Medium)],
+            import.NewTypes.Select(t => (t.Name, t.Size)));
         Assert.All(import.NewTypes, t => Assert.Equal((CampaignId, Now), (t.CampaignId, t.CreatedAt)));
         Assert.Equal(
             ["Goblin 1", "Goblin 2", "Oger 1", "Goblin 3", "Wolf 1"],
@@ -182,13 +179,13 @@ public sealed class MapImportTests
     }
 
     [Fact]
-    public void Existing_creature_types_keep_their_name_size_and_speed()
+    public void Existing_creature_types_keep_their_name_and_size()
     {
-        var goblin = new CreatureType { CampaignId = CampaignId, Name = "Goblin", Size = CreatureSize.Medium, SpeedSquares = 4 };
+        var goblin = new CreatureType { CampaignId = CampaignId, Name = "Goblin", Size = CreatureSize.Medium };
         var map = TestMaps.Gorge();
 
         var error = MapImport.Build(
-            map with { Creatures = [new ImportCreature(" goblin ", CreatureSize.Huge, 30, 0, 0, null)] },
+            map with { Creatures = [new ImportCreature(" goblin ", CreatureSize.Huge, 0, 0, null)] },
             CampaignId,
             [goblin],
             Now,
@@ -209,9 +206,9 @@ public sealed class MapImportTests
         {
             Creatures =
             [
-                new ImportCreature("Goblin", CreatureSize.Small, 9, 0, 0, "  Anführer  "),
-                new ImportCreature("Goblin", null, null, 1, 0, " "),
-                new ImportCreature("Goblin", null, null, 2, 0, null),
+                new ImportCreature("Goblin", CreatureSize.Small, 0, 0, "  Anführer  "),
+                new ImportCreature("Goblin", null, 1, 0, " "),
+                new ImportCreature("Goblin", null, 2, 0, null),
             ],
         });
 
@@ -223,22 +220,9 @@ public sealed class MapImportTests
     {
         var name = new string('x', 39) + "y";
         var map = TestMaps.Gorge();
-        var import = Build(map with { Creatures = [new ImportCreature(name, CreatureSize.Small, 9, 0, 0, null)] });
+        var import = Build(map with { Creatures = [new ImportCreature(name, CreatureSize.Small, 0, 0, null)] });
 
         Assert.Equal(new string('x', 38) + " 1", import.Encounter.Tokens.Single().Label);
-    }
-
-    [Theory]
-    [InlineData(9, 6)]
-    [InlineData(10, 6)]
-    [InlineData(7.5, 5)]
-    [InlineData(1.4, 0)]
-    [InlineData(0, 0)]
-    [InlineData(300, 200)]
-    public void Speed_is_rounded_down_to_whole_squares(double meters, int squares)
-    {
-        Assert.True(MapImport.TrySpeedSquares((decimal)meters, out var result));
-        Assert.Equal(squares, result);
     }
 
     [Fact]
@@ -250,8 +234,8 @@ public sealed class MapImportTests
             Creatures =
             [
                 .. map.Creatures!,
-                new ImportCreature("Bär", CreatureSize.Large, 12, 2, 1, null),
-                new ImportCreature("Ratte", CreatureSize.Tiny, 6, 4, 1, null),
+                new ImportCreature("Bär", CreatureSize.Large, 2, 1, null),
+                new ImportCreature("Ratte", CreatureSize.Tiny, 4, 1, null),
             ],
         });
 

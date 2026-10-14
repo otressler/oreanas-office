@@ -86,10 +86,10 @@ public static class CampaignTestApi
     }
 
     public static async Task<CharacterResponse> CreateCharacterAsync(
-        this Person owner, Guid campaignId, string name, CreatureSize size = CreatureSize.Medium, int speedSquares = 6)
+        this Person owner, Guid campaignId, string name, CreatureSize size = CreatureSize.Medium)
     {
         var response = await owner.Client.PostAsJsonAsync(
-            $"/api/campaigns/{campaignId}/characters", new CharacterRequest(name, size, speedSquares), Json);
+            $"/api/campaigns/{campaignId}/characters", new CharacterRequest(name, size), Json);
         return await response.ReadAsync<CharacterResponse>(HttpStatusCode.Created);
     }
 

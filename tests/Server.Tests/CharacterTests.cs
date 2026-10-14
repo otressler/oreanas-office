@@ -20,12 +20,12 @@ public sealed class CharacterTests(AppFixture fixture)
         var (_, player, _, campaignId) = await CreatePartyAsync();
 
         var response = await player.Client.PostAsJsonAsync(
-            $"/api/campaigns/{campaignId}/characters", new CharacterRequest("  Thorin  ", CreatureSize.Small, 5), Json);
+            $"/api/campaigns/{campaignId}/characters", new CharacterRequest("  Thorin  ", CreatureSize.Small), Json);
 
         var character = await response.ReadAsync<CharacterResponse>(HttpStatusCode.Created);
         Assert.Equal($"/api/campaigns/{campaignId}/characters/{character.Id}", response.Headers.Location?.OriginalString);
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, 5, CanEdit: true, ColorIndex: 0),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, CanEdit: true, ColorIndex: 0),
             character);
     }
 
@@ -87,12 +87,12 @@ public sealed class CharacterTests(AppFixture fixture)
 
         var updated = await (await player.Client.PutAsJsonAsync(
                 $"/api/campaigns/{campaignId}/characters/{character.Id}",
-                new CharacterRequest(" Thorin II ", CreatureSize.Large, 8),
+                new CharacterRequest(" Thorin II ", CreatureSize.Large),
                 Json))
             .ReadAsync<CharacterResponse>(HttpStatusCode.OK);
 
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, 8, CanEdit: true, ColorIndex: 0),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, CanEdit: true, ColorIndex: 0),
             updated);
         Assert.Equal(updated, Assert.Single(await ListAsync(player, campaignId)));
     }
@@ -105,11 +105,11 @@ public sealed class CharacterTests(AppFixture fixture)
 
         var updated = await (await dm.Client.PutAsJsonAsync(
                 $"/api/campaigns/{campaignId}/characters/{character.Id}",
-                new CharacterRequest("Thorin", CreatureSize.Medium, 7),
+                new CharacterRequest("Thorin", CreatureSize.Large),
                 Json))
             .ReadAsync<CharacterResponse>(HttpStatusCode.OK);
 
-        Assert.Equal((player.Id, 7, true), (updated.OwnerUserId, updated.SpeedSquares, updated.CanEdit));
+        Assert.Equal((player.Id, CreatureSize.Large, true), (updated.OwnerUserId, updated.Size, updated.CanEdit));
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public sealed class CharacterTests(AppFixture fixture)
 
         var response = await otherPlayer.Client.PutAsJsonAsync(
             $"/api/campaigns/{campaignId}/characters/{character.Id}",
-            new CharacterRequest("Gestohlen", CreatureSize.Medium, 6),
+            new CharacterRequest("Gestohlen", CreatureSize.Medium),
             Json);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -133,43 +133,13 @@ public sealed class CharacterTests(AppFixture fixture)
         var (dm, _, _, campaignId) = await CreatePartyAsync();
         var otherCampaign = await dm.CreateCampaignAsync("Andere Runde");
         var elsewhere = await CreateCharacterAsync(dm, otherCampaign.Id, "Woanders");
-        var request = new CharacterRequest("Hier", CreatureSize.Medium, 6);
+        var request = new CharacterRequest("Hier", CreatureSize.Medium);
 
         var wrongCampaign = await dm.Client.PutAsJsonAsync($"/api/campaigns/{campaignId}/characters/{elsewhere.Id}", request, Json);
         var unknown = await dm.Client.PutAsJsonAsync($"/api/campaigns/{campaignId}/characters/{Guid.NewGuid()}", request, Json);
 
         Assert.Equal(HttpStatusCode.NotFound, wrongCampaign.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(6)]
-    [InlineData(Character.MaxSpeedSquares)]
-    public async Task Speeds_from_zero_to_the_maximum_are_accepted(int speedSquares)
-    {
-        var (_, player, _, campaignId) = await CreatePartyAsync();
-
-        var response = await player.Client.PostAsJsonAsync(
-            $"/api/campaigns/{campaignId}/characters", new CharacterRequest("Thorin", CreatureSize.Medium, speedSquares), Json);
-
-        Assert.Equal(speedSquares, (await response.ReadAsync<CharacterResponse>(HttpStatusCode.Created)).SpeedSquares);
-    }
-
-    [Theory]
-    [InlineData(-1)]
-    [InlineData(Character.MaxSpeedSquares + 1)]
-    public async Task Speeds_outside_the_range_are_refused(int speedSquares)
-    {
-        var (_, player, _, campaignId) = await CreatePartyAsync();
-        var character = await CreateCharacterAsync(player, campaignId, "Thorin");
-        var request = new CharacterRequest("Thorin", CreatureSize.Medium, speedSquares);
-
-        var create = await player.Client.PostAsJsonAsync($"/api/campaigns/{campaignId}/characters", request, Json);
-        var update = await player.Client.PutAsJsonAsync($"/api/campaigns/{campaignId}/characters/{character.Id}", request, Json);
-
-        await create.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.SpeedInvalid, "speedSquares");
-        await update.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.SpeedInvalid, "speedSquares");
     }
 
     [Theory]
@@ -181,7 +151,7 @@ public sealed class CharacterTests(AppFixture fixture)
     {
         var (_, player, _, campaignId) = await CreatePartyAsync();
         var character = await CreateCharacterAsync(player, campaignId, new string('x', Character.NameMaxLength));
-        var request = new CharacterRequest(name!, CreatureSize.Medium, 6);
+        var request = new CharacterRequest(name!, CreatureSize.Medium);
 
         var create = await player.Client.PostAsJsonAsync($"/api/campaigns/{campaignId}/characters", request, Json);
         var update = await player.Client.PutAsJsonAsync($"/api/campaigns/{campaignId}/characters/{character.Id}", request, Json);
@@ -194,8 +164,8 @@ public sealed class CharacterTests(AppFixture fixture)
     public async Task Sizes_must_be_defined()
     {
         var (_, player, _, campaignId) = await CreatePartyAsync();
-        using var numeric = new StringContent("""{"name":"Thorin","size":42,"speedSquares":6}""", Encoding.UTF8, "application/json");
-        using var unknown = new StringContent("""{"name":"Thorin","size":"colossal","speedSquares":6}""", Encoding.UTF8, "application/json");
+        using var numeric = new StringContent("""{"name":"Thorin","size":42}""", Encoding.UTF8, "application/json");
+        using var unknown = new StringContent("""{"name":"Thorin","size":"colossal"}""", Encoding.UTF8, "application/json");
 
         var numericResponse = await player.Client.PostAsync($"/api/campaigns/{campaignId}/characters", numeric);
         var unknownResponse = await player.Client.PostAsync($"/api/campaigns/{campaignId}/characters", unknown);
@@ -219,7 +189,7 @@ public sealed class CharacterTests(AppFixture fixture)
 
     private static async Task<CharacterResponse> CreateCharacterAsync(Person owner, Guid campaignId, string name) =>
         await (await owner.Client.PostAsJsonAsync(
-                $"/api/campaigns/{campaignId}/characters", new CharacterRequest(name, CreatureSize.Medium, 6), Json))
+                $"/api/campaigns/{campaignId}/characters", new CharacterRequest(name, CreatureSize.Medium), Json))
             .ReadAsync<CharacterResponse>(HttpStatusCode.Created);
 
     private static async Task<List<CharacterResponse>> ListAsync(Person person, Guid campaignId) =>

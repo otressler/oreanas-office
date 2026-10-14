@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { Character } from '../api/types'
 import { Button, LoadError, Loading, Panel } from '../components/ui'
-import { formatMeters } from '../lib/units'
 import { de } from '../text/de'
 import { CharacterForm } from './CharacterForm'
 import { useCharacters } from './queries'
@@ -62,10 +61,7 @@ function CharacterRow({ character, onEdit }: { character: Character; onEdit: () 
         <span className="font-semibold text-parchment">{character.name}</span>
         <span className="text-sm text-dim">{de.characters.owner(character.ownerDisplayName)}</span>
       </div>
-      <div className="flex flex-col text-sm text-dim">
-        <span>{de.sizes[character.size]}</span>
-        <span>{de.characters.speedValue(formatMeters(character.speedSquares))}</span>
-      </div>
+      <span className="text-sm text-dim">{de.sizes[character.size]}</span>
       {character.canEdit && (
         <Button
           className="ml-auto"

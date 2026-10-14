@@ -58,33 +58,18 @@ test('a wrong join code shows a German message', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText(text.joinCodeInvalid)
 })
 
-test('creates a character with 9 m and shows it as 9 m', async ({ page }) => {
+test('creates a character with a name and size', async ({ page }) => {
   await createCampaign(page, 'Die Rabenküste')
 
   const characters = panel(page, text.charactersTitle)
   await characters.getByRole('button', { name: text.newCharacter }).click()
   await characters.getByLabel(text.characterName).fill('Ilse Eisenhut')
-  await characters.getByLabel(text.speed).fill('9')
+  await characters.getByLabel('Größe').selectOption('small')
   await characters.getByRole('button', { name: text.create }).click()
 
   await expect(characters.getByText('Ilse Eisenhut')).toBeVisible()
-  await expect(characters).toContainText('Geschwindigkeit 9 m')
-  await expect(characters).not.toContainText('Felder')
-  expect(backend.characters[0]).toMatchObject({ name: 'Ilse Eisenhut', speedSquares: 6 })
-})
-
-test('rounds a speed that is not a whole number of squares down, and says so', async ({ page }) => {
-  await createCampaign(page, 'Die Rabenküste')
-
-  const characters = panel(page, text.charactersTitle)
-  await characters.getByRole('button', { name: text.newCharacter }).click()
-  await characters.getByLabel(text.characterName).fill('Brom')
-  await characters.getByLabel(text.speed).fill('10')
-  await expect(characters.getByText('Wird auf 9 m abgerundet.')).toBeVisible()
-  await characters.getByRole('button', { name: text.create }).click()
-
-  await expect(characters).toContainText('Geschwindigkeit 9 m')
-  expect(backend.characters[0]?.speedSquares).toBe(6)
+  await expect(characters).toContainText('Klein')
+  expect(backend.characters[0]).toMatchObject({ name: 'Ilse Eisenhut', size: 'small' })
 })
 
 test('creates a session and makes it active', async ({ page }) => {

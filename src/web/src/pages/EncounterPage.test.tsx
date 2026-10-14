@@ -26,7 +26,6 @@ const hero: BoardToken = {
   y: 0,
   elevation: 0,
   size: 'medium',
-  speedSquares: 6,
   colorIndex: 0,
   version: 0,
 }

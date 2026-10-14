@@ -181,12 +181,7 @@ export const de = {
     add: 'Neuer Charakter',
     name: 'Name',
     size: 'Größe',
-    speed: 'Geschwindigkeit in Metern',
-    speedHint: 'Zum Beispiel 9 oder 7,5.',
-    /** The input isn't a multiple of 1.5 m; `meters` is already formatted, e.g. "9 m". */
-    speedRounded: (meters: string) => `Wird auf ${meters} abgerundet.`,
     owner: (name: string) => `Gehört ${name}`,
-    speedValue: (meters: string) => `Geschwindigkeit ${meters}`,
     editTitle: (name: string) => `${name} bearbeiten`,
   },
 
@@ -387,7 +382,6 @@ export const de = {
     nameInvalid: 'Bitte gib einen Namen an.',
     joinCodeInvalid:
       'Diesen Code gibt es nicht. Prüf ihn oder frag deine Spielleitung nach dem aktuellen.',
-    speedInvalid: 'Gib die Geschwindigkeit in Metern an, zum Beispiel 9.',
     dateInvalid: 'Bitte wähle ein Datum.',
     notADm: 'Diese Person gehört nicht zur Spielleitung der Kampagne.',
     anotherSessionActive: 'In dieser Kampagne läuft schon eine Sitzung. Beende sie zuerst.',
@@ -399,7 +393,7 @@ export const de = {
     featureInvalid: 'Ein Objekt auf der Karte ist unvollständig oder ragt über den Rand.',
     entranceInvalid: 'Ein Ein- oder Ausgang liegt nicht am Rand der Karte.',
     creatureTypeInvalid:
-      'Für eine neue Kreaturenart fehlen Größe oder Geschwindigkeit, oder ihr Name ist zu lang.',
+      'Für eine neue Kreaturenart fehlt die Größe, oder ihr Name ist zu lang.',
     placementInvalid:
       'Dort ist kein Platz: Die Figur stünde außerhalb der Karte, auf Wand oder Abgrund oder auf einer anderen Figur.',
     characterInvalid: 'Dieser Charakter gehört nicht zur Kampagne oder ist doppelt dabei.',

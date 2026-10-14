@@ -1381,7 +1381,6 @@
           "googleAlreadyLinked",
           "nameInvalid",
           "joinCodeInvalid",
-          "speedInvalid",
           "dateInvalid",
           "notADm",
           "anotherSessionActive",
@@ -1524,7 +1523,6 @@
           "y",
           "elevation",
           "size",
-          "speedSquares",
           "colorIndex",
           "version"
         ],
@@ -1575,10 +1573,6 @@
           },
           "size": {
             "$ref": "#/components/schemas/CreatureSize"
-          },
-          "speedSquares": {
-            "type": "integer",
-            "format": "int32"
           },
           "colorIndex": {
             "type": [
@@ -1714,8 +1708,7 @@
       "CharacterRequest": {
         "required": [
           "name",
-          "size",
-          "speedSquares"
+          "size"
         ],
         "type": "object",
         "properties": {
@@ -1724,10 +1717,6 @@
           },
           "size": {
             "$ref": "#/components/schemas/CreatureSize"
-          },
-          "speedSquares": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },
@@ -1738,7 +1727,6 @@
           "ownerDisplayName",
           "name",
           "size",
-          "speedSquares",
           "canEdit",
           "colorIndex"
         ],
@@ -1760,10 +1748,6 @@
           },
           "size": {
             "$ref": "#/components/schemas/CreatureSize"
-          },
-          "speedSquares": {
-            "type": "integer",
-            "format": "int32"
           },
           "canEdit": {
             "type": "boolean"
@@ -1942,7 +1926,6 @@
               "googleAlreadyLinked",
               "nameInvalid",
               "joinCodeInvalid",
-              "speedInvalid",
               "dateInvalid",
               "notADm",
               "anotherSessionActive",
@@ -1973,7 +1956,6 @@
         "required": [
           "type",
           "size",
-          "speedMeters",
           "x",
           "y",
           "label"
@@ -1992,13 +1974,6 @@
                 "$ref": "#/components/schemas/CreatureSize"
               }
             ]
-          },
-          "speedMeters": {
-            "type": [
-              "null",
-              "number"
-            ],
-            "format": "double"
           },
           "x": {
             "type": "integer",
@@ -2589,7 +2564,6 @@
               "googleAlreadyLinked",
               "nameInvalid",
               "joinCodeInvalid",
-              "speedInvalid",
               "dateInvalid",
               "notADm",
               "anotherSessionActive",

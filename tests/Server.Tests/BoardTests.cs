@@ -78,9 +78,9 @@ public sealed class BoardTests(AppFixture fixture)
     public async Task The_board_lists_creatures_then_characters()
     {
         var table = await fixture.App.CreateEncounterTableAsync();
-        var thorin = await table.Player.CreateCharacterAsync(table.CampaignId, "Thorin", CreatureSize.Small, 5);
+        var thorin = await table.Player.CreateCharacterAsync(table.CampaignId, "Thorin", CreatureSize.Small);
         await table.Player.CreateCharacterAsync(table.CampaignId, "Zuschauer");
-        var aria = await table.SecondDm.CreateCharacterAsync(table.CampaignId, "Aria", CreatureSize.Large, 8);
+        var aria = await table.SecondDm.CreateCharacterAsync(table.CampaignId, "Aria", CreatureSize.Large);
         await table.Dm.StartEncounterAsync(
             table.CampaignId,
             table.Session.Id,
@@ -88,7 +88,7 @@ public sealed class BoardTests(AppFixture fixture)
             new CharacterPlacement(thorin.Id, 0, 1),
             new CharacterPlacement(aria.Id, 3, 1));
         await table.Player.Client.PutAsJsonAsync(
-            $"/api/campaigns/{table.CampaignId}/characters/{thorin.Id}", new CharacterRequest("Thorin II", CreatureSize.Small, 5), Json);
+            $"/api/campaigns/{table.CampaignId}/characters/{thorin.Id}", new CharacterRequest("Thorin II", CreatureSize.Small), Json);
 
         var board = await ReadBoardAsync(table.Player, table);
 
@@ -100,13 +100,13 @@ public sealed class BoardTests(AppFixture fixture)
             (board.Map.Id, board.Map.Name, board.Map.Width, board.Map.Height, board.Map.BackgroundUrl, board.Map.Layout.Cells.Count));
         Assert.Equal(
             [
-                (TokenKind.Creature, null, "Goblin 1", 5, 1, 1m, CreatureSize.Small, 6, null),
-                (TokenKind.Creature, null, "Goblin 2", 6, 1, 1m, CreatureSize.Small, 6, null),
-                (TokenKind.Creature, null, "Oger 1", 1, 3, 0m, CreatureSize.Large, 8, null),
-                (TokenKind.Character, (Guid?)table.SecondDm.Id, "Aria", 3, 1, 0.5m, CreatureSize.Large, 8, 2),
-                (TokenKind.Character, (Guid?)table.Player.Id, "Thorin II", 0, 1, 0m, CreatureSize.Small, 5, (int?)0),
+                (TokenKind.Creature, null, "Goblin 1", 5, 1, 1m, CreatureSize.Small, null),
+                (TokenKind.Creature, null, "Goblin 2", 6, 1, 1m, CreatureSize.Small, null),
+                (TokenKind.Creature, null, "Oger 1", 1, 3, 0m, CreatureSize.Large, null),
+                (TokenKind.Character, (Guid?)table.SecondDm.Id, "Aria", 3, 1, 0.5m, CreatureSize.Large, 2),
+                (TokenKind.Character, (Guid?)table.Player.Id, "Thorin II", 0, 1, 0m, CreatureSize.Small, (int?)0),
             ],
-            board.Tokens.Select(t => (t.Kind, t.OwnerUserId, t.Label, t.X, t.Y, t.Elevation, t.Size, t.SpeedSquares, t.ColorIndex)));
+            board.Tokens.Select(t => (t.Kind, t.OwnerUserId, t.Label, t.X, t.Y, t.Elevation, t.Size, t.ColorIndex)));
         Assert.All(board.Tokens.Where(t => t.Kind == TokenKind.Creature), t => Assert.Null(t.CharacterId));
         Assert.Equal([aria.Id, thorin.Id], board.Tokens.Where(t => t.Kind == TokenKind.Character).Select(t => t.CharacterId));
         Assert.All(board.Tokens.Where(t => t.Kind == TokenKind.Character), t => Assert.Null(t.CreatureTypeId));

@@ -60,7 +60,6 @@ test('two people register, create and join a campaign, and run a session', async
   const characters = panel(brom, text.charactersTitle)
   await characters.getByRole('button', { name: text.newCharacter }).click()
   await characters.getByLabel(text.characterName).fill('Brom Eisenbart')
-  await characters.getByLabel(text.speed).fill('9')
   await characters.getByRole('button', { name: text.create }).click()
   await expect(characters).toContainText('Geschwindigkeit 9 m')
 

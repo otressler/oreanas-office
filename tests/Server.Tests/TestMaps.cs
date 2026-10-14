@@ -32,9 +32,9 @@ public static class TestMaps
             ],
             [new LayoutEntranceFile(null, EntranceKind.Entrance, "Waldweg", [[0, 1], [0, 2]])]),
         [
-            new ImportCreature("Goblin", CreatureSize.Small, 9, 5, 1, null),
-            new ImportCreature("Goblin", null, null, 6, 1, null),
-            new ImportCreature("Oger", CreatureSize.Large, 12, 1, 3, null),
+            new ImportCreature("Goblin", CreatureSize.Small, 5, 1, null),
+            new ImportCreature("Goblin", null, 6, 1, null),
+            new ImportCreature("Oger", CreatureSize.Large, 1, 3, null),
         ]);
 
     private static List<LayoutCellFile> GorgeCells()

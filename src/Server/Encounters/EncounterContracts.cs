@@ -53,7 +53,7 @@ public record BoardMap(Guid Id, string Name, int Width, int Height, MapLayout La
 // Label: the character's name or the creature's label. OwnerUserId: the character's
 // owner, null for creatures. ColorIndex: characters get a fixed ring colour by the
 // order they were added to the campaign (0, 1, 2…); null for creatures, which share
-// one colour. Size and speed come from the character or creature type. Version: see
+// one colour. Size comes from the character or creature type. Version: see
 // Token.Version; devices keep the position with the higher version.
 public record BoardToken(
     Guid Id,
@@ -66,6 +66,5 @@ public record BoardToken(
     int Y,
     decimal Elevation,
     CreatureSize Size,
-    int SpeedSquares,
     int? ColorIndex,
     int Version);

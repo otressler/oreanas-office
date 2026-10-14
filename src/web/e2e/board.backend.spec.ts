@@ -44,7 +44,6 @@ test('the DM starts a fight on the gorge crossing and a player lands on it', asy
   const characters = panel(mira, text.charactersTitle)
   await characters.getByRole('button', { name: text.newCharacter }).click()
   await characters.getByLabel(text.characterName).fill('Ilse')
-  await characters.getByLabel(text.speed).fill('9')
   await characters.getByRole('button', { name: text.create }).click()
   await expect(characters).toContainText('Geschwindigkeit 9 m')
 

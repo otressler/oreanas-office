@@ -44,7 +44,6 @@ export function withPlacedCharacters(
       y: position.y,
       elevation: placementElevation(grid, character.size, position.x, position.y),
       size: character.size,
-      speedSquares: character.speedSquares,
       colorIndex: character.colorIndex,
       version: 0,
     })

@@ -28,7 +28,6 @@ export const text = {
   charactersTitle: 'Charaktere',
   newCharacter: 'Neuer Charakter',
   characterName: 'Name',
-  speed: 'Geschwindigkeit in Metern',
   sessionsTitle: 'Sitzungen',
   newSession: 'Neue Sitzung',
   sessionTitle: 'Titel',

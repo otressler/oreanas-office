@@ -6,8 +6,8 @@ using OreanasOffice.Server.Characters;
 namespace OreanasOffice.Server.Encounters;
 
 // knowledge/domain/token.md: a character or creature on an encounter's board. X and
-// Y are the top-left cell of the footprint; size and speed come from the character
-// or creature type. Character tokens take their label from the character's name, so
+// Y are the top-left cell of the footprint; size comes from the character or
+// creature type. Character tokens take their label from the character's name, so
 // Label is only stored for creatures ("Goblin 3").
 public class Token
 {

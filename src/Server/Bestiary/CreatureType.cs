@@ -6,8 +6,7 @@ using OreanasOffice.Server.Rules;
 namespace OreanasOffice.Server.Bestiary;
 
 // knowledge/domain/creature-type.md. Stage 3 creates types only through map imports;
-// the bestiary screens come in stage 6, the icon with assets in stage 8. Speed is
-// whole squares, a hint for the reach highlight.
+// the bestiary screens come in stage 6, the icon with assets in stage 8.
 public class CreatureType
 {
     public const int NameMaxLength = 40;
@@ -21,8 +20,6 @@ public class CreatureType
     public required string Name { get; set; }
 
     public CreatureSize Size { get; set; }
-
-    public int SpeedSquares { get; set; }
 
     public string Appearance { get; set; } = "";
 

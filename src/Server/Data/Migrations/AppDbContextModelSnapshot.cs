@@ -229,9 +229,6 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("SpeedSquares")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CampaignId", "Name")
@@ -320,9 +317,6 @@ namespace OreanasOffice.Server.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("SpeedSquares")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

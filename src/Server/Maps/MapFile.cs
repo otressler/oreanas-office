@@ -43,14 +43,13 @@ public record LayoutFeatureFile(
 public record LayoutEntranceFile(string? Id, EntranceKind Kind, string? Label, List<int[]> Cells);
 
 // Type is matched by name against the campaign's creature types, ignoring case. A new
-// type takes Size and SpeedMeters from the first entry that names it; both are then
-// required (CreatureTypeInvalid). Meters are rounded down to whole squares. Label
+// type takes Size from the first entry that names it, which is then required
+// (CreatureTypeInvalid). A speedMeters field from older files is ignored. Label
 // replaces the automatic "Goblin 1". The token must stand on free walkable cells
 // (PlacementInvalid).
 public record ImportCreature(
     string Type,
     CreatureSize? Size,
-    decimal? SpeedMeters,
     int X,
     int Y,
     string? Label);

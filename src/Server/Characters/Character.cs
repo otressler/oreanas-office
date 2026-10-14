@@ -6,12 +6,10 @@ using OreanasOffice.Server.Rules;
 
 namespace OreanasOffice.Server.Characters;
 
-// knowledge/domain/character.md. Speed is whole squares (1.5 m each), entered and
-// shown in meters by the frontend; it's a hint for the reach highlight, never a limit.
+// knowledge/domain/character.md.
 public class Character
 {
     public const int NameMaxLength = 40;
-    public const int MaxSpeedSquares = 200;
 
     public Guid Id { get; set; }
 
@@ -22,8 +20,6 @@ public class Character
     public required string Name { get; set; }
 
     public CreatureSize Size { get; set; }
-
-    public int SpeedSquares { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 

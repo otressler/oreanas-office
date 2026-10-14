@@ -71,11 +71,11 @@ public sealed class EncounterImportTests(AppFixture fixture)
             (campaign.Id, "Klamm", "Seilbrücke über einer Schlucht", "angespannt", "Dämmerung", 30),
             (map.CampaignId, map.Name, map.Scene, map.Vibe, map.Lighting, map.Layout.Cells.Count));
         Assert.Equal(
-            [("Goblin", CreatureSize.Small, 6), ("Oger", CreatureSize.Large, 8)],
+            [("Goblin", CreatureSize.Small), ("Oger", CreatureSize.Large)],
             await db.CreatureTypes
                 .Where(t => t.CampaignId == campaign.Id)
                 .OrderBy(t => t.Name)
-                .Select(t => ValueTuple.Create(t.Name, t.Size, t.SpeedSquares))
+                .Select(t => ValueTuple.Create(t.Name, t.Size))
                 .ToListAsync());
     }
 
@@ -87,7 +87,7 @@ public sealed class EncounterImportTests(AppFixture fixture)
         var dm = await fixture.App.CreatePersonAsync("Oreana");
         var campaign = await dm.CreateCampaignAsync();
         var map = TestMaps.Gorge();
-        var broken = map with { Creatures = [.. map.Creatures!, new ImportCreature("Wolf", CreatureSize.Medium, 12, 3, 0, null)] };
+        var broken = map with { Creatures = [.. map.Creatures!, new ImportCreature("Wolf", CreatureSize.Medium, 3, 0, null)] };
 
         var response = await dm.Client.PostAsJsonAsync($"/api/campaigns/{campaign.Id}/encounters/import", broken, Json);
 
@@ -149,14 +149,14 @@ public sealed class EncounterImportTests(AppFixture fixture)
         var second = await dm.ImportMapAsync(campaign.Id, map with
         {
             Name = "Zweite Klamm",
-            Creatures = [new ImportCreature("gOBLIN", CreatureSize.Huge, 30, 0, 0, null)],
+            Creatures = [new ImportCreature("gOBLIN", CreatureSize.Huge, 0, 0, null)],
         });
 
         var firstBoard = await (await dm.GetBoardAsync(campaign.Id, first.Id)).ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
         var secondBoard = await (await dm.GetBoardAsync(campaign.Id, second.Id)).ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
         var goblin = Assert.Single(secondBoard.Tokens);
         Assert.Equal(firstBoard.Tokens.Single(t => t.Label == "Goblin 1").CreatureTypeId, goblin.CreatureTypeId);
-        Assert.Equal(("Goblin 1", CreatureSize.Small, 6), (goblin.Label, goblin.Size, goblin.SpeedSquares));
+        Assert.Equal(("Goblin 1", CreatureSize.Small), (goblin.Label, goblin.Size));
         await using var scope = fixture.App.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         Assert.Equal(2, await db.CreatureTypes.CountAsync(t => t.CampaignId == campaign.Id));
@@ -174,7 +174,7 @@ public sealed class EncounterImportTests(AppFixture fixture)
 
         var response = await dm.Client.PostAsJsonAsync(
             $"/api/campaigns/{here.Id}/encounters/import",
-            map with { Creatures = [new ImportCreature("Goblin", null, null, 0, 0, null)] },
+            map with { Creatures = [new ImportCreature("Goblin", null, 0, 0, null)] },
             Json);
 
         await response.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.CreatureTypeInvalid, "creatures[0]");
@@ -201,9 +201,9 @@ public sealed class EncounterImportTests(AppFixture fixture)
     private static IEnumerable<string> Entrances(MapLayout layout) =>
         layout.Entrances.Select(e => $"{e.Id} {e.Kind} {e.Label} {string.Join(";", e.Cells.Select(c => string.Join(",", c)))}");
 
-    private static IEnumerable<(string, int, int, decimal, CreatureSize, int, int?)> Creatures(IEnumerable<BoardToken> tokens) =>
+    private static IEnumerable<(string, int, int, decimal, CreatureSize, int?)> Creatures(IEnumerable<BoardToken> tokens) =>
         tokens
             .Where(t => t.Kind == TokenKind.Creature)
             .OrderBy(t => t.Label, StringComparer.Ordinal)
-            .Select(t => (t.Label, t.X, t.Y, t.Elevation, t.Size, t.SpeedSquares, t.ColorIndex));
+            .Select(t => (t.Label, t.X, t.Y, t.Elevation, t.Size, t.ColorIndex));
 }

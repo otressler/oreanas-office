@@ -28,7 +28,6 @@ public enum ApiErrorCode
     // Campaigns, characters and sessions
     NameInvalid,
     JoinCodeInvalid,
-    SpeedInvalid,
     DateInvalid,
     NotADm,
     AnotherSessionActive,

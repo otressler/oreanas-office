@@ -44,7 +44,6 @@ async function startFight(browser: Browser, page: Page) {
   const characters = panel(mira, text.charactersTitle)
   await characters.getByRole('button', { name: text.newCharacter }).click()
   await characters.getByLabel(text.characterName).fill('Ilse')
-  await characters.getByLabel(text.speed).fill('9')
   await characters.getByRole('button', { name: text.create }).click()
   await expect(characters).toContainText('Geschwindigkeit 9 m')
 

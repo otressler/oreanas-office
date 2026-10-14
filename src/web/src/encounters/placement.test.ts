@@ -21,7 +21,6 @@ function character(id: string, fields: Partial<Character> = {}): Character {
     ownerDisplayName: 'Mira',
     name: id,
     size: 'medium',
-    speedSquares: 6,
     canEdit: true,
     colorIndex: 0,
     ...fields,
@@ -30,7 +29,7 @@ function character(id: string, fields: Partial<Character> = {}): Character {
 
 describe('withPlacedCharacters', () => {
   it('adds placed characters as tokens and leaves unplaced ones out', () => {
-    const ilse = character('ilse', { name: 'Ilse', size: 'small', speedSquares: 5, colorIndex: 3 })
+    const ilse = character('ilse', { name: 'Ilse', size: 'small', colorIndex: 3 })
     const brom = character('brom')
     const board = withPlacedCharacters(
       gorge,
@@ -54,7 +53,6 @@ describe('withPlacedCharacters', () => {
       y: 5,
       elevation: grid.elevation(9, 5),
       size: 'small',
-      speedSquares: 5,
       // The server's order, not the list's.
       colorIndex: 3,
       version: 0,

@@ -21,7 +21,6 @@ const ALL_CODES = {
   googleAlreadyLinked: true,
   nameInvalid: true,
   joinCodeInvalid: true,
-  speedInvalid: true,
   dateInvalid: true,
   notADm: true,
   anotherSessionActive: true,

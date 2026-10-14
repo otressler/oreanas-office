@@ -15,7 +15,6 @@ import {
   type Positions,
 } from '../encounters/placement'
 import { useBoard, useStartEncounter } from '../encounters/queries'
-import { formatMeters } from '../lib/units'
 import { de } from '../text/de'
 
 const t = de.encounters.setup
@@ -278,7 +277,7 @@ function CharacterRow({
       >
         <span className="truncate font-semibold text-parchment">{character.name}</span>
         <span className="text-xs text-dim">
-          {de.sizes[character.size]} · {formatMeters(character.speedSquares)}
+          {de.sizes[character.size]}
           {ticked && ` · ${placed ? t.placed : t.notPlaced}`}
         </span>
       </button>

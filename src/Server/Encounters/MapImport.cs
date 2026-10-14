@@ -19,9 +19,6 @@ public static class MapImport
     // long as a token's label, since the board shows them the same way.
     private const int TextMaxLength = Token.LabelMaxLength;
 
-    // Meters per square (knowledge/rules/movement-distance.md).
-    private const decimal SquareMeters = 1.5m;
-
     public sealed record Result(BattleMap Map, Encounter Encounter, List<CreatureType> NewTypes);
 
     public static ApiError? Build(
@@ -99,25 +96,6 @@ public static class MapImport
 
         result = new Result(map, encounter, newTypes);
         return null;
-    }
-
-    // Whole squares, rounded down; 10 m → 6 squares.
-    public static bool TrySpeedSquares(decimal meters, out int squares)
-    {
-        squares = 0;
-        if (meters < 0)
-        {
-            return false;
-        }
-
-        var whole = Math.Floor(meters / SquareMeters + 0.000000001m);
-        if (whole > Character.MaxSpeedSquares)
-        {
-            return false;
-        }
-
-        squares = (int)whole;
-        return true;
     }
 
     // Meters, one decimal; a missing elevation is 0.
@@ -325,14 +303,9 @@ public static class MapImport
 
             if (!types.TryGetValue(typeName, out var type))
             {
-                if (creature.Size is not { } size || creature.SpeedMeters is not { } meters)
+                if (creature.Size is not { } size)
                 {
                     return new ApiError(ApiErrorCode.CreatureTypeInvalid, field);
-                }
-
-                if (!TrySpeedSquares(meters, out var speed))
-                {
-                    return new ApiError(ApiErrorCode.SpeedInvalid, field);
                 }
 
                 type = new CreatureType
@@ -340,7 +313,6 @@ public static class MapImport
                     CampaignId = encounter.CampaignId,
                     Name = typeName,
                     Size = size,
-                    SpeedSquares = speed,
                     CreatedAt = now,
                 };
                 types.Add(typeName, type);

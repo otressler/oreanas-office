@@ -4,26 +4,12 @@ import { api } from '../api/client'
 import { unwrap } from '../api/errors'
 import type { Character, CharacterRequest, CreatureSize } from '../api/types'
 import { Button, ErrorAlert, SelectField, TextField } from '../components/ui'
-import {
-  formatMeters,
-  formatMetersInput,
-  isWholeSquares,
-  metersToSquares,
-  parseMeters,
-} from '../lib/units'
 import { de } from '../text/de'
 import { campaignKeys } from './queries'
 import { limits } from '../lib/limits'
 
 const SIZES: CreatureSize[] = ['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan']
-/** 6 squares = 9 m, the usual walking speed (30 ft in the rulebook). */
-const DEFAULT_SPEED_SQUARES = 6
-
-/**
- * Creates a character, or edits one when `character` is given. Speed is typed
- * in meters and stored in whole squares, rounded down
- * (knowledge/rules/movement-distance.md); the hint says what it will become.
- */
+/** Creates a character, or edits one when `character` is given. */
 export function CharacterForm({
   campaignId,
   character,
@@ -37,12 +23,6 @@ export function CharacterForm({
   const formId = useId()
   const [name, setName] = useState(character?.name ?? '')
   const [size, setSize] = useState<CreatureSize>(character?.size ?? 'medium')
-  const [speed, setSpeed] = useState(
-    formatMetersInput(character?.speedSquares ?? DEFAULT_SPEED_SQUARES),
-  )
-  const [speedError, setSpeedError] = useState(false)
-
-  const meters = parseMeters(speed)
 
   const save = useMutation({
     mutationFn: (body: CharacterRequest) =>
@@ -65,17 +45,8 @@ export function CharacterForm({
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    if (meters === null) {
-      setSpeedError(true)
-      return
-    }
-    save.mutate({ name: name.trim(), size, speedSquares: metersToSquares(meters) })
+    save.mutate({ name: name.trim(), size })
   }
-
-  const speedHint =
-    meters !== null && !isWholeSquares(meters)
-      ? de.characters.speedRounded(formatMeters(metersToSquares(meters)))
-      : de.characters.speedHint
 
   return (
     <form
@@ -104,20 +75,6 @@ export function CharacterForm({
           </option>
         ))}
       </SelectField>
-      <TextField
-        label={de.characters.speed}
-        inputMode="decimal"
-        autoComplete="off"
-        required
-        value={speed}
-        invalid={speedError}
-        hint={<span aria-live="polite">{speedHint}</span>}
-        onChange={(event) => {
-          setSpeed(event.target.value)
-          setSpeedError(false)
-        }}
-      />
-      {speedError && <ErrorAlert error={de.errors.speedInvalid} />}
       <ErrorAlert error={save.error} />
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="primary" busy={save.isPending}>

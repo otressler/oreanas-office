@@ -57,7 +57,6 @@ public static class CharacterEndpoints
             OwnerUserId = userId,
             Name = name,
             Size = request.Size,
-            SpeedSquares = request.SpeedSquares,
             CreatedAt = time.GetUtcNow(),
         };
         db.Characters.Add(character);
@@ -96,25 +95,17 @@ public static class CharacterEndpoints
 
         character.Name = name;
         character.Size = request.Size;
-        character.SpeedSquares = request.SpeedSquares;
         await db.SaveChangesAsync(cancellationToken);
 
         return TypedResults.Ok(await LoadAsync(db, campaignId, character.Id, userId, cancellationToken));
     }
 
-    // Speed arrives in whole squares: the frontend rounds meters down, so only
-    // values no input could produce are refused.
     private static ApiError? Validate(CharacterRequest request, out string name)
     {
         name = request.Name?.Trim() ?? "";
         if (name.Length is 0 or > Character.NameMaxLength)
         {
             return new ApiError(ApiErrorCode.NameInvalid, "name");
-        }
-
-        if (request.SpeedSquares is < 0 or > Character.MaxSpeedSquares)
-        {
-            return new ApiError(ApiErrorCode.SpeedInvalid, "speedSquares");
         }
 
         return null;
@@ -137,7 +128,6 @@ public static class CharacterEndpoints
             c.Owner.DisplayName,
             c.Name,
             c.Size,
-            c.SpeedSquares,
             isDm || c.OwnerUserId == userId,
             0));
 
