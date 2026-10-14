@@ -1,12 +1,14 @@
-// What a tool and a side panel of the map editor look like. Each tool module exports
-// a list of tools and panels; registry.ts collects them (the integrator owns it).
+// What a tool of the map editor looks like. Each tool module exports a list of tools;
+// registry.ts collects them (the integrator owns it). The side panel shows only the
+// active tool's panel, so map settings such as the size are tools too.
 import type { ComponentType } from 'react'
 import type { GridPoint } from '../board/geometry'
 import type { EncounterStore } from './encounter/store'
 import type { EditorStore } from './store'
 
 /** The toolbar's groups, in toolbar order. */
-export type ToolGroup = 'terrain' | 'elevation' | 'features' | 'entrances' | 'creatures'
+export type ToolGroup =
+  'terrain' | 'elevation' | 'features' | 'entrances' | 'map' | 'creatures' | 'encounter'
 
 /** A pointer over the map, in cells. */
 export interface CellPointer {
@@ -37,7 +39,10 @@ export interface EditorTool {
   /** One lower-case key that picks the tool, e.g. "b". */
   shortcut?: string
   Icon: ComponentType<{ className?: string }>
-  /** The tool's options and the selection's properties, shown in the side panel while active. */
+  /**
+   * The tool's options and the selection's properties, shown in the side panel while
+   * active. A tool without pointer handlers is only this panel, e.g. the map's size.
+   */
   Panel?: ComponentType
   /** A CSS cursor over the map. */
   cursor?: string
@@ -57,12 +62,4 @@ export interface EditorTool {
    * handled by the editor before this.
    */
   onKeyDown?(event: KeyboardEvent, ctx: ToolContext): boolean
-}
-
-/** A section of the side panel that is always there, below the active tool's panel. */
-export interface EditorPanel {
-  id: string
-  /** German, from text/de.ts. */
-  title: string
-  Component: ComponentType
 }

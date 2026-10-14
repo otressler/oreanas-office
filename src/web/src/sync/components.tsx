@@ -93,7 +93,8 @@ function statusText(status: SyncStatus): string {
 }
 
 /** The status line with the "Sync" button; conflicts and rejections get a button of their own. */
-export function SyncStatusView() {
+/** `compact` keeps it on one line and shortens the status text (the editor header). */
+export function SyncStatusView({ compact = false }: { compact?: boolean }) {
   const db = useSyncDb()
   const status = useSyncStatus()
   const failed = useSyncStore((s) => s.failed)
@@ -102,8 +103,14 @@ export function SyncStatusView() {
 
   const syncing = status.state === 'syncing'
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
-      <span role="status" className="min-w-0 text-dim">
+    <div
+      className={`flex min-w-0 items-center gap-2 text-sm ${compact ? 'flex-nowrap' : 'flex-wrap'}`}
+    >
+      <span
+        role="status"
+        title={compact ? statusText(status) : undefined}
+        className={`min-w-0 text-dim ${compact ? 'truncate' : ''}`}
+      >
         {statusText(status)}
       </span>
       {failed && <span className="text-red-300">{t.status.failed}</span>}
@@ -163,5 +170,5 @@ export function SyncStatusItem() {
     }
   }, [db, mapId, encounterId])
   if (!db) return null
-  return <SyncStatusView />
+  return <SyncStatusView compact />
 }

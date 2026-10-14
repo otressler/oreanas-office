@@ -4,7 +4,7 @@ title: DM map editor
 description: Set the grid, paint terrain, place features, elevation, entrances and creatures, and describe the scene.
 tags: [feature, dm, editor]
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T18:35:54Z }
 sources:
   - id: brief
     resource: /references/original-brief.md
@@ -44,11 +44,21 @@ Built on `stage/5-offline-map-editor`. The project owner accepted the choices be
 - **Pages.** `/kampagnen/:id/karten` lists the campaign's maps in this browser, `/kampagnen/:id/karten/:mapId` is the editor, and `/karten` lists the DM's campaigns from the offline copy. The offline and waking screens link to `/karten`, and the campaign page links to its maps.
 - **Tools and keys.** Terrain: brush `B`, rectangle `R`, fill `F`, with digits 1–5 for Boden, Schwieriges Gelände, Wasser, Wand and Leer (void). Elevation: brush `H` and rectangle, with quick values −3, −1,5, 0, +1,5 and +3; cell heights show as labels while an elevation tool is active. Alt+click takes the terrain or height of a cell. Features: select `V`, place `O`; entrances: `E`. Undo is Ctrl+Z, redo Ctrl+Shift+Z or Ctrl+Y. The right or middle mouse button, or Space, pans; the wheel zooms.
 - **Offline link.** The offline and waking screens offer "Karten ohne Verbindung bearbeiten" to anyone remembered on the device; players find an empty list there.
-- **Suggested feature kinds** preset "blocks movement": Brücke, Tür, Treppe, Leiter and Podest don't block; Säule, Baum, Felsen, Kiste, Fass, Tisch, Altar, Brunnen, Wagen and Statue do. The DM can change it.
-- **Prüfung.** A side panel lists every layout rule break ([battle map](/domain/battle-map.md)); clicking one selects the item. The rules are written as shared test cases in `src/web/src/editor/validation.cases.json` for the server's checks in stage 6.
+- **Suggested feature kinds** preset "blocks movement": Brücke, Tür, Treppe, Leiter and Podest don't block; Säule, Baum, Felsen, Kiste, Fass, Tisch, Altar, Brunnen, Wagen and Statue do. The DM can change it. Stage 6 adds more at the project owner's request: Tor, Falltür, Rampe, Steg, Teppich, Geröll and Gebüsch don't block; Mauerrest, Stalagmit, Baumstamm, Zelt, Lagerfeuer, Kohlenbecken, Kamin, Truhe, Regal, Bett, Bank, Theke, Thron, Sarkophag and Käfig do.
+- **Prüfung.** Every layout rule break is listed ([battle map](/domain/battle-map.md)); clicking one selects the item. The rules are written as shared test cases in `src/web/src/editor/validation.cases.json` for the server's checks in stage 6. Since stage 6 the list opens from the status bar (see "Editor layout").
 - **Resize** keeps entrance cells that are no longer on the edge; the Prüfung panel flags them.
 - **Preview.** The map as the board draws it, with a test token of a chosen size that may stand only where the stage 4 target check allows. Nothing is saved.
-- **Saving.** Every change is saved in the browser about 0.4 s after the last edit, and at once when the page hides or the editor closes. The header says "Auf diesem Gerät gespeichert"; maps show "Nur auf diesem Gerät" until stage 6 syncs them.
+- **Saving.** Every change is saved in the browser about 0.4 s after the last edit, and at once when the page hides or the editor closes. The status bar says "Auf diesem Gerät gespeichert"; maps show "Nur auf diesem Gerät" until stage 6 syncs them.
 - **Map files.** The editor exports the map in the import-file format (without creatures). The map list imports such a file as a new map in the browser; a file that breaks layout rules is still imported, and the list says how many problems the Prüfung panel shows.
+
+# Editor layout (stage 6)
+
+The project owner found the stage 5 side panel incoherent: the active tool's panel sat above panels that were always there (name and scene texts, encounters, size, Prüfung), so the scene texts looked like part of the tool. Decided on 2026-10-14: each region of the editor has one job.
+
+- **Toolbar (left):** picks what you work on. Map mode has the terrain, elevation, feature and entrance tools, and a "Karte" group with "Beschreibung" (scene, vibe and lighting) and "Größe" (resize). Stage 7's background generation joins that group. Encounter mode has "Platzieren" and "Auswählen", and a "Begegnung" entry with "Bereit", starting and archiving. A read-only encounter has only that entry.
+- **Side panel (right):** only the panel of what the toolbar picked, nothing else.
+- **Object catalog:** the feature tool's panel shows what the next feature gets on top: kind (with its icon), label, elevation and "blocks movement". Below that is a catalog of the suggested kinds as cards with an icon, the name and "begehbar" or "blockiert", two per row, in five sections (Wege und Durchgänge, Natur, Bauwerke, Einrichtung und Lager, Feuer). A search filters the cards and ignores case and umlauts ("tur" finds Tür). A search without a match can be used as a kind of the DM's own, and the kind field above still takes free text. Picking a card sets its "blocks movement" preset. The select tool's panel keeps the plain kind field with the list.
+- **Header:** what belongs to the whole map or encounter: the back link, the map's name as an editable field (the encounter's name in encounter mode, with its status and creature count), the sync status and "Sync" button, a "Begegnungen" menu with the map's encounters and "Neue Begegnung", export, undo and redo, and edit or preview. The menu's button carries a warning when a creature on one of the encounters no longer stands validly.
+- **Status bar (bottom):** live information: the save state and the sync mark ("Nur auf diesem Gerät"), the cell under the pointer, and the number of layout problems. Clicking the number opens the Prüfung list; clicking a problem selects its item and closes the list.
 
 [^brief]: Original project brief

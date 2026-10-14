@@ -88,6 +88,22 @@ public sealed class EncounterSyncTests(AppFixture fixture)
         Assert.Equal(Terrain.Difficult, board.Map.Layout.Cells.Single(c => (c.X, c.Y) == (2, 4)).Terrain);
     }
 
+    [Fact]
+    public async Task Starting_takes_the_creatures_elevation_from_the_map_as_it_is_now()
+    {
+        var table = await fixture.App.CreateEncounterTableAsync();
+        await PushMapLayoutAsync(table, layout => layout with
+        {
+            Cells = [.. layout.Cells.Select(c => (c.X, c.Y) == (5, 1) ? c with { Elevation = 3 } : c)],
+        });
+
+        var response = await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, table.Encounter.Id);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var board = await (await table.Dm.GetBoardAsync(table.CampaignId, table.Encounter.Id)).ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
+        Assert.Equal(3m, board.Tokens.Single(t => (t.X, t.Y) == (5, 1)).Elevation);
+    }
+
     // A fight keeps what it began with
 
     [Fact]

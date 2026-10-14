@@ -287,6 +287,7 @@ Completes roadmap phase 2.
 - [ ] Edit the same map in two browsers and sync both: the second gets the conflict dialog, and nothing is merged silently.
 - [ ] In a second campaign, add the gorge crossing from the store: it appears as a copy and is gone from that campaign's store. Archive the copy and add the map again: the archived copy comes back.
 - [ ] Create a campaign offline and build a map in it: no invite or join code is offered. Go online and sync: the campaign gets a join code and the map is on the server.
+- [ ] In the editor the side panel changes with every toolbar pick and shows nothing else. The map's name is in the header, scene texts and size are under "Karte" in the toolbar, the encounters open from the header, and the problem count in the status bar opens the Prüfung list ([DM map editor](/features/dm-map-editor.md), "Editor layout").
 
 # Stage 7 — AI backgrounds
 

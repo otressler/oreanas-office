@@ -14,8 +14,8 @@ describe('features in the editor', () => {
     const user = userEvent.setup()
     await renderEditor(mapWith([feature('f1', 0, 0, 2, 1), feature('f2', 1, 0)]))
 
-    expect(await screen.findByRole('heading', { name: t.checks.title })).toBeInTheDocument()
-    expect(screen.getByText(t.checks.count(1))).toBeInTheDocument()
+    // The status bar counts the problems.
+    const checks = await screen.findByRole('button', { name: t.checks.count(1) })
 
     await user.keyboard('o')
     expect(screen.getByRole('button', { name: t.tools.feature })).toHaveAttribute(
@@ -27,8 +27,12 @@ describe('features in the editor', () => {
     await user.keyboard('e')
     expect(screen.getByText(t.entranceHelp)).toBeInTheDocument()
 
-    // A problem leads to the select tool with the feature's properties.
+    // A problem in the status bar's list leads to the select tool with the feature's
+    // properties, and the list closes.
+    await user.click(checks)
+    expect(screen.getByRole('dialog', { name: t.checks.title })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /liegt über/ }))
+    expect(screen.queryByRole('dialog', { name: t.checks.title })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: t.tools.select })).toHaveAttribute(
       'aria-pressed',
       'true',

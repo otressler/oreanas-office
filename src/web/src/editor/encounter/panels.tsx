@@ -1,5 +1,6 @@
 // The side panels of encounter mode: the placement tool's creature types, the selected
-// token's properties, and the encounter itself (ready, archive, start).
+// token's properties, and the "Begegnung" tool's encounter itself (ready, archive,
+// start). Its status and creature count are in the header (EncounterSummary).
 import { useEffect, useId, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { BestiaryList } from '../../bestiary/BestiaryList'
@@ -8,7 +9,7 @@ import { useSessions } from '../../campaigns/queries'
 import { Badge, Button } from '../../components/ui'
 import { inputClass } from '../../components/styles'
 import { useLocalUser } from '../../offline/localUser'
-import { syncBeforeStart } from '../../sync'
+import { syncThenStart } from '../../sync'
 import { de } from '../../text/de'
 import { saveEncounter } from './encounters'
 import { pickType, usePickedState } from './picked'
@@ -132,7 +133,23 @@ function LabelField({ id, label, disabled }: { id: string; label: string; disabl
   )
 }
 
-/** The encounter in encounter mode: its state, "Bereit", archive and start. */
+/** The encounter's status, archived mark and creature count, for the header. */
+export function EncounterSummary() {
+  const doc = useEncounter((s) => s.doc)
+  return (
+    <div className="flex items-center gap-2">
+      <Badge tone={doc.status === 'ready' || doc.status === 'active' ? 'candle' : 'dim'}>
+        {de.encounterStatus[doc.status]}
+      </Badge>
+      {doc.archivedAt !== null && <Badge>{t.archivedBadge}</Badge>}
+      <span className="text-sm whitespace-nowrap text-dim">
+        {de.encounters.creatures(doc.tokens.length)}
+      </span>
+    </div>
+  )
+}
+
+/** The "Begegnung" tool's panel: "Bereit", start and archive. */
 export function EncounterPanel() {
   const store = useEncounterStore()
   const doc = useEncounter((s) => s.doc)
@@ -144,25 +161,10 @@ export function EncounterPanel() {
   const reason = notReadyReason(doc, grid)
   const ready = doc.status === 'ready'
 
-  if (meta.readOnly) {
-    return (
-      <div className="flex flex-col gap-2">
-        <div>
-          <Badge tone="candle">{de.encounterStatus[doc.status]}</Badge>
-        </div>
-        <Help>{t.readOnly(de.encounterStatus[doc.status])}</Help>
-      </div>
-    )
-  }
+  if (meta.readOnly) return <Help>{t.readOnly(de.encounterStatus[doc.status])}</Help>
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={ready ? 'candle' : 'dim'}>{de.encounterStatus[doc.status]}</Badge>
-        {doc.archivedAt !== null && <Badge>{t.archivedBadge}</Badge>}
-        <span className="text-sm text-dim">{de.encounters.creatures(doc.tokens.length)}</span>
-      </div>
-
       <label className="flex min-h-9 items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -241,14 +243,14 @@ function StartOnline({ reason }: { reason: NotReadyReason | null }) {
         await saveEncounter(db, encounterId, doc)
         store.setState({ savedDoc: doc })
       }
-      const result = await syncBeforeStart(db, encounterId)
-      if (result === 'ready') {
+      const check = await syncThenStart(db, encounterId)
+      if (check.proceed) {
         void navigate(
           `/kampagnen/${campaignId}/sitzungen/${session!.id}/kampf/${encounterId}/aufstellen`,
         )
         return
       }
-      setMessage(result === 'blocked' ? t.startBlocked : t.startOffline)
+      setMessage(check.message)
     } finally {
       setBusy(false)
     }

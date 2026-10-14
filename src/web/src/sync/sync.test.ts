@@ -4,7 +4,13 @@ import { editorMapOf } from '../editor/model'
 import { saveMap } from '../editor/maps'
 import { offlineDb, type OfflineDb } from '../offline/db'
 import { newSyncState } from '../offline/sync'
-import { SYNC_VERSION_HEADER, syncBeforeStart, syncNow, withSyncLock } from './client'
+import {
+  refreshOpenedRecords,
+  SYNC_VERSION_HEADER,
+  syncBeforeStart,
+  syncNow,
+  withSyncLock,
+} from './client'
 import { pull } from './pull'
 import {
   CAMPAIGN,
@@ -375,6 +381,49 @@ describe('pull', () => {
     await pull(db, { held: new Set([map.id]) })
 
     expect(await db.maps.get(map.id)).toMatchObject({ name: 'Alt' })
+  })
+
+  describe('records an editor has just opened', () => {
+    it('takes the newer server version when the device and the editor changed nothing', async () => {
+      const map = await seedMap(db, { name: 'Alt', synced: 1 })
+      server.put(serverMap(map.id, 2, { name: 'Neu' }))
+
+      const taken = await refreshOpenedRecords(db, CAMPAIGN, [map.id], () => true)
+
+      expect(taken).toBe(true)
+      expect(await db.maps.get(map.id)).toMatchObject({ name: 'Neu' })
+      expect((await db.maps.get(map.id))!.sync).toMatchObject({ baseVersion: 2, changed: false })
+    })
+
+    it('leaves the record alone once the editor holds edits', async () => {
+      const map = await seedMap(db, { name: 'Alt', synced: 1 })
+      server.put(serverMap(map.id, 2, { name: 'Neu' }))
+
+      expect(await refreshOpenedRecords(db, CAMPAIGN, [map.id], () => false)).toBe(false)
+
+      expect(await db.maps.get(map.id)).toMatchObject({ name: 'Alt' })
+    })
+
+    it('leaves a record the device changed to the next push', async () => {
+      const map = await seedMap(db, { name: 'Meine', synced: 1 })
+      await db.maps.update(map.id, { sync: { ...map.sync, changed: true, editCount: 1 } })
+      server.put(serverMap(map.id, 2, { name: 'Ihre' }))
+
+      expect(await refreshOpenedRecords(db, CAMPAIGN, [map.id], () => true)).toBe(false)
+
+      expect(await db.maps.get(map.id)).toMatchObject({ name: 'Meine' })
+    })
+
+    it('does nothing without a connection or when the version is the same', async () => {
+      const map = await seedMap(db, { name: 'Alt', synced: 2 })
+      server.put(serverMap(map.id, 2, { name: 'Alt' }))
+
+      expect(await refreshOpenedRecords(db, CAMPAIGN, [map.id], () => true)).toBe(false)
+      expect(server.calls.some((call) => call.path.endsWith('/items'))).toBe(false)
+
+      server.offline = true
+      expect(await refreshOpenedRecords(db, CAMPAIGN, [map.id], () => true)).toBe(false)
+    })
   })
 
   it('drops synced items the server no longer lists and flags changed ones', async () => {

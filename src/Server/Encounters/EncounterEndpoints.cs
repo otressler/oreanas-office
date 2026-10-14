@@ -239,12 +239,17 @@ public static class EncounterEndpoints
             .OrderBy(t => t.CreatedAt)
             .ThenBy(t => t.Id)
             .ToList();
+        // The elevation is taken from the map as it is now (knowledge/domain/token.md), not from
+        // the push: the map may have been raised under a creature since.
+        var creatureElevations = new Dictionary<Guid, decimal>();
         for (var i = 0; i < standing.Count; i++)
         {
-            if (!board.TryPlace(standing[i].Size, standing[i].X, standing[i].Y, out _))
+            if (!board.TryPlace(standing[i].Size, standing[i].X, standing[i].Y, out var standingElevation))
             {
                 return TypedResults.Conflict(new ApiError(ApiErrorCode.CreaturesMisplaced, $"tokens[{i}]"));
             }
+
+            creatureElevations[standing[i].Id] = standingElevation;
         }
 
         var now = time.GetUtcNow();
@@ -317,6 +322,15 @@ public static class EncounterEndpoints
                 // update; the filtered unique index IX_Encounters_SessionId_Active let
                 // only one win.
                 return new ApiError(ApiErrorCode.AnotherEncounterActive);
+            }
+
+            var creatures = await db.Tokens.Where(t => t.EncounterId == encounterId).ToListAsync(cancellationToken);
+            foreach (var creature in creatures)
+            {
+                if (creatureElevations.TryGetValue(creature.Id, out var elevation))
+                {
+                    creature.Elevation = elevation;
+                }
             }
 
             db.Tokens.AddRange(tokens);

@@ -37,6 +37,13 @@ async function dragCells(page: Page, from: [number, number], to: [number, number
 }
 
 const ready = (page: Page) => page.getByRole('switch', { name: 'Bereit' })
+/** "Bereit" and starting are the panel of the toolbar's "Begegnung" entry. */
+const encounterPanel = (page: Page) => tool(page, 'Begegnung').click()
+/** Map mode's "Begegnungen" menu in the header, opened. */
+async function openEncounterMenu(page: Page) {
+  await page.getByRole('button', { name: /^Begegnungen/ }).click()
+  return page.getByRole('dialog', { name: 'Begegnungen' })
+}
 const label = (page: Page) => page.getByLabel('Bezeichnung')
 
 /** Selects the token on a cell and reads its label. */
@@ -71,12 +78,12 @@ test('a DM prepares an encounter with goblins offline, and it survives a reload'
   await expect(page.getByText('Auf diesem Gerät gespeichert')).toBeVisible()
 
   // A new encounter opens in encounter mode, named after the map.
-  await page.getByRole('button', { name: 'Neue Begegnung' }).click()
+  await (await openEncounterMenu(page)).getByRole('button', { name: 'Neue Begegnung' }).click()
   const name = page.getByLabel('Name der Begegnung')
   await expect(name).toHaveValue('Hinterhalt')
   await expect(page.getByRole('heading', { name: 'Karte: Hinterhalt' })).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Werkzeuge' }).getByRole('button')).toHaveCount(
-    2,
+    3,
   )
   await expect(page.getByText('0 Kreaturen')).toBeVisible()
 
@@ -115,6 +122,7 @@ test('a DM prepares an encounter with goblins offline, and it survives a reload'
   await expect(page.getByText('Auf diesem Gerät gespeichert')).toBeVisible()
 
   // Ready by hand.
+  await encounterPanel(page)
   await expect(ready(page)).not.toBeChecked()
   await ready(page).check()
   await expect(ready(page)).toBeChecked()
@@ -125,26 +133,33 @@ test('a DM prepares an encounter with goblins offline, and it survives a reload'
   await page.reload()
   await expect(page).toHaveURL(encounterUrl)
   await expect(page.getByLabel('Name der Begegnung')).toHaveValue('Hinterhalt')
+  await encounterPanel(page)
   await expect(ready(page)).toBeChecked()
   await expect(page.getByText('3 Kreaturen')).toBeVisible()
   expect(await labelAt(page, 7, 1)).toBe('Goblin 4')
   expect(await labelAt(page, 5, 1)).toBe('Grisk')
   expect(await labelAt(page, 1, 1)).toBe('Goblin 1')
   // Starting needs the server.
+  await encounterPanel(page)
   await expect(page.getByText('Zum Starten brauchst du eine Verbindung zum Server.')).toBeVisible()
 
   // The map changes under a goblin: a wall on its cell.
   await page.getByRole('link', { name: /Zur Karte/ }).click()
   await expect(page).toHaveURL(mapUrl)
-  await expect(page.getByRole('link', { name: 'Hinterhalt' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Begegnungen (1)' })).toBeVisible()
   await tool(page, 'Pinsel').click()
   await page.getByRole('button', { name: /^Wand/ }).click()
   await clickCell(page, 1, 1)
   await expect(page.getByText('Auf diesem Gerät gespeichert')).toBeVisible()
-  // The list flags the encounter, which stays ready.
-  await expect(page.getByRole('img', { name: /nicht mehr gültig/ })).toBeVisible()
+  // The menu's button and the list flag the encounter, which stays ready.
+  await expect(
+    page.getByRole('button', { name: /^Begegnungen \(1\)\. .*nicht mehr gültig/ }),
+  ).toBeVisible()
+  const menu = await openEncounterMenu(page)
+  await expect(menu.getByRole('img', { name: /nicht mehr gültig/ })).toBeVisible()
 
-  await page.getByRole('link', { name: 'Hinterhalt' }).click()
+  await menu.getByRole('link', { name: 'Hinterhalt' }).click()
+  await encounterPanel(page)
   await expect(ready(page)).toBeChecked()
   await expect(page.getByRole('alert')).toContainText('Goblin 1')
 
@@ -155,6 +170,7 @@ test('a DM prepares an encounter with goblins offline, and it survives a reload'
 
   await tool(page, 'Auswählen').click()
   await dragCells(page, [1, 1], [1, 3])
+  await encounterPanel(page)
   await expect(ready(page)).toBeEnabled()
   await ready(page).check()
   await expect(ready(page)).toBeChecked()

@@ -9,6 +9,8 @@ import { de } from '../../text/de'
 import { useEditor, useEditorStore } from '../store'
 import { checkLayout, problemTarget } from '../validation'
 import { CheckField, Help, KindSuggestions, MapNumberField, MapTextField } from './fields'
+import { KindCatalog } from './KindCatalog'
+import { KindIcon } from './kindIcons'
 import { suggestionFor } from './kinds'
 import {
   footprintProblem,
@@ -25,32 +27,39 @@ const t = de.editorFeatures
 const ENTRANCE_KINDS = Object.keys(de.board.entranceKinds) as EntranceKind[]
 
 /** The feature tool's options for the next feature. */
+/**
+ * The feature tool's panel: what the next feature gets (kind, label, elevation, blocks
+ * movement) on top, the catalog of suggested kinds below.
+ */
 export function FeatureToolPanel() {
   const options = usePlacementOptions((s) => s.feature)
-  const listId = useId()
   const [elevationDraft, setElevationDraft] = useState<string | null>(null)
   const elevationValid = elevationDraft === null || parseElevationInput(elevationDraft) !== null
+  const setKind = (kind: string) => {
+    const suggestion = suggestionFor(kind)
+    setFeatureOptions({
+      kind,
+      ...(suggestion && { blocksMovement: suggestion.blocksMovement }),
+    })
+  }
   return (
     <div className="flex flex-col gap-3">
       <Help>{t.featureHelp}</Help>
-      <TextField
-        label={t.kind}
-        value={options.kind}
-        maxLength={limits.layoutText}
-        list={listId}
-        autoComplete="off"
-        invalid={!options.kind.trim()}
-        hint={options.kind.trim() ? t.kindHint : t.kindMissing}
-        onChange={(e) => {
-          const kind = e.target.value
-          const suggestion = suggestionFor(kind)
-          setFeatureOptions({
-            kind,
-            ...(suggestion && { blocksMovement: suggestion.blocksMovement }),
-          })
-        }}
-      />
-      <KindSuggestions id={listId} />
+      <div className="flex items-start gap-3">
+        <div className="mt-6 flex size-12 shrink-0 items-center justify-center rounded-lg border border-line text-candle">
+          <KindIcon kind={suggestionFor(options.kind)?.key ?? null} className="size-8" />
+        </div>
+        <TextField
+          className="min-w-0 flex-1"
+          label={t.kind}
+          value={options.kind}
+          maxLength={limits.layoutText}
+          autoComplete="off"
+          invalid={!options.kind.trim()}
+          hint={options.kind.trim() ? t.kindHintCatalog : t.kindMissing}
+          onChange={(e) => setKind(e.target.value)}
+        />
+      </div>
       <TextField
         label={t.label}
         value={options.label}
@@ -79,6 +88,9 @@ export function FeatureToolPanel() {
         checked={options.blocksMovement}
         onChange={(blocksMovement) => setFeatureOptions({ blocksMovement })}
       />
+      <div className="mt-1 border-t border-line pt-4">
+        <KindCatalog kind={options.kind} onPick={(card) => setKind(card.kind)} onCustom={setKind} />
+      </div>
     </div>
   )
 }
@@ -258,15 +270,17 @@ function DeleteButton({ item }: { item: { kind: 'feature' | 'entrance'; id: stri
   )
 }
 
-/** The layout checks: "Keine Probleme", or every problem; a click selects what it's about. */
-export function ChecksPanel() {
+/**
+ * The layout checks: "Keine Probleme", or every problem; a click selects what it's about,
+ * then `onSelect` runs (the status bar closes its list).
+ */
+export function ChecksPanel({ onSelect }: { onSelect?: () => void }) {
   const store = useEditorStore()
   const doc = useEditor((s) => s.doc)
   const problems = useMemo(() => checkLayout(doc), [doc])
   if (problems.length === 0) return <p className="text-sm text-parchment">{t.checks.none}</p>
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm text-red-200">{t.checks.count(problems.length)}</p>
       <ul className="flex flex-col gap-1">
         {problems.map((problem, i) => {
           const message = problemMessage(problem, doc)
@@ -282,6 +296,7 @@ export function ChecksPanel() {
                     const state = store.getState()
                     state.setTool('select')
                     state.select(target)
+                    onSelect?.()
                   }}
                 >
                   {message}

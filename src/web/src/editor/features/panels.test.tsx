@@ -1,6 +1,6 @@
-import { act, screen } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { de } from '../../text/de'
 import type { EditorStore } from '../store'
 import { renderWithEditorStore } from '../testing'
@@ -179,6 +179,59 @@ describe('tool panels', () => {
     })
   })
 
+  it('picks the kind from the catalog, with its preset', async () => {
+    const user = userEvent.setup()
+    renderWithEditorStore(<FeatureToolPanel />)
+    const catalog = screen.getByRole('region', { name: t.catalog.title })
+    expect(within(catalog).getByRole('button', { name: t.kinds.bridge })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    await user.click(within(catalog).getByRole('button', { name: t.kinds.sarcophagus }))
+    expect(screen.getByLabelText(t.kind)).toHaveValue(t.kinds.sarcophagus)
+    expect(screen.getByLabelText(t.blocksMovement)).toBeChecked()
+    expect(within(catalog).getByRole('button', { name: t.kinds.sarcophagus })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(within(catalog).getByRole('button', { name: t.kinds.bridge })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
+  it('searches the catalog, umlauts too, and takes a search without a match as own kind', async () => {
+    const user = userEvent.setup()
+    renderWithEditorStore(<FeatureToolPanel />)
+    const catalog = screen.getByRole('region', { name: t.catalog.title })
+    const search = within(catalog).getByRole('searchbox', { name: t.catalog.search })
+
+    await user.type(search, 'tur')
+    const cards = within(catalog)
+      .getAllByRole('button', { pressed: false })
+      .map((b) => b.getAttribute('aria-label'))
+    expect(cards).toEqual([t.kinds.door, t.kinds.trapdoor])
+    expect(within(catalog).getByRole('group', { name: t.catalog.groups.passage })).toBeVisible()
+    expect(within(catalog).queryByRole('group', { name: t.catalog.groups.fire })).toBeNull()
+
+    await user.clear(search)
+    await user.type(search, 'Kristallsäule')
+    expect(within(catalog).getByText(t.catalog.noMatch('Kristallsäule'))).toBeInTheDocument()
+    await user.click(
+      within(catalog).getByRole('button', { name: t.catalog.useCustom('Kristallsäule') }),
+    )
+    expect(placementOptions.getState().feature.kind).toBe('Kristallsäule')
+
+    // Enter takes the only match.
+    await user.clear(search)
+    await user.type(search, 'kamin{Enter}')
+    expect(placementOptions.getState().feature).toMatchObject({
+      kind: t.kinds.fireplace,
+      blocksMovement: true,
+    })
+  })
+
   it('sets label and elevation for the next feature', async () => {
     const user = userEvent.setup()
     renderWithEditorStore(<FeatureToolPanel />)
@@ -212,8 +265,9 @@ describe('checks panel', () => {
 
   it('lists the problems and selects what a problem is about', async () => {
     const user = userEvent.setup()
+    const onSelect = vi.fn()
     const store = renderWithEditorStore(
-      <ChecksPanel />,
+      <ChecksPanel onSelect={onSelect} />,
       mapWith(
         [
           feature('f1', 0, 0, 2, 1, { label: 'Kiste' }),
@@ -223,7 +277,7 @@ describe('checks panel', () => {
         [{ id: 'e1', kind: 'exit', label: '', cells: [[4, 4]] }],
       ),
     )
-    expect(screen.getByText(t.checks.count(3))).toBeInTheDocument()
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
     const overlap = screen.getByRole('button', {
       name: t.checks.problems.featureOverlap(t.checks.feature('Fass'), t.checks.feature('Kiste')),
     })
@@ -238,6 +292,7 @@ describe('checks panel', () => {
     await user.click(overlap)
     expect(store.getState().selection).toEqual({ kind: 'feature', id: 'f2' })
     expect(store.getState().toolId).toBe('select')
+    expect(onSelect).toHaveBeenCalledTimes(1)
   })
 
   it('names map problems without a button', () => {

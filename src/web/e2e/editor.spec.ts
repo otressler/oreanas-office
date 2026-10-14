@@ -61,7 +61,8 @@ test('a DM builds a gorge crossing offline, and it is still there after a reload
 
   // A bridge over the gorge (the feature tool starts as a bridge that doesn't block).
   await tool(page, 'Objekt').click()
-  await expect(page.getByRole('combobox', { name: 'Art' })).toHaveValue('Brücke')
+  await expect(page.getByRole('textbox', { name: 'Art', exact: true })).toHaveValue('Brücke')
+  await expect(page.getByRole('button', { name: 'Brücke', pressed: true })).toBeVisible()
   await dragCells(page, [4, 2], [5, 2])
 
   // An entrance on the left edge.

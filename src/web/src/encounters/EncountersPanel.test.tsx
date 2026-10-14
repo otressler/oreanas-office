@@ -2,9 +2,16 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { Campaign, Encounter, Session } from '../api/types'
+import { offlineDb } from '../offline/db'
+import { syncBeforeStart } from '../sync/client'
 import { json, mockApi, renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
 import { encounter, ids, session } from './testing'
+
+vi.mock('../sync/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../sync/client')>()),
+  syncBeforeStart: vi.fn(),
+}))
 
 function campaign(myRole: Campaign['myRole']): Campaign {
   return {
@@ -47,6 +54,43 @@ describe('EncountersPanel', () => {
     expect(within(encounters).getByRole('link', { name: de.encounters.importMap })).toHaveAttribute(
       'href',
       `/kampagnen/${ids.campaign}/karten/importieren`,
+    )
+  })
+
+  it('syncs an encounter prepared on this device before the setup, and stays if that is blocked', async () => {
+    api('dm', [session()], [encounter()])
+    await offlineDb(testUser.id).encounters.put({
+      id: ids.encounter,
+      campaignId: ids.campaign,
+      battleMapId: 'map-1',
+      name: 'Kleine Lichtung',
+      status: 'ready',
+      archivedAt: null,
+      tokens: [],
+      sessionId: null,
+      mapCopy: null,
+      createdAt: '2026-10-14T10:00:00Z',
+      updatedAt: '2026-10-14T10:00:00Z',
+      sync: { baseVersion: 1, changed: false, editCount: 0, issue: null, server: null },
+      recordVersion: 1,
+    })
+    vi.mocked(syncBeforeStart).mockResolvedValueOnce('blocked').mockResolvedValueOnce('offline')
+    const { router } = renderApp(`/kampagnen/${ids.campaign}`)
+    const user = userEvent.setup()
+
+    const encounters = await panel()
+    await user.click(await within(encounters).findByRole('link', { name: de.encounters.setUp }))
+    expect(await within(encounters).findByText(de.encounterEditor.startBlocked)).toBeInTheDocument()
+    await user.click(within(encounters).getByRole('link', { name: de.encounters.setUp }))
+    expect(await within(encounters).findByText(de.encounterEditor.startOffline)).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe(`/kampagnen/${ids.campaign}`)
+
+    vi.mocked(syncBeforeStart).mockResolvedValueOnce('ready')
+    await user.click(within(encounters).getByRole('link', { name: de.encounters.setUp }))
+    await vi.waitFor(() =>
+      expect(router.state.location.pathname).toBe(
+        `/kampagnen/${ids.campaign}/sitzungen/${ids.session}/kampf/${ids.encounter}/aufstellen`,
+      ),
     )
   })
 

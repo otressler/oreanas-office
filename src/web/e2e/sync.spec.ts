@@ -20,6 +20,8 @@ const text = {
   onServer: 'Auf dem Server',
   newMapTitle: 'Neue Karte',
   mapName: 'Name',
+  /** The map's name in the editor header. */
+  editorMapName: 'Name der Karte',
   createMap: 'Anlegen',
   backToMapList: 'Zur Kartenliste',
   newCampaign: 'Neue Kampagne',
@@ -94,7 +96,7 @@ test('a map built without a connection is pushed when the connection is back', a
   await expect(mapsPanel(page).getByText(text.localOnly)).toHaveCount(0)
 })
 
-/** Opens the map in the editor; the list's own "Name" field must be gone before typing. */
+/** Opens the map in the editor. */
 async function openEditor(page: Page, name: string) {
   await page.getByRole('link', { name: `${name} bearbeiten`, exact: true }).click()
   await expect(page.getByRole('button', { name: 'Exportieren' })).toBeVisible()
@@ -109,7 +111,7 @@ test('Sync brings a map from another device and pushes the changes made here', a
   await expect(page.getByText(text.allSynced)).toBeVisible()
 
   await openEditor(page, 'Klamm')
-  await page.getByLabel(text.mapName, { exact: true }).fill('Klamm im Nebel')
+  await page.getByLabel(text.editorMapName).fill('Klamm im Nebel')
   // The autosave has written the change when the header counts it.
   await expect(page.getByText(text.pendingOne)).toBeVisible()
   await sync(page)
@@ -127,7 +129,7 @@ async function makeConflict(page: Page) {
   await expect(mapsPanel(page).getByText('Klamm', { exact: true })).toBeVisible()
 
   await openEditor(page, 'Klamm')
-  await page.getByLabel(text.mapName, { exact: true }).fill('Klamm von Jennie')
+  await page.getByLabel(text.editorMapName).fill('Klamm von Jennie')
   await expect(page.getByText(text.pendingOne)).toBeVisible()
   backend.renameSyncedMap(item.id, 'Klamm von Felix', felix)
 

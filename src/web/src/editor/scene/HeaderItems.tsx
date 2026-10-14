@@ -1,4 +1,4 @@
-// The editor header's sync mark and file export.
+// The editor's sync mark (status bar) and file export (header).
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useParams } from 'react-router'
 import { downloadMapFile } from '../../maps/mapFile'
@@ -23,11 +23,23 @@ export function ExportButton() {
   return (
     <button
       type="button"
+      aria-label={t.export}
       title={t.exportTitle}
       onClick={() => downloadMapFile(store.getState().doc)}
-      className="min-h-9 rounded-lg border border-line px-3 text-sm hover:border-candle"
+      className="flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-line hover:border-candle"
     >
-      {t.export}
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className="size-5"
+      >
+        <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14" />
+      </svg>
     </button>
   )
 }

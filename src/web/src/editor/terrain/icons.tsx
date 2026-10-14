@@ -64,3 +64,12 @@ export function ElevationRectIcon({ className }: { className?: string }) {
     </Svg>
   )
 }
+
+export function ResizeIcon({ className }: { className?: string }) {
+  return (
+    <Svg className={className}>
+      <rect x="7" y="7" width="10" height="10" rx="1" />
+      <path d="M3 9V3h6M21 15v6h-6M3 3l4 4M21 21l-4-4" />
+    </Svg>
+  )
+}

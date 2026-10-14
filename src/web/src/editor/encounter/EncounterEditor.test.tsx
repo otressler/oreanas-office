@@ -1,5 +1,5 @@
 // Encounter mode as a page: the route, the header, the toolbar, undo and the autosave.
-import { cleanup, screen, waitFor } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { offlineDb } from '../../offline/db'
@@ -24,9 +24,17 @@ async function seed() {
 }
 
 const toolbar = () => screen.getByRole('navigation', { name: de.editor.toolbar })
+const toolNames = () =>
+  Array.from(toolbar().querySelectorAll('button')).map((b) => b.getAttribute('aria-label'))
+/** The header's "Begegnungen" menu of map mode, opened. */
+async function openEncounterMenu(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: /^Begegnungen/ }))
+  return screen.getByRole('dialog', { name: t.listTitle })
+}
 
 describe('encounter mode', () => {
   it('shows the encounter and the map in the header, with only the creature tools', async () => {
+    const user = userEvent.setup()
     const { map, encounter } = await seed()
     renderApp(encounterEditorPath(CAMPAIGN_ID, map.id, encounter.id))
 
@@ -36,12 +44,16 @@ describe('encounter mode', () => {
       'href',
       editorPath(CAMPAIGN_ID, map.id),
     )
-    const tools = Array.from(toolbar().querySelectorAll('button')).map((b) =>
-      b.getAttribute('aria-label'),
-    )
-    expect(tools).toEqual([t.tools.place, t.tools.select])
+    // The status and the creature count are in the header too.
+    const header = screen.getByLabelText(t.encounterName).closest('header')!
+    expect(header).toHaveTextContent(de.encounterStatus.draft)
+    expect(header).toHaveTextContent(de.encounters.creatures(0))
+    expect(toolNames()).toEqual([t.tools.place, t.tools.select, t.title])
     // The map can't change: no preview switch, no terrain tools.
     expect(screen.queryByRole('button', { name: de.editor.preview })).not.toBeInTheDocument()
+    // "Bereit" and starting are the panel of the "Begegnung" entry.
+    expect(screen.queryByRole('switch', { name: t.ready })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: t.title }))
     expect(screen.getByRole('switch', { name: t.ready })).toBeInTheDocument()
   })
 
@@ -86,7 +98,8 @@ describe('encounter mode', () => {
     const user = userEvent.setup()
     const { map, encounter } = await seed()
     renderApp(editorPath(CAMPAIGN_ID, map.id))
-    await user.click(await screen.findByRole('link', { name: encounter.name }))
+    const menu = await openEncounterMenu(user)
+    await user.click(await within(menu).findByRole('link', { name: encounter.name }))
     expect(await screen.findByLabelText(t.encounterName)).toHaveValue('Klamm')
   })
 
@@ -94,7 +107,8 @@ describe('encounter mode', () => {
     const user = userEvent.setup()
     const { map, db } = await seed()
     renderApp(editorPath(CAMPAIGN_ID, map.id))
-    await user.click(await screen.findByRole('button', { name: t.newEncounter }))
+    const menu = await openEncounterMenu(user)
+    await user.click(await within(menu).findByRole('button', { name: t.newEncounter }))
     expect(await screen.findByLabelText(t.encounterName)).toHaveValue('Klamm')
     // The map already had one.
     expect(await db.encounters.count()).toBe(2)
@@ -118,7 +132,8 @@ describe('encounter mode', () => {
     renderApp(encounterEditorPath(CAMPAIGN_ID, map.id, encounter.id))
     expect(await screen.findByText(t.readOnly(de.encounterStatus.active))).toBeInTheDocument()
     expect(screen.queryByLabelText(t.encounterName)).not.toBeInTheDocument()
-    expect(screen.queryByRole('navigation', { name: de.editor.toolbar })).not.toBeInTheDocument()
+    // Only the encounter itself is in the toolbar, and it is open.
+    expect(toolNames()).toEqual([t.title])
     expect(screen.queryByRole('button', { name: de.editor.undo })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: de.editor.canvasLabel('Klamm') })).toBeInTheDocument()
   })

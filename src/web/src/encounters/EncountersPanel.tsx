@@ -1,7 +1,10 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import type { Campaign, Encounter, Session } from '../api/types'
 import { useSessions } from '../campaigns/queries'
 import { Badge, ButtonLink, LoadError, Loading, Panel } from '../components/ui'
 import { formatMeters } from '../lib/units'
+import { syncThenStart, useSyncDb } from '../sync'
 import { de } from '../text/de'
 import { useEncounters } from './queries'
 
@@ -71,6 +74,28 @@ function EncounterRow({
   session: Session | null
 }) {
   const canSetUp = encounter.status === 'ready' && session && !session.activeEncounter
+  // An encounter prepared on this device goes to the server first, as with the editor's button.
+  const db = useSyncDb()
+  const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  async function setUp() {
+    if (!session) return
+    setBusy(true)
+    setMessage(null)
+    try {
+      const check = await syncThenStart(db, encounter.id)
+      if (check.proceed) {
+        void navigate(
+          `/kampagnen/${campaignId}/sitzungen/${session.id}/kampf/${encounter.id}/aufstellen`,
+        )
+      } else {
+        setMessage(check.message)
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
   return (
     <li className="flex flex-col gap-2 py-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -93,9 +118,19 @@ function EncounterRow({
           <ButtonLink
             variant="primary"
             to={`/kampagnen/${campaignId}/sitzungen/${session.id}/kampf/${encounter.id}/aufstellen`}
+            onClick={(event) => {
+              event.preventDefault()
+              void setUp()
+            }}
+            aria-busy={busy}
           >
             {de.encounters.setUp}
           </ButtonLink>
+          {message && (
+            <p role="status" className="mt-2 text-sm text-parchment">
+              {message}
+            </p>
+          )}
         </div>
       )}
       {encounter.status === 'active' && (

@@ -1,6 +1,8 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { mockApi, renderApp } from '../test/api'
+import { offlineDb } from '../offline/db'
+import { serverMap } from '../sync/testing'
+import { json, mockApi, renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
 import { emptyMap } from './model'
 import { CAMPAIGN_ID, renderEditor, seedMap, seedOffline } from './testing'
@@ -15,11 +17,40 @@ describe('EditorPage', () => {
       'href',
       `/kampagnen/${CAMPAIGN_ID}/karten`,
     )
-    // Only the header's profile link and the sync's pull on opening ask, since the test
-    // marks the server as awake; the map itself comes from the browser.
+    // Only the header's profile link and the sync on opening ask (the pull, and the look at
+    // the opened map's version), since the test marks the server as awake; the map itself
+    // comes from the browser.
     expect(
-      calls.filter((c) => c.path !== '/api/auth/me' && c.path !== '/api/campaigns'),
+      calls.filter(
+        (c) =>
+          c.path !== '/api/auth/me' &&
+          c.path !== '/api/campaigns' &&
+          !c.path.startsWith('/api/sync/'),
+      ),
     ).toHaveLength(0)
+  })
+
+  it('shows the server’s newer version of a map this device has not changed', async () => {
+    mockApi({
+      'GET /api/sync/campaigns/:id/versions': () =>
+        json(200, { creatureTypes: [], battleMaps: [{ id: 'm1', version: 2 }], encounters: [] }),
+      'POST /api/sync/campaigns/:id/items': () =>
+        json(200, [serverMap('m1', 2, { name: 'Klamm, neu', campaignId: CAMPAIGN_ID })]),
+    })
+    await seedOffline()
+    const db = offlineDb(testUser.id)
+    const record = await seedMap({ ...emptyMap('Klamm, alt', 12, 8) })
+    // Same id as the server's copy; synced at version 1.
+    await db.maps.delete(record.id)
+    await db.maps.put({
+      ...record,
+      id: 'm1',
+      sync: { ...record.sync, baseVersion: 1, changed: false, editCount: 0 },
+    })
+    renderApp(`/kampagnen/${CAMPAIGN_ID}/karten/m1`)
+
+    expect(await screen.findByRole('heading', { name: 'Klamm, neu' })).toBeInTheDocument()
+    expect((await db.maps.get('m1'))!.sync).toMatchObject({ baseVersion: 2, changed: false })
   })
 
   it('says when the map isn’t on this device', async () => {

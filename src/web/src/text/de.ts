@@ -365,6 +365,8 @@ export const de = {
     /** Accessible name of the canvas; the name is the map's. */
     canvasLabel: (name: string) => `Karteneditor: ${name}`,
     back: 'Zur Kartenliste',
+    /** The back link's visible text; `back` is its accessible name. */
+    backShort: 'Karten',
     toolbar: 'Werkzeuge',
     undo: 'Rückgängig',
     redo: 'Wiederholen',
@@ -378,7 +380,9 @@ export const de = {
       elevation: 'Höhe',
       features: 'Objekte',
       entrances: 'Ein- und Ausgänge',
+      map: 'Karte',
       creatures: 'Kreaturen',
+      encounter: 'Begegnung',
     } satisfies Record<import('../editor/tools').ToolGroup, string>,
     edit: 'Bearbeiten',
     preview: 'Vorschau',
@@ -490,6 +494,13 @@ export const de = {
       stairs: 'Treppe',
       ladder: 'Leiter',
       platform: 'Podest',
+      gate: 'Tor',
+      trapdoor: 'Falltür',
+      ramp: 'Rampe',
+      jetty: 'Steg',
+      carpet: 'Teppich',
+      rubble: 'Geröll',
+      bushes: 'Gebüsch',
       pillar: 'Säule',
       tree: 'Baum',
       rock: 'Felsen',
@@ -500,9 +511,44 @@ export const de = {
       well: 'Brunnen',
       wagon: 'Wagen',
       statue: 'Statue',
+      ruin: 'Mauerrest',
+      stalagmite: 'Stalagmit',
+      log: 'Baumstamm',
+      tent: 'Zelt',
+      campfire: 'Lagerfeuer',
+      brazier: 'Kohlenbecken',
+      fireplace: 'Kamin',
+      chest: 'Truhe',
+      shelf: 'Regal',
+      bed: 'Bett',
+      bench: 'Bank',
+      counter: 'Theke',
+      throne: 'Thron',
+      sarcophagus: 'Sarkophag',
+      cage: 'Käfig',
     },
     kind: 'Art',
     kindHint: 'Frei wählbar oder aus der Liste. Die Art fließt auch ins Kartenbild ein.',
+    /** The feature tool's kind field, filled from the catalog below it. */
+    kindHintCatalog:
+      'Aus dem Katalog oder frei eingetragen. Die Art fließt auch ins Kartenbild ein.',
+    /** The feature tool's catalog of suggested kinds. */
+    catalog: {
+      title: 'Katalog',
+      search: 'Objekt suchen',
+      searchPlaceholder: 'Suchen, z. B. Fass',
+      groups: {
+        passage: 'Wege und Durchgänge',
+        nature: 'Natur',
+        structure: 'Bauwerke',
+        furniture: 'Einrichtung und Lager',
+        fire: 'Feuer',
+      } satisfies Record<import('../editor/features/kinds').KindGroup, string>,
+      passable: 'begehbar',
+      blocks: 'blockiert',
+      noMatch: (query: string) => `Kein Objekt im Katalog passt zu „${query}“.`,
+      useCustom: (query: string) => `„${query}“ als eigene Art verwenden`,
+    },
     kindMissing: 'Gib an, was für ein Objekt es ist.',
     label: 'Beschriftung',
     featureLabelHint: 'Optional, z. B. „Hängebrücke“. Ohne Beschriftung zeigt die Karte die Art.',
@@ -692,8 +738,11 @@ export const de = {
 
     /** The editor's side panel and header (src/editor/scene). */
     scene: {
-      panel: 'Karte',
-      name: 'Name',
+      /** The toolbar entry with the scene, vibe and lighting texts. */
+      tool: 'Beschreibung',
+      help: 'Beschreibe den Ort in eigenen Worten. Aus diesen Texten entsteht später das Hintergrundbild.',
+      /** The map's name in the editor header. */
+      name: 'Name der Karte',
       nameEmpty: (previous: string) =>
         `Eine Karte braucht einen Namen. Gespeichert bleibt „${previous}“.`,
       scene: 'Szene',
@@ -959,8 +1008,11 @@ export const de = {
       place: 'Platzieren',
       select: 'Auswählen',
     },
-    // The map mode's list of encounters.
+    // The map mode's list of encounters, opened from the header.
     listTitle: 'Begegnungen',
+    /** The header button, e.g. "Begegnungen (2)"; the count leaves out archived ones. */
+    menu: (count: number) => (count === 0 ? 'Begegnungen' : `Begegnungen (${count})`),
+    menuFlagged: 'Auf einer Begegnung steht eine Kreatur nicht mehr gültig.',
     listEmpty: 'Noch keine Begegnung auf dieser Karte.',
     newEncounter: 'Neue Begegnung',
     archive: 'Archivieren',
@@ -977,6 +1029,7 @@ export const de = {
     /** The map's name in the header, e.g. "Karte: Klamm". */
     mapOf: (name: string) => `Karte: ${name}`,
     backToMap: 'Zur Karte',
+    backToMapShort: 'Karte',
     notFoundTitle: 'Diese Begegnung gibt es hier nicht',
     notFoundBody:
       'Sie liegt nicht auf diesem Gerät, gehört zu einer anderen Karte, oder der Link stimmt nicht.',

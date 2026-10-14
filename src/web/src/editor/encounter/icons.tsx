@@ -33,3 +33,14 @@ export function SelectCreatureIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Two crossed swords: the encounter itself (ready, start, archive). */
+export function EncounterIcon({ className }: IconProps) {
+  return (
+    <svg {...svg} className={className}>
+      <path d="M4 4l10 10M20 4L10 14" />
+      <path d="M12.5 16.5l-3 3M11.5 16.5l3 3M7.5 12.5l-3 3M16.5 12.5l3 3" />
+      <path d="M3.5 18.5l2 2M20.5 18.5l-2 2" />
+    </svg>
+  )
+}

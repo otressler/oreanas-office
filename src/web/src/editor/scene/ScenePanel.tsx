@@ -1,7 +1,8 @@
-// The map's name and the free texts for the image prompt (knowledge/domain/battle-map.md:
-// scene, vibe, lighting). Typing into a field is one undo step from focus to blur, not
-// one per keystroke: focus begins a gesture, typing updates it, blur ends it.
-import { useId, useState, type ReactNode } from 'react'
+// The "Beschreibung" tool's panel: the free texts for the image prompt
+// (knowledge/domain/battle-map.md: scene, vibe, lighting). Typing into a field is one undo
+// step from focus to blur, not one per keystroke: focus begins a gesture, typing updates
+// it, blur ends it.
+import { useId, type ReactNode } from 'react'
 import { inputClass } from '../../components/styles'
 import { limits } from '../../lib/limits'
 import { de } from '../../text/de'
@@ -18,55 +19,11 @@ const LEFT_FROM = 50
 export function ScenePanel() {
   return (
     <div className="flex flex-col gap-3">
-      <NameField />
+      <p className="text-sm text-dim">{t.help}</p>
       <TextAreaField field="scene" label={t.scene} hint={t.sceneHint} />
       <TextAreaField field="vibe" label={t.vibe} hint={t.vibeHint} />
       <TextAreaField field="lighting" label={t.lighting} hint={t.lightingHint} />
     </div>
-  )
-}
-
-function NameField() {
-  const id = useId()
-  const name = useEditor((s) => s.doc.name)
-  const typing = useEditGesture()
-  // What the field shows while it has focus; the map keeps the last valid name.
-  const [draft, setDraft] = useState<string | null>(null)
-  const empty = draft !== null && draft.trim() === ''
-
-  return (
-    <Field id={id} label={t.name} hint={empty ? t.nameEmpty(name) : undefined} invalid={empty}>
-      <input
-        id={id}
-        className={inputClass}
-        value={draft ?? name}
-        maxLength={limits.mapName}
-        autoComplete="off"
-        aria-invalid={empty || undefined}
-        aria-describedby={empty ? `${id}-hint` : undefined}
-        onFocus={() => {
-          setDraft(name)
-          typing.begin()
-        }}
-        onChange={(event) => {
-          const value = event.target.value
-          setDraft(value)
-          // An empty name isn't saved: the map keeps the name it had before typing.
-          typing.change((current, base) => ({
-            ...current,
-            name: value.trim() ? value : base.name,
-          }))
-        }}
-        onBlur={() => {
-          typing.change((current) => {
-            const trimmed = current.name.trim()
-            return trimmed === current.name ? current : { ...current, name: trimmed }
-          })
-          typing.end()
-          setDraft(null)
-        }}
-      />
-    </Field>
   )
 }
 
@@ -100,13 +57,11 @@ function Field({
   id,
   label,
   hint,
-  invalid = false,
   children,
 }: {
   id: string
   label: string
-  hint?: string
-  invalid?: boolean
+  hint: string
   children: ReactNode
 }) {
   return (
@@ -115,11 +70,9 @@ function Field({
         {label}
       </label>
       {children}
-      {hint && (
-        <p id={`${id}-hint`} className={`text-xs ${invalid ? 'text-red-300' : 'text-dim'}`}>
-          {hint}
-        </p>
-      )}
+      <p id={`${id}-hint`} className="text-xs text-dim">
+        {hint}
+      </p>
     </div>
   )
 }

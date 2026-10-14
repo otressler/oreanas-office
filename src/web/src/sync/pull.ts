@@ -130,3 +130,52 @@ export async function writeServerItem(
     await table.put(recordFromServer(item, current))
   })
 }
+
+/**
+ * For an editor that has just opened its records: takes the server's newer version of every
+ * one the device hasn't changed, unless `canTake` says the editor already holds edits. A held
+ * record is skipped by the normal pull, so without this the editor would show the old copy and
+ * its next save would end in a conflict. Returns whether anything was written, so the editor
+ * can reload its document.
+ */
+export async function pullOpened(
+  db: OfflineDb,
+  campaignId: string,
+  ids: readonly string[],
+  canTake: () => boolean,
+): Promise<boolean> {
+  const listed = await versionsOf(campaignId)
+  const stale: string[] = []
+  for (const kind of ITEM_KINDS) {
+    const table = itemTable(db, kind)
+    for (const entry of listed[VERSION_LIST_KEY[kind]]) {
+      if (!ids.includes(entry.id)) continue
+      const record = await table.get(entry.id)
+      // Changed here, or flagged: the next push decides, not the pull.
+      if (
+        record &&
+        !record.sync.changed &&
+        !record.sync.issue &&
+        record.sync.baseVersion !== entry.version
+      ) {
+        stale.push(entry.id)
+      }
+    }
+  }
+  if (stale.length === 0) return false
+  const items = await fetchItems(campaignId, stale)
+  // Checked after the request: the editor may have been edited while it ran.
+  if (!canTake()) return false
+  let written = false
+  for (const item of items) {
+    if (item.campaignId !== campaignId || item.kind === 'campaign') continue
+    const table = itemTable(db, item.kind)
+    await db.transaction('rw', table, async () => {
+      const current = await table.get(item.id)
+      if (current?.sync.changed || !canTake()) return
+      await table.put(recordFromServer(item, current))
+      written = true
+    })
+  }
+  return written
+}

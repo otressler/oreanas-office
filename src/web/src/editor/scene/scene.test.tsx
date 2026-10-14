@@ -5,15 +5,17 @@ import { de } from '../../text/de'
 import { emptyMap } from '../model'
 import { renderEditor, renderWithEditorStore } from '../testing'
 import { ExportButton } from './HeaderItems'
+import { MapNameField } from './MapName'
 import { ScenePanel } from './ScenePanel'
-import { sceneHeaderItems, scenePanels } from '.'
+import { descriptionTool, sceneHeaderItems, sceneStatusItems } from '.'
 
 const t = de.maps.scene
 
 describe('scene panel', () => {
-  it('is the editor’s "Karte" panel', () => {
-    expect(scenePanels.map((panel) => panel.title)).toEqual([t.panel])
-    expect(sceneHeaderItems).toHaveLength(2)
+  it('is the panel of the "Beschreibung" tool in the "Karte" group', () => {
+    expect(descriptionTool).toMatchObject({ group: 'map', label: t.tool, Panel: ScenePanel })
+    expect(sceneHeaderItems).toHaveLength(1)
+    expect(sceneStatusItems).toHaveLength(1)
   })
 
   it('makes one undo step per field visit, not one per keystroke', async () => {
@@ -57,9 +59,16 @@ describe('scene panel', () => {
     expect(store.getState().past).toHaveLength(2)
   })
 
+  it('limits the texts to what the server keeps', () => {
+    renderWithEditorStore(<ScenePanel />)
+    expect(screen.getByLabelText(t.scene)).toHaveAttribute('maxLength', '500')
+  })
+})
+
+describe('map name', () => {
   it('doesn’t save an empty name and keeps the previous one', async () => {
     const user = userEvent.setup()
-    const store = renderWithEditorStore(<ScenePanel />, emptyMap('Klamm', 4, 4))
+    const store = renderWithEditorStore(<MapNameField />, emptyMap('Klamm', 4, 4))
     const name = screen.getByLabelText(t.name)
 
     await user.clear(name)
@@ -75,7 +84,7 @@ describe('scene panel', () => {
 
   it('renames the map in one undo step and trims the name', async () => {
     const user = userEvent.setup()
-    const store = renderWithEditorStore(<ScenePanel />, emptyMap('Klamm', 4, 4))
+    const store = renderWithEditorStore(<MapNameField />, emptyMap('Klamm', 4, 4))
     const name = screen.getByLabelText(t.name)
 
     await user.clear(name)
@@ -89,10 +98,16 @@ describe('scene panel', () => {
     expect(name).toHaveValue('Klamm')
   })
 
-  it('limits the texts to what the server keeps', () => {
-    renderWithEditorStore(<ScenePanel />)
+  it('limits the name to what the server keeps', () => {
+    renderWithEditorStore(<MapNameField />)
     expect(screen.getByLabelText(t.name)).toHaveAttribute('maxLength', '80')
-    expect(screen.getByLabelText(t.scene)).toHaveAttribute('maxLength', '500')
+  })
+
+  it('is in the editor header, with the name as the page heading', async () => {
+    await renderEditor(emptyMap('Klamm', 6, 4))
+    const header = (await screen.findByRole('heading', { name: 'Klamm' })).closest('header')!
+    expect(header).toContainElement(screen.getByLabelText(t.name))
+    expect(screen.getByLabelText(t.name)).toHaveValue('Klamm')
   })
 })
 
@@ -112,11 +127,12 @@ describe('header items', () => {
     expect(JSON.parse(await blob.text())).toMatchObject({ name: 'Klamm', scene: 'Schlucht' })
   })
 
-  it('marks a map that is only on this device in the editor header', async () => {
+  it('marks a map that is only on this device in the status bar, next to the save state', async () => {
     await renderEditor(emptyMap('Klamm', 6, 4))
     const header = (await screen.findByRole('heading', { name: 'Klamm' })).closest('header')!
-    expect(await screen.findByText(de.maps.localOnly)).toBeInTheDocument()
-    expect(header).toContainElement(screen.getByText(de.maps.localOnly))
-    expect(screen.getByRole('button', { name: t.export })).toBeInTheDocument()
+    const mark = await screen.findByText(de.maps.localOnly)
+    expect(header).not.toContainElement(mark)
+    expect(mark.parentElement).toContainElement(screen.getByText(de.editor.saved))
+    expect(header).toContainElement(screen.getByRole('button', { name: t.export }))
   })
 })

@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import type { OfflineDb } from '../offline/db'
 import { SYNC_VERSION, SYNC_VERSION_HEADER, SyncFailure } from './api'
 import { useSyncDb } from './context'
-import { pull } from './pull'
+import { pull, pullOpened } from './pull'
 import { planPush, push, pushAll } from './push'
 import { countUnsynced, heldRecords, useOnline, useSyncStore } from './state'
 
@@ -131,6 +131,24 @@ async function issuesOf(db: OfflineDb): Promise<number> {
   } catch {
     return 0
   }
+}
+
+/**
+ * Called by an editor right after it read its map (and encounter): takes the server's newer
+ * version of those records when this device hasn't changed them and `canTake` still says the
+ * editor holds no edits. Resolves true when the offline database changed, so the editor must
+ * read its records again. Never rejects; the editor-open sync reports connection trouble.
+ */
+export function refreshOpenedRecords(
+  db: OfflineDb,
+  campaignId: string,
+  ids: readonly string[],
+  canTake: () => boolean,
+): Promise<boolean> {
+  if (!navigator.onLine || useSyncStore.getState().blocked) return Promise.resolve(false)
+  return withSyncLock(userIdOf(db), () => pullOpened(db, campaignId, ids, canTake)).catch(
+    () => false,
+  )
 }
 
 /**

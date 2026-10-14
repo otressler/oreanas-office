@@ -243,14 +243,11 @@ describe('starting', () => {
       mapWith([], roomCells()),
     )
 
-  it('shows Starten to the session DM and goes to the setup page', async () => {
-    const user = userEvent.setup()
+  it('shows Starten to the session DM', async () => {
     mockApi({ 'GET /api/campaigns/:id/sessions': () => json(200, [session()]) })
-    const f = readyFixture()
-    renderInEncounter(<EncounterPanel />, f)
-    await user.click(await screen.findByRole('button', { name: t.start }))
-    // The router has no routes here; the sync stub resolved 'ready' and navigation was tried.
-    await waitFor(() => expect(screen.queryByText(t.startBlocked)).not.toBeInTheDocument())
+    renderInEncounter(<EncounterPanel />, readyFixture())
+    // What the button does with the sync's answer is in start.test.tsx.
+    expect(await screen.findByRole('button', { name: t.start })).toBeEnabled()
   })
 
   it('explains when the user is not the session DM', async () => {

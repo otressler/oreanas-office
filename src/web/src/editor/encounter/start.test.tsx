@@ -20,8 +20,8 @@ vi.mock('react-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => navigate,
 }))
-vi.mock('../../sync', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../../sync')>()),
+vi.mock('../../sync/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../sync/client')>()),
   syncBeforeStart,
 }))
 
@@ -30,6 +30,22 @@ beforeEach(async () => {
   navigate.mockReset()
   syncBeforeStart.mockReset()
   await seedOffline()
+  // The device has the encounter, so the start syncs it first.
+  await offlineDb(testUser.id).encounters.put({
+    id: ENCOUNTER_ID,
+    campaignId: CAMPAIGN_ID,
+    battleMapId: 'map-1',
+    name: 'Hinterhalt',
+    status: 'ready',
+    archivedAt: null,
+    tokens: [],
+    sessionId: null,
+    mapCopy: null,
+    createdAt: '2026-10-14T10:00:00Z',
+    updatedAt: '2026-10-14T10:00:00Z',
+    sync: { baseVersion: 0, changed: true, editCount: 1, issue: null, server: null },
+    recordVersion: 1,
+  })
   mockApi({
     'GET /api/campaigns/:id/sessions': () =>
       json(200, [
@@ -93,21 +109,6 @@ describe('Starten', () => {
     const user = userEvent.setup()
     const f = readyFixture()
     const db = offlineDb(testUser.id)
-    await db.encounters.put({
-      id: ENCOUNTER_ID,
-      campaignId: CAMPAIGN_ID,
-      battleMapId: 'map-1',
-      name: 'Hinterhalt',
-      status: 'ready',
-      archivedAt: null,
-      tokens: [],
-      sessionId: null,
-      mapCopy: null,
-      createdAt: '2026-10-14T10:00:00Z',
-      updatedAt: '2026-10-14T10:00:00Z',
-      sync: { baseVersion: 0, changed: true, editCount: 1, issue: null, server: null },
-      recordVersion: 1,
-    })
     renderInEncounter(<EncounterPanel />, f)
     // A change the autosave hasn't written yet.
     act(() => f.encounter.getState().apply((doc) => ({ ...doc, name: 'Neuer Name' })))
