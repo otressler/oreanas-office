@@ -60,6 +60,12 @@ public sealed class MapImportTests
             { "entrance off the map", WithEntrance(map, entrance with { Cells = [[8, 1]] }), ApiErrorCode.EntranceInvalid, "layout.entrances[1]" },
             { "entrance cell not a pair", WithEntrance(map, entrance with { Cells = [[0, 1, 2]] }), ApiErrorCode.EntranceInvalid, "layout.entrances[1]" },
             { "entrance id twice", WithEntrances(map, entrance with { Id = "e1" }, entrance with { Id = "e1" }), ApiErrorCode.EntranceInvalid, "layout.entrances[1]" },
+            // The shared layout checks (MapChecks) catch what the parsing lets through.
+            { "overlapping features", WithFeatures(map, bridge, bridge with { X = 4 }), ApiErrorCode.FeatureInvalid, "layout.features[1]" },
+            { "entrance in the gorge", WithEntrance(map, entrance with { Cells = [[3, 0]] }), ApiErrorCode.EntranceInvalid, "layout.entrances[1]" },
+            { "entrance in the wall", WithEntrance(map, entrance with { Cells = [[7, 0]] }), ApiErrorCode.EntranceInvalid, "layout.entrances[1]" },
+            { "entrance cell in two entrances", WithEntrance(map, entrance with { Id = "e9", Cells = [[0, 2]] }), ApiErrorCode.EntranceInvalid, "layout.entrances[1]" },
+            { "entrance cell twice", WithEntrance(map, entrance with { Cells = [[0, 1], [0, 1]] }), ApiErrorCode.EntranceInvalid, "layout.entrances[1]" },
             { "long entrance label", WithEntrance(map, entrance with { Label = long41 }), ApiErrorCode.TextTooLong, "layout.entrances[1]" },
             { "no type", WithCreature(map, goblin with { Type = " " }), ApiErrorCode.CreatureTypeInvalid, "creatures[3]" },
             { "type null", WithCreature(map, goblin with { Type = null! }), ApiErrorCode.CreatureTypeInvalid, "creatures[3]" },

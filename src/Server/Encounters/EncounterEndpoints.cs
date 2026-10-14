@@ -197,7 +197,7 @@ public static class EncounterEndpoints
     {
         var encounter = await db.Encounters
             .Where(e => e.Id == encounterId && e.CampaignId == campaignId)
-            .Select(e => new { e.Status, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout })
+            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout })
             .SingleOrDefaultAsync(cancellationToken);
         if (encounter is null)
         {
@@ -208,6 +208,11 @@ public static class EncounterEndpoints
         if (await ConflictAsync(db, sessionId, encounter.Status, cancellationToken) is { } conflict)
         {
             return TypedResults.Conflict(conflict);
+        }
+
+        if (encounter.ArchivedAt is not null)
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.EncounterArchived));
         }
 
         // Nobody can join the board later in stage 3, so a fight starts with at least one character.
@@ -222,15 +227,24 @@ public static class EncounterEndpoints
             .Where(c => c.CampaignId == campaignId && ids.Contains(c.Id))
             .ToDictionaryAsync(c => c.Id, c => c.Size, cancellationToken);
 
-        // The creatures stand first; each character must find free walkable cells.
+        // The creatures stand first, on the map as it is now: a push may have been
+        // accepted before the map changed. Each character must then find free walkable cells.
         var board = new TokenPlacement(new MapGrid(encounter.Width, encounter.Height, encounter.Layout));
-        var standing = await db.Tokens
-            .Where(t => t.EncounterId == encounterId)
-            .Select(t => new { t.Size, t.X, t.Y })
-            .ToListAsync(cancellationToken);
-        foreach (var token in standing)
+        // In the order a push lists them (SyncItems), so Field names the token the device
+        // shows. Sorted here, not in SQL, which orders Guids differently.
+        var standing = (await db.Tokens
+                .Where(t => t.EncounterId == encounterId)
+                .Select(t => new { t.Id, t.CreatedAt, t.Size, t.X, t.Y })
+                .ToListAsync(cancellationToken))
+            .OrderBy(t => t.CreatedAt)
+            .ThenBy(t => t.Id)
+            .ToList();
+        for (var i = 0; i < standing.Count; i++)
         {
-            board.Add(token.Size, token.X, token.Y);
+            if (!board.TryPlace(standing[i].Size, standing[i].X, standing[i].Y, out _))
+            {
+                return TypedResults.Conflict(new ApiError(ApiErrorCode.CreaturesMisplaced, $"tokens[{i}]"));
+            }
         }
 
         var now = time.GetUtcNow();
@@ -276,6 +290,8 @@ public static class EncounterEndpoints
                 var updated = await db.Encounters
                     .Where(e => e.Id == encounterId
                         && e.Status == EncounterStatus.Ready
+                        && e.Version == encounter.Version
+                        && e.ArchivedAt == null
                         && db.Sessions.Any(s => s.Id == sessionId && s.Status == SessionStatus.Active))
                     .ExecuteUpdateAsync(
                         set => set
@@ -289,8 +305,9 @@ public static class EncounterEndpoints
                 if (updated == 0)
                 {
                     // The session ended or the encounter started in the meantime.
-                    var status = await db.Encounters.Where(e => e.Id == encounterId).Select(e => e.Status).SingleAsync(cancellationToken);
-                    return await ConflictAsync(db, sessionId, status, cancellationToken)
+                    var current = await db.Encounters.Where(e => e.Id == encounterId).Select(e => new { e.Status, e.ArchivedAt }).SingleAsync(cancellationToken);
+                    return await ConflictAsync(db, sessionId, current.Status, cancellationToken)
+                        ?? (current.ArchivedAt is not null ? new ApiError(ApiErrorCode.EncounterArchived) : null)
                         ?? new ApiError(ApiErrorCode.EncounterNotReady);
                 }
             }

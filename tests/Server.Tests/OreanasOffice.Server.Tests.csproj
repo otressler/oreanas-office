@@ -26,6 +26,8 @@
     <None Include="..\..\src\web\src\samples\maps\*.json" LinkBase="SampleMaps" CopyToOutputDirectory="PreserveNewest" />
     <!-- The frontend's board fixtures for the sample maps; import tests compare against them. -->
     <None Include="..\..\src\web\src\board\fixtures\*.board.json" LinkBase="BoardFixtures" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The layout check cases the editor's Vitest test runs too; MapChecksTests runs them against the server's checks. -->
+    <None Include="..\..\src\web\src\editor\validation.cases.json" Link="validation.cases.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- The OpenAPI document the frontend generates its types from; the hub contract test reads it. -->
     <None Include="..\..\src\web\src\api\openapi.json" Link="openapi.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
