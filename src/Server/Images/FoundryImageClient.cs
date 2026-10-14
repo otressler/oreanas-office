@@ -36,9 +36,17 @@ public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOp
             { new StringContent(request.OutputCompression.ToString(CultureInfo.InvariantCulture)), "output_compression" },
             { new StringContent("1"), "n" },
         };
-        var image = new ByteArrayContent(request.GuidePng);
-        image.Headers.ContentType = new MediaTypeHeaderValue("image/png");
-        form.Add(image, "image", "guide.png");
+        // A refinement sends the picture to edit first, then the guide; several images go
+        // as image[], one as image.
+        if (request.Picture is { } picture)
+        {
+            AddImage(form, "image[]", picture.Content, picture.ContentType, $"picture.{(picture.ContentType == "image/png" ? "png" : "jpg")}");
+            AddImage(form, "image[]", request.GuidePng, "image/png", "guide.png");
+        }
+        else
+        {
+            AddImage(form, "image", request.GuidePng, "image/png", "guide.png");
+        }
 
         using var message = new HttpRequestMessage(HttpMethod.Post, $"{_options.Endpoint!.TrimEnd('/')}/images/edits") { Content = form };
         message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
@@ -156,4 +164,11 @@ public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOp
 
     [GeneratedRegex(@"retry after (\d+) second", RegexOptions.IgnoreCase)]
     private static partial Regex RetryAfterText();
+
+    private static void AddImage(MultipartFormDataContent form, string name, byte[] content, string contentType, string fileName)
+    {
+        var image = new ByteArrayContent(content);
+        image.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(image, name, fileName);
+    }
 }

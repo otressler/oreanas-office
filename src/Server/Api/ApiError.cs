@@ -99,4 +99,6 @@ public enum ApiErrorCode
     BackgroundNotFound,
     // BackgroundOutdated: the background was made for another size of the map.
     BackgroundOutdated,
+    // InstructionInvalid: a refinement needs an instruction of 1 to 500 characters.
+    InstructionInvalid,
 }

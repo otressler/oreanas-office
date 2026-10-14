@@ -1813,7 +1813,8 @@
           "generationRunning",
           "mapChanged",
           "backgroundNotFound",
-          "backgroundOutdated"
+          "backgroundOutdated",
+          "instructionInvalid"
         ]
       },
       "AssetFailure": {
@@ -2402,6 +2403,19 @@
           "mapVersion": {
             "type": "integer",
             "format": "int32"
+          },
+          "refineAssetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "instruction": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2478,6 +2492,7 @@
               "mapChanged",
               "backgroundNotFound",
               "backgroundOutdated",
+              "instructionInvalid",
               null
             ]
           }
@@ -3081,7 +3096,9 @@
           "layoutChanged",
           "failure",
           "createdAt",
-          "finishedAt"
+          "finishedAt",
+          "refinedFromId",
+          "instruction"
         ],
         "type": "object",
         "properties": {
@@ -3152,6 +3169,19 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "refinedFromId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "instruction": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3430,6 +3460,7 @@
               "mapChanged",
               "backgroundNotFound",
               "backgroundOutdated",
+              "instructionInvalid",
               null
             ]
           },

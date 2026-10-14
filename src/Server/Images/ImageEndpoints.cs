@@ -69,7 +69,8 @@ public static class ImageEndpoints
     // is queued or running, the monthly limit and that a model is configured; then saves a
     // Queued asset with the map's size, frame and layout hash and wakes the worker. 202 with
     // the new version. 404 for a map of another campaign or an archived map.
-    // Errors (409): MapChanged, GenerationRunning, ImageBudgetExhausted, ImagesUnavailable.
+    // Errors (409): MapChanged, GenerationRunning, ImageBudgetExhausted, ImagesUnavailable;
+    // for a refinement also InstructionInvalid, BackgroundNotFound, BackgroundOutdated.
     private static async Task<Results<Accepted<MapBackground>, NotFound, Conflict<ApiError>>> GenerateBackground(
         Guid campaignId,
         Guid mapId,
@@ -112,6 +113,33 @@ public static class ImageEndpoints
                 return new Outcome(null, ApiErrorCode.MapChanged);
             }
 
+            // A refinement edits a finished version listed for the map that fits its size.
+            var instruction = request.Instruction?.Trim();
+            if (request.RefineAssetId is { } sourceId)
+            {
+                if (string.IsNullOrEmpty(instruction) || instruction.Length > Asset.InstructionMaxLength)
+                {
+                    return new Outcome(null, ApiErrorCode.InstructionInvalid);
+                }
+
+                var source = await db.Assets.AsNoTracking()
+                    .SingleOrDefaultAsync(
+                        a => a.Id == sourceId
+                            && a.Kind == AssetKind.MapBackground
+                            && a.Status == AssetStatus.Done
+                            && ((a.OwnerType == AssetOwnerType.BattleMap && a.OwnerId == mapId) || a.Id == map.BackgroundAssetId),
+                        cancellationToken);
+                if (source is null)
+                {
+                    return new Outcome(null, ApiErrorCode.BackgroundNotFound);
+                }
+
+                if (!MapBackgrounds.Fits(source, map.Width, map.Height))
+                {
+                    return new Outcome(null, ApiErrorCode.BackgroundOutdated);
+                }
+            }
+
             if (await db.Assets.AnyAsync(
                     a => a.OwnerType == AssetOwnerType.BattleMap
                         && a.OwnerId == mapId
@@ -148,6 +176,8 @@ public static class ImageEndpoints
                 FrameWidth = frame.Width,
                 FrameHeight = frame.Height,
                 LayoutHash = LayoutFingerprint.Of(map.Width, map.Height, map.Layout),
+                RefinedFromAssetId = request.RefineAssetId,
+                Instruction = request.RefineAssetId is null ? null : instruction,
                 CreatedAt = now,
                 CreatedByUserId = userId,
             };

@@ -344,6 +344,8 @@ export class MockBackend {
         failure: null,
         createdAt: new Date().toISOString(),
         finishedAt: null,
+        refinedFromId: typeof body.refineAssetId === 'string' ? body.refineAssetId : null,
+        instruction: typeof body.instruction === 'string' ? body.instruction : null,
       }
       this.backgrounds.push(background)
       return [202, background]

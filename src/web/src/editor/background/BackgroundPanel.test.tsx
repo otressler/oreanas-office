@@ -318,6 +318,67 @@ describe('the gallery', () => {
   })
 })
 
+describe('refining', () => {
+  const r = t.refine
+
+  it('asks what should change, then syncs and posts a refinement of that version', async () => {
+    const user = userEvent.setup()
+    const first = version()
+    list = backgroundsOf([first], { pickedAssetId: first.id })
+    serve({
+      post: () =>
+        json(202, version({ status: 'queued', refinedFromId: first.id, instruction: 'Breiter' })),
+    })
+    const { mapId } = await renderInMapEditor(<BackgroundPanel />)
+
+    await user.click(await screen.findByRole('button', { name: r.button }))
+    const dialog = screen.getByRole('dialog', { name: r.title })
+    expect(dialog).toHaveTextContent(r.layoutHint)
+    expect(dialog).toHaveTextContent('Diesen Monat: 0,42 $ von 20,00 $')
+    const ok = within(dialog).getByRole('button', { name: r.ok })
+    expect(ok).toBeDisabled()
+
+    await user.type(within(dialog).getByLabelText(r.instruction), '  Breiter  ')
+    await user.click(ok)
+
+    await screen.findByText(t.queued)
+    expect(syncMapBeforeGenerate).toHaveBeenCalledWith(expect.anything(), mapId)
+    expect(posts()).toEqual([
+      expect.objectContaining({
+        body: { mapVersion: 4, refineAssetId: first.id, instruction: 'Breiter' },
+      }),
+    ])
+  })
+
+  it('posts nothing when the dialog is cancelled', async () => {
+    const user = userEvent.setup()
+    list = backgroundsOf([version()])
+    serve()
+    await renderInMapEditor(<BackgroundPanel />)
+
+    await user.click(await screen.findByRole('button', { name: r.button }))
+    const dialog = screen.getByRole('dialog', { name: r.title })
+    await user.type(within(dialog).getByLabelText(r.instruction), 'Breiter')
+    await user.click(within(dialog).getByRole('button', { name: de.common.cancel }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(syncMapBeforeGenerate).not.toHaveBeenCalled()
+    expect(posts()).toEqual([])
+  })
+
+  it('shows what a refinement changed, and offers no refining of an outdated version', async () => {
+    list = backgroundsOf([
+      version({ instruction: 'Mehr Nebel', refinedFromId: 'other' }),
+      version({ gridWidth: 12, outdated: true }),
+    ])
+    serve()
+    await renderInMapEditor(<BackgroundPanel />)
+
+    expect(await screen.findByText(t.refinedFrom('Mehr Nebel'))).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: r.button })).toHaveLength(1)
+  })
+})
+
 describe('the image hub', () => {
   it('stays closed while no job is pending', async () => {
     list = backgroundsOf([version()])

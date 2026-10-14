@@ -12,7 +12,8 @@ public interface IImageClient
 }
 
 // Width and Height in pixels: the guide's size, both multiples of 16, which the request
-// asks for exactly. Quality, OutputFormat and OutputCompression as in ImageOptions.
+// asks for exactly. Quality, OutputFormat and OutputCompression as in ImageOptions. Picture:
+// for a refinement the version to edit, sent before the guide.
 public record ImageEditRequest(
     string Prompt,
     byte[] GuidePng,
@@ -20,7 +21,10 @@ public record ImageEditRequest(
     int Height,
     string Quality,
     string OutputFormat,
-    int OutputCompression);
+    int OutputCompression,
+    ImageInput? Picture = null);
+
+public record ImageInput(byte[] Content, string ContentType);
 
 // ContentType: image/jpeg or image/png (the edits endpoint refuses WebP). RequestId: the
 // response's id, logged.

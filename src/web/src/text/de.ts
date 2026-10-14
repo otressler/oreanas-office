@@ -966,6 +966,20 @@ export const de = {
         cost: 'Jedes Bild kostet ein paar Cent vom monatlichen Bildbudget.',
         ok: 'Erzeugen',
       },
+      /** Refining a finished version with an instruction: a new version from it. */
+      refine: {
+        button: 'Überarbeiten',
+        title: 'Version überarbeiten?',
+        instruction: 'Was soll sich ändern?',
+        placeholder: 'z. B. Die Brücke soll doppelt so breit sein, mit dickeren Seilen.',
+        layoutHint:
+          'Das Modell ändert nur, was du hier schreibst, und hält sich an die Karte. Wo Wände, Wasser und Objekte liegen und wie groß sie sind, bestimmt die Karte: Soll die Brücke im Spiel breiter werden, ändere sie im Editor und erzeuge neu.',
+        result: 'Es entsteht eine neue Version; die alte bleibt.',
+        ok: 'Überarbeiten',
+        left: (count: number) => `noch ${count} Zeichen`,
+      },
+      /** A refinement's note in the gallery, with the DM's instruction. */
+      refinedFrom: (instruction: string) => `Überarbeitet: „${instruction}“`,
       versions: 'Versionen',
       empty: 'Für diese Karte gibt es noch keinen Hintergrund.',
       /** The alt text of a version's picture. */
@@ -1088,6 +1102,7 @@ export const de = {
       'Die Karte hat sich auf dem Server geändert. Synchronisiere und bestätige den Auftrag noch einmal.',
     backgroundNotFound: 'Diesen Hintergrund gibt es für diese Karte nicht.',
     backgroundOutdated: 'Dieser Hintergrund wurde für eine andere Kartengröße erzeugt.',
+    instructionInvalid: 'Schreib in höchstens 500 Zeichen, was sich am Bild ändern soll.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */

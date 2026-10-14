@@ -16,6 +16,8 @@ public record MapBackgroundsResponse(
 // than the map has now. LayoutChanged: the layout changed since it was made (same size);
 // the editor notes it, the board still shows it. Failure: set when Failed.
 // X, Y, Width, Height: as BoardBackground, so the editor can draw it under its grid.
+// RefinedFromId and Instruction: set for a refinement, the version it edits and what the DM
+// asked for.
 public record MapBackground(
     Guid Id,
     Guid MapId,
@@ -31,7 +33,9 @@ public record MapBackground(
     bool LayoutChanged,
     AssetFailure? Failure,
     DateTimeOffset CreatedAt,
-    DateTimeOffset? FinishedAt);
+    DateTimeOffset? FinishedAt,
+    Guid? RefinedFromId,
+    string? Instruction);
 
 // The month runs in UTC from MonthStart. SpentUsd counts finished images; generating is
 // refused (ImageBudgetExhausted) once SpentUsd reaches LimitUsd. Available: the server has
@@ -40,8 +44,11 @@ public record ImageBudgetResponse(decimal SpentUsd, decimal LimitUsd, DateTimeOf
 
 // POST backgrounds: the editor synced the map and the DM confirmed the job (never
 // automatic, knowledge/decisions/image-budget.md). MapVersion: the map version the DM saw;
-// MapChanged (409) when the server has another one.
-public record GenerateBackgroundRequest(int MapVersion);
+// MapChanged (409) when the server has another one. RefineAssetId and Instruction refine a
+// finished version that fits the map's size instead of painting a new one
+// (knowledge/features/ai-map-generation.md, "Refining"); errors: InstructionInvalid (empty or
+// longer than 500 characters), BackgroundNotFound, BackgroundOutdated.
+public record GenerateBackgroundRequest(int MapVersion, Guid? RefineAssetId = null, string? Instruction = null);
 
 // PUT background: pick a Done version that fits the map's size, or null for the plain
 // rendering. Errors: BackgroundNotFound, BackgroundOutdated.

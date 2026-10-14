@@ -534,6 +534,10 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<int?>("GridWidth")
                         .HasColumnType("int");
 
+                    b.Property<string>("Instruction")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -567,6 +571,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<string>("Quality")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid?>("RefinedFromAssetId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("StartedAt")
                         .HasColumnType("datetimeoffset");

@@ -20,16 +20,28 @@ export function fetchBackgrounds(campaignId: string, mapId: string): Promise<Map
   )
 }
 
-/** Queues a job; only after the DM confirmed it and the map was synced. */
+/** What a refinement edits and how: a done version that fits the map, and the DM's words. */
+export interface Refinement {
+  assetId: string
+  instruction: string
+}
+
+/**
+ * Queues a job; only after the DM confirmed it and the map was synced. With `refine`, a new
+ * version from a finished one and an instruction instead of a fresh picture.
+ */
 export function generateBackground(
   campaignId: string,
   mapId: string,
   mapVersion: number,
+  refine?: Refinement,
 ): Promise<MapBackground> {
   return unwrap(
     api.POST('/api/campaigns/{campaignId}/maps/{mapId}/backgrounds', {
       params: { path: { campaignId, mapId } },
-      body: { mapVersion },
+      body: refine
+        ? { mapVersion, refineAssetId: refine.assetId, instruction: refine.instruction }
+        : { mapVersion },
     }),
   )
 }

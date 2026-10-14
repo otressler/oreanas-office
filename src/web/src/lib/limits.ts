@@ -21,4 +21,6 @@ export const limits = {
   layoutText: 40,
   /** MapImport.MaxElevation: elevations stay below this many meters either way */
   elevation: 10000,
+  /** Asset.InstructionMaxLength: what to change when refining a background */
+  refineInstruction: 500,
 } as const
