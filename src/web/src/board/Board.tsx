@@ -14,7 +14,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { Layer, Shape, Stage } from 'react-konva'
 import type { BoardState, BoardToken } from '../api/types'
 import { de } from '../text/de'
-import { footprint, tokenAt, type GridPoint } from './geometry'
+import { footprint, stackCounts, tokenAt, tokensAt, type GridPoint } from './geometry'
 import { GestureTracker, wheelZoomFactor, type Gesture, type PointerSample } from './gestures'
 import { cellInfo, tokenInfo } from './info'
 import {
@@ -24,7 +24,9 @@ import {
   drawMapAtZoom,
   drawTokens,
   type Marker,
+  type MoveArrow,
 } from './render'
+import { tokenMarks } from './palette'
 import { buildHighlight, buildScene } from './scene'
 import { useElementSize } from './useElementSize'
 import {
@@ -60,6 +62,8 @@ export interface BoardProps {
   selectedTokenId?: string | null
   /** A see-through copy of a token at another top-left cell: the preview of a move. */
   ghost?: { tokenId: string; x: number; y: number } | null
+  /** Where others are about to move tokens: an arrow from each token to its target. */
+  arrows?: readonly MoveArrow[]
   /** Tokens glide to a new position instead of jumping (not with reduced motion). */
   slide?: boolean
   /** Tokens that jump even with `slide`: the device's own move, already shown at its target. */
@@ -69,7 +73,10 @@ export interface BoardProps {
 }
 
 /** What the board's own info box is about. */
-type InfoTarget = { kind: 'cell'; x: number; y: number } | { kind: 'token'; id: string }
+type InfoTarget =
+  | { kind: 'cell'; x: number; y: number }
+  /** The tapped cell: in a stack, the box names the other tokens on it. */
+  | { kind: 'token'; id: string; cell: GridPoint }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
@@ -87,6 +94,7 @@ export function Board({
   highlight,
   selectedTokenId,
   ghost,
+  arrows,
   slide = false,
   instantTokenIds,
   className,
@@ -109,8 +117,13 @@ export function Board({
   const infoContent =
     info?.kind === 'cell'
       ? cellInfo(scene, info.x, info.y)
-      : infoToken
-        ? tokenInfo(infoToken)
+      : infoToken && info?.kind === 'token'
+        ? tokenInfo(
+            infoToken,
+            tokensAt(board.tokens, info.cell)
+              .filter((token) => token.id !== infoToken.id)
+              .map((token) => token.label),
+          )
         : null
   const marker: Marker | null =
     info?.kind === 'cell' && infoContent
@@ -233,7 +246,7 @@ export function Board({
           setInfo((current) =>
             current?.kind === 'token' && current.id === token.id
               ? null
-              : { kind: 'token', id: token.id },
+              : { kind: 'token', id: token.id, cell },
           )
         }
         return
@@ -349,6 +362,8 @@ export function Board({
   )
 
   const tokens = board.tokens
+  const stacks = useMemo(() => stackCounts(tokens, selectedTokenId), [tokens, selectedTokenId])
+  const marks = useMemo(() => tokenMarks(tokens), [tokens])
   const ghostToken = useMemo(() => {
     const token = ghost && tokens.find((t) => t.id === ghost.tokenId)
     return token ? { ...token, x: ghost.x, y: ghost.y } : null
@@ -409,7 +424,15 @@ export function Board({
             return at === token ? token : { ...token, x: at.x, y: at.y }
           })
         : tokens
-    drawTokens(ctx, drawn, { selectedTokenId, cssScale, marker, ghost: ghostToken })
+    drawTokens(ctx, drawn, {
+      selectedTokenId,
+      cssScale,
+      marker,
+      ghost: ghostToken,
+      arrows,
+      stacks,
+      marks,
+    })
   }
 
   return (

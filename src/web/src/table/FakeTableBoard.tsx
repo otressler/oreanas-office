@@ -1,6 +1,7 @@
 // A board stand-in for the fight page's tests (`vi.mock('../board/Board', …)`): every
 // cell is a button that taps like the canvas board does (the token on it first), and
-// the tokens, the selection, the preview and the info box are plain text.
+// the tokens, the selection, the preview, others' move arrows and the info box are
+// plain text.
 import { useState } from 'react'
 import type { BoardProps } from '../board/Board'
 import { tokenAt } from '../board/geometry'
@@ -11,6 +12,7 @@ export function FakeTableBoard({
   onTokenTap,
   selectedTokenId,
   ghost,
+  arrows,
   instantTokenIds,
 }: BoardProps) {
   const [info, setInfo] = useState<string | null>(null)
@@ -44,6 +46,11 @@ export function FakeTableBoard({
       </ul>
       {selected && <p>{`Ausgewählt: ${selected.label}`}</p>}
       {ghost && ghostToken && <p>{`Vorschau ${ghostToken.label} auf ${ghost.x},${ghost.y}`}</p>}
+      {arrows?.map((arrow) => (
+        <p key={arrow.tokenId}>
+          {`Pfeil ${board.tokens.find((token) => token.id === arrow.tokenId)?.label} nach ${arrow.x},${arrow.y}`}
+        </p>
+      ))}
       {info && <p>{info}</p>}
     </div>
   )

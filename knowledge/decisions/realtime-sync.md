@@ -1,11 +1,11 @@
 ---
 type: Decision
 title: Realtime sync
-description: The server holds the board state and pushes confirmed token moves to every device over in-process SignalR, inside a single app instance that scales to zero between sessions.
+description: The server holds the board state and pushes confirmed token moves, and where someone is about to move a token, to every device over in-process SignalR, inside a single app instance that scales to zero between sessions.
 tags: [decision, realtime, architecture]
 decision: accepted
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-13T22:20:29Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T07:12:36Z }
 ---
 
 # Decision
@@ -14,7 +14,8 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-13T22:20:29Z }
 - **Optimistic UI.** The mover's device shows the move at once and puts the token back if the server rejects it.
 - **Transport**: WebSockets, one group per active encounter, running **inside the app**. [Hosting](/decisions/hosting.md) runs at most one replica, so the in-process option is enough: ASP.NET Core SignalR ([tech stack](/decisions/tech-stack.md)), with the `@microsoft/signalr` client in the browser ([frontend stack](/decisions/frontend-stack.md)). Azure SignalR Service was considered; see below.
 - **Database first**: every move is saved before it's broadcast. The container can stop between sessions, so on start the board is loaded from the database. Nothing polls the database.
-- **Only confirmed moves are sent.** Selecting a token and choosing a target stay on the device; other devices see nothing until the move is confirmed.
+- **Only confirmed moves are saved.** Selecting a token stays on the device. Once a target is chosen and the device waits for the confirming tap, the others see a move preview (below); nothing is saved until the move is confirmed.
+- **Move previews**: while someone is at the confirm step, every other device draws an arrow from the token to the chosen target, in the token's ring colour, with a dashed outline of the footprint there. For players this is their character's colour; when the session DM moves a creature it is the creature red. The preview passes the same permission and target checks as a move, and changes when the person picks another target. It disappears when the move is confirmed, when the person lets go of the token, and when their device disconnects. Previews live only in the server's memory: they aren't worth keeping, and after a restart every device reconnects without one. A device that joins sees the previews already shown.
 - **Where a token may go**: the whole footprint must lie inside the map on walkable cells, as defined by the [placement rule](/domain/encounter.md): no `wall` or `void`, no blocking feature, and a non-blocking feature such as a bridge counts as walkable. Unlike placement, tokens may overlap. The token takes the elevation under its new footprint, as on placement. This is the only check on the target; there are no distance or turn-order limits ([playable map](/features/playable-map.md)).
 - **Undo**: a user can undo only their own last move, and only while it is still that token's latest move. Once anyone has moved the token again, the undo is gone. The session DM can't undo other people's moves; they move the token back instead. Undo for the DM stays in the [backlog](/backlog.md).
 - **Conflicts**: the last move wins. Without turn order, two people rarely move the same token at once. The earlier mover's device simply shows the newer position.
@@ -25,14 +26,16 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-13T22:20:29Z }
 
 # As built (stage 4)
 
-- **Hub**: `/hubs/table`. A device calls `JoinEncounter`, `MoveToken`, `UndoMove` and `MarkActive`; the server sends `TokenMoved`, `EncounterEnded` and `IdleTimeout`. The message types and method names are in `openapi.json`, so the frontend's types come from the same document as the API's.
+- **Hub**: `/hubs/table`. A device calls `JoinEncounter`, `MoveToken`, `PreviewMove`, `ClearPreview`, `UndoMove` and `MarkActive`; the server sends `TokenMoved`, `MovePreviewed`, `MovePreviewCleared`, `EncounterEnded` and `IdleTimeout`. The message types and method names are in `openapi.json`, so the frontend's types come from the same document as the API's.
 - **Versions**: every move and undo raises the token's version. A device keeps whichever position has the higher version, so a move that arrives before a reloaded board isn't lost. Saving a move requires the version it read: two moves of the same token never interleave, and the later one wins.
 - **Order on every (re)connect**: join the encounter's group, then reload the board.
+- **Move previews**: one per connection; a new one replaces it. `MovePreviewed` and `MovePreviewCleared` go to everyone in the encounter except the device that previews, which shows its own see-through token instead. `MoveToken` clears the caller's preview after the move is broadcast. A device drops all previews when its connection ends, and gets the ones still shown when it joins again.
 - **Undo** is available while the user's latest move in the encounter isn't undone, the token still has that move's version, and the user may still move the token. The board tells each user whether they have one.
 - **End of a fight**: when the session DM ends it, or the session ends, every device gets `EncounterEnded` and shows that the fight is over.
 - **Idle**: "idle" means no call from the device. Touching the screen sends `MarkActive` at most once a minute, so someone who only watches stays connected. After 30 minutes without either, the server sends `IdleTimeout` and closes the connection a second later. The device then shows "Pausiert – tippe, um weiterzuspielen" and reconnects only when someone touches it or brings the app back.
 - **Reconnects** retry after 0, 1, 2 and 5 seconds, then every 10 seconds, and not at all while the device is offline. When an attempt fails, the app checks whether the server is waking and shows the waking screen if it is.
 - **Phone controls**: while a token is selected, every tap except one on that token picks a target, even a cell with another token on it, so the session DM can stack tokens too. To take a different token, the person lets go of the selected one first (tap it again, "Abbrechen" or Escape). Tapping a target previews it; tapping the preview again or "Hierhin" confirms.
+- **Stacks**: each player's own characters are drawn, and hit by taps, on top of every other token, so nobody's token disappears under another. Tokens that overlap form a stack, and the token drawn on top carries a small badge with the number of tokens in it. A tap selects the person's topmost token in the stack, even under a creature or someone else's character. Tapping the selected token again takes their next token on that cell, and after the last one lets go, so no token can be buried for good. The info box of a stacked token names the others on the cell ("Auch hier: …").
 
 # Alternatives considered
 

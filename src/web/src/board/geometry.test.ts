@@ -7,7 +7,9 @@ import {
   footprint,
   footprintCells,
   placementElevation,
+  stackCounts,
   tokenAt,
+  tokensAt,
 } from './geometry'
 
 const gorge = gorgeFixture as BoardState
@@ -147,5 +149,58 @@ describe('tokenAt', () => {
     expect(tokenAt(tokens, { x: 3, y: 3 })?.id).toBe('goblin')
     expect(tokenAt(tokens, { x: 3, y: 3 }, 'ogre')?.id).toBe('ogre')
     expect(tokenAt(tokens, { x: 2, y: 2 }, 'goblin')?.id).toBe('ogre')
+  })
+})
+
+describe('tokensAt', () => {
+  const tokens = [
+    { id: 'ogre', x: 2, y: 2, size: 'large' as const },
+    { id: 'goblin', x: 3, y: 3, size: 'small' as const },
+    { id: 'hero', x: 3, y: 3, size: 'medium' as const },
+  ]
+
+  it('lists every token on the cell, top first, the selected one on top', () => {
+    expect(tokensAt(tokens, { x: 3, y: 3 }).map((t) => t.id)).toEqual(['hero', 'goblin', 'ogre'])
+    expect(tokensAt(tokens, { x: 3, y: 3 }, 'goblin').map((t) => t.id)).toEqual([
+      'goblin',
+      'hero',
+      'ogre',
+    ])
+    expect(tokensAt(tokens, { x: 2, y: 2 }, 'hero').map((t) => t.id)).toEqual(['ogre'])
+  })
+})
+
+describe('stackCounts', () => {
+  it('counts overlapping tokens on the one drawn on top', () => {
+    const tokens = [
+      { id: 'ogre', x: 2, y: 2, size: 'large' as const },
+      { id: 'goblin', x: 3, y: 3, size: 'small' as const },
+      // Touches the ogre's edge but doesn't overlap it.
+      { id: 'hero', x: 4, y: 2, size: 'medium' as const },
+      { id: 'a', x: 8, y: 8, size: 'medium' as const },
+      { id: 'b', x: 8, y: 8, size: 'medium' as const },
+    ]
+
+    expect(stackCounts(tokens)).toEqual(
+      new Map([
+        ['goblin', 2],
+        ['b', 2],
+      ]),
+    )
+    expect(stackCounts(tokens, 'a')).toEqual(
+      new Map([
+        ['goblin', 2],
+        ['a', 2],
+      ]),
+    )
+  })
+
+  it('joins stacks that overlap through a token between them', () => {
+    const tokens = [
+      { id: 'left', x: 0, y: 0, size: 'medium' as const },
+      { id: 'middle', x: 0, y: 0, size: 'large' as const },
+      { id: 'right', x: 1, y: 1, size: 'medium' as const },
+    ]
+    expect(stackCounts(tokens)).toEqual(new Map([['right', 3]]))
   })
 })

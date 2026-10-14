@@ -149,6 +149,11 @@ export class MockHub {
         result = undo
         break
       }
+      // Previews only draw arrows on the other devices' canvas; the mock just accepts them.
+      case 'PreviewMove':
+        result = { error: null }
+        break
+      case 'ClearPreview':
       case 'MarkActive':
         break
       default:

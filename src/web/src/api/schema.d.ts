@@ -1770,6 +1770,26 @@ export interface components {
             hasPassword: boolean;
             hasGoogle: boolean;
         };
+        MovePreviewClearedEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: uuid */
+            byUserId: string;
+        };
+        MovePreviewEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            /** Format: uuid */
+            byUserId: string;
+        };
         MoveResult: {
             /** @enum {unknown} */
             error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "speedInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | null;
@@ -1822,9 +1842,9 @@ export interface components {
             characters: components["schemas"]["CharacterPlacement"][];
         };
         /** @enum {string} */
-        TableClientMethod: "EncounterEnded" | "IdleTimeout" | "TokenMoved";
+        TableClientMethod: "EncounterEnded" | "IdleTimeout" | "MovePreviewCleared" | "MovePreviewed" | "TokenMoved";
         /** @enum {string} */
-        TableHubMethod: "JoinEncounter" | "MarkActive" | "MoveToken" | "UndoMove";
+        TableHubMethod: "ClearPreview" | "JoinEncounter" | "MarkActive" | "MoveToken" | "PreviewMove" | "UndoMove";
         /** @enum {unknown} */
         Terrain: "void" | "floor" | "difficult" | "water" | "wall";
         /** @enum {unknown} */

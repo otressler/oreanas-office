@@ -206,6 +206,8 @@ export const de = {
     fit: 'Ganze Karte',
     /** `meters` is already formatted, e.g. "1,5 m". */
     elevation: (meters: string) => `Höhe ${meters}`,
+    /** The other tokens on a tapped token's cell, e.g. "Auch hier: Goblin 1, Brom". */
+    alsoHere: (labels: string) => `Auch hier: ${labels}`,
     terrain: {
       void: 'Abgrund',
       floor: 'Boden',

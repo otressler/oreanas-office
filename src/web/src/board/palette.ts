@@ -89,6 +89,31 @@ export function tokenLetter(label: string): string {
   return first ? first.toLocaleUpperCase('de-DE') : '?'
 }
 
+/**
+ * What each token shows in its middle: its letter, and for creatures sharing a letter
+ * the letter with a number (S1, S2, S3), so a DM can call them apart. Numbers follow
+ * the labels in natural order, so "Goblin 1" and "Goblin 2" become G1 and G2.
+ */
+export function tokenMarks(
+  tokens: readonly Pick<BoardToken, 'id' | 'kind' | 'label'>[],
+): Map<string, string> {
+  const marks = new Map<string, string>()
+  const creatures = new Map<string, Pick<BoardToken, 'id' | 'label'>[]>()
+  for (const token of tokens) {
+    const letter = tokenLetter(token.label)
+    marks.set(token.id, letter)
+    if (token.kind === 'creature') creatures.set(letter, [...(creatures.get(letter) ?? []), token])
+  }
+  const byLabel = new Intl.Collator('de-DE', { numeric: true }).compare
+  for (const [letter, group] of creatures) {
+    if (group.length < 2) continue
+    group
+      .sort((a, b) => byLabel(a.label, b.label) || (a.id < b.id ? -1 : 1))
+      .forEach((token, i) => marks.set(token.id, `${letter}${i + 1}`))
+  }
+  return marks
+}
+
 /** Mixes two #rrggbb colours: t = 0 gives a, t = 1 gives b. */
 export function mixColor(a: string, b: string, t: number): string {
   const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16)

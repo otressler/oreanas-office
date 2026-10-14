@@ -2511,6 +2511,60 @@
           }
         }
       },
+      "MovePreviewClearedEvent": {
+        "required": [
+          "encounterId",
+          "tokenId",
+          "byUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "byUserId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "MovePreviewEvent": {
+        "required": [
+          "encounterId",
+          "tokenId",
+          "x",
+          "y",
+          "byUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "byUserId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "MoveResult": {
         "required": [
           "error",
@@ -2736,15 +2790,19 @@
         "enum": [
           "EncounterEnded",
           "IdleTimeout",
+          "MovePreviewCleared",
+          "MovePreviewed",
           "TokenMoved"
         ],
         "type": "string"
       },
       "TableHubMethod": {
         "enum": [
+          "ClearPreview",
           "JoinEncounter",
           "MarkActive",
           "MoveToken",
+          "PreviewMove",
           "UndoMove"
         ],
         "type": "string"

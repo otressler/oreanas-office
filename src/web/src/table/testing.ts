@@ -13,9 +13,9 @@ export interface Invocation {
 
 /** Answers like a server that accepts everything but moves nothing. */
 export const acceptAll: Responder = (method) =>
-  method === 'MarkActive'
+  method === 'MarkActive' || method === 'ClearPreview'
     ? undefined
-    : method === 'JoinEncounter'
+    : method === 'JoinEncounter' || method === 'PreviewMove'
       ? { error: null }
       : new Promise(() => {})
 

@@ -36,6 +36,8 @@ export type UndoableMove = Schemas['UndoableMove']
 // The live table's SignalR messages (src/web/src/table/hub.ts).
 export type MoveTokenRequest = Schemas['MoveTokenRequest']
 export type TokenMovedEvent = Schemas['TokenMovedEvent']
+export type MovePreviewEvent = Schemas['MovePreviewEvent']
+export type MovePreviewClearedEvent = Schemas['MovePreviewClearedEvent']
 export type HubResult = Schemas['HubResult']
 export type MoveResult = Schemas['MoveResult']
 export type TableHubMethod = Schemas['TableHubMethod']

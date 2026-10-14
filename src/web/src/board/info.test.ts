@@ -47,4 +47,10 @@ describe('tokenInfo', () => {
       'Höhe 4,5 m',
     ])
   })
+
+  it('names the other tokens stacked on the cell', () => {
+    expect(
+      tokenInfo({ label: 'Brom', size: 'small', elevation: 0 }, ['Goblin 1', 'Liora']).details,
+    ).toEqual(['Klein', 'Höhe 0 m', 'Auch hier: Goblin 1, Liora'])
+  })
 })

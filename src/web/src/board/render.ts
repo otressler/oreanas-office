@@ -10,6 +10,7 @@ import {
   HIGHLIGHT_COLORS,
   PARCHMENT,
   PATTERN_COLORS,
+  TABLE_COLOR,
   TERRAIN_COLORS,
   ringColor,
   tokenFill,
@@ -602,12 +603,30 @@ export interface TokenDrawOptions {
   marker?: Marker | null
   /** A see-through copy of a token at its previewed target, drawn on top. */
   ghost?: BoardToken | null
+  /** Where others are about to move tokens, drawn over the tokens. */
+  arrows?: readonly MoveArrow[]
+  /** How many tokens lie in each stack, by the id of the token on top (stackCounts). */
+  stacks?: ReadonlyMap<string, number>
+  /** What each token shows in its middle (tokenMarks); its letter by default. */
+  marks?: ReadonlyMap<string, string>
+}
+
+/** Someone else's move preview: the token's target top-left cell. */
+export interface MoveArrow {
+  tokenId: string
+  x: number
+  y: number
 }
 
 /** Below this radius in CSS pixels a token is drawn as a plain coloured dot. */
 const DOT_RADIUS_PX = 7
 
-function drawToken(ctx: CanvasRenderingContext2D, token: BoardToken, cssScale: number) {
+function drawToken(
+  ctx: CanvasRenderingContext2D,
+  token: BoardToken,
+  cssScale: number,
+  mark = tokenLetter(token.label),
+) {
   const n = footprint(token.size)
   const cx = (token.x + n / 2) * CELL
   const cy = (token.y + n / 2) * CELL
@@ -638,11 +657,40 @@ function drawToken(ctx: CanvasRenderingContext2D, token: BoardToken, cssScale: n
   ctx.lineWidth = ringWidth
   ctx.stroke()
 
-  ctx.font = `600 ${Math.round(r * 0.95)}px ${FONT}`
+  // A numbered mark (S12) gets smaller type to stay inside the ring.
+  const size = r * ([0.95, 0.95, 0.72, 0.56][mark.length] ?? 0.48)
+  ctx.font = `600 ${Math.round(size)}px ${FONT}`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillStyle = PARCHMENT
-  ctx.fillText(tokenLetter(token.label), cx, cy + r * 0.05)
+  ctx.fillText(mark, cx, cy + r * 0.05)
+}
+
+/** A stack's count on its top token: a small parchment disc at the upper right. */
+function drawStackBadge(
+  ctx: CanvasRenderingContext2D,
+  token: BoardToken,
+  count: number,
+  cssScale: number,
+) {
+  const n = footprint(token.size)
+  const r = n * CELL * 0.42
+  if (r * cssScale < DOT_RADIUS_PX) return
+  const radius = Math.max(CELL * 0.16, 8 / cssScale)
+  const x = (token.x + n / 2) * CELL + r * 0.74
+  const y = (token.y + n / 2) * CELL - r * 0.74
+  ctx.beginPath()
+  ctx.arc(x, y, radius, 0, Math.PI * 2)
+  ctx.fillStyle = PARCHMENT
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(10, 11, 14, 0.85)'
+  ctx.lineWidth = Math.max(1.5 / cssScale, CELL * 0.02)
+  ctx.stroke()
+  ctx.font = `700 ${Math.round(radius * 1.3)}px ${FONT}`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = TABLE_COLOR
+  ctx.fillText(String(count), x, y + radius * 0.06)
 }
 
 /** Candle-gold corner brackets around the selected token's footprint. */
@@ -675,11 +723,16 @@ function drawSelection(ctx: CanvasRenderingContext2D, token: BoardToken, cssScal
 }
 
 /** A move's preview: the token half see-through with a dashed candle frame. */
-function drawGhost(ctx: CanvasRenderingContext2D, token: BoardToken, cssScale: number) {
+function drawGhost(
+  ctx: CanvasRenderingContext2D,
+  token: BoardToken,
+  cssScale: number,
+  mark?: string,
+) {
   const n = footprint(token.size)
   ctx.save()
   ctx.globalAlpha = 0.6
-  drawToken(ctx, token, cssScale)
+  drawToken(ctx, token, cssScale, mark)
   ctx.restore()
   const inset = 2 / cssScale
   ctx.setLineDash([7 / cssScale, 5 / cssScale])
@@ -694,23 +747,104 @@ function drawGhost(ctx: CanvasRenderingContext2D, token: BoardToken, cssScale: n
   ctx.setLineDash([])
 }
 
-/** Tokens in list order, the selected one on top, then a preview, plus the info box's marker. */
+/**
+ * Someone else's move preview: an arrow in the token's ring colour from its edge to the
+ * middle of the target, and a dashed outline of the footprint there.
+ */
+function drawArrow(
+  ctx: CanvasRenderingContext2D,
+  token: BoardToken,
+  arrow: MoveArrow,
+  cssScale: number,
+) {
+  const n = footprint(token.size)
+  const half = (n * CELL) / 2
+  const [x0, y0] = [token.x * CELL + half, token.y * CELL + half]
+  const [x1, y1] = [arrow.x * CELL + half, arrow.y * CELL + half]
+  const length = Math.hypot(x1 - x0, y1 - y0)
+  const start = n * CELL * 0.42
+  if (length <= start) return
+  const [ux, uy] = [(x1 - x0) / length, (y1 - y0) / length]
+  const color = ringColor(token)
+  const width = Math.max(CELL * 0.08, 3 / cssScale)
+  const head = Math.min(width * 3.2, length - start)
+  const [bx, by] = [x1 - ux * head, y1 - uy * head]
+
+  const shaft = () => {
+    ctx.beginPath()
+    ctx.moveTo(x0 + ux * start, y0 + uy * start)
+    ctx.lineTo(bx, by)
+  }
+  const tip = () => {
+    ctx.beginPath()
+    ctx.moveTo(x1, y1)
+    ctx.lineTo(bx - uy * head * 0.6, by + ux * head * 0.6)
+    ctx.lineTo(bx + uy * head * 0.6, by - ux * head * 0.6)
+    ctx.closePath()
+  }
+
+  const inset = 2 / cssScale
+  ctx.setLineDash([7 / cssScale, 5 / cssScale])
+  ctx.strokeStyle = color
+  ctx.lineWidth = 2 / cssScale
+  ctx.strokeRect(
+    arrow.x * CELL + inset,
+    arrow.y * CELL + inset,
+    n * CELL - 2 * inset,
+    n * CELL - 2 * inset,
+  )
+  ctx.setLineDash([])
+
+  // A dark edge first, so the arrow stands off any ground and any ring colour.
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = 'rgba(10, 11, 14, 0.75)'
+  ctx.lineWidth = width + 3 / cssScale
+  shaft()
+  ctx.stroke()
+  tip()
+  ctx.stroke()
+  ctx.strokeStyle = color
+  ctx.fillStyle = color
+  ctx.lineWidth = width
+  shaft()
+  ctx.stroke()
+  tip()
+  ctx.fill()
+}
+
+/**
+ * Tokens in list order, others' move arrows, the selected token on top, then a preview,
+ * plus the info box's marker.
+ */
 export function drawTokens(
   ctx: CanvasRenderingContext2D,
   tokens: readonly BoardToken[],
-  { selectedTokenId, cssScale, marker, ghost }: TokenDrawOptions,
+  { selectedTokenId, cssScale, marker, ghost, arrows, stacks, marks }: TokenDrawOptions,
 ): void {
   ctx.save()
+  const badge = (token: BoardToken) => {
+    const count = stacks?.get(token.id)
+    if (count) drawStackBadge(ctx, token, count, cssScale)
+  }
   let selected: BoardToken | undefined
   for (const token of tokens) {
     if (token.id === selectedTokenId) selected = token
-    else drawToken(ctx, token, cssScale)
+    else {
+      drawToken(ctx, token, cssScale, marks?.get(token.id))
+      badge(token)
+    }
+  }
+  for (const arrow of arrows ?? []) {
+    const token = tokens.find((candidate) => candidate.id === arrow.tokenId)
+    if (token) drawArrow(ctx, token, arrow, cssScale)
   }
   if (selected) {
-    drawToken(ctx, selected, cssScale)
+    drawToken(ctx, selected, cssScale, marks?.get(selected.id))
     drawSelection(ctx, selected, cssScale)
+    badge(selected)
   }
-  if (ghost) drawGhost(ctx, ghost, cssScale)
+  if (ghost) drawGhost(ctx, ghost, cssScale, marks?.get(ghost.id))
   if (marker) {
     const inset = 1.5 / cssScale
     ctx.setLineDash([6 / cssScale, 4 / cssScale])

@@ -4,7 +4,7 @@ title: Playable map
 description: Real-time shared board where players move their own characters and see distances, and the DM moves the creatures.
 tags: [feature, players, realtime, mobile]
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T07:12:36Z }
 sources:
   - id: brief
     resource: /references/original-brief.md
@@ -21,7 +21,7 @@ Each player uses their own device, sees the current board and moves their charac
 2. Moves appear on every device within about a second ([realtime sync](/decisions/realtime-sync.md)).
 3. Players move only their own characters; the DM moves anything ([token permissions](/domain/token.md)).
 4. **Distance preview** (deferred, see below): while choosing a target cell, show the path and its length in meters, at 1.5 m per square ([movement rules](/rules/movement-distance.md)).
-5. **Phone controls**: tap a token to select it, tap a target to preview, tap again to confirm. Dragging conflicts with pinch-zoom and panning on phones.
+5. **Phone controls**: tap a token to select it, tap a target to preview, tap again to confirm. Dragging conflicts with pinch-zoom and panning on phones. While someone is at the confirm step, everyone else sees an arrow from the token to the target in the token's ring colour ([realtime sync](/decisions/realtime-sync.md), "Move previews"). Tokens may stack: a badge shows how many lie there, each player sees their own characters on top, and tapping again cycles through the person's own tokens in the stack. Creatures sharing a letter are numbered on the board (S1, S2, S3).
 6. Pinch to zoom and drag to pan.
 7. Show the elevation of a cell and of each token on tap.
 8. Undo your own last move.

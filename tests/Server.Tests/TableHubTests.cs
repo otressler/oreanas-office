@@ -307,6 +307,100 @@ public sealed class TableHubTests(AppFixture fixture)
         Assert.Equal(fight.EncounterId, await player.NextEncounterEndedAsync());
     }
 
+    // knowledge/decisions/realtime-sync.md, "Move previews".
+    [Fact]
+    public async Task A_preview_reaches_the_others_until_the_move()
+    {
+        var fight = await App.StartFightAsync();
+        var player = fight.Table.Player;
+        await using var playerDevice = await TableTestClient.JoinAsync(App, player, fight.EncounterId);
+        await using var dmDevice = await TableTestClient.JoinAsync(App, fight.Table.Dm, fight.EncounterId);
+
+        var result = await playerDevice.PreviewAsync(fight.Thorin, 5, 2);
+        var moved = await playerDevice.MoveAsync(fight.Thorin, 5, 2);
+
+        Assert.Equal(new HubResult(null), result);
+        Assert.Equal(new MovePreviewEvent(fight.EncounterId, fight.Thorin, 5, 2, player.Id), await dmDevice.NextPreviewAsync());
+        Assert.Equal(moved.Move, await dmDevice.NextMoveAsync());
+        Assert.Equal(new MovePreviewClearedEvent(fight.EncounterId, fight.Thorin, player.Id), await dmDevice.NextPreviewAsync());
+
+        // Nothing is saved, and the device that previews sees only its own move.
+        Assert.Single(await HistoryAsync(fight.Thorin));
+        Assert.Equal(moved.Move, await playerDevice.NextMoveAsync());
+        Assert.False(playerDevice.HasPendingPreview);
+    }
+
+    [Fact]
+    public async Task Previews_follow_the_rules_of_moves()
+    {
+        var fight = await App.StartFightAsync();
+        await using var player = await TableTestClient.JoinAsync(App, fight.Table.Player, fight.EncounterId);
+        await using var dm = await TableTestClient.JoinAsync(App, fight.Table.Dm, fight.EncounterId);
+
+        HubResult[] rejected =
+        [
+            await player.PreviewAsync(fight.Aria, 1, 0),
+            await player.PreviewAsync(fight.Goblin, 5, 2),
+            await player.PreviewAsync(fight.Thorin, 7, 0),
+            await player.PreviewAsync(Guid.NewGuid(), 1, 0),
+        ];
+        await player.PreviewAsync(fight.Thorin, 1, 0);
+
+        Assert.Equal(
+            [ApiErrorCode.NotYourToken, ApiErrorCode.NotYourToken, ApiErrorCode.TargetInvalid, ApiErrorCode.TokenNotFound],
+            rejected.Select(r => r.Error));
+        // Rejected previews send nothing: the first message is the good one.
+        Assert.Equal(new MovePreviewEvent(fight.EncounterId, fight.Thorin, 1, 0, fight.Table.Player.Id), await dm.NextPreviewAsync());
+    }
+
+    [Fact]
+    public async Task A_preview_goes_when_let_go_of_or_its_device_leaves()
+    {
+        var fight = await App.StartFightAsync();
+        var dm = fight.Table.Dm;
+        await using var dmDevice = await TableTestClient.JoinAsync(App, dm, fight.EncounterId);
+        var playerDevice = await TableTestClient.JoinAsync(App, fight.Table.Player, fight.EncounterId);
+
+        await dmDevice.PreviewAsync(fight.Goblin, 5, 2);
+        await dmDevice.PreviewAsync(fight.Goblin, 5, 3);
+        await dmDevice.PreviewAsync(fight.Ogre, 5, 0);
+        await dmDevice.ClearPreviewAsync();
+        await dmDevice.ClearPreviewAsync();
+
+        // A new target for the same token replaces the preview; another token clears the old one first.
+        object[] expected =
+        [
+            new MovePreviewEvent(fight.EncounterId, fight.Goblin, 5, 2, dm.Id),
+            new MovePreviewEvent(fight.EncounterId, fight.Goblin, 5, 3, dm.Id),
+            new MovePreviewClearedEvent(fight.EncounterId, fight.Goblin, dm.Id),
+            new MovePreviewEvent(fight.EncounterId, fight.Ogre, 5, 0, dm.Id),
+            new MovePreviewClearedEvent(fight.EncounterId, fight.Ogre, dm.Id),
+        ];
+        foreach (var message in expected)
+        {
+            Assert.Equal(message, await playerDevice.NextPreviewAsync());
+        }
+
+        await playerDevice.PreviewAsync(fight.Thorin, 1, 0);
+        await playerDevice.DisposeAsync();
+
+        Assert.Equal(new MovePreviewEvent(fight.EncounterId, fight.Thorin, 1, 0, fight.Table.Player.Id), await dmDevice.NextPreviewAsync());
+        Assert.Equal(new MovePreviewClearedEvent(fight.EncounterId, fight.Thorin, fight.Table.Player.Id), await dmDevice.NextPreviewAsync());
+        Assert.False(dmDevice.HasPendingPreview);
+    }
+
+    [Fact]
+    public async Task A_device_that_joins_sees_the_previews_already_shown()
+    {
+        var fight = await App.StartFightAsync();
+        await using var dm = await TableTestClient.JoinAsync(App, fight.Table.Dm, fight.EncounterId);
+        await dm.PreviewAsync(fight.Goblin, 5, 2);
+
+        await using var player = await TableTestClient.JoinAsync(App, fight.Table.Player, fight.EncounterId);
+
+        Assert.Equal(new MovePreviewEvent(fight.EncounterId, fight.Goblin, 5, 2, fight.Table.Dm.Id), await player.NextPreviewAsync());
+    }
+
     // Two devices moving one token at once: each save needs the version it read, so the
     // moves form one chain and the last one saved wins.
     [Fact]

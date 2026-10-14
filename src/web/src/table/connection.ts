@@ -12,10 +12,19 @@
 // - after the server's IdleTimeout the device stays "idle" until the person touches
 //   the screen, presses a key or brings the app back;
 // - the person's pointer input tells the server they are still there (MarkActive), at
-//   most once a minute.
+//   most once a minute;
+// - others' move previews are reported as they come and dropped with the connection;
+//   the server sends the ones still shown when the device joins again.
 // The connection factory is injected, so tests run without a server.
 import type { HubConnection } from '@microsoft/signalr'
-import type { ApiErrorCode, MoveResult, MoveTokenRequest, TokenMovedEvent } from '../api/types'
+import type {
+  ApiErrorCode,
+  MovePreviewClearedEvent,
+  MovePreviewEvent,
+  MoveResult,
+  MoveTokenRequest,
+  TokenMovedEvent,
+} from '../api/types'
 import { invokeHub, onHubEvent } from './hub'
 
 export type TableStatus =
@@ -52,6 +61,9 @@ export interface TableConnectionOptions {
   /** Joined (again): reload the board. */
   onJoined: () => void
   onMoved: (move: TokenMovedEvent) => void
+  /** Someone else's preview arrived, or (null) every preview is gone: the connection was left. */
+  onPreview: (preview: MovePreviewEvent | null) => void
+  onPreviewCleared: (cleared: MovePreviewClearedEvent) => void
   /** The fight is over: reload the board, which then says so. */
   onEnded: () => void
   /** JoinEncounter said no (encounterNotActive, tokenNotFound): reload the board. */
@@ -124,6 +136,21 @@ export class TableConnection {
     return invokeHub(connection, 'UndoMove', this.options.encounterId)
   }
 
+  /**
+   * Shows the others the preview, or (null) takes it back. Best effort: nothing happens
+   * while not connected, and the server clears a preview when the connection ends.
+   */
+  preview(request: MoveTokenRequest | null): void {
+    const connection = this.activeConnection()
+    if (!connection) return
+    const call = request
+      ? invokeHub(connection, 'PreviewMove', request)
+      : invokeHub(connection, 'ClearPreview')
+    call.catch(() => {
+      // A lost connection shows up through onclose.
+    })
+  }
+
   private activeConnection(): HubConnection | null {
     if (this.state !== 'connected' || !this.connection) return null
     // Any call resets the server's idle timer.
@@ -146,7 +173,10 @@ export class TableConnection {
     this.connection = null
     this.joined = false
     // Its onclose sees a newer generation and does nothing.
-    if (connection) void connection.stop().catch(() => {})
+    if (connection) {
+      void connection.stop().catch(() => {})
+      this.options.onPreview(null)
+    }
   }
 
   private async connect() {
@@ -160,11 +190,18 @@ export class TableConnection {
     const stale = () => generation !== this.generation
     this.setStatus(this.everJoined ? 'reconnecting' : 'connecting')
 
-    const { createConnection, encounterId, onMoved, onEnded } = this.options
+    const { createConnection, encounterId, onMoved, onPreview, onPreviewCleared, onEnded } =
+      this.options
     const connection = createConnection()
     this.connection = connection
     onHubEvent(connection, 'TokenMoved', (move) => {
       if (!stale()) onMoved(move)
+    })
+    onHubEvent(connection, 'MovePreviewed', (preview) => {
+      if (!stale()) onPreview(preview)
+    })
+    onHubEvent(connection, 'MovePreviewCleared', (cleared) => {
+      if (!stale()) onPreviewCleared(cleared)
     })
     onHubEvent(connection, 'EncounterEnded', () => {
       if (!stale()) onEnded()

@@ -23,6 +23,16 @@ public interface ITableHub
     // Errors: TokenNotFound, EncounterNotActive, NotYourToken, TargetInvalid.
     Task<MoveResult> MoveToken(MoveTokenRequest request);
 
+    // Shows the others where the caller is about to move a token, before they confirm:
+    // the same checks as MoveToken, then MovePreviewed to the encounter's group, the
+    // caller left out. One preview per connection; a new one replaces it. Kept in memory
+    // only and cleared by MoveToken, ClearPreview or a disconnect.
+    // Errors: TokenNotFound, EncounterNotActive, NotYourToken, TargetInvalid.
+    Task<HubResult> PreviewMove(MoveTokenRequest request);
+
+    // The caller let go of the token without moving it: MovePreviewCleared to the others.
+    Task ClearPreview();
+
     // Puts back the caller's own last move in the encounter, while it is still that
     // token's latest move, and broadcasts TokenMoved with Undo = true.
     // Errors: TokenNotFound (encounter), EncounterNotActive, NothingToUndo.
@@ -38,6 +48,13 @@ public interface ITableClient
 {
     // A confirmed move or undo, to everyone in the encounter's group.
     Task TokenMoved(TokenMovedEvent move);
+
+    // Someone is about to move a token there (PreviewMove). Also sent to a device
+    // when it joins, for every preview already shown.
+    Task MovePreviewed(MovePreviewEvent preview);
+
+    // A preview is gone: moved, let go of, or the device disconnected.
+    Task MovePreviewCleared(MovePreviewClearedEvent cleared);
 
     // The session DM ended the fight, or the session with it. Everyone leaves the board.
     Task EncounterEnded(Guid encounterId);
@@ -62,6 +79,12 @@ public record TokenMovedEvent(
     int Version,
     Guid ByUserId,
     bool Undo);
+
+// Where ByUserId is about to move the token: its top-left cell, not yet confirmed.
+public record MovePreviewEvent(Guid EncounterId, Guid TokenId, int X, int Y, Guid ByUserId);
+
+// Takes back the MovePreviewEvent with the same token and user.
+public record MovePreviewClearedEvent(Guid EncounterId, Guid TokenId, Guid ByUserId);
 
 // Error is null on success.
 public record HubResult(ApiErrorCode? Error);

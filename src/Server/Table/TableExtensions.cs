@@ -14,6 +14,7 @@ public static class TableExtensions
         builder.Services.Configure<TableOptions>(builder.Configuration.GetSection(TableOptions.Section));
         builder.Services.AddScoped<TableMoves>();
         builder.Services.AddSingleton<TableActivity>();
+        builder.Services.AddSingleton<TablePreviews>();
         builder.Services.AddSingleton<TableActivityFilter>();
         if (!BuildTime.IsGeneratingOpenApiDocument)
         {

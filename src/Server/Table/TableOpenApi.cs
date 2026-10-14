@@ -10,7 +10,10 @@ namespace OreanasOffice.Server.Table;
 public sealed class TableOpenApi : IOpenApiDocumentTransformer
 {
     private static readonly Type[] Messages =
-        [typeof(MoveTokenRequest), typeof(TokenMovedEvent), typeof(HubResult), typeof(MoveResult)];
+        [
+            typeof(MoveTokenRequest), typeof(TokenMovedEvent), typeof(MovePreviewEvent), typeof(MovePreviewClearedEvent),
+            typeof(HubResult), typeof(MoveResult),
+        ];
 
     public async Task TransformAsync(
         OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)

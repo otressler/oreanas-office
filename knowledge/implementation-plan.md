@@ -199,7 +199,7 @@ Distance rules are out of the proof of concept: no path, no distance preview and
 **Feature set**
 
 - Phone controls: tap a token, tap a target cell to see the token there as a preview, tap again to confirm ([playable map](/features/playable-map.md)). Only cells the token may stand on are accepted: its whole footprint on walkable cells, overlapping other tokens allowed ([realtime sync](/decisions/realtime-sync.md)).
-- SignalR hub, one group per encounter: permission and target check, save the move and its history, then broadcast. Only confirmed moves are sent. Optimistic moves with rollback when rejected. On other devices the token slides to its new cell in about 200 ms.
+- SignalR hub, one group per encounter: permission and target check, save the move and its history, then broadcast. Only confirmed moves are saved; while someone is at the confirm step, the others see an arrow to the target in the token's ring colour. Optimistic moves with rollback when rejected. On other devices the token slides to its new cell in about 200 ms.
 - Undo your own last move, only while it is still that token's latest move. The session DM moves any token but undoes only their own moves. Other `dm` members of the campaign, the default DM included, move only their own characters ([session](/domain/session.md)).
 - Connection lifecycle: disconnect when the app goes to the background, reconnect and reload the board when visible, drop connections idle for 30 minutes, a small connection indicator, moving switched off while disconnected, and the waking screen when a reconnect hits a cold start.
 
@@ -216,7 +216,9 @@ Distance rules are out of the proof of concept: no path, no distance preview and
 - [ ] Three or more phones and the DM laptop on production. A move shows up on the other devices within about a second.
 - [ ] A player can't move another player's character or a creature; the DM can move anything.
 - [ ] A token can't be put on a wall or into the gorge, but can stand on the bridge and on another token.
+- [ ] A stack shows its count. A player whose character lies under another token still selects it with a tap, and repeated taps cycle through their own tokens in the stack.
 - [ ] Undo works on a phone after a mistaken tap, and is gone once someone else has moved that token.
+- [ ] While a player is at the confirm step, the other devices show an arrow from their token to the target in their colour. It goes away when they confirm or cancel, or lock their phone.
 - [ ] Lock a phone for a minute and unlock it: it reconnects and shows the current board.
 - [ ] Leave everything closed until the app scales to zero; reopen: waking screen, then the correct board.
 

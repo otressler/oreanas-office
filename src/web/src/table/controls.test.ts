@@ -7,6 +7,7 @@ import {
   chooseTarget,
   confirmPreview,
   currentControls,
+  ownTokensOnTop,
   tapBoard,
   type Controls,
   type TapContext,
@@ -101,6 +102,15 @@ describe('canMoveToken', () => {
   })
 })
 
+describe('ownTokensOnTop', () => {
+  it('draws the person’s own characters last, keeping the order otherwise', () => {
+    const order = ownTokensOnTop([hero, friend, goblin, sidekick, ogre], ME).map((t) => t.id)
+    expect(order).toEqual(['friend', 'goblin', 'ogre', 'hero', 'sidekick'])
+    // The session DM owns no characters here: nothing moves.
+    expect(ownTokensOnTop(tokens, 'dm')).toEqual(tokens)
+  })
+})
+
 describe('chooseTarget', () => {
   it('uses the tapped cell for a 1×1 token, a bridge included, and nothing on void or wall', () => {
     expect(chooseTarget(grid, 'medium', { x: 2, y: 2 })).toEqual({ x: 2, y: 2 })
@@ -170,6 +180,33 @@ describe('tapBoard', () => {
       tokenId: 'hero',
       target: { x: 2, y: 2 },
     })
+  })
+
+  it('in a stack, selects the person’s topmost token and cycles through theirs on each tap', () => {
+    // Drawn bottom to top: hero, twin, a friend's character and a goblin, all on 0,0.
+    const twin = token('twin')
+    const stack = [
+      hero,
+      twin,
+      token('friend', { ownerUserId: 'other' }),
+      token('goblin', { kind: 'creature', ownerUserId: null }),
+    ]
+    const ctx = context({ tokens: stack })
+    const tapStack = (controls: Controls) => tapBoard(controls, at(0, 0, stack[3]), ctx).controls
+
+    const first = tapStack(IDLE)
+    expect(first).toEqual({ mode: 'selected', tokenId: 'twin' })
+    const second = tapStack(first)
+    expect(second).toEqual({ mode: 'selected', tokenId: 'hero' })
+    expect(tapStack(second)).toEqual(IDLE)
+
+    // From a preview, too: the preview goes with the old selection.
+    const preview: Controls = { mode: 'preview', tokenId: 'twin', target: { x: 2, y: 1 } }
+    expect(tapStack(preview)).toEqual({ mode: 'selected', tokenId: 'hero' })
+
+    // A stack without any of the person's tokens shows info.
+    const theirs = context({ tokens: stack.slice(2) })
+    expect(tapBoard(IDLE, at(0, 0, stack[3]), theirs)).toEqual({ controls: IDLE, info: true })
   })
 
   it('takes a cell with someone else’s token on it as the target', () => {

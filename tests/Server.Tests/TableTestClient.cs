@@ -18,6 +18,8 @@ public sealed class TableTestClient : IAsyncDisposable
 
     private readonly Channel<TokenMovedEvent> _moves = Channel.CreateUnbounded<TokenMovedEvent>();
     private readonly Channel<Guid> _ended = Channel.CreateUnbounded<Guid>();
+    // MovePreviewed and MovePreviewCleared in one list, to check their order.
+    private readonly Channel<object> _previews = Channel.CreateUnbounded<object>();
     private readonly TaskCompletionSource _idleTimeout = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource _closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -26,6 +28,8 @@ public sealed class TableTestClient : IAsyncDisposable
         Connection = connection;
         connection.On<TokenMovedEvent>(nameof(ITableClient.TokenMoved), move => _moves.Writer.TryWrite(move));
         connection.On<Guid>(nameof(ITableClient.EncounterEnded), id => _ended.Writer.TryWrite(id));
+        connection.On<MovePreviewEvent>(nameof(ITableClient.MovePreviewed), preview => _previews.Writer.TryWrite(preview));
+        connection.On<MovePreviewClearedEvent>(nameof(ITableClient.MovePreviewCleared), cleared => _previews.Writer.TryWrite(cleared));
         connection.On(nameof(ITableClient.IdleTimeout), () => _idleTimeout.TrySetResult());
         connection.Closed += _ =>
         {
@@ -76,6 +80,11 @@ public sealed class TableTestClient : IAsyncDisposable
     public Task<MoveResult> UndoAsync(Guid encounterId) =>
         Connection.InvokeAsync<MoveResult>(nameof(ITableHub.UndoMove), encounterId);
 
+    public Task<HubResult> PreviewAsync(Guid tokenId, int x, int y) =>
+        Connection.InvokeAsync<HubResult>(nameof(ITableHub.PreviewMove), new MoveTokenRequest(tokenId, x, y));
+
+    public Task ClearPreviewAsync() => Connection.InvokeAsync(nameof(ITableHub.ClearPreview));
+
     public Task MarkActiveAsync() => Connection.InvokeAsync(nameof(ITableHub.MarkActive));
 
     // The next TokenMoved this device received. Messages arrive in the order the server
@@ -92,6 +101,15 @@ public sealed class TableTestClient : IAsyncDisposable
         using var timeout = new CancellationTokenSource(Wait);
         return await _ended.Reader.ReadAsync(timeout.Token);
     }
+
+    // The next MovePreviewed or MovePreviewCleared this device received.
+    public async Task<object> NextPreviewAsync()
+    {
+        using var timeout = new CancellationTokenSource(Wait);
+        return await _previews.Reader.ReadAsync(timeout.Token);
+    }
+
+    public bool HasPendingPreview => _previews.Reader.TryPeek(out _);
 
     public bool HasPendingMove => _moves.Reader.TryPeek(out _);
 

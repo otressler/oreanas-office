@@ -35,10 +35,12 @@ export function cellInfo(scene: MapScene, x: number, y: number): BoardInfo | nul
   }
 }
 
-/** A token: its label, its size and its elevation. */
-export function tokenInfo(token: Pick<BoardToken, 'label' | 'size' | 'elevation'>): BoardInfo {
-  return {
-    title: token.label,
-    details: [de.sizes[token.size], de.board.elevation(formatElevation(token.elevation))],
-  }
+/** A token: its label, its size and its elevation, and the others stacked on the cell. */
+export function tokenInfo(
+  token: Pick<BoardToken, 'label' | 'size' | 'elevation'>,
+  alsoHere: readonly string[] = [],
+): BoardInfo {
+  const details = [de.sizes[token.size], de.board.elevation(formatElevation(token.elevation))]
+  if (alsoHere.length > 0) details.push(de.board.alsoHere(alsoHere.join(', ')))
+  return { title: token.label, details }
 }

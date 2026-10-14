@@ -1,13 +1,21 @@
 // Phone controls for moving tokens (knowledge/features/playable-map.md, "Phone
 // controls"): tap a token to select it, tap a cell to see it there as a preview, tap
 // the preview again to confirm. While a token is selected, every other tap picks a
-// target, even on another token. Pure functions; the fight page keeps the state and
+// target, even on another token. Tokens may stack: a tap selects the person's topmost
+// token there, and tapping the selected token again takes their next one in the stack,
+// then lets go after the last. Pure functions; the fight page keeps the state and
 // sends the confirmed move. Who may move what follows knowledge/domain/token.md, where
 // a token may stand follows knowledge/decisions/realtime-sync.md: the whole footprint
 // inside the map on walkable cells (a bridge counts), overlapping tokens allowed.
 // No distance, path or reach (dropped from the proof of concept).
 import type { BoardState, BoardToken, CreatureSize } from '../api/types'
-import { footprint, footprintCells, type GridPoint, type MapGrid } from '../board/geometry'
+import {
+  footprint,
+  footprintCells,
+  tokensAt,
+  type GridPoint,
+  type MapGrid,
+} from '../board/geometry'
 
 export type Controls =
   | { mode: 'idle' }
@@ -58,6 +66,18 @@ export function canMoveToken(
   return token.kind === 'character' && token.ownerUserId === userId
 }
 
+/**
+ * The order to draw tokens in for this person: their own characters on top of everything
+ * else, so a token put on theirs never hides it. Otherwise the order stays as it is.
+ */
+export function ownTokensOnTop<T extends Pick<BoardToken, 'kind' | 'ownerUserId'>>(
+  tokens: readonly T[],
+  userId: string,
+): T[] {
+  const own = (token: T) => token.kind === 'character' && token.ownerUserId === userId
+  return [...tokens.filter((token) => !own(token)), ...tokens.filter(own)]
+}
+
 /** Whether a token of this size may stand with its top-left corner on the cell. */
 export function isValidTarget(grid: MapGrid, size: CreatureSize, x: number, y: number): boolean {
   return footprintCells(size, x, y).every((cell) => grid.walkable(cell.x, cell.y))
@@ -104,17 +124,19 @@ export function currentControls(
 export function tapBoard(controls: Controls, tap: Tap, context: TapContext): TapResult {
   const { tokens, grid, canMove, enabled } = context
   const current = currentControls(controls, tokens, enabled)
-  const movable = tap.token && canMove(tap.token) ? tap.token : undefined
+  // The person's tokens on the tapped cell, top first as drawn without a selection: in a
+  // stack, theirs may lie under a creature or someone else's character.
+  const movable = tokensAt(tokens, tap.cell).filter(canMove)
 
   if (!enabled) {
-    return movable
+    return movable.length > 0
       ? { controls: IDLE, info: true, hint: 'movingOff' }
       : { controls: IDLE, info: true }
   }
 
   if (current.mode === 'idle') {
-    return movable
-      ? { controls: { mode: 'selected', tokenId: movable.id } }
+    return movable[0]
+      ? { controls: { mode: 'selected', tokenId: movable[0].id } }
       : { controls: current, info: true }
   }
 
@@ -126,7 +148,11 @@ export function tapBoard(controls: Controls, tap: Tap, context: TapContext): Tap
       confirm: { tokenId: selected.id, x: current.target.x, y: current.target.y },
     }
   }
-  if (tap.token?.id === selected.id) return { controls: IDLE }
+  // The selected token again: the person's next token in the stack, or let go.
+  if (covers(selected.size, selected, tap.cell)) {
+    const next = movable[movable.findIndex((token) => token.id === selected.id) + 1]
+    return { controls: next ? { mode: 'selected', tokenId: next.id } : IDLE }
+  }
 
   // Any other cell is a target, also one with another token on it: tokens may overlap,
   // and the session DM, who may move every token, must be able to stack them too. To

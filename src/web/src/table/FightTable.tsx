@@ -1,6 +1,7 @@
 // The fight page's live table (knowledge/features/playable-map.md, "Phone controls";
 // knowledge/decisions/realtime-sync.md): the board with select, preview and confirm,
-// optimistic moves with rollback, undo, and the connection indicator.
+// optimistic moves with rollback, undo, the connection indicator, and arrows where
+// others are about to move tokens.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { ApiErrorCode, BoardState, BoardToken, UndoableMove } from '../api/types'
 import { useCurrentUser } from '../auth/auth'
@@ -15,11 +16,13 @@ import {
   canMoveToken,
   confirmPreview,
   currentControls,
+  ownTokensOnTop,
   tapBoard,
   type Controls,
   type MoveIntent,
 } from './controls'
 import { mergeKnown, withPending, type PendingMoves } from './merge'
+import { moveArrows } from './previews'
 import { isUndoVisible, undoCandidate } from './undo'
 import { useTable } from './useTable'
 
@@ -70,16 +73,41 @@ export function FightTable({
     setOwnUndo(undefined)
   }
 
-  const shown = useMemo(
-    () => withPending(mergeKnown(board, table.known), pending),
-    [board, table.known, pending],
-  )
+  // The person's own characters are drawn, and tapped, on top of any stack.
+  const shown = useMemo(() => {
+    const merged = withPending(mergeKnown(board, table.known), pending)
+    return { ...merged, tokens: ownTokensOnTop(merged.tokens, me.id) }
+  }, [board, table.known, pending, me.id])
   const instant = useMemo(() => new Set(pending.keys()), [pending])
   const current = currentControls(controls, shown.tokens, running && connected)
   const selected =
     current.mode === 'idle' ? null : shown.tokens.find((token) => token.id === current.tokenId)!
   const undoable = undoCandidate(ownUndo, board.undoableMove)
   const showUndo = isUndoVisible(undoable, shown.tokens, connected)
+  const arrows = useMemo(
+    () => moveArrows(table.previews, shown.tokens),
+    [table.previews, shown.tokens],
+  )
+
+  // While this device is at the confirm step, the others see an arrow to the target.
+  // A confirmed move clears it on the server; letting go or losing the connection here.
+  const previewing = current.mode === 'preview' ? current : null
+  const [previewToken, previewX, previewY] = [
+    previewing?.tokenId,
+    previewing?.target.x,
+    previewing?.target.y,
+  ]
+  const { preview } = table
+  const previewShown = useRef(false)
+  useEffect(() => {
+    if (previewToken !== undefined && previewX !== undefined && previewY !== undefined) {
+      preview({ tokenId: previewToken, x: previewX, y: previewY })
+      previewShown.current = true
+    } else if (previewShown.current) {
+      previewShown.current = false
+      preview(null)
+    }
+  }, [previewToken, previewX, previewY, preview])
 
   const canMove = useCallback(
     (token: BoardToken) => canMoveToken(token, board, me.id),
@@ -189,6 +217,7 @@ export function FightTable({
           ghost={
             current.mode === 'preview' ? { tokenId: current.tokenId, ...current.target } : null
           }
+          arrows={arrows}
           slide
           instantTokenIds={instant}
           className="min-h-0 flex-1"

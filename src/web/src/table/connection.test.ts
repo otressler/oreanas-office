@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { TokenMovedEvent } from '../api/types'
+import type { MovePreviewClearedEvent, MovePreviewEvent, TokenMovedEvent } from '../api/types'
 import {
   MARK_ACTIVE_EVERY_MS,
   NotConnectedError,
@@ -16,6 +16,8 @@ let table: TableConnection | undefined
 let statuses: TableStatus[]
 const onJoined = vi.fn()
 const onMoved = vi.fn()
+const onPreview = vi.fn()
+const onPreviewCleared = vi.fn()
 const onEnded = vi.fn()
 const onRejected = vi.fn()
 const recheckServer = vi.fn()
@@ -40,6 +42,8 @@ function startTable() {
     onStatus: (status) => statuses.push(status),
     onJoined,
     onMoved,
+    onPreview,
+    onPreviewCleared,
     onEnded,
     onRejected,
   })
@@ -55,7 +59,16 @@ beforeEach(() => {
   Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden })
   hub = new FakeHub()
   statuses = []
-  for (const fn of [onJoined, onMoved, onEnded, onRejected, recheckServer]) fn.mockReset()
+  for (const fn of [
+    onJoined,
+    onMoved,
+    onPreview,
+    onPreviewCleared,
+    onEnded,
+    onRejected,
+    recheckServer,
+  ])
+    fn.mockReset()
 })
 
 afterEach(() => {
@@ -237,6 +250,35 @@ describe('TableConnection', () => {
 
     setOnline(false)
     await expect(table.undo()).rejects.toBeInstanceOf(NotConnectedError)
+  })
+
+  it('passes on others’ previews and drops them with the connection', async () => {
+    const table = startTable()
+    await flush()
+    const preview = { tokenId: 't1', x: 3, y: 4, byUserId: 'u2' } as MovePreviewEvent
+    const cleared = { tokenId: 't1', byUserId: 'u2' } as MovePreviewClearedEvent
+    hub.latest.emit('MovePreviewed', preview)
+    hub.latest.emit('MovePreviewCleared', cleared)
+    expect(onPreview).toHaveBeenCalledWith(preview)
+    expect(onPreviewCleared).toHaveBeenCalledWith(cleared)
+
+    setHidden(true)
+    expect(table.status).toBe('paused')
+    expect(onPreview).toHaveBeenLastCalledWith(null)
+  })
+
+  it('shows and takes back its own preview only while connected', async () => {
+    const table = startTable()
+    table.preview({ tokenId: 't1', x: 1, y: 2 })
+    await flush()
+    table.preview({ tokenId: 't1', x: 1, y: 2 })
+    table.preview(null)
+    expect(hub.calls('PreviewMove')).toEqual([[{ tokenId: 't1', x: 1, y: 2 }]])
+    expect(hub.calls('ClearPreview')).toEqual([[]])
+
+    setOnline(false)
+    table.preview(null)
+    expect(hub.calls('ClearPreview')).toHaveLength(1)
   })
 
   it('reloads the board and waits for the person when the fight isn’t running', async () => {

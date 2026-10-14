@@ -153,20 +153,69 @@ export function placementElevation(
   return Math.max(...footprintCells(size, x, y).map((cell) => grid.elevation(cell.x, cell.y)))
 }
 
+type Placed = Pick<BoardToken, 'id' | 'x' | 'y' | 'size'>
+
 /**
- * The token whose footprint covers the cell, as drawn: later tokens lie on top of
- * earlier ones and the selected token on top of all.
+ * The tokens whose footprints cover the cell, top first as drawn: later tokens lie on
+ * top of earlier ones and the selected token on top of all.
  */
-export function tokenAt<T extends Pick<BoardToken, 'id' | 'x' | 'y' | 'size'>>(
+export function tokensAt<T extends Placed>(
+  tokens: readonly T[],
+  cell: GridPoint,
+  selectedTokenId?: string | null,
+): T[] {
+  const here = tokens
+    .filter((token) => {
+      const n = footprint(token.size)
+      return cell.x >= token.x && cell.y >= token.y && cell.x < token.x + n && cell.y < token.y + n
+    })
+    .reverse()
+  const selected = here.findIndex((token) => token.id === selectedTokenId)
+  if (selected > 0) here.unshift(...here.splice(selected, 1))
+  return here
+}
+
+/** The token on top at the cell, as drawn (see tokensAt). */
+export function tokenAt<T extends Placed>(
   tokens: readonly T[],
   cell: GridPoint,
   selectedTokenId?: string | null,
 ): T | undefined {
-  const covers = (token: T) => {
-    const n = footprint(token.size)
-    return cell.x >= token.x && cell.y >= token.y && cell.x < token.x + n && cell.y < token.y + n
+  return tokensAt(tokens, cell, selectedTokenId)[0]
+}
+
+/**
+ * Stacks: tokens whose footprints overlap, directly or through others. Each stack is
+ * counted on the token drawn on top of it (the selected one, else the latest in the
+ * list), so the board can show how many lie there.
+ */
+export function stackCounts(
+  tokens: readonly Placed[],
+  selectedTokenId?: string | null,
+): Map<string, number> {
+  // Drawing order: the selected token last.
+  const drawn = [
+    ...tokens.filter((token) => token.id !== selectedTokenId),
+    ...tokens.filter((token) => token.id === selectedTokenId),
+  ]
+  const group = drawn.map((_, i) => i)
+  const root = (i: number): number => (group[i] === i ? i : (group[i] = root(group[i]!)))
+  const overlap = (a: Placed, b: Placed) => {
+    const [na, nb] = [footprint(a.size), footprint(b.size)]
+    return a.x < b.x + nb && b.x < a.x + na && a.y < b.y + nb && b.y < a.y + na
   }
-  const selected = tokens.find((token) => token.id === selectedTokenId)
-  if (selected && covers(selected)) return selected
-  return tokens.findLast(covers)
+  for (let i = 0; i < drawn.length; i++)
+    for (let j = i + 1; j < drawn.length; j++)
+      if (overlap(drawn[i]!, drawn[j]!)) group[root(i)] = root(j)
+
+  const sizes = new Map<number, number>()
+  const top = new Map<number, string>()
+  drawn.forEach((token, i) => {
+    const r = root(i)
+    sizes.set(r, (sizes.get(r) ?? 0) + 1)
+    top.set(r, token.id)
+  })
+  const counts = new Map<string, number>()
+  for (const [r, size] of sizes) if (size > 1) counts.set(top.get(r)!, size)
+  return counts
 }

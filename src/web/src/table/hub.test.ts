@@ -10,12 +10,16 @@ const hubMethods = {
   MoveToken: true,
   UndoMove: true,
   MarkActive: true,
+  PreviewMove: true,
+  ClearPreview: true,
 } satisfies Record<keyof TableHubCalls, true>
 
 const clientMethods = {
   TokenMoved: true,
   EncounterEnded: true,
   IdleTimeout: true,
+  MovePreviewed: true,
+  MovePreviewCleared: true,
 } satisfies Record<keyof TableClientEvents, true>
 
 describe('table hub contract', () => {

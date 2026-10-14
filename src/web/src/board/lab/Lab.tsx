@@ -17,13 +17,34 @@ function fixture(name: string): BoardState {
 const params = new URLSearchParams(location.search)
 
 export function Lab() {
-  const board = useMemo(() => fixture(params.get('fixture') ?? 'gorge-crossing'), [])
+  const board = useMemo(() => {
+    const loaded = fixture(params.get('fixture') ?? 'gorge-crossing')
+    const moves = new Map(
+      params.getAll('move').map((value) => {
+        const [label, x, y] = value.split(/[:,]/)
+        return [label, { x: Number(x), y: Number(y) }] as const
+      }),
+    )
+    return {
+      ...loaded,
+      tokens: loaded.tokens.map((token) => ({ ...token, ...moves.get(token.label) })),
+    }
+  }, [])
   const selected = board.tokens.find((token) => token.label === params.get('select'))?.id
   const highlight = useMemo(
     () =>
       params.get('highlight') === 'free'
         ? freeCells(buildGrid(board.map), board.tokens, { id: '', size: 'medium' })
         : undefined,
+    [board],
+  )
+  const arrows = useMemo(
+    () =>
+      params.getAll('arrow').flatMap((value) => {
+        const [label, x, y] = value.split(/[:,]/)
+        const token = board.tokens.find((candidate) => candidate.label === label)
+        return token ? [{ tokenId: token.id, x: Number(x), y: Number(y) }] : []
+      }),
     [board],
   )
   const [log, setLog] = useState('')
@@ -47,6 +68,7 @@ export function Lab() {
         className="min-h-0 flex-1"
         selectedTokenId={selected}
         highlight={highlight}
+        arrows={arrows}
         {...handlers}
       />
       {log && (

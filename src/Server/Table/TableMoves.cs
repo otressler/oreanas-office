@@ -47,44 +47,13 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
         for (var attempt = 1; ; attempt++)
         {
             db.ChangeTracker.Clear();
-            var found = await db.Tokens
-                .Where(t => t.Id == request.TokenId)
-                .Select(t => new
-                {
-                    Token = t,
-                    IsMember = db.CampaignMembers.Any(m => m.CampaignId == t.Encounter.CampaignId && m.UserId == userId),
-                    t.Encounter.Status,
-                    SessionDmUserId = (Guid?)t.Encounter.Session!.DmUserId,
-                    OwnerUserId = (Guid?)t.Character!.OwnerUserId,
-                    CharacterSize = (CreatureSize?)t.Character!.Size,
-                    TypeSize = (CreatureSize?)t.CreatureType!.Size,
-                    t.Encounter.BattleMap.Width,
-                    t.Encounter.BattleMap.Height,
-                    t.Encounter.BattleMap.Layout,
-                })
-                .SingleOrDefaultAsync();
-            if (found is null || !found.IsMember)
+            var check = await CheckMoveAsync(userId, request);
+            if (check.Error is { } error)
             {
-                return new MoveResult(ApiErrorCode.TokenNotFound, null);
+                return new MoveResult(error, null);
             }
 
-            if (found.Status != EncounterStatus.Active)
-            {
-                return new MoveResult(ApiErrorCode.EncounterNotActive, null);
-            }
-
-            var token = found.Token;
-            if (!MayMove(userId, found.SessionDmUserId, token.Kind, found.OwnerUserId))
-            {
-                return new MoveResult(ApiErrorCode.NotYourToken, null);
-            }
-
-            var size = found.TypeSize ?? found.CharacterSize ?? CreatureSize.Medium;
-            var grid = new MapGrid(found.Width, found.Height, found.Layout);
-            if (!MapGrid.FootprintCells(size, request.X, request.Y).All(cell => grid.Walkable(cell.X, cell.Y)))
-            {
-                return new MoveResult(ApiErrorCode.TargetInvalid, null);
-            }
+            var (token, grid, size) = (check.Token!, check.Grid!, check.Size);
 
             var move = new TokenMove
             {
@@ -118,6 +87,61 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
 
             return new MoveResult(null, Event(token, userId, undo: false));
         }
+    }
+
+    // MoveAsync's checks without saving anything: the preview the others see. The
+    // event is null with an error.
+    public async Task<(ApiErrorCode? Error, MovePreviewEvent? Preview)> PreviewAsync(Guid userId, MoveTokenRequest? request)
+    {
+        if (request is null)
+        {
+            return (ApiErrorCode.TokenNotFound, null);
+        }
+
+        var check = await CheckMoveAsync(userId, request);
+        return check.Error is { } error
+            ? (error, null)
+            : (null, new MovePreviewEvent(check.Token!.EncounterId, request.TokenId, request.X, request.Y, userId));
+    }
+
+    private async Task<MoveCheck> CheckMoveAsync(Guid userId, MoveTokenRequest request)
+    {
+        var found = await db.Tokens
+            .Where(t => t.Id == request.TokenId)
+            .Select(t => new
+            {
+                Token = t,
+                IsMember = db.CampaignMembers.Any(m => m.CampaignId == t.Encounter.CampaignId && m.UserId == userId),
+                t.Encounter.Status,
+                SessionDmUserId = (Guid?)t.Encounter.Session!.DmUserId,
+                OwnerUserId = (Guid?)t.Character!.OwnerUserId,
+                CharacterSize = (CreatureSize?)t.Character!.Size,
+                TypeSize = (CreatureSize?)t.CreatureType!.Size,
+                t.Encounter.BattleMap.Width,
+                t.Encounter.BattleMap.Height,
+                t.Encounter.BattleMap.Layout,
+            })
+            .SingleOrDefaultAsync();
+        if (found is null || !found.IsMember)
+        {
+            return MoveCheck.Failed(ApiErrorCode.TokenNotFound);
+        }
+
+        if (found.Status != EncounterStatus.Active)
+        {
+            return MoveCheck.Failed(ApiErrorCode.EncounterNotActive);
+        }
+
+        if (!MayMove(userId, found.SessionDmUserId, found.Token.Kind, found.OwnerUserId))
+        {
+            return MoveCheck.Failed(ApiErrorCode.NotYourToken);
+        }
+
+        var size = found.TypeSize ?? found.CharacterSize ?? CreatureSize.Medium;
+        var grid = new MapGrid(found.Width, found.Height, found.Layout);
+        return MapGrid.FootprintCells(size, request.X, request.Y).All(cell => grid.Walkable(cell.X, cell.Y))
+            ? new MoveCheck(null, found.Token, grid, size)
+            : MoveCheck.Failed(ApiErrorCode.TargetInvalid);
     }
 
     // Puts the caller's latest move in the encounter back, while it isn't undone and the
@@ -212,6 +236,12 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
         new(token.EncounterId, token.Id, token.X, token.Y, token.Elevation, token.Version, userId, undo);
 
     private sealed record EncounterAccess(bool IsMember, EncounterStatus Status, Guid? SessionDmUserId);
+
+    // The token as read (tracked, for MoveAsync to save), its map and size; or an error.
+    private sealed record MoveCheck(ApiErrorCode? Error, Token? Token, MapGrid? Grid, CreatureSize Size)
+    {
+        public static MoveCheck Failed(ApiErrorCode error) => new(error, null, null, default);
+    }
 
     private sealed record LatestTokenMove(TokenMove Move, Token Token, Guid? OwnerUserId);
 }

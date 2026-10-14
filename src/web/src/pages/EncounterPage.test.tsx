@@ -193,6 +193,46 @@ describe('EncounterPage', () => {
     expect(hub.calls('MoveToken')).toEqual([[{ tokenId: hero.id, x: 1, y: 0 }]])
   })
 
+  it('shows the others the preview until the move is confirmed or let go of', async () => {
+    const { user } = openFight()
+    await connected()
+
+    await user.click(cell(0, 0))
+    expect(hub.calls('PreviewMove')).toHaveLength(0)
+    await user.click(cell(1, 1))
+    await user.click(cell(2, 1))
+    await user.click(screen.getByRole('button', { name: de.table.cancel }))
+    expect(hub.calls('PreviewMove')).toEqual([
+      [{ tokenId: hero.id, x: 1, y: 1 }],
+      [{ tokenId: hero.id, x: 2, y: 1 }],
+    ])
+    expect(hub.calls('ClearPreview')).toHaveLength(1)
+
+    // Confirming sends the move first, which clears the preview on the server.
+    await user.click(cell(0, 0))
+    await user.click(cell(1, 0))
+    await user.click(cell(1, 0))
+    const order = hub.invocations.map((call) => call.method).filter((m) => m !== 'MarkActive')
+    expect(order.slice(-3)).toEqual(['PreviewMove', 'MoveToken', 'ClearPreview'])
+  })
+
+  it('draws an arrow where someone else is about to move a token', async () => {
+    openFight()
+    await connected()
+
+    const preview = { encounterId: ids.encounter, tokenId: 't1', byUserId: 'dm' }
+    act(() => hub.latest.emit('MovePreviewed', { ...preview, x: 2, y: 1 }))
+    expect(screen.getByText('Pfeil Goblin 1 nach 2,1')).toBeInTheDocument()
+
+    act(() => hub.latest.emit('MovePreviewCleared', preview))
+    expect(screen.queryByText(/^Pfeil/)).not.toBeInTheDocument()
+
+    // Gone with the connection, too.
+    act(() => hub.latest.emit('MovePreviewed', { ...preview, x: 2, y: 1 }))
+    act(() => hub.latest.close(new Error('gone')))
+    expect(screen.queryByText(/^Pfeil/)).not.toBeInTheDocument()
+  })
+
   it('puts the token back with the German message when the server says no', async () => {
     hub.respond = (method) => (method === 'MoveToken' ? refused('notYourToken') : { error: null })
     const { user } = openFight()
@@ -220,6 +260,16 @@ describe('EncounterPage', () => {
     await act(async () => answer.resolve(refused('targetInvalid')))
 
     expect(tokenText('Held')).toHaveTextContent('auf 2,0')
+  })
+
+  it('draws the person’s own character on top of a creature standing on it', async () => {
+    const board = runningBoard()
+    const goblin = { ...board.tokens[0]!, x: 0, y: 0 }
+    openFight({ ...board, tokens: [hero, goblin, ...board.tokens.slice(1)] })
+    await connected()
+
+    const drawn = within(screen.getByRole('list', { name: 'Figuren' })).getAllByRole('listitem')
+    expect(drawn.at(-1)).toHaveTextContent('Figur Held auf 0,0')
   })
 
   it('stays selected with a hint on a cell the token can’t stand on', async () => {
