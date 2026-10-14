@@ -255,6 +255,25 @@ describe('tool panels', () => {
     await user.type(screen.getByLabelText(t.label), 'Höhle')
     expect(placementOptions.getState().entrance).toEqual({ kind: 'both', label: 'Höhle' })
   })
+
+  it('shows a selected entrance to edit and delete without switching tools', async () => {
+    const user = userEvent.setup()
+    const map = mapWith(
+      [],
+      [floor(0, 2)],
+      [{ id: 'e1', kind: 'entrance', label: 'Waldweg', cells: [[0, 2]] }],
+    )
+    const store = renderWithEditorStore(<EntranceToolPanel />, map)
+    expect(screen.queryByRole('button', { name: t.delete })).not.toBeInTheDocument()
+
+    select(store, 'entrance', 'e1')
+    const section = screen.getByRole('region', { name: t.selectedEntrance })
+    expect(within(section).getByText(t.cellCount(1))).toBeInTheDocument()
+
+    await user.click(within(section).getByRole('button', { name: t.delete }))
+    expect(store.getState().doc.layout.entrances).toEqual([])
+    expect(screen.queryByRole('region', { name: t.selectedEntrance })).not.toBeInTheDocument()
+  })
 })
 
 describe('checks panel', () => {

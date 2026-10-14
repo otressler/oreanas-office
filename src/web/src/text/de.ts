@@ -743,7 +743,9 @@ export const de = {
       'Ziehe ein Rechteck auf der Karte. Objekte dürfen über Abgrund und Wand liegen, aber nicht über anderen Objekten.',
     entranceKind: 'Art',
     entranceHelp:
-      'Ziehe am Kartenrand entlang. Übernommen werden nur Randfelder, auf denen eine Figur stehen kann und die noch zu keinem Ein- oder Ausgang gehören; rot markierte nicht. Ein Klick auf einen vorhandenen wählt ihn aus.',
+      'Ziehe am Kartenrand entlang. Übernommen werden nur Randfelder, auf denen eine Figur stehen kann und die noch zu keinem Ein- oder Ausgang gehören; rot markierte nicht. Ein Klick auf einen vorhandenen wählt ihn aus: Er erscheint dann unten zum Bearbeiten oder Löschen, Entf löscht ihn.',
+    /** The entrance tool's section for the selected entrance. */
+    selectedEntrance: 'Ausgewählter Ein- oder Ausgang',
     selectHelp:
       'Klick auf ein Objekt oder einen Ein- oder Ausgang, um es zu bearbeiten. Ziehen verschiebt ein Objekt. Entf löscht, Esc hebt die Auswahl auf.',
     /** Heading of the selected feature's properties. */

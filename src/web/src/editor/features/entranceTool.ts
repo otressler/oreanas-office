@@ -1,13 +1,14 @@
 // The entrance tool: drag along the map's outer edge to make an entrance from the cells
 // crossed. Only edge cells a token may stand on and no other entrance has are taken;
-// the rest show red. Clicking a cell of an existing entrance selects it.
+// the rest show red. Clicking a cell of an existing entrance selects it; the panel then
+// shows it to edit or delete, and Delete removes it.
 import type { GridPoint } from '../../board/geometry'
 import { de } from '../../text/de'
 import type { EditorStore, Overlay } from '../store'
 import type { EditorTool, ToolContext } from '../tools'
 import { EntranceIcon } from './icons'
 import { lineCells } from '../terrain/layout'
-import { addEntrance, entranceAtCell, entranceCells } from './layout'
+import { addEntrance, entranceAtCell, entranceCells, removeItem } from './layout'
 import { placementOptions } from './options'
 import { EntranceToolPanel } from './panels'
 
@@ -102,8 +103,21 @@ export const entranceTool: EditorTool = {
   },
 
   onKeyDown(event, ctx) {
-    if (event.key !== 'Escape' || !press) return false
-    cancel(ctx)
-    return true
+    const { selection, select, apply } = ctx.store.getState()
+    if (event.key === 'Escape') {
+      if (press) {
+        cancel(ctx)
+        return true
+      }
+      if (selection?.kind !== 'entrance') return false
+      select(null)
+      return true
+    }
+    if ((event.key === 'Delete' || event.key === 'Backspace') && selection?.kind === 'entrance') {
+      cancel(ctx)
+      apply((doc) => removeItem(doc, selection))
+      return true
+    }
+    return false
   },
 }
