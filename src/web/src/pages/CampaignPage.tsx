@@ -5,6 +5,8 @@ import { useCampaign } from '../campaigns/queries'
 import { SessionsPanel } from '../campaigns/SessionsPanel'
 import { Badge, LoadError, Loading, PageTitle } from '../components/ui'
 import { EncountersPanel } from '../encounters/EncountersPanel'
+import { CampaignMapsLink } from '../maps/CampaignMapsLink'
+import { useKeepCampaignCopy } from '../maps/campaignCopy'
 import { de } from '../text/de'
 
 /**
@@ -14,6 +16,8 @@ import { de } from '../text/de'
 export function CampaignPage() {
   const { campaignId = '' } = useParams()
   const campaign = useCampaign(campaignId)
+  // The map pages work offline from this copy.
+  useKeepCampaignCopy(campaign.data)
 
   if (campaign.isPending) return <Loading />
   if (campaign.isError) {
@@ -31,7 +35,12 @@ export function CampaignPage() {
         <Badge>{de.roles[campaign.data.myRole]}</Badge>
       </div>
       <SessionsPanel campaign={campaign.data} />
-      {campaign.data.myRole === 'dm' && <EncountersPanel campaign={campaign.data} />}
+      {campaign.data.myRole === 'dm' && (
+        <>
+          <CampaignMapsLink campaignId={campaign.data.id} />
+          <EncountersPanel campaign={campaign.data} />
+        </>
+      )}
       <CharactersPanel campaignId={campaign.data.id} />
       <MembersPanel campaign={campaign.data} />
     </div>

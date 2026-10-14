@@ -45,6 +45,23 @@ export const text = {
   reconnecting: 'Verbindung weg – verbinde neu…',
   idle: 'Pausiert – tippe, um weiterzuspielen',
   notYourToken: 'Diese Figur darfst du nicht bewegen.',
+  // The map list and offline map pages (de.maps).
+  campaignMaps: /^Karten/,
+  mapListTitle: (campaign: string) => `Karten – ${campaign}`,
+  newMapTitle: 'Neue Karte',
+  mapName: 'Name',
+  createMap: 'Anlegen',
+  editMap: (name: string) => `${name} bearbeiten`,
+  duplicateMap: (name: string) => `${name} duplizieren`,
+  archiveMap: (name: string) => `${name} archivieren`,
+  restoreMap: (name: string) => `${name} zurückholen`,
+  archivedMaps: (count: number) => `Archiviert (${count})`,
+  localOnly: 'Nur auf diesem Gerät',
+  backToMapList: 'Zur Kartenliste',
+  backToCampaign: 'Zur Kampagne',
+  offlineMapsLink: 'Karten ohne Verbindung bearbeiten',
+  offlineMapsTitle: 'Deine Karten',
+  editorNarrowTitle: 'Der Karteneditor ist für Laptops gedacht',
 }
 
 /** The screen position of a cell's centre on the board, read from the Konva stage's transform. */
