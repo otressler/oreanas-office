@@ -378,6 +378,7 @@ export const de = {
       elevation: 'Höhe',
       features: 'Objekte',
       entrances: 'Ein- und Ausgänge',
+      creatures: 'Kreaturen',
     } satisfies Record<import('../editor/tools').ToolGroup, string>,
     edit: 'Bearbeiten',
     preview: 'Vorschau',
@@ -778,11 +779,111 @@ export const de = {
   /** Creature types and the bestiary (lane: bestiary). */
   bestiary: {
     title: 'Bestiarium',
+    empty: 'Noch keine Kreaturenarten. Lege die erste an.',
+    newType: 'Neue Kreaturenart',
+    newTitle: 'Neue Kreaturenart',
+    /** The form's title when editing, e.g. "Goblin bearbeiten". */
+    editTitle: (name: string) => `${name} bearbeiten`,
+    /** Accessible name of a row's edit button, e.g. "Goblin bearbeiten". */
+    edit: (name: string) => `${name} bearbeiten`,
+    editShort: 'Ändern',
+    /** Accessible name of a row's button that picks the type, e.g. "Goblin wählen". */
+    pick: (name: string) => `${name} wählen`,
+    name: 'Name',
+    nameHint: 'Einmalig in der Kampagne, bis zu 40 Zeichen.',
+    size: 'Größe',
+    /** A size and its footprint, e.g. "Groß (2 × 2 Felder)". */
+    sizeOption: (size: string, cells: number) => `${size} (${cells} × ${cells} Felder)`,
+    appearance: 'Aussehen',
+    appearanceHint: 'Kurze Beschreibung, aus der später das Symbol gemalt wird.',
+    notes: 'Notizen der Spielleitung',
+    notesHint: 'Nur für die Spielleitung sichtbar.',
+    create: 'Anlegen',
+    save: 'Speichern',
+    cancel: 'Abbrechen',
+    archive: 'Archivieren',
+    restore: 'Zurückholen',
+    /** Accessible name of the button that brings an archived type back, e.g. "Goblin zurückholen". */
+    restoreLabel: (name: string) => `${name} zurückholen`,
+    /** The collapsed part with archived types, e.g. "Archiviert (2)". */
+    archived: (count: number) => `Archiviert (${count})`,
+    saveFailed: 'Speichern auf diesem Gerät hat nicht geklappt. Versuch es bitte noch einmal.',
+    problems: {
+      nameMissing: 'Gib einen Namen an.',
+      nameTooLong: 'Der Name darf höchstens 40 Zeichen haben.',
+      nameTaken: 'Diese Kampagne hat schon eine Kreaturenart mit diesem Namen.',
+      appearanceTooLong: 'Das Aussehen darf höchstens 500 Zeichen haben.',
+      notesTooLong: 'Die Notizen dürfen höchstens 2000 Zeichen haben.',
+    } satisfies Record<import('../bestiary/creatureTypes').CreatureTypeProblem, string>,
   },
 
   /** The editor's encounter mode: creatures, placement, ready (lane: bestiary). */
   encounterEditor: {
     title: 'Begegnung',
+    tools: {
+      place: 'Platzieren',
+      select: 'Auswählen',
+    },
+    // The map mode's list of encounters.
+    listTitle: 'Begegnungen',
+    listEmpty: 'Noch keine Begegnung auf dieser Karte.',
+    newEncounter: 'Neue Begegnung',
+    archive: 'Archivieren',
+    restore: 'Zurückholen',
+    /** Accessible names of the list's archive and restore buttons. */
+    archiveLabel: (name: string) => `${name} archivieren`,
+    restoreLabel: (name: string) => `${name} zurückholen`,
+    /** The collapsed part with archived encounters, e.g. "Archiviert (1)". */
+    archived: (count: number) => `Archiviert (${count})`,
+    misplacedMark: 'Eine Kreatur steht auf dieser Karte nicht mehr gültig.',
+    // The header in encounter mode.
+    encounterName: 'Name der Begegnung',
+    encounterNameInvalid: 'Der Name braucht 1 bis 80 Zeichen.',
+    /** The map's name in the header, e.g. "Karte: Klamm". */
+    mapOf: (name: string) => `Karte: ${name}`,
+    backToMap: 'Zur Karte',
+    notFoundTitle: 'Diese Begegnung gibt es hier nicht',
+    notFoundBody:
+      'Sie liegt nicht auf diesem Gerät, gehört zu einer anderen Karte, oder der Link stimmt nicht.',
+    // The placement tool.
+    placePickFirst:
+      'Wähle eine Kreaturenart oder lege eine neue an. Ein Klick auf ein Feld stellt sie dorthin.',
+    /** `name` is the picked type, e.g. "Goblin". */
+    placeHelp: (name: string) =>
+      `${name}: Ein Klick auf ein Feld stellt eine Kreatur dorthin (oben links ihrer Fläche). Rot heißt: Dort kann sie nicht stehen.`,
+    // The select tool.
+    selectHelp: 'Klicke eine Kreatur an, um sie zu bearbeiten. Ziehen verschiebt sie.',
+    selectKeys: 'Entf entfernt die Kreatur, Esc hebt die Auswahl auf.',
+    label: 'Bezeichnung',
+    labelInvalid: 'Die Bezeichnung braucht 1 bis 40 Zeichen.',
+    type: 'Art',
+    size: 'Größe',
+    position: 'Feld',
+    /** A cell, e.g. "3, 4". */
+    cell: (x: number, y: number) => `${x}, ${y}`,
+    remove: 'Entfernen',
+    // The encounter itself.
+    archivedBadge: 'Archiviert',
+    ready: 'Bereit',
+    readyHint: 'Setze die Begegnung von Hand auf bereit, wenn sie gespielt werden kann.',
+    readyArchived: 'Eine archivierte Begegnung kann nicht bereit sein. Hol sie zuerst zurück.',
+    /** `labels` lists the creatures, e.g. "Goblin 2, Goblin 3". */
+    readyMisplaced: (labels: string) =>
+      `Bereit geht erst, wenn alle Kreaturen gültig stehen. Nicht gültig: ${labels}.`,
+    readyBroken: (labels: string) =>
+      `Die Karte hat sich geändert: ${labels} steht nicht mehr gültig. Die Begegnung bleibt bereit, lässt sich aber erst starten, wenn das behoben ist.`,
+    /** `status` is the encounter's, e.g. "Läuft". */
+    readOnly: (status: string) =>
+      `Diese Begegnung ist ${status.toLowerCase()} und gehört dem Server. Hier lässt sie sich nur ansehen, auf der Karte von damals.`,
+    // Starting.
+    start: 'Starten',
+    startNeedsReady: 'Zum Starten muss die Begegnung bereit sein.',
+    startOffline: 'Zum Starten brauchst du eine Verbindung zum Server.',
+    startNeedsSession: 'Zum Starten muss eine Sitzung laufen, in der du die Spielleitung bist.',
+    startArchived: 'Eine archivierte Begegnung lässt sich nicht starten.',
+    startMisplaced: 'Starten geht erst, wenn alle Kreaturen gültig stehen.',
+    startBlocked:
+      'Erst muss ein Konflikt oder eine abgelehnte Änderung gelöst werden. Schau in den Synchronisierungsstatus.',
   },
 
   /** Failures without an error code. */

@@ -2,10 +2,11 @@
 // a list of tools and panels; registry.ts collects them (the integrator owns it).
 import type { ComponentType } from 'react'
 import type { GridPoint } from '../board/geometry'
+import type { EncounterStore } from './encounter/store'
 import type { EditorStore } from './store'
 
 /** The toolbar's groups, in toolbar order. */
-export type ToolGroup = 'terrain' | 'elevation' | 'features' | 'entrances'
+export type ToolGroup = 'terrain' | 'elevation' | 'features' | 'entrances' | 'creatures'
 
 /** A pointer over the map, in cells. */
 export interface CellPointer {
@@ -23,6 +24,8 @@ export interface CellPointer {
 
 export interface ToolContext {
   store: EditorStore
+  /** In encounter mode the encounter being edited; the creature tools need it. */
+  encounter?: EncounterStore
 }
 
 export interface EditorTool {
