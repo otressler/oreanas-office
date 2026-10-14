@@ -1,6 +1,7 @@
 // Units (knowledge/rules/movement-distance.md): distances are whole squares
 // internally and only become meters for display. One square is 1.5 m. Never feet.
 import { de } from '../text/de'
+import { limits } from './limits'
 
 /** Length of one grid square in meters. A fixed constant, not a per-map setting. */
 export const SQUARE_METERS = 1.5
@@ -8,15 +9,6 @@ export const SQUARE_METERS = 1.5
 /** Squares to meters, e.g. 5 → 7.5. */
 export function squaresToMeters(squares: number): number {
   return squares * SQUARE_METERS
-}
-
-/**
- * Meters to whole squares, e.g. 9 → 6 and 7.5 → 5. A remainder smaller than a
- * square is dropped (10 m → 6 squares), since a partial square can't be entered.
- */
-export function metersToSquares(meters: number): number {
-  // The epsilon absorbs floating-point noise such as 4.5 / 1.5 = 2.9999…
-  return Math.floor(meters / SQUARE_METERS + 1e-9)
 }
 
 const meterNumber = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 })
@@ -36,28 +28,23 @@ export function formatElevation(meters: number): string {
   return de.units.meters(meterNumber.format(rounded))
 }
 
-const meterInputNumber = new Intl.NumberFormat('de-DE', {
+const elevationInputNumber = new Intl.NumberFormat('de-DE', {
   maximumFractionDigits: 1,
   useGrouping: false,
 })
 
-/** Squares as the value of a meter input field, without unit: 5 → "7,5". */
-export function formatMetersInput(squares: number): string {
-  return meterInputNumber.format(squaresToMeters(squares))
+/** An elevation as the value of an input field, without unit: 1.5 → "1,5", -3 → "-3". */
+export function formatElevationInput(meters: number): string {
+  return elevationInputNumber.format(Math.round(meters * 10) / 10 + 0)
 }
 
 /**
- * Meters as typed by a person: "9", "7,5", "7.5" or "7,5 m". Returns null for
- * anything that isn't a non-negative number. Rounding to squares is separate
- * (metersToSquares), so a form can say what the value will become.
+ * An elevation as typed: "1,5", "1.5", "-3", "−1,5", "+3" or "2,5 m", with at most one
+ * decimal. Null for anything else and for heights at or beyond limits.elevation.
  */
-export function parseMeters(input: string): number | null {
-  const normalized = input.trim().replace(/\s*m$/i, '').replace(',', '.')
-  if (!/^(\d+(\.\d*)?|\.\d+)$/.test(normalized)) return null
-  return Number(normalized)
-}
-
-/** True when the meters are a whole number of squares, so nothing is rounded off. */
-export function isWholeSquares(meters: number): boolean {
-  return Math.abs(squaresToMeters(metersToSquares(meters)) - meters) < 1e-9
+export function parseElevationInput(input: string): number | null {
+  const normalized = input.trim().replace(/\s*m$/i, '').replace(/^[−–]/, '-').replace(',', '.')
+  if (!/^[+-]?(\d+(\.\d?)?|\.\d)$/.test(normalized)) return null
+  const value = Math.round(Number(normalized) * 10) / 10 + 0
+  return Math.abs(value) < limits.elevation ? value : null
 }

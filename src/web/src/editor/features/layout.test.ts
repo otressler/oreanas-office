@@ -3,15 +3,12 @@ import { feature, floor, mapWith } from './fixtures'
 import {
   addEntrance,
   addFeature,
-  cellsAlong,
   entranceAtCell,
   entranceCells,
   featureAtCell,
   footprintProblem,
-  formatElevationInput,
   moveFeature,
   parseCellsInput,
-  parseElevationInput,
   rectBetween,
   removeEntrance,
   removeFeature,
@@ -145,46 +142,9 @@ describe('entrances', () => {
     )
     expect(removeItem(withEntrance, { kind: 'entrance', id: 'e1' }).layout.entrances).toEqual([])
   })
-
-  it('fills the cells between two pointer positions', () => {
-    expect(cellsAlong({ x: 0, y: 0 }, { x: 0, y: 3 })).toEqual([
-      { x: 0, y: 0 },
-      { x: 0, y: 1 },
-      { x: 0, y: 2 },
-      { x: 0, y: 3 },
-    ])
-    expect(cellsAlong({ x: 3, y: 0 }, { x: 0, y: 0 })).toHaveLength(4)
-    expect(cellsAlong({ x: 0, y: 0 }, { x: 2, y: 2 })).toEqual([
-      { x: 0, y: 0 },
-      { x: 1, y: 1 },
-      { x: 2, y: 2 },
-    ])
-    expect(cellsAlong({ x: 1, y: 1 }, { x: 1, y: 1 })).toEqual([{ x: 1, y: 1 }])
-  })
 })
 
 describe('typed numbers', () => {
-  it('reads elevations the German way, rounded to one decimal', () => {
-    expect(parseElevationInput('2,5')).toBe(2.5)
-    expect(parseElevationInput('-1,5')).toBe(-1.5)
-    expect(parseElevationInput('1.25')).toBe(1.3)
-    expect(parseElevationInput(' 3 m ')).toBe(3)
-    expect(parseElevationInput('-0')).toBe(0)
-    expect(parseElevationInput(',5')).toBe(0.5)
-    expect(parseElevationInput('9999,9')).toBe(9999.9)
-    expect(parseElevationInput('10000')).toBeNull()
-    expect(parseElevationInput('-')).toBeNull()
-    expect(parseElevationInput('')).toBeNull()
-    expect(parseElevationInput('zwei')).toBeNull()
-  })
-
-  it('writes elevations the German way', () => {
-    expect(formatElevationInput(-1.5)).toBe('-1,5')
-    expect(formatElevationInput(2)).toBe('2')
-    expect(formatElevationInput(1234.5)).toBe('1234,5')
-    expect(formatElevationInput(-0)).toBe('0')
-  })
-
   it('reads whole cell numbers', () => {
     expect(parseCellsInput(' 4 ')).toBe(4)
     expect(parseCellsInput('-1')).toBe(-1)

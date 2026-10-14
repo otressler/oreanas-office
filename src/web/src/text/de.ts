@@ -368,6 +368,8 @@ export const de = {
     toolbar: 'Werkzeuge',
     undo: 'Rückgängig',
     redo: 'Wiederholen',
+    undoKey: 'Strg+Z',
+    redoKey: 'Strg+Umschalt+Z',
     /** Tooltip of a tool button: its name and shortcut key. */
     toolTitle: (label: string, key: string | undefined) =>
       key ? `${label} (${key.toUpperCase()})` : label,
@@ -650,6 +652,8 @@ export const de = {
     importedWithProblems: (name: string, count: number) =>
       `„${name}“ ist importiert. Die Prüfung im Editor meldet ${count === 1 ? 'ein Problem' : `${count} Probleme`}.`,
     file: {
+      /** The download's name when the map's name leaves nothing usable. */
+      fallbackName: 'Karte',
       unreadable: 'Diese Datei lässt sich nicht lesen. Ist es wirklich eine JSON-Datei?',
       notAMap: 'Diese Datei ist keine Kartendatei.',
       noName: 'Die Karte in der Datei hat keinen Namen.',

@@ -208,6 +208,13 @@ function makeTool(
     },
 
     onKeyDown(event, { store }) {
+      const s = session(store)
+      // A rectangle is only a preview until release; Escape drops it.
+      if (event.key === 'Escape' && s.start) {
+        s.start = null
+        draw(store)
+        return true
+      }
       if (event.ctrlKey || event.metaKey || event.altKey) return false
       if (!how.keys(event)) return false
       draw(store)

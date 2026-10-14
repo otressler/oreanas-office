@@ -3,6 +3,7 @@
 import { useId, useMemo, useState } from 'react'
 import { Button, SelectField, TextField } from '../../components/ui'
 import type { LayoutEntrance, LayoutFeature } from '../../api/types'
+import { formatElevationInput, parseElevationInput } from '../../lib/units'
 import { limits } from '../../lib/limits'
 import { de } from '../../text/de'
 import { useEditor, useEditorStore } from '../store'
@@ -11,9 +12,7 @@ import { CheckField, Help, KindSuggestions, MapNumberField, MapTextField } from 
 import { suggestionFor } from './kinds'
 import {
   footprintProblem,
-  formatElevationInput,
   parseCellsInput,
-  parseElevationInput,
   removeItem,
   updateEntrance,
   updateFeature,

@@ -5,11 +5,9 @@ import {
   canResize,
   elevationLabels,
   floodArea,
-  formatElevationInput,
   lineCells,
   paintElevation,
   paintTerrain,
-  parseElevation,
   rectBetween,
   rectCells,
   resizeLosses,
@@ -305,33 +303,6 @@ describe('resizeMap', () => {
       features: 1,
       entrances: 1,
     })
-  })
-})
-
-describe('parseElevation', () => {
-  it('reads German and English decimals, signs and a unit', () => {
-    expect(parseElevation('1,5')).toBe(1.5)
-    expect(parseElevation('1.5')).toBe(1.5)
-    expect(parseElevation('-3')).toBe(-3)
-    expect(parseElevation('−1,5')).toBe(-1.5)
-    expect(parseElevation('+3')).toBe(3)
-    expect(parseElevation(' 2,5 m ')).toBe(2.5)
-    expect(parseElevation('0')).toBe(0)
-    expect(parseElevation('-0')).toBe(0)
-    expect(Object.is(parseElevation('-0'), -0)).toBe(false)
-    expect(parseElevation(',5')).toBe(0.5)
-    expect(parseElevation('9999,9')).toBe(9999.9)
-  })
-
-  it('rejects anything else', () => {
-    for (const input of ['', '-', 'abc', '1,25', '1,5,5', '10000', '-10000', '1e3', '3 ft'])
-      expect(parseElevation(input), input).toBeNull()
-  })
-
-  it('formats for the input field', () => {
-    expect(formatElevationInput(1.5)).toBe('1,5')
-    expect(formatElevationInput(-3)).toBe('-3')
-    expect(formatElevationInput(2500)).toBe('2500')
   })
 })
 

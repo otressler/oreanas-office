@@ -44,18 +44,44 @@ describe('useAutosave', () => {
     await vi.waitFor(async () => expect((await stored())?.name).toBe('Klamm'))
   })
 
-  it('waits for the end of a gesture', async () => {
-    const { store, stored } = await setup()
+  it('saves during a gesture too, so typed text is stored before the field loses focus', async () => {
+    const { store, hook, stored } = await setup()
     act(() => {
       store.getState().beginGesture()
       store.getState().updateGesture(rename('A'))
     })
-    await act(() => vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS * 3))
-    expect((await stored())?.name).toBe('Klamm')
-
-    act(() => store.getState().endGesture())
+    expect(hook.result.current).toBe('saving')
     await act(() => vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS))
     await vi.waitFor(async () => expect((await stored())?.name).toBe('A'))
+    await vi.waitFor(() => expect(hook.result.current).toBe('saved'))
+
+    // Ending the gesture changes nothing more and leaves the status at "saved".
+    act(() => store.getState().endGesture())
+    expect(hook.result.current).toBe('saved')
+  })
+
+  it('stays "saved" after a gesture that changed nothing', async () => {
+    const { store, hook } = await setup()
+    act(() => {
+      store.getState().beginGesture()
+      store.getState().endGesture()
+    })
+    await act(() => vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS))
+    expect(hook.result.current).toBe('saved')
+  })
+
+  it('reports a failed write, and clears it once a later write succeeds', async () => {
+    const { store, hook, stored } = await setup()
+    const put = vi.spyOn(offlineDb('u1').maps, 'put').mockRejectedValueOnce(new Error('full'))
+    act(() => store.getState().apply(rename('A')))
+    await act(() => vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS))
+    await vi.waitFor(() => expect(hook.result.current).toBe('failed'))
+
+    act(() => store.getState().apply(rename('B')))
+    await act(() => vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS))
+    await vi.waitFor(() => expect(hook.result.current).toBe('saved'))
+    expect((await stored())?.name).toBe('B')
+    expect(put).toHaveBeenCalledTimes(2)
   })
 
   it('saves at once when the editor closes', async () => {

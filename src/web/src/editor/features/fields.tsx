@@ -1,39 +1,11 @@
 // Inputs for the side panels. Edits of the map run as one store gesture from focus to
 // blur, so typing a label is one undo step, not one per keystroke.
-import { useEffect, useId, useRef, useState, type InputHTMLAttributes, type ReactNode } from 'react'
+import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react'
 import { TextField } from '../../components/ui'
 import type { EditorMap } from '../model'
 import { useEditorStore } from '../store'
+import { useEditGesture } from '../useEditGesture'
 import { KIND_SUGGESTIONS } from './kinds'
-
-/** Begins the store gesture on focus, ends it on blur, and also when unmounted mid-edit. */
-function useEditGesture() {
-  const store = useEditorStore()
-  const editing = useRef(false)
-  useEffect(
-    () => () => {
-      if (editing.current) store.getState().endGesture()
-    },
-    [store],
-  )
-  return {
-    begin() {
-      editing.current = true
-      store.getState().beginGesture()
-    },
-    /** Changes the map inside the gesture, starting it again if something ended it. */
-    change(update: (doc: EditorMap) => EditorMap) {
-      editing.current = true
-      const state = store.getState()
-      state.beginGesture()
-      state.updateGesture((current) => update(current))
-    },
-    end() {
-      editing.current = false
-      store.getState().endGesture()
-    },
-  }
-}
 
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'>
 

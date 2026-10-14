@@ -8,7 +8,7 @@ import { limits } from '../../lib/limits'
 import { formatElevation } from '../../lib/units'
 import { de } from '../../text/de'
 import { useEditor } from '../store'
-import { formatElevationInput, parseElevation } from './layout'
+import { formatElevationInput, parseElevationInput } from '../../lib/units'
 import { ELEVATION_QUICK, TERRAIN_CHOICES, usePaintOptions } from './options'
 
 const t = de.editorTerrain
@@ -94,11 +94,11 @@ export function ElevationPanel() {
   const [draft, setDraft] = useState<string | null>(null)
   const inputId = useId()
   const errorId = useId()
-  const invalid = draft !== null && parseElevation(draft) === null
+  const invalid = draft !== null && parseElevationInput(draft) === null
 
   const change = (text: string) => {
     setDraft(text)
-    const meters = parseElevation(text)
+    const meters = parseElevationInput(text)
     if (meters !== null) setElevation(meters)
   }
 

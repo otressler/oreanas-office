@@ -89,6 +89,17 @@ describe('terrain tools', () => {
     expect(store.getState().doc.layout.cells).toEqual([])
   })
 
+  it('rectangle is dropped with Escape before the button is released', () => {
+    const store = editorStoreFor()
+    const ctx = { store }
+    terrainRect.onPointerDown!(pointerAt(1, 1), ctx)
+    terrainRect.onPointerMove!(pointerAt(3, 2), ctx)
+    expect(terrainRect.onKeyDown!(key('Escape'), ctx)).toBe(true)
+    terrainRect.onPointerUp!(pointerAt(3, 2, { pressed: false }), ctx)
+    expect(store.getState().doc.layout.cells).toEqual([])
+    expect(store.getState().overlay.some((o) => o.kind === 'rect')).toBe(false)
+  })
+
   it('fill paints the connected area, void included', () => {
     const store = editorStoreFor(mapWith([cell(0, 0, 'wall'), cell(1, 0, 'wall')]))
     usePaintOptions.getState().setTerrain('floor')

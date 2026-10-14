@@ -41,7 +41,7 @@ export function mapFileName(name: string): string {
     .replace(/\s+/g, ' ')
     .trim()
     .replace(/^\.+/, '')
-  return `${safe || 'Karte'}.json`
+  return `${safe || t.fallbackName}.json`
 }
 
 /** Starts a download of the map file; needs no connection. */

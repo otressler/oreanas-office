@@ -5,8 +5,8 @@ import { useId, useState, type ReactNode } from 'react'
 import { inputClass } from '../../components/styles'
 import { limits } from '../../lib/limits'
 import { de } from '../../text/de'
-import { useEditor, useEditorStore } from '../store'
-import type { EditorMap } from '../model'
+import { useEditor } from '../store'
+import { useEditGesture } from '../useEditGesture'
 
 const t = de.maps.scene
 
@@ -26,33 +26,10 @@ export function ScenePanel() {
   )
 }
 
-/** Typing changes the map inside the running gesture; one begins if none runs. */
-function useTyping() {
-  const store = useEditorStore()
-  return {
-    begin: () => store.getState().beginGesture(),
-    change: (change: (current: EditorMap, base: EditorMap) => EditorMap) => {
-      const state = store.getState()
-      // Something else (an undo, a tool) may have ended the gesture while typing.
-      if (!state.gestureBase) state.beginGesture()
-      // Typing back what was there before makes no undo step.
-      store.getState().updateGesture((current, base) => {
-        const next = change(current, base)
-        return sameMap(next, base) ? base : next
-      })
-    },
-    end: () => store.getState().endGesture(),
-  }
-}
-
-function sameMap(a: EditorMap, b: EditorMap): boolean {
-  return (Object.keys(b) as (keyof EditorMap)[]).every((key) => a[key] === b[key])
-}
-
 function NameField() {
   const id = useId()
   const name = useEditor((s) => s.doc.name)
-  const typing = useTyping()
+  const typing = useEditGesture()
   // What the field shows while it has focus; the map keeps the last valid name.
   const [draft, setDraft] = useState<string | null>(null)
   const empty = draft !== null && draft.trim() === ''
@@ -96,7 +73,7 @@ function NameField() {
 function TextAreaField({ field, label, hint }: { field: TextKey; label: string; hint: string }) {
   const id = useId()
   const value = useEditor((s) => s.doc[field])
-  const typing = useTyping()
+  const typing = useEditGesture()
   const left = limits.mapDescription - value.length
 
   return (

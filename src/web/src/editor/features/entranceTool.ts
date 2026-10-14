@@ -6,7 +6,8 @@ import { de } from '../../text/de'
 import type { EditorStore, Overlay } from '../store'
 import type { EditorTool, ToolContext } from '../tools'
 import { EntranceIcon } from './icons'
-import { addEntrance, cellsAlong, entranceAtCell, entranceCells } from './layout'
+import { lineCells } from '../terrain/layout'
+import { addEntrance, entranceAtCell, entranceCells } from './layout'
 import { placementOptions } from './options'
 import { EntranceToolPanel } from './panels'
 
@@ -85,7 +86,7 @@ export const entranceTool: EditorTool = {
     const last = press.path.at(-1)!
     if (last.x === pointer.cell.x && last.y === pointer.cell.y) return
     // The canvas reports cell changes only; a fast drag can skip cells in between.
-    press.path.push(...cellsAlong(last, pointer.cell).slice(1))
+    press.path.push(...lineCells(last, pointer.cell).slice(1))
     press.moved = true
     store.getState().setOverlay(overlayFor(store, press.path))
   },

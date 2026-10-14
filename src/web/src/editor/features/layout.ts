@@ -3,7 +3,6 @@
 // the same map object when nothing changes, so the store makes no undo step for it.
 import type { LayoutEntrance, LayoutFeature } from '../../api/types'
 import { buildGrid, cellKey, type GridPoint } from '../../board/geometry'
-import { limits } from '../../lib/limits'
 import { nextLayoutId, type EditorMap } from '../model'
 import { isEdgeCell, rectInside, rectsOverlap, type Rect } from '../validation'
 
@@ -167,51 +166,6 @@ export function entranceCells(
     ;(ok ? take : refuse).push(cell)
   }
   return { take, refuse }
-}
-
-/** The cells on a straight line from one cell to another, both included (Bresenham). */
-export function cellsAlong(from: GridPoint, to: GridPoint): GridPoint[] {
-  const cells: GridPoint[] = []
-  const dx = Math.abs(to.x - from.x)
-  const dy = -Math.abs(to.y - from.y)
-  const sx = from.x < to.x ? 1 : -1
-  const sy = from.y < to.y ? 1 : -1
-  let { x, y } = from
-  let err = dx + dy
-  for (;;) {
-    cells.push({ x, y })
-    if (x === to.x && y === to.y) return cells
-    const e2 = 2 * err
-    if (e2 >= dy) {
-      err += dy
-      x += sx
-    }
-    if (e2 <= dx) {
-      err += dx
-      y += sy
-    }
-  }
-}
-
-const elevationInput = new Intl.NumberFormat('de-DE', {
-  maximumFractionDigits: 1,
-  useGrouping: false,
-})
-
-/** An elevation as the value of an input field, without unit: -1.5 → "-1,5". */
-export function formatElevationInput(meters: number): string {
-  return elevationInput.format(Math.round(meters * 10) / 10 + 0)
-}
-
-/**
- * An elevation as typed: "2", "-1,5", "1.5", "0,5 m". Rounded to one decimal. Null for
- * anything else, and for heights at or beyond limits.elevation.
- */
-export function parseElevationInput(text: string): number | null {
-  const normalized = text.trim().replace(/\s*m$/i, '').replace(',', '.').replace('−', '-')
-  if (!/^-?(\d+(\.\d*)?|\.\d+)$/.test(normalized)) return null
-  const meters = Math.round(Number(normalized) * 10) / 10 + 0
-  return Math.abs(meters) < limits.elevation ? meters : null
 }
 
 /** A whole number of cells as typed; null for anything else. */

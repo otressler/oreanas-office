@@ -244,27 +244,6 @@ export function resizeLosses(doc: EditorMap, edges: ResizeEdges) {
   }
 }
 
-/**
- * An elevation as typed: "1,5", "-3", "1.5", "+3", "−1,5 m". At most one decimal and
- * below limits.elevation either way; null otherwise.
- */
-export function parseElevation(input: string): number | null {
-  const normalized = input.trim().replace(/\s*m$/i, '').replace(/^[−–]/, '-').replace(',', '.')
-  if (!/^[+-]?(\d+(\.\d?)?|\.\d)$/.test(normalized)) return null
-  const value = Math.round(Number(normalized) * 10) / 10 + 0
-  return Math.abs(value) < limits.elevation ? value : null
-}
-
-const elevationNumber = new Intl.NumberFormat('de-DE', {
-  maximumFractionDigits: 1,
-  useGrouping: false,
-})
-
-/** An elevation for an input field, without unit: 1.5 → "1,5", -3 → "-3". */
-export function formatElevationInput(meters: number): string {
-  return elevationNumber.format(Math.round(meters * 10) / 10 + 0)
-}
-
 const signedElevation = new Intl.NumberFormat('de-DE', {
   maximumFractionDigits: 1,
   signDisplay: 'exceptZero',

@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   SQUARE_METERS,
   formatElevation,
+  formatElevationInput,
   formatMeters,
-  formatMetersInput,
-  isWholeSquares,
-  metersToSquares,
-  parseMeters,
+  parseElevationInput,
   squaresToMeters,
 } from './units'
 
@@ -19,18 +17,6 @@ describe('units', () => {
     expect(squaresToMeters(5)).toBe(7.5)
     expect(squaresToMeters(6)).toBe(9)
     expect(squaresToMeters(0)).toBe(0)
-  })
-
-  it('converts meters to whole squares (rulebook speeds)', () => {
-    expect(metersToSquares(9)).toBe(6)
-    expect(metersToSquares(7.5)).toBe(5)
-    expect(metersToSquares(4.5)).toBe(3)
-    expect(metersToSquares(0)).toBe(0)
-  })
-
-  it('drops a remainder smaller than a square', () => {
-    expect(metersToSquares(10)).toBe(6)
-    expect(metersToSquares(1.4)).toBe(0)
   })
 
   it('formats squares as German meters', () => {
@@ -47,66 +33,6 @@ describe('units', () => {
   })
 })
 
-describe('parseMeters', () => {
-  it('accepts a German decimal comma and a decimal point', () => {
-    expect(parseMeters('7,5')).toBe(7.5)
-    expect(parseMeters('7.5')).toBe(7.5)
-    expect(parseMeters('9')).toBe(9)
-    expect(parseMeters(',5')).toBe(0.5)
-    expect(parseMeters('9,')).toBe(9)
-  })
-
-  it('ignores spaces and a trailing unit', () => {
-    expect(parseMeters('  9  ')).toBe(9)
-    expect(parseMeters('9 m')).toBe(9)
-    expect(parseMeters('7,5m')).toBe(7.5)
-    expect(parseMeters('10 M')).toBe(10)
-  })
-
-  it('rejects anything that is not a non-negative number', () => {
-    for (const input of ['', ' ', 'm', 'neun', '-3', '9 ft', '1,5,3', '7.5.1', '1e3', '9 m m']) {
-      expect(parseMeters(input), input).toBeNull()
-    }
-  })
-
-  it('feeds the conversion to squares, rounding down', () => {
-    // knowledge/rules/movement-distance.md: 10 m → 6 squares, shown as 9 m.
-    const squares = metersToSquares(parseMeters('10')!)
-    expect(squares).toBe(6)
-    expect(formatMeters(squares)).toBe('9 m')
-    expect(metersToSquares(parseMeters('7,5')!)).toBe(5)
-  })
-})
-
-describe('isWholeSquares', () => {
-  it('is true for multiples of 1.5 m', () => {
-    expect(isWholeSquares(0)).toBe(true)
-    expect(isWholeSquares(1.5)).toBe(true)
-    expect(isWholeSquares(4.5)).toBe(true)
-    expect(isWholeSquares(9)).toBe(true)
-  })
-
-  it('is false when a remainder would be dropped', () => {
-    expect(isWholeSquares(10)).toBe(false)
-    expect(isWholeSquares(1)).toBe(false)
-    expect(isWholeSquares(7.4)).toBe(false)
-  })
-})
-
-describe('formatMetersInput', () => {
-  it('writes squares as an editable German number without unit or grouping', () => {
-    expect(formatMetersInput(6)).toBe('9')
-    expect(formatMetersInput(5)).toBe('7,5')
-    expect(formatMetersInput(1001)).toBe('1501,5')
-  })
-
-  it('round-trips through parseMeters', () => {
-    for (const squares of [0, 1, 5, 6, 7, 1001]) {
-      expect(metersToSquares(parseMeters(formatMetersInput(squares))!)).toBe(squares)
-    }
-  })
-})
-
 describe('formatElevation', () => {
   it('shows meters with one decimal in German format', () => {
     expect(formatElevation(1.5)).toBe('1,5 m')
@@ -119,5 +45,33 @@ describe('formatElevation', () => {
   it('never shows a negative zero', () => {
     expect(formatElevation(-0)).toBe('0 m')
     expect(formatElevation(-0.04)).toBe('0 m')
+  })
+})
+
+describe('elevation input', () => {
+  it('reads German and English decimals, signs and a unit', () => {
+    expect(parseElevationInput('1,5')).toBe(1.5)
+    expect(parseElevationInput('1.5')).toBe(1.5)
+    expect(parseElevationInput('-3')).toBe(-3)
+    expect(parseElevationInput('−1,5')).toBe(-1.5)
+    expect(parseElevationInput('–1,5')).toBe(-1.5)
+    expect(parseElevationInput('+3')).toBe(3)
+    expect(parseElevationInput(' 2,5 m ')).toBe(2.5)
+    expect(parseElevationInput('-0')).toBe(0)
+    expect(Object.is(parseElevationInput('-0'), -0)).toBe(false)
+    expect(parseElevationInput(',5')).toBe(0.5)
+    expect(parseElevationInput('9999,9')).toBe(9999.9)
+  })
+
+  it('rejects anything else', () => {
+    for (const input of ['', '-', 'abc', '1,25', '1,5,5', '10000', '-10000', '1e3', '3 ft'])
+      expect(parseElevationInput(input), input).toBeNull()
+  })
+
+  it('writes elevations for an input field', () => {
+    expect(formatElevationInput(1.5)).toBe('1,5')
+    expect(formatElevationInput(-3)).toBe('-3')
+    expect(formatElevationInput(2500)).toBe('2500')
+    expect(formatElevationInput(-0)).toBe('0')
   })
 })

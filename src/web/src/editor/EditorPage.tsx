@@ -183,16 +183,10 @@ function UndoRedo() {
     'min-h-9 rounded-lg border border-line px-3 text-sm hover:border-candle disabled:opacity-40 disabled:hover:border-line'
   return (
     <div className="flex gap-1">
-      <button type="button" className={button} disabled={!canUndo} onClick={undo} title="Strg+Z">
+      <button type="button" className={button} disabled={!canUndo} onClick={undo} title={t.undoKey}>
         {t.undo}
       </button>
-      <button
-        type="button"
-        className={button}
-        disabled={!canRedo}
-        onClick={redo}
-        title="Strg+Umschalt+Z"
-      >
+      <button type="button" className={button} disabled={!canRedo} onClick={redo} title={t.redoKey}>
         {t.redo}
       </button>
     </div>

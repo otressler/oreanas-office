@@ -15,7 +15,9 @@ export function useAutosave(store: EditorStore, db: OfflineDb, mapId: string): S
   const [status, setStatus] = useState<SaveStatus>('saved')
 
   useEffect(() => {
-    let savedRevision = store.getState().revision
+    // The revision last handed to a write; writes run one after another.
+    let queuedRevision = store.getState().revision
+    let writing = 0
     let timer: ReturnType<typeof setTimeout> | undefined
     let running: Promise<void> = Promise.resolve()
 
@@ -23,28 +25,37 @@ export function useAutosave(store: EditorStore, db: OfflineDb, mapId: string): S
       clearTimeout(timer)
       timer = undefined
       const { revision, doc } = store.getState()
-      if (revision === savedRevision) return
-      savedRevision = revision
+      if (revision === queuedRevision) {
+        if (writing === 0) setStatus('saved')
+        return
+      }
+      queuedRevision = revision
+      writing += 1
       setStatus('saving')
+      // Each write stores the whole map, so only the last one decides the status.
       running = running
         .then(() => saveMap(db, mapId, doc))
         .then(
-          () => {
-            if (store.getState().revision === savedRevision) setStatus('saved')
-          },
-          () => {
-            // Try again with the next change or flush.
-            savedRevision = -1
-            setStatus('failed')
-          },
+          (saved) => saved,
+          () => false,
         )
+        .then((saved) => {
+          writing -= 1
+          if (writing > 0) return
+          if (!saved) {
+            // The next change or flush tries again.
+            queuedRevision = -1
+            setStatus('failed')
+          } else {
+            setStatus(store.getState().revision === queuedRevision ? 'saved' : 'saving')
+          }
+        })
     }
 
+    // Changes inside a gesture (typing, a brush stroke) are saved too, so nothing waits
+    // for the gesture to end; the delay keeps it to one write per pause.
     const unsubscribe = store.subscribe((state, previous) => {
-      const gestureEnded = previous.gestureBase !== null && state.gestureBase === null
-      if (state.revision === previous.revision && !gestureEnded) return
-      // A gesture saves when it ends; one write per drag, not per cell.
-      if (state.gestureBase) return
+      if (state.revision === previous.revision) return
       clearTimeout(timer)
       timer = setTimeout(flush, AUTOSAVE_DELAY_MS)
       setStatus('saving')
