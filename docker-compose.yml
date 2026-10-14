@@ -34,6 +34,10 @@ services:
       Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
       Authentication__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
       Admin__Email: ${ADMIN_EMAIL:-}
+      # The Foundry image deployment; without it generating backgrounds is off.
+      Images__Endpoint: ${AZURE_OPENAI_ENDPOINT:-}
+      Images__ApiKey: ${AZURE_API_KEY:-}
+      Images__Deployment: ${AZURE_IMAGE_DEPLOYMENT:-}
     ports:
       - "8080:8080"
 

@@ -44,6 +44,16 @@ param googleClientSecret string
 @description('The site admin\'s Google address. Empty for no admin.')
 param adminEmail string
 
+@description('The Foundry image deployment\'s OpenAI v1 endpoint (Images:Endpoint). Empty turns background generation off.')
+param imagesEndpoint string
+
+@description('The Foundry image deployment\'s API key.')
+@secure()
+param imagesApiKey string
+
+@description('The image deployment\'s name, sent as `model`.')
+param imagesDeployment string
+
 resource workspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
   name: logAnalyticsWorkspaceName
 }
@@ -66,6 +76,7 @@ resource environment 'Microsoft.App/managedEnvironments@2025-07-01' = {
 
 var usePrivateRegistry = !empty(ghcrToken)
 var useGoogle = !empty(googleClientId) && !empty(googleClientSecret)
+var useImages = !empty(imagesEndpoint) && !empty(imagesApiKey) && !empty(imagesDeployment)
 
 // A managed certificate can only be issued for a host name the app already has, and the app can
 // only bind a certificate that exists. So the first deployment with a custom domain adds the host
@@ -118,6 +129,14 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
               {
                 name: 'google-client-secret'
                 value: googleClientSecret
+              }
+            ]
+          : [],
+        useImages
+          ? [
+              {
+                name: 'images-api-key'
+                value: imagesApiKey
               }
             ]
           : []
@@ -175,7 +194,23 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
                     name: 'Admin__Email'
                     value: adminEmail
                   }
+                ],
+            useImages
+              ? [
+                  {
+                    name: 'Images__Endpoint'
+                    value: imagesEndpoint
+                  }
+                  {
+                    name: 'Images__ApiKey'
+                    secretRef: 'images-api-key'
+                  }
+                  {
+                    name: 'Images__Deployment'
+                    value: imagesDeployment
+                  }
                 ]
+              : []
           )
           // No probes on purpose: Container Apps then uses its default TCP startup, liveness and
           // readiness probes on port 8080. Never point any probe at /api/health: it answers 503
