@@ -7,6 +7,7 @@ using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Images;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Sessions;
@@ -110,6 +111,8 @@ public static class EncounterEndpoints
                 e.Status,
                 SessionDmUserId = (Guid?)e.Session!.DmUserId,
                 e.MapCopy,
+                SavedBackgroundAssetId = e.BackgroundAssetId,
+                MapBackgroundAssetId = e.BattleMap.BackgroundAssetId,
                 Map = new BoardMap(e.BattleMap.Id, e.BattleMap.Name, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, null),
             })
             .SingleOrDefaultAsync(cancellationToken);
@@ -150,9 +153,21 @@ public static class EncounterEndpoints
 
         // The map as it was when the fight started, once it has; the battle map itself
         // may have been edited since.
+        // Likewise the background saved at the start; before that the map's picked one,
+        // while it fits the map's size (knowledge/domain/battle-map.md, "Background image").
         var map = encounter.MapCopy is { } copy
-            ? encounter.Map with { Width = copy.Width, Height = copy.Height, Layout = copy.Layout }
-            : encounter.Map;
+            ? encounter.Map with
+            {
+                Width = copy.Width,
+                Height = copy.Height,
+                Layout = copy.Layout,
+                Background = await MapBackgrounds.BoardAsync(db, encounter.SavedBackgroundAssetId, null, cancellationToken),
+            }
+            : encounter.Map with
+            {
+                Background = await MapBackgrounds.BoardAsync(
+                    db, encounter.MapBackgroundAssetId, (encounter.Map.Width, encounter.Map.Height), cancellationToken),
+            };
         var board = new BoardStateResponse(
             encounter.Id,
             campaignId,
@@ -197,7 +212,7 @@ public static class EncounterEndpoints
     {
         var encounter = await db.Encounters
             .Where(e => e.Id == encounterId && e.CampaignId == campaignId)
-            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout })
+            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, e.BattleMap.BackgroundAssetId })
             .SingleOrDefaultAsync(cancellationToken);
         if (encounter is null)
         {
@@ -252,6 +267,11 @@ public static class EncounterEndpoints
             creatureElevations[standing[i].Id] = standingElevation;
         }
 
+        // The fight keeps the map's picked background with its copy of the layout, when it
+        // can be shown on this size.
+        var background = await MapBackgrounds.UsableAsync(
+            db, encounter.BackgroundAssetId, (encounter.Width, encounter.Height), cancellationToken);
+
         var now = time.GetUtcNow();
         var tokens = new List<Token>();
         var seen = new HashSet<Guid>();
@@ -304,6 +324,7 @@ public static class EncounterEndpoints
                             .SetProperty(e => e.SessionId, sessionId)
                             .SetProperty(e => e.StartedAt, now)
                             .SetProperty(e => e.MapCopy, new EncounterMapCopy(encounter.Width, encounter.Height, encounter.Layout))
+                            .SetProperty(e => e.BackgroundAssetId, background == null ? null : background.Id)
                             .SetProperty(e => e.Version, e => e.Version + 1)
                             .SetProperty(e => e.UpdatedAt, now),
                         cancellationToken);

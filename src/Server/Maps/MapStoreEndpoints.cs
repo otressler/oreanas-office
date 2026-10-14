@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Images;
 using OreanasOffice.Server.Sync;
 
 namespace OreanasOffice.Server.Maps;
@@ -95,8 +96,11 @@ public static class MapStoreEndpoints
             }
             else
             {
-                // A copy takes name, size, layout, scene, vibe and lighting; encounters and
-                // creatures stay behind.
+                // A copy takes name, size, layout, scene, vibe, lighting and the picked
+                // background while it fits (the same asset, not a copy of the image);
+                // encounters and creatures stay behind. A revived copy keeps its own.
+                var background = await MapBackgrounds.UsableAsync(
+                    db, source.BackgroundAssetId, (source.Width, source.Height), cancellationToken);
                 copy = db.BattleMaps.Add(new BattleMap
                 {
                     Id = Guid.NewGuid(),
@@ -110,6 +114,7 @@ public static class MapStoreEndpoints
                     Lighting = source.Lighting,
                     CreatedAt = now,
                     CopiedFromMapId = mapId,
+                    BackgroundAssetId = background?.Id,
                 }).Entity;
             }
 
