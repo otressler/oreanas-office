@@ -725,6 +725,8 @@ export class MockBackend {
       creatureCount: encounter.tokens.filter((t) => t.kind === 'creature').length,
       sessionId: encounter.sessionId,
       createdAt: encounter.createdAt,
+      version: 1,
+      archivedAt: null,
     }
   }
 

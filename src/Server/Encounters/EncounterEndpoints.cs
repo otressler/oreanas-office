@@ -63,6 +63,7 @@ public static class EncounterEndpoints
     private static async Task<Results<Created<EncounterSummaryResponse>, BadRequest<ApiError>>> ImportMap(
         Guid campaignId,
         ImportMapRequest request,
+        ClaimsPrincipal user,
         AppDbContext db,
         TimeProvider time,
         CancellationToken cancellationToken)
@@ -70,7 +71,7 @@ public static class EncounterEndpoints
         for (var attempt = 1; ; attempt++)
         {
             var campaignTypes = await db.CreatureTypes.Where(t => t.CampaignId == campaignId).ToListAsync(cancellationToken);
-            if (MapImport.Build(request, campaignId, campaignTypes, time.GetUtcNow(), out var import) is { } error)
+            if (MapImport.Build(request, campaignId, campaignTypes, time.GetUtcNow(), user.GetUserId(), out var import) is { } error)
             {
                 return TypedResults.BadRequest(error);
             }
@@ -108,6 +109,7 @@ public static class EncounterEndpoints
                 e.Name,
                 e.Status,
                 SessionDmUserId = (Guid?)e.Session!.DmUserId,
+                e.MapCopy,
                 Map = new BoardMap(e.BattleMap.Id, e.BattleMap.Name, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, null),
             })
             .SingleOrDefaultAsync(cancellationToken);
@@ -136,8 +138,7 @@ public static class EncounterEndpoints
                 t.X,
                 t.Y,
                 t.Elevation,
-                CharacterSize = (CreatureSize?)t.Character!.Size,
-                TypeSize = (CreatureSize?)t.CreatureType!.Size,
+                t.Size,
                 t.Version,
             })
             .ToListAsync(cancellationToken);
@@ -147,13 +148,18 @@ public static class EncounterEndpoints
             ? await TableMoves.UndoableMoveAsync(db, encounterId, userId, encounter.SessionDmUserId, cancellationToken)
             : null;
 
+        // The map as it was when the fight started, once it has; the battle map itself
+        // may have been edited since.
+        var map = encounter.MapCopy is { } copy
+            ? encounter.Map with { Width = copy.Width, Height = copy.Height, Layout = copy.Layout }
+            : encounter.Map;
         var board = new BoardStateResponse(
             encounter.Id,
             campaignId,
             encounter.SessionId,
             encounter.Name,
             encounter.Status,
-            encounter.Map,
+            map,
             [
                 .. tokens.Select(t => new BoardToken(
                     t.Id,
@@ -165,7 +171,7 @@ public static class EncounterEndpoints
                     t.X,
                     t.Y,
                     t.Elevation,
-                    (t.Kind == TokenKind.Character ? t.CharacterSize : t.TypeSize) ?? CreatureSize.Medium,
+                    t.Size,
                     t.CharacterId is { } characterId ? colors[characterId] : null,
                     t.Version)),
             ],
@@ -220,17 +226,11 @@ public static class EncounterEndpoints
         var board = new TokenPlacement(new MapGrid(encounter.Width, encounter.Height, encounter.Layout));
         var standing = await db.Tokens
             .Where(t => t.EncounterId == encounterId)
-            .Select(t => new
-            {
-                t.X,
-                t.Y,
-                CharacterSize = (CreatureSize?)t.Character!.Size,
-                TypeSize = (CreatureSize?)t.CreatureType!.Size,
-            })
+            .Select(t => new { t.Size, t.X, t.Y })
             .ToListAsync(cancellationToken);
         foreach (var token in standing)
         {
-            board.Add(token.TypeSize ?? token.CharacterSize ?? CreatureSize.Medium, token.X, token.Y);
+            board.Add(token.Size, token.X, token.Y);
         }
 
         var now = time.GetUtcNow();
@@ -255,6 +255,7 @@ public static class EncounterEndpoints
                 EncounterId = encounterId,
                 Kind = TokenKind.Character,
                 CharacterId = placement.CharacterId,
+                Size = size,
                 X = placement.X,
                 Y = placement.Y,
                 Elevation = elevation,
@@ -280,7 +281,10 @@ public static class EncounterEndpoints
                         set => set
                             .SetProperty(e => e.Status, EncounterStatus.Active)
                             .SetProperty(e => e.SessionId, sessionId)
-                            .SetProperty(e => e.StartedAt, now),
+                            .SetProperty(e => e.StartedAt, now)
+                            .SetProperty(e => e.MapCopy, new EncounterMapCopy(encounter.Width, encounter.Height, encounter.Layout))
+                            .SetProperty(e => e.Version, e => e.Version + 1)
+                            .SetProperty(e => e.UpdatedAt, now),
                         cancellationToken);
                 if (updated == 0)
                 {
@@ -353,7 +357,11 @@ public static class EncounterEndpoints
         encounters
             .Where(e => e.Status == EncounterStatus.Active)
             .ExecuteUpdateAsync(
-                set => set.SetProperty(e => e.Status, EncounterStatus.Ended).SetProperty(e => e.EndedAt, now),
+                set => set
+                    .SetProperty(e => e.Status, EncounterStatus.Ended)
+                    .SetProperty(e => e.EndedAt, now)
+                    .SetProperty(e => e.Version, e => e.Version + 1)
+                    .SetProperty(e => e.UpdatedAt, now),
                 cancellationToken);
 
     // Why this encounter can't start in this session, in the order the setup screen
@@ -391,5 +399,7 @@ public static class EncounterEndpoints
             e.BattleMap.Height,
             e.Tokens.Count(t => t.Kind == TokenKind.Creature),
             e.SessionId,
-            e.CreatedAt));
+            e.CreatedAt,
+            e.Version,
+            e.ArchivedAt));
 }

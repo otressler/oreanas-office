@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { LoadError } from '../components/ui'
+import { SyncProvider } from '../sync'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { signInPath, useMe } from './auth'
 
@@ -17,7 +18,11 @@ export function RequireAuth() {
   if (!me.data) {
     return <Navigate replace to={signInPath(location.pathname + location.search)} />
   }
-  return <Outlet />
+  return (
+    <SyncProvider>
+      <Outlet />
+    </SyncProvider>
+  )
 }
 
 /** Route guard for the site admin; others get the not-found page. */

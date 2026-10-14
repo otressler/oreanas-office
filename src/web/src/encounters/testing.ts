@@ -94,6 +94,8 @@ export function encounter(fields: Partial<Encounter> = {}): Encounter {
     creatureCount: 1,
     sessionId: null,
     createdAt: '2026-10-12T18:00:00Z',
+    version: 1,
+    archivedAt: null,
     ...fields,
   }
 }

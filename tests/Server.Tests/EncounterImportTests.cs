@@ -61,7 +61,7 @@ public sealed class EncounterImportTests(AppFixture fixture)
             $"/api/campaigns/{campaign.Id}/encounters/{summary.Id}/board", response.Headers.Location?.OriginalString);
         Assert.Equal(
             new EncounterSummaryResponse(
-                summary.Id, "Klamm", EncounterStatus.Ready, summary.BattleMapId, 8, 5, 3, null, summary.CreatedAt),
+                summary.Id, "Klamm", EncounterStatus.Ready, summary.BattleMapId, 8, 5, 3, null, summary.CreatedAt, 1, null),
             summary);
 
         await using var scope = fixture.App.Services.CreateAsyncScope();

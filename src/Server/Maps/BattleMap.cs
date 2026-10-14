@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OreanasOffice.Server.Accounts;
 using OreanasOffice.Server.Campaigns;
 
 namespace OreanasOffice.Server.Maps;
@@ -36,6 +37,21 @@ public class BattleMap
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    // Sync (knowledge/decisions/offline-prep-pwa.md, "Versions and IDs"): 1 when created,
+    // raised by 1 on every accepted change; a concurrency token.
+    public int Version { get; set; } = 1;
+
+    // Archived items stay listed for sync but aren't offered for picking.
+    public DateTimeOffset? ArchivedAt { get; set; }
+
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    // The map this one was copied from in the store, possibly in another campaign, so no
+    // foreign key. Set once, never changed (knowledge/domain/battle-map.md, "Store").
+    public Guid? CopiedFromMapId { get; set; }
+
     public Campaign Campaign { get; set; } = null!;
 }
 
@@ -62,6 +78,9 @@ internal sealed class BattleMapConfiguration : IEntityTypeConfiguration<BattleMa
                     layout => JsonSerializer.Serialize(layout, LayoutJson).GetHashCode(),
                     layout => JsonSerializer.Deserialize<MapLayout>(JsonSerializer.Serialize(layout, LayoutJson), LayoutJson)!))
             .HasColumnName("LayoutJson");
+        map.Property(m => m.Version).IsConcurrencyToken();
+        map.HasOne<AppUser>().WithMany().HasForeignKey(m => m.UpdatedByUserId).OnDelete(DeleteBehavior.Restrict);
+        map.HasIndex(m => new { m.CampaignId, m.CopiedFromMapId });
         map.HasOne(m => m.Campaign).WithMany().HasForeignKey(m => m.CampaignId).OnDelete(DeleteBehavior.Cascade);
     }
 }

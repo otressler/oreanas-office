@@ -2,6 +2,9 @@
 // The editor works on an EditorMap; the browser keeps it as a LocalMap with the
 // fields stage 6 sync needs (knowledge/decisions/offline-prep-pwa.md, "Versions and IDs").
 import type { MapLayout } from '../api/types'
+import type { SyncState } from '../offline/sync'
+
+export type { SyncState }
 
 /** What the editor changes, and what undo and redo restore. */
 export interface EditorMap {
@@ -14,16 +17,6 @@ export interface EditorMap {
   scene: string
   vibe: string
   lighting: string
-}
-
-/** Sync bookkeeping per item. Stage 5 only writes it; stage 6 reads it. */
-export interface SyncState {
-  /** The server version this copy is based on; 0 for a map the server has never seen. */
-  baseVersion: number
-  /** Changed since the last successful push ("Nicht synchronisiert"). */
-  changed: boolean
-  /** Raised on every save, so a push can tell whether the map changed while it ran. */
-  editCount: number
 }
 
 /** A battle map kept in the browser (IndexedDB). */

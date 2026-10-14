@@ -17,7 +17,7 @@ describe('maps in the browser', () => {
       height: 12,
       copiedFromMapId: null,
       archivedAt: null,
-      sync: { baseVersion: 0, changed: true, editCount: 1 },
+      sync: { baseVersion: 0, changed: true, editCount: 1, issue: null, server: null },
       recordVersion: 1,
     })
     expect(await getMap(db(), map.id)).toEqual(map)
@@ -42,7 +42,13 @@ describe('maps in the browser', () => {
     expect(await saveMap(db(), map.id, edited)).toBe(true)
     const stored = await getMap(db(), map.id)
     expect(stored).toMatchObject({ name: 'Neue Klamm', width: 6, scene: 'Seilbrücke' })
-    expect(stored?.sync).toEqual({ baseVersion: 0, changed: true, editCount: 2 })
+    expect(stored?.sync).toEqual({
+      baseVersion: 0,
+      changed: true,
+      editCount: 2,
+      issue: null,
+      server: null,
+    })
     expect(await saveMap(db(), 'missing', edited)).toBe(false)
   })
 

@@ -55,4 +55,32 @@ public enum ApiErrorCode
     NotYourToken,
     TargetInvalid,
     NothingToUndo,
+
+    // Sync and the map store (knowledge/decisions/offline-prep-pwa.md, "Sync protocol").
+    // SyncOutdated: the app's sync version is older than the server's minimum.
+    SyncOutdated,
+    // IdTaken: a new item's id exists already (elsewhere, or as another kind), or an
+    // existing id belongs to another campaign.
+    IdTaken,
+    // ItemNotFound: baseVersion > 0 for an id the server doesn't know.
+    ItemNotFound,
+    // DependencyRejected: an item this one needs was rejected in the same push.
+    DependencyRejected,
+    // LayoutInvalid: the map breaks the layout rules; the item result lists the problems.
+    LayoutInvalid,
+    // MapInvalid: the encounter's map isn't a map of this campaign.
+    MapInvalid,
+    // CreatureTypeNameTaken: another type of the campaign has this name, ignoring case.
+    CreatureTypeNameTaken,
+    // StatusInvalid: a device may only push draft or ready.
+    StatusInvalid,
+    // TokenInvalid: a creature token is malformed; Field is "tokens[i]".
+    TokenInvalid,
+    // EncounterArchived: an archived encounter can't be started.
+    EncounterArchived,
+    // CreaturesMisplaced: a creature doesn't stand validly on the current map, so the
+    // encounter can't be marked ready or started; Field is "tokens[i]".
+    CreaturesMisplaced,
+    // MapNotInStore: the map isn't offered in this campaign's store.
+    MapNotInStore,
 }

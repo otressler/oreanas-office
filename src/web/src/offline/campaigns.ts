@@ -5,7 +5,10 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import type { CampaignSummary } from '../api/types'
 import type { CampaignCopy, OfflineDb } from './db'
 
-/** Replaces the copy with the campaigns the server just listed. */
+/**
+ * Replaces the copy with the campaigns the server just listed. Campaigns made on this
+ * device and not synced yet (`local`) stay: the server doesn't know them.
+ */
 export async function saveCampaignCopies(
   db: OfflineDb,
   campaigns: readonly CampaignSummary[],
@@ -16,9 +19,13 @@ export async function saveCampaignCopies(
     name,
     myRole,
     savedAt,
+    local: false,
+    sync: null,
   }))
   await db.transaction('rw', db.campaigns, async () => {
-    await db.campaigns.clear()
+    const listed = new Set(copies.map((copy) => copy.id))
+    // A local campaign the server lists now has synced; its copy comes from the list.
+    await db.campaigns.filter((copy) => !copy.local || listed.has(copy.id)).delete()
     await db.campaigns.bulkPut(copies)
   })
 }

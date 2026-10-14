@@ -27,6 +27,8 @@ export async function seedOffline({
     name: campaignName,
     myRole: role,
     savedAt: new Date().toISOString(),
+    local: false,
+    sync: null,
   })
   return db
 }

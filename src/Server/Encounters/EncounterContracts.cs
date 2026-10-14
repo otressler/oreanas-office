@@ -15,7 +15,9 @@ public record EncounterSummaryResponse(
     int Height,
     int CreatureCount,
     Guid? SessionId,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    int Version,
+    DateTimeOffset? ArchivedAt);
 
 // The setup screen's result: the characters taking part and where each stands.
 // Placing and starting are one step (knowledge/domain/encounter.md, "Starting").

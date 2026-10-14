@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OreanasOffice.Server.Accounts;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Rules;
 
@@ -27,6 +28,17 @@ public class CreatureType
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    // Sync (knowledge/decisions/offline-prep-pwa.md, "Versions and IDs"): 1 when created,
+    // raised by 1 on every accepted change; a concurrency token.
+    public int Version { get; set; } = 1;
+
+    // Archived items stay listed for sync but aren't offered for picking.
+    public DateTimeOffset? ArchivedAt { get; set; }
+
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
     public Campaign Campaign { get; set; } = null!;
 }
 
@@ -37,6 +49,8 @@ internal sealed class CreatureTypeConfiguration : IEntityTypeConfiguration<Creat
         type.Property(t => t.Name).HasMaxLength(CreatureType.NameMaxLength);
         type.Property(t => t.Appearance).HasMaxLength(CreatureType.AppearanceMaxLength);
         type.Property(t => t.Notes).HasMaxLength(CreatureType.NotesMaxLength);
+        type.Property(t => t.Version).IsConcurrencyToken();
+        type.HasOne<AppUser>().WithMany().HasForeignKey(t => t.UpdatedByUserId).OnDelete(DeleteBehavior.Restrict);
         type.HasOne(t => t.Campaign).WithMany().HasForeignKey(t => t.CampaignId).OnDelete(DeleteBehavior.Cascade);
 
         // One "Goblin" per campaign. The database collation ignores case, so "goblin"

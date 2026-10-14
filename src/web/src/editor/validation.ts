@@ -5,7 +5,7 @@
 //
 // Unlike the server's import, which stops at the first broken rule, this reports every
 // problem, so the editor can list them all and lead the DM to each one.
-import type { LayoutEntrance, Terrain } from '../api/types'
+import type { ApiLayoutProblemCode, LayoutEntrance, Terrain } from '../api/types'
 import { buildGrid, type GridPoint } from '../board/geometry'
 import { limits } from '../lib/limits'
 import { LAYOUT_SCHEMA_VERSION, MIN_MAP_SIZE, type EditorMap } from './model'
@@ -54,6 +54,15 @@ export type LayoutProblemCode =
   | 'entranceCellDuplicate'
   /** A cell already belongs to an earlier entrance (`otherId`). */
   | 'entranceCellShared'
+
+// The server's MapChecks reports the same codes (ApiLayoutProblemCode, generated from its
+// enum); this fails to compile when the two unions drift apart.
+type _SameCodes = [ApiLayoutProblemCode] extends [LayoutProblemCode]
+  ? [LayoutProblemCode] extends [ApiLayoutProblemCode]
+    ? true
+    : never
+  : never
+export const layoutProblemCodesMatchServer: _SameCodes = true
 
 /** Which text is too long, or which id is missing. */
 export type LayoutTextField = 'name' | 'scene' | 'vibe' | 'lighting' | 'id' | 'kind' | 'label'

@@ -42,6 +42,18 @@ const ALL_CODES = {
   notYourToken: true,
   targetInvalid: true,
   nothingToUndo: true,
+  syncOutdated: true,
+  idTaken: true,
+  itemNotFound: true,
+  dependencyRejected: true,
+  layoutInvalid: true,
+  mapInvalid: true,
+  creatureTypeNameTaken: true,
+  statusInvalid: true,
+  tokenInvalid: true,
+  encounterArchived: true,
+  creaturesMisplaced: true,
+  mapNotInStore: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

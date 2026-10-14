@@ -1,6 +1,7 @@
 // Battle maps in the browser (knowledge/domain/battle-map.md, "Map list, archive and
 // store"). Every change marks the map as not synced; nothing is ever deleted.
 import type { OfflineDb } from '../offline/db'
+import { markChanged, newSyncState } from '../offline/sync'
 import { LOCAL_MAP_RECORD_VERSION, type EditorMap, type LocalMap } from './model'
 
 const now = () => new Date().toISOString()
@@ -32,7 +33,7 @@ export async function createMap(
     archivedAt: null,
     createdAt: time,
     updatedAt: time,
-    sync: { baseVersion: 0, changed: true, editCount: 1 },
+    sync: newSyncState(),
     recordVersion: LOCAL_MAP_RECORD_VERSION,
   }
   await db.maps.add(record)
@@ -74,6 +75,6 @@ export async function setArchived(db: OfflineDb, id: string, archived: boolean):
 function changed(stored: LocalMap): Pick<LocalMap, 'updatedAt' | 'sync'> {
   return {
     updatedAt: now(),
-    sync: { ...stored.sync, changed: true, editCount: stored.sync.editCount + 1 },
+    sync: markChanged(stored.sync),
   }
 }

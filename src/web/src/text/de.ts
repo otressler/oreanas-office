@@ -754,7 +754,36 @@ export const de = {
       'Dort kann die Figur nicht stehen: außerhalb der Karte, auf einer Wand oder über einem Abgrund.',
     nothingToUndo:
       'Da gibt es nichts mehr rückgängig zu machen. Vielleicht hat jemand die Figur inzwischen bewegt.',
+    syncOutdated: 'Diese App-Version ist zu alt zum Synchronisieren. Bitte neu laden.',
+    idTaken: 'Diese Kennung ist schon vergeben, in einer anderen Kampagne oder für etwas anderes.',
+    itemNotFound: 'Der Server kennt diesen Eintrag nicht (mehr).',
+    dependencyRejected: 'Dafür wird ein Eintrag gebraucht, der nicht gespeichert werden konnte.',
+    layoutInvalid: 'Die Karte verstößt gegen die Regeln für Kartenlayouts.',
+    mapInvalid: 'Diese Karte gehört nicht zur Kampagne dieser Begegnung.',
+    creatureTypeNameTaken: 'In dieser Kampagne gibt es schon eine Kreaturenart mit diesem Namen.',
+    statusInvalid: 'Vom Gerät aus kann eine Begegnung nur Entwurf oder Bereit sein.',
+    tokenInvalid:
+      'Eine Kreatur der Begegnung ist fehlerhaft: Der Name fehlt oder ist zu lang, oder die Figur steht doppelt.',
+    encounterArchived: 'Diese Begegnung ist archiviert und kann nicht gestartet werden.',
+    creaturesMisplaced:
+      'Eine Kreatur steht nicht gültig auf der Karte. Korrigiere die Aufstellung, bevor die Begegnung bereit ist oder startet.',
+    mapNotInStore: 'Diese Karte wird im Kartenspeicher dieser Kampagne nicht angeboten.',
   } satisfies Record<ApiErrorCode, string>,
+
+  /** Sync and the map store (lane: sync client). */
+  sync: {
+    title: 'Synchronisieren',
+  },
+
+  /** Creature types and the bestiary (lane: bestiary). */
+  bestiary: {
+    title: 'Bestiarium',
+  },
+
+  /** The editor's encounter mode: creatures, placement, ready (lane: bestiary). */
+  encounterEditor: {
+    title: 'Begegnung',
+  },
 
   /** Failures without an error code. */
   requestErrors: {

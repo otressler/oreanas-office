@@ -1286,6 +1286,220 @@
           }
         }
       }
+    },
+    "/api/sync/push": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncPushRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPushResponse"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Upgrade Required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/campaigns/{campaignId}/versions": {
+      "get": {
+        "tags": [
+          "Sync"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncVersionList"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Upgrade Required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/campaigns/{campaignId}/items": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncFetchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SyncServerItem"
+                  }
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Upgrade Required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/map-store": {
+      "get": {
+        "tags": [
+          "Maps"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StoreMapResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/map-store/{mapId}": {
+      "post": {
+        "tags": [
+          "Maps"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncServerItem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1401,7 +1615,19 @@
           "tokenNotFound",
           "notYourToken",
           "targetInvalid",
-          "nothingToUndo"
+          "nothingToUndo",
+          "syncOutdated",
+          "idTaken",
+          "itemNotFound",
+          "dependencyRejected",
+          "layoutInvalid",
+          "mapInvalid",
+          "creatureTypeNameTaken",
+          "statusInvalid",
+          "tokenInvalid",
+          "encounterArchived",
+          "creaturesMisplaced",
+          "mapNotInStore"
         ]
       },
       "AuthOptionsResponse": {
@@ -1824,6 +2050,27 @@
           "gargantuan"
         ]
       },
+      "EncounterMapCopy": {
+        "required": [
+          "width",
+          "height",
+          "layout"
+        ],
+        "type": "object",
+        "properties": {
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/MapLayout"
+          }
+        }
+      },
       "EncounterStatus": {
         "enum": [
           "draft",
@@ -1842,7 +2089,9 @@
           "height",
           "creatureCount",
           "sessionId",
-          "createdAt"
+          "createdAt",
+          "version",
+          "archivedAt"
         ],
         "type": "object",
         "properties": {
@@ -1881,6 +2130,17 @@
           },
           "createdAt": {
             "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "date-time"
           }
         }
@@ -1947,6 +2207,18 @@
               "notYourToken",
               "targetInvalid",
               "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
               null
             ]
           }
@@ -2339,6 +2611,75 @@
           }
         }
       },
+      "LayoutProblem": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/LayoutProblemCode"
+          },
+          "field": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "otherId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "y": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "LayoutProblemCode": {
+        "enum": [
+          "mapSizeInvalid",
+          "layoutVersionUnsupported",
+          "nameMissing",
+          "textTooLong",
+          "cellOutside",
+          "cellDuplicate",
+          "terrainInvalid",
+          "elevationInvalid",
+          "idMissing",
+          "featureIdDuplicate",
+          "featureKindMissing",
+          "featureSizeInvalid",
+          "featureOutside",
+          "featureOverlap",
+          "entranceIdDuplicate",
+          "entranceKindInvalid",
+          "entranceEmpty",
+          "entranceCellOutside",
+          "entranceCellNotOnEdge",
+          "entranceCellNotWalkable",
+          "entranceCellDuplicate",
+          "entranceCellShared"
+        ]
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -2585,6 +2926,18 @@
               "notYourToken",
               "targetInvalid",
               "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
               null
             ]
           },
@@ -2760,6 +3113,587 @@
           }
         }
       },
+      "StoreMapResponse": {
+        "required": [
+          "id",
+          "name",
+          "width",
+          "height",
+          "campaignName",
+          "layout",
+          "hasArchivedCopy"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "campaignName": {
+            "type": "string"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/MapLayout"
+          },
+          "hasArchivedCopy": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SyncCampaignData": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncCreatureToken": {
+        "required": [
+          "id",
+          "creatureTypeId",
+          "label",
+          "x",
+          "y",
+          "size"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creatureTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "$ref": "#/components/schemas/CreatureSize"
+          }
+        }
+      },
+      "SyncCreatureTypeData": {
+        "required": [
+          "name",
+          "size",
+          "appearance",
+          "notes",
+          "archivedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "$ref": "#/components/schemas/CreatureSize"
+          },
+          "appearance": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "SyncEncounterData": {
+        "required": [
+          "name",
+          "battleMapId",
+          "status",
+          "archivedAt",
+          "tokens"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "battleMapId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EncounterStatus"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncCreatureToken"
+            }
+          }
+        }
+      },
+      "SyncEncounterServerData": {
+        "required": [
+          "name",
+          "battleMapId",
+          "status",
+          "archivedAt",
+          "tokens",
+          "sessionId",
+          "mapCopy"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "battleMapId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EncounterStatus"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncCreatureToken"
+            }
+          },
+          "sessionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "mapCopy": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncounterMapCopy"
+              }
+            ]
+          }
+        }
+      },
+      "SyncFetchRequest": {
+        "required": [
+          "ids"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "SyncItemKind": {
+        "enum": [
+          "campaign",
+          "creatureType",
+          "battleMap",
+          "encounter"
+        ]
+      },
+      "SyncItemResult": {
+        "required": [
+          "id",
+          "kind",
+          "outcome",
+          "server",
+          "error",
+          "dependsOnId",
+          "problems",
+          "existingCreatureTypeId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SyncItemKind"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/SyncOutcome"
+          },
+          "server": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyncServerItem"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ApiError"
+              }
+            ]
+          },
+          "dependsOnId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "problems": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LayoutProblem"
+            }
+          },
+          "existingCreatureTypeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "SyncItemVersion": {
+        "required": [
+          "id",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SyncMapData": {
+        "required": [
+          "name",
+          "width",
+          "height",
+          "layout",
+          "scene",
+          "vibe",
+          "lighting",
+          "archivedAt",
+          "copiedFromMapId"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/MapLayout"
+          },
+          "scene": {
+            "type": "string"
+          },
+          "vibe": {
+            "type": "string"
+          },
+          "lighting": {
+            "type": "string"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "copiedFromMapId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "SyncOutcome": {
+        "enum": [
+          "created",
+          "saved",
+          "conflict",
+          "rejected"
+        ]
+      },
+      "SyncPushItem": {
+        "required": [
+          "id",
+          "kind",
+          "campaignId",
+          "baseVersion",
+          "campaign",
+          "creatureType",
+          "map",
+          "encounter"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SyncItemKind"
+          },
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "baseVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "campaign": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyncCampaignData"
+              }
+            ]
+          },
+          "creatureType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyncCreatureTypeData"
+              }
+            ]
+          },
+          "map": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyncMapData"
+              }
+            ]
+          },
+          "encounter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEncounterData"
+              }
+            ]
+          }
+        }
+      },
+      "SyncPushRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncPushItem"
+            }
+          }
+        }
+      },
+      "SyncPushResponse": {
+        "required": [
+          "results"
+        ],
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncItemResult"
+            }
+          }
+        }
+      },
+      "SyncServerItem": {
+        "required": [
+          "id",
+          "kind",
+          "campaignId",
+          "version",
+          "updatedAt",
+          "updatedByDisplayName",
+          "campaign",
+          "creatureType",
+          "map",
+          "encounter"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SyncItemKind"
+          },
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedByDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campaign": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyncCampaignData"
+              }
+            ]
+          },
+          "creatureType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyncCreatureTypeData"
+              }
+            ]
+          },
+          "map": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyncMapData"
+              }
+            ]
+          },
+          "encounter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEncounterServerData"
+              }
+            ]
+          }
+        }
+      },
+      "SyncVersionList": {
+        "required": [
+          "creatureTypes",
+          "battleMaps",
+          "encounters"
+        ],
+        "type": "object",
+        "properties": {
+          "creatureTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncItemVersion"
+            }
+          },
+          "battleMaps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncItemVersion"
+            }
+          },
+          "encounters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncItemVersion"
+            }
+          }
+        }
+      },
       "TableClientMethod": {
         "enum": [
           "EncounterEnded",
@@ -2921,6 +3855,12 @@
     },
     {
       "name": "Encounters"
+    },
+    {
+      "name": "Sync"
+    },
+    {
+      "name": "Maps"
     }
   ]
 }

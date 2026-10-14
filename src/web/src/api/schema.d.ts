@@ -1451,6 +1451,234 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sync/push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SyncPushRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SyncPushResponse"];
+                    };
+                };
+                /** @description Upgrade Required */
+                426: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sync/campaigns/{campaignId}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SyncVersionList"];
+                    };
+                };
+                /** @description Upgrade Required */
+                426: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sync/campaigns/{campaignId}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SyncFetchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SyncServerItem"][];
+                    };
+                };
+                /** @description Upgrade Required */
+                426: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/map-store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoreMapResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/map-store/{mapId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    mapId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SyncServerItem"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1476,7 +1704,7 @@ export interface components {
             field?: null | string;
         };
         /** @enum {unknown} */
-        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo";
+        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore";
         AuthOptionsResponse: {
             googleEnabled: boolean;
         };
@@ -1596,6 +1824,13 @@ export interface components {
         };
         /** @enum {unknown} */
         CreatureSize: "tiny" | "small" | "medium" | "large" | "huge" | "gargantuan";
+        EncounterMapCopy: {
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            layout: components["schemas"]["MapLayout"];
+        };
         /** @enum {unknown} */
         EncounterStatus: "draft" | "ready" | "active" | "ended";
         EncounterSummaryResponse: {
@@ -1615,6 +1850,10 @@ export interface components {
             sessionId: null | string;
             /** Format: date-time */
             createdAt: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: date-time */
+            archivedAt: null | string;
         };
         /** @enum {unknown} */
         EntranceKind: "entrance" | "exit" | "both";
@@ -1623,7 +1862,7 @@ export interface components {
         };
         HubResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | null;
         };
         ImportCreature: {
             type: string;
@@ -1727,6 +1966,18 @@ export interface components {
             elevation: null | number;
             blocksMovement: null | boolean;
         };
+        LayoutProblem: {
+            code: components["schemas"]["LayoutProblemCode"];
+            field?: null | string;
+            id?: null | string;
+            otherId?: null | string;
+            /** Format: int32 */
+            x?: null | number;
+            /** Format: int32 */
+            y?: null | number;
+        };
+        /** @enum {unknown} */
+        LayoutProblemCode: "mapSizeInvalid" | "layoutVersionUnsupported" | "nameMissing" | "textTooLong" | "cellOutside" | "cellDuplicate" | "terrainInvalid" | "elevationInvalid" | "idMissing" | "featureIdDuplicate" | "featureKindMissing" | "featureSizeInvalid" | "featureOutside" | "featureOverlap" | "entranceIdDuplicate" | "entranceKindInvalid" | "entranceEmpty" | "entranceCellOutside" | "entranceCellNotOnEdge" | "entranceCellNotWalkable" | "entranceCellDuplicate" | "entranceCellShared";
         LoginRequest: {
             email: string;
             password: string;
@@ -1784,7 +2035,7 @@ export interface components {
         };
         MoveResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | null;
             move: components["schemas"]["TokenMovedEvent"] | null;
         };
         MoveTokenRequest: {
@@ -1832,6 +2083,143 @@ export interface components {
         SessionStatus: "planned" | "active" | "ended";
         StartEncounterRequest: {
             characters: components["schemas"]["CharacterPlacement"][];
+        };
+        StoreMapResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            campaignName: string;
+            layout: components["schemas"]["MapLayout"];
+            hasArchivedCopy: boolean;
+        };
+        SyncCampaignData: {
+            name: string;
+        };
+        SyncCreatureToken: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            creatureTypeId: string;
+            label: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            size: components["schemas"]["CreatureSize"];
+        };
+        SyncCreatureTypeData: {
+            name: string;
+            size: components["schemas"]["CreatureSize"];
+            appearance: string;
+            notes: string;
+            /** Format: date-time */
+            archivedAt: null | string;
+        };
+        SyncEncounterData: {
+            name: string;
+            /** Format: uuid */
+            battleMapId: string;
+            status: components["schemas"]["EncounterStatus"];
+            /** Format: date-time */
+            archivedAt: null | string;
+            tokens: components["schemas"]["SyncCreatureToken"][];
+        };
+        SyncEncounterServerData: {
+            name: string;
+            /** Format: uuid */
+            battleMapId: string;
+            status: components["schemas"]["EncounterStatus"];
+            /** Format: date-time */
+            archivedAt: null | string;
+            tokens: components["schemas"]["SyncCreatureToken"][];
+            /** Format: uuid */
+            sessionId: null | string;
+            mapCopy: null | components["schemas"]["EncounterMapCopy"];
+        };
+        SyncFetchRequest: {
+            ids: string[];
+        };
+        /** @enum {unknown} */
+        SyncItemKind: "campaign" | "creatureType" | "battleMap" | "encounter";
+        SyncItemResult: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["SyncItemKind"];
+            outcome: components["schemas"]["SyncOutcome"];
+            server: null | components["schemas"]["SyncServerItem"];
+            error: null | components["schemas"]["ApiError"];
+            /** Format: uuid */
+            dependsOnId: null | string;
+            problems: null | components["schemas"]["LayoutProblem"][];
+            /** Format: uuid */
+            existingCreatureTypeId: null | string;
+        };
+        SyncItemVersion: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            version: number;
+        };
+        SyncMapData: {
+            name: string;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            layout: components["schemas"]["MapLayout"];
+            scene: string;
+            vibe: string;
+            lighting: string;
+            /** Format: date-time */
+            archivedAt: null | string;
+            /** Format: uuid */
+            copiedFromMapId: null | string;
+        };
+        /** @enum {unknown} */
+        SyncOutcome: "created" | "saved" | "conflict" | "rejected";
+        SyncPushItem: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["SyncItemKind"];
+            /** Format: uuid */
+            campaignId: string;
+            /** Format: int32 */
+            baseVersion: number;
+            campaign: null | components["schemas"]["SyncCampaignData"];
+            creatureType: null | components["schemas"]["SyncCreatureTypeData"];
+            map: null | components["schemas"]["SyncMapData"];
+            encounter: null | components["schemas"]["SyncEncounterData"];
+        };
+        SyncPushRequest: {
+            items: components["schemas"]["SyncPushItem"][];
+        };
+        SyncPushResponse: {
+            results: components["schemas"]["SyncItemResult"][];
+        };
+        SyncServerItem: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["SyncItemKind"];
+            /** Format: uuid */
+            campaignId: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: date-time */
+            updatedAt: string;
+            updatedByDisplayName: null | string;
+            campaign: null | components["schemas"]["SyncCampaignData"];
+            creatureType: null | components["schemas"]["SyncCreatureTypeData"];
+            map: null | components["schemas"]["SyncMapData"];
+            encounter: null | components["schemas"]["SyncEncounterServerData"];
+        };
+        SyncVersionList: {
+            creatureTypes: components["schemas"]["SyncItemVersion"][];
+            battleMaps: components["schemas"]["SyncItemVersion"][];
+            encounters: components["schemas"]["SyncItemVersion"][];
         };
         /** @enum {string} */
         TableClientMethod: "EncounterEnded" | "IdleTimeout" | "MovePreviewCleared" | "MovePreviewed" | "TokenMoved";

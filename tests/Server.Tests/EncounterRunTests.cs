@@ -32,11 +32,12 @@ public sealed class EncounterRunTests(AppFixture fixture)
             new CharacterPlacement(aria.Id, 2, 1));
 
         var summary = await response.ReadAsync<EncounterSummaryResponse>(HttpStatusCode.OK);
-        Assert.Equal(table.Encounter with { Status = EncounterStatus.Active, SessionId = table.Session.Id }, summary);
+        Assert.Equal(table.Encounter with { Status = EncounterStatus.Active, SessionId = table.Session.Id, Version = 2 }, summary);
         await using var scope = fixture.App.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var encounter = await db.Encounters.Include(e => e.Tokens).SingleAsync(e => e.Id == table.Encounter.Id);
         Assert.NotNull(encounter.StartedAt);
+        Assert.Equal((8, 5), (encounter.MapCopy!.Width, encounter.MapCopy.Height));
         Assert.Null(encounter.EndedAt);
         Assert.Equal(
             [(thorin.Id, 0, 0, 0m, (string?)null), (aria.Id, 2, 1, 0.5m, null)],
@@ -230,7 +231,7 @@ public sealed class EncounterRunTests(AppFixture fixture)
         var endedAt = await EndedAtAsync(table.Encounter.Id);
         var again = await table.Dm.EndEncounterAsync(table.CampaignId, table.Session.Id, table.Encounter.Id);
 
-        var expected = table.Encounter with { Status = EncounterStatus.Ended, SessionId = table.Session.Id };
+        var expected = table.Encounter with { Status = EncounterStatus.Ended, SessionId = table.Session.Id, Version = 3 };
         Assert.Equal(expected, await ended.ReadAsync<EncounterSummaryResponse>(HttpStatusCode.OK));
         Assert.Equal(expected, await again.ReadAsync<EncounterSummaryResponse>(HttpStatusCode.OK));
         Assert.NotNull(endedAt);

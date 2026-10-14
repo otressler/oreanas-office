@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { signInPath } from '../auth/auth'
 import { offlineDb } from './db'
+import { SyncProvider } from '../sync'
 import { lastUser } from './identity'
 import { LocalUserContext } from './localUser'
 
@@ -19,7 +20,9 @@ export function RequireLocalUser() {
   if (!value) return <Navigate replace to={signInPath(location.pathname + location.search)} />
   return (
     <LocalUserContext.Provider value={value}>
-      <Outlet />
+      <SyncProvider>
+        <Outlet />
+      </SyncProvider>
     </LocalUserContext.Provider>
   )
 }

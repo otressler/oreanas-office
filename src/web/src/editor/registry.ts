@@ -1,7 +1,9 @@
 // Every tool and side panel of the map editor, in toolbar and panel order. Owned by
 // the integrator; each lane fills its own module's lists.
+import { encounterPanels } from './encounter'
 import { featurePanels, featureTools } from './features'
 import { scenePanels, sceneHeaderItems } from './scene'
+import { SyncStatusItem } from '../sync'
 import { terrainPanels, terrainTools } from './terrain'
 import type { EditorPanel, EditorTool, ToolGroup } from './tools'
 
@@ -13,9 +15,15 @@ export const editorTools: EditorTool[] = [...terrainTools, ...featureTools].sort
   (a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group),
 )
 
-export const editorPanels: EditorPanel[] = [...scenePanels, ...terrainPanels, ...featurePanels]
+export const editorPanels: EditorPanel[] = [
+  ...scenePanels,
+  ...encounterPanels,
+  ...terrainPanels,
+  ...featurePanels,
+]
 
-export const editorHeaderItems = sceneHeaderItems
+/** The sync status first, then the scene lane's items. */
+export const editorHeaderItems = [SyncStatusItem, ...sceneHeaderItems]
 
 /** The tool a newly opened editor starts with: the first one. */
 export const DEFAULT_TOOL_ID = editorTools[0]?.id ?? ''

@@ -16,7 +16,14 @@ export function useKeepCampaignCopy(
     const user = lastUser()
     if (!user || !id || !name || !myRole) return
     offlineDb(user.id)
-      .campaigns.put({ id, name, myRole, savedAt: new Date().toISOString() })
+      .campaigns.put({
+        id,
+        name,
+        myRole,
+        savedAt: new Date().toISOString(),
+        local: false,
+        sync: null,
+      })
       // Without IndexedDB the page still works; only offline editing is lost.
       .catch(() => {})
   }, [id, name, myRole])

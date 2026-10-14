@@ -115,8 +115,7 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
                 t.Encounter.Status,
                 SessionDmUserId = (Guid?)t.Encounter.Session!.DmUserId,
                 OwnerUserId = (Guid?)t.Character!.OwnerUserId,
-                CharacterSize = (CreatureSize?)t.Character!.Size,
-                TypeSize = (CreatureSize?)t.CreatureType!.Size,
+                t.Encounter.MapCopy,
                 t.Encounter.BattleMap.Width,
                 t.Encounter.BattleMap.Height,
                 t.Encounter.BattleMap.Layout,
@@ -137,8 +136,11 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
             return MoveCheck.Failed(ApiErrorCode.NotYourToken);
         }
 
-        var size = found.TypeSize ?? found.CharacterSize ?? CreatureSize.Medium;
-        var grid = new MapGrid(found.Width, found.Height, found.Layout);
+        var size = found.Token.Size;
+        // The fight uses the map as it was at the start, not the battle map's current state.
+        var grid = found.MapCopy is { } copy
+            ? new MapGrid(copy.Width, copy.Height, copy.Layout)
+            : new MapGrid(found.Width, found.Height, found.Layout);
         return MapGrid.FootprintCells(size, request.X, request.Y).All(cell => grid.Walkable(cell.X, cell.Y))
             ? new MoveCheck(null, found.Token, grid, size)
             : MoveCheck.Failed(ApiErrorCode.TargetInvalid);

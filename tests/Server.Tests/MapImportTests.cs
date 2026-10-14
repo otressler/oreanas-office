@@ -83,7 +83,7 @@ public sealed class MapImportTests
     public void A_broken_file_is_refused_with_the_offending_entry(
         string because, ImportMapRequest request, ApiErrorCode code, string field)
     {
-        var error = MapImport.Build(request, CampaignId, [], Now, out var result);
+        var error = MapImport.Build(request, CampaignId, [], Now, null, out var result);
 
         Assert.True(error == new ApiError(code, field), $"{because}: {error}");
         Assert.Null(result);
@@ -189,6 +189,7 @@ public sealed class MapImportTests
             CampaignId,
             [goblin],
             Now,
+            null,
             out var import);
 
         Assert.Null(error);
@@ -256,7 +257,7 @@ public sealed class MapImportTests
 
     private static MapImport.Result Build(ImportMapRequest request)
     {
-        var error = MapImport.Build(request, CampaignId, [], Now, out var result);
+        var error = MapImport.Build(request, CampaignId, [], Now, null, out var result);
         Assert.Null(error);
         return result!;
     }

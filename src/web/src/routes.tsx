@@ -77,6 +77,13 @@ export const routes: RouteObject[] = [
               Component: (await import('./editor/EditorPage')).EditorPage,
             }),
           },
+          // The same page; encounter mode reads the encounterId param.
+          {
+            path: 'kampagnen/:campaignId/karten/:mapId/begegnungen/:encounterId',
+            lazy: async () => ({
+              Component: (await import('./editor/EditorPage')).EditorPage,
+            }),
+          },
         ],
       },
     ],

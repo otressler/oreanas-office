@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OreanasOffice.Server.Bestiary;
 using OreanasOffice.Server.Characters;
+using OreanasOffice.Server.Rules;
 
 namespace OreanasOffice.Server.Encounters;
 
@@ -24,6 +25,10 @@ public class Token
     public Guid? CreatureTypeId { get; set; }
 
     public string? Label { get; set; }
+
+    // Copied from the character or creature type when the token is created; later changes
+    // to the type don't touch it.
+    public CreatureSize Size { get; set; }
 
     public int X { get; set; }
 

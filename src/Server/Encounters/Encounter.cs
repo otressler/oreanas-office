@@ -1,5 +1,9 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OreanasOffice.Server.Accounts;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Sessions;
@@ -33,6 +37,21 @@ public class Encounter
 
     public DateTimeOffset? EndedAt { get; set; }
 
+    // Sync (knowledge/decisions/offline-prep-pwa.md, "Versions and IDs"): 1 when created,
+    // raised by 1 on every accepted change; a concurrency token.
+    public int Version { get; set; } = 1;
+
+    // Archived items stay listed for sync but aren't offered for picking.
+    public DateTimeOffset? ArchivedAt { get; set; }
+
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    // The battle map as it was when the encounter started; the live fight and the ended
+    // encounter use it, so later map edits don't change them.
+    public EncounterMapCopy? MapCopy { get; set; }
+
     public Campaign Campaign { get; set; } = null!;
 
     public BattleMap BattleMap { get; set; } = null!;
@@ -54,9 +73,26 @@ public enum EncounterStatus
 
 internal sealed class EncounterConfiguration : IEntityTypeConfiguration<Encounter>
 {
+    // The same JSON as BattleMap.Layout.
+    private static readonly JsonSerializerOptions LayoutJson = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+    };
+
     public void Configure(EntityTypeBuilder<Encounter> encounter)
     {
         encounter.Property(e => e.Name).HasMaxLength(Encounter.NameMaxLength);
+        encounter.Property(e => e.Version).IsConcurrencyToken();
+        encounter.HasOne<AppUser>().WithMany().HasForeignKey(e => e.UpdatedByUserId).OnDelete(DeleteBehavior.Restrict);
+        encounter.Property(e => e.MapCopy)
+            .HasConversion(
+                copy => JsonSerializer.Serialize(copy, LayoutJson),
+                json => JsonSerializer.Deserialize<EncounterMapCopy>(json, LayoutJson),
+                new ValueComparer<EncounterMapCopy?>(
+                    (a, b) => JsonSerializer.Serialize(a, LayoutJson) == JsonSerializer.Serialize(b, LayoutJson),
+                    copy => JsonSerializer.Serialize(copy, LayoutJson).GetHashCode(),
+                    copy => JsonSerializer.Deserialize<EncounterMapCopy>(JsonSerializer.Serialize(copy, LayoutJson), LayoutJson)))
+            .HasColumnName("MapCopyJson");
         encounter.HasOne(e => e.Campaign).WithMany().HasForeignKey(e => e.CampaignId).OnDelete(DeleteBehavior.Cascade);
 
         // SQL Server allows one cascade path per row: the campaign already deletes its

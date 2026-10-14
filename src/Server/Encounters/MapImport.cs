@@ -26,6 +26,7 @@ public static class MapImport
         Guid campaignId,
         IEnumerable<CreatureType> campaignTypes,
         DateTimeOffset now,
+        Guid? userId,
         out Result? result)
     {
         result = null;
@@ -77,6 +78,8 @@ public static class MapImport
             Vibe = vibe,
             Lighting = lighting,
             CreatedAt = now,
+            UpdatedAt = now,
+            UpdatedByUserId = userId,
         };
         var encounter = new Encounter
         {
@@ -85,10 +88,12 @@ public static class MapImport
             Name = name,
             Status = EncounterStatus.Ready,
             CreatedAt = now,
+            UpdatedAt = now,
+            UpdatedByUserId = userId,
         };
 
         var newTypes = new List<CreatureType>();
-        if (Creatures(request.Creatures ?? [], new MapGrid(map.Width, map.Height, layout), campaignTypes, encounter, newTypes, now)
+        if (Creatures(request.Creatures ?? [], new MapGrid(map.Width, map.Height, layout), campaignTypes, encounter, newTypes, now, userId)
             is { } creatureError)
         {
             return creatureError;
@@ -281,7 +286,8 @@ public static class MapImport
         IEnumerable<CreatureType> campaignTypes,
         Encounter encounter,
         List<CreatureType> newTypes,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        Guid? userId)
     {
         var types = new Dictionary<string, CreatureType>(StringComparer.OrdinalIgnoreCase);
         foreach (var type in campaignTypes)
@@ -314,6 +320,8 @@ public static class MapImport
                     Name = typeName,
                     Size = size,
                     CreatedAt = now,
+                    UpdatedAt = now,
+                    UpdatedByUserId = userId,
                 };
                 types.Add(typeName, type);
                 newTypes.Add(type);
@@ -340,6 +348,7 @@ public static class MapImport
             {
                 Kind = TokenKind.Creature,
                 CreatureType = type,
+                Size = type.Size,
                 Label = label,
                 X = creature.X,
                 Y = creature.Y,

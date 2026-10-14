@@ -7,7 +7,9 @@ using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Health;
 using OreanasOffice.Server.Hosting;
+using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Sessions;
+using OreanasOffice.Server.Sync;
 using OreanasOffice.Server.Table;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,7 @@ builder.AddApiJson();
 builder.AddAccounts();
 builder.AddAppAuthorization();
 builder.AddTable();
+builder.AddSync();
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<TableOpenApi>());
 
 var app = builder.Build();
@@ -41,6 +44,8 @@ app.MapCampaignEndpoints();
 app.MapCharacterEndpoints();
 app.MapSessionEndpoints();
 app.MapEncounterEndpoints();
+app.MapSyncEndpoints();
+app.MapMapStoreEndpoints();
 app.MapTableHub();
 
 if (app.Environment.IsEnvironment(TestingEndpoints.Environment))
