@@ -31,9 +31,10 @@ Plan a game night as a whole and run it from one place. The DM thinks in game ni
 
 `/kampagnen/:id/sitzungen/:sessionId`. What it offers depends on the session's status and the viewer.
 
-- **Header:** title, date, DM and status. The session DM edits title and date. The session DM or the campaign's default DM starts, ends, continues and hands over the session ([session](/domain/session.md)).
+- **Header:** title, date, DM and status. The session DM edits title and date ("Titel und Datum ändern"). The session DM or the campaign's default DM starts ("Starten"), ends ("Beenden"), continues ("Fortsetzen") and hands over the session ([session](/domain/session.md)).
+- **The running fight** has its own block under the header, with "Zum Kampf" for everyone and "Kampf beenden" for the session DM.
 - **Fights:** the session's fights in the order they were added, each with its name, map, creature count and status (Entwurf, Bereit, Läuft, Vorbei). A fight whose creatures no longer stand validly on a changed map carries the warning from the editor.
-- **For the session DM, per fight:** open it in the editor, start it (ready fights, while the session runs and no other fight runs), move it to another planned or running session they run, archive it. Draft and ready fights can be moved; running and ended ones can't.
+- **For the session DM, per fight:** open it in the editor ("Bearbeiten", wide screens only), start it ("Aufstellen und starten": ready fights, while the session runs and no other fight runs), move it to another planned or running session they run ("Verschieben"), archive it or bring it back. Draft and ready fights can be moved; running and ended ones can't. A fight made on this device and not synced yet carries "Nur auf diesem Gerät".
 - **For the session DM, for the session:** "Kampf hinzufügen", "Karte importieren" (the [import file](/domain/battle-map.md) now creates its fight in this session).
 - **Players** see the session's header and the running fight with "Zum Kampf". Prepared and ended fights stay hidden from them, as before ([encounter](/domain/encounter.md)).
 - Ending a fight returns everyone to the session page.
@@ -61,12 +62,23 @@ When the group goes somewhere the DM didn't plan for, the DM adds a fight to the
 
 # Continuing an ended session
 
-"Sitzung fortsetzen" on an ended session, for when the group didn't get through it in one evening.
+"Fortsetzen" on an ended session, for when the group didn't get through it in one evening.
 
 - The same people who start a session continue it: the session DM or the campaign's default DM. It fails while another session of the campaign runs ([session](/domain/session.md)).
 - The session becomes `active` again. Its unplayed fights are still there.
 - **An interrupted fight comes back.** If ending the session ended a running fight, continuing brings that fight back as running, with every token where it stood and its move history kept. Players opening the app land on it again. Fights the DM ended by hand stay ended.
 - The session's date doesn't change.
+
+# As built (stage 7)
+
+Built on `stage/7-session-planning`, a branch of the stage 7 work.
+
+- **Pages.** The session page is `/kampagnen/:id/sitzungen/:sessionId`; the import moved to `/kampagnen/:id/sitzungen/:sessionId/importieren`. The campaign-wide encounter list (`GET /encounters`) is gone; the session (`GET /sessions/:id`, and each entry of the session list) carries its fights for `dm` members.
+- **The list on the session page** is the server's, with the device's copies laid over it, so a fight added, moved or archived here shows at once and is marked until it syncs. Opening the page, and every move or archive there, syncs the session DM's device.
+- **Moving and archiving** change the device's copy and sync, like the editor; the server checks the session DM on the push ([offline prep](/decisions/offline-prep-pwa.md), "Server checks").
+- **The editor's "Neue Begegnung"** creates the fight straight away when the user runs one planned or running session, and otherwise lists them. The device knows the sessions from the last pull. Each fight in the "Begegnungen" menu names its session.
+- **Continuing** uses the same request as starting (`POST /sessions/:id/activate`), which now takes planned and ended sessions. The session remembers the interrupted fight as `interruptedEncounterId`.
+- **Sync format 2.** Encounters carry `sessionId`, and the version list carries the campaign's sessions; the server's minimum sync version is 2. The browser database (version 3) dropped its encounters, which the next pull brings back.
 
 # Open questions
 

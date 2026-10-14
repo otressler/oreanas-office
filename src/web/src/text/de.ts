@@ -248,11 +248,13 @@ export const de = {
         stages: [
           {
             number: 7,
-            title: 'Gemalte Hintergründe',
+            title: 'Gemalte Hintergründe und Sitzungsplanung',
             items: [
               'Ein Bildmodell malt aus der Karte einen Hintergrund, passend zum Raster.',
               'Mehrere Fassungen erzeugen, vergleichen und eine auswählen.',
               'Ohne Bild bleibt die gezeichnete Karte: Der Kampf ist immer spielbar.',
+              'Einen Spielabend planen: Kämpfe vorbereiten und am Tisch der Reihe nach starten.',
+              'Eine beendete Sitzung fortsetzen, auch mitten im Kampf.',
             ],
           },
           {
@@ -313,10 +315,7 @@ export const de = {
         },
         {
           title: 'Die Sitzung leiten',
-          items: [
-            'Mehrere Kämpfe pro Sitzung, mit einem Tipp umschalten.',
-            'Rückgängig für die Spielleitung.',
-          ],
+          items: ['Rückgängig für die Spielleitung.'],
         },
         {
           title: 'Für Spielende',
@@ -411,8 +410,92 @@ export const de = {
     dmName: (name: string) => `Spielleitung: ${name}`,
     activate: 'Starten',
     end: 'Beenden',
+    /** Makes an ended session run again (knowledge/domain/session.md, "Continuing"). */
+    continue: 'Fortsetzen',
+    /** Under "Fortsetzen" when ending the session cut a fight off. */
+    continueResumes: (name: string) =>
+      `„${name}“ wurde mit der Sitzung unterbrochen und läuft dann weiter, alle Figuren stehen, wo sie waren.`,
     changeDm: 'Spielleitung wechseln',
     applyDm: 'Übernehmen',
+    // The campaign page's list.
+    runningTitle: 'Läuft gerade',
+    plannedTitle: 'Geplant',
+    /** The collapsed part with ended sessions, e.g. "Beendet (3)". */
+    endedTitle: (count: number) => `Beendet (${count})`,
+    fights: (count: number) => (count === 1 ? '1 Kampf' : `${count} Kämpfe`),
+    noFights: 'Noch keine Kämpfe geplant.',
+  },
+
+  /** /kampagnen/:id/sitzungen/:sessionId (knowledge/features/session-planning.md). */
+  sessionPage: {
+    back: 'Zur Kampagne',
+    /** Links back to the session page, e.g. from the import and the setup screen. */
+    toSession: 'Zur Sitzung',
+    notFoundTitle: 'Diese Sitzung gibt es hier nicht',
+    notFoundBody: 'Sie gehört zu einer anderen Kampagne, oder der Link stimmt nicht.',
+    editDetails: 'Titel und Datum ändern',
+    fightsTitle: 'Kämpfe',
+    empty:
+      'Noch keine Kämpfe. Füge einen hinzu: auf einer vorhandenen Karte, einer Kopie oder einer neuen.',
+    addFight: 'Kampf hinzufügen',
+    importMap: 'Karte importieren',
+    /** The collapsed part with archived fights, e.g. "Archiviert (1)". */
+    archived: (count: number) => `Archiviert (${count})`,
+    /** A fight made on this device and not on the server yet. */
+    localOnly: 'Nur auf diesem Gerät',
+    openEditor: 'Bearbeiten',
+    /** Accessible names of a row's buttons, which repeat for every fight. */
+    openEditorLabel: (name: string) => `${name} bearbeiten`,
+    moveLabel: (name: string) => `${name} verschieben`,
+    archiveLabel: (name: string) => `${name} archivieren`,
+    restoreLabel: (name: string) => `${name} zurückholen`,
+    move: 'Verschieben',
+    archive: 'Archivieren',
+    restore: 'Zurückholen',
+    misplaced: 'Eine Kreatur steht auf der geänderten Karte nicht mehr gültig.',
+    moveTitle: (name: string) => `„${name}“ verschieben`,
+    moveHelp:
+      'In welche Sitzung soll der Kampf? Angeboten werden die geplanten und laufenden, die du leitest.',
+    moveNoTarget:
+      'Du leitest keine andere geplante oder laufende Sitzung. Lege auf der Kampagnenseite eine an.',
+    moveTo: 'Hierhin',
+    /** After a move, archive or restore that the server didn't take. */
+    notSynced:
+      'Auf diesem Gerät gespeichert, aber noch nicht synchronisiert. Schau in den Synchronisierungsstatus.',
+    // Hints that explain missing buttons.
+    startWhenRunning: 'Bereite Kämpfe startest du hier, sobald die Sitzung läuft.',
+    endedHint:
+      'Diese Sitzung ist beendet. Setze sie fort, um weiterzuspielen oder Kämpfe hinzuzufügen.',
+    otherDm: (name: string) => `${name} leitet diese Sitzung und bereitet ihre Kämpfe vor.`,
+    playerHint:
+      'Die Spielleitung bereitet die Kämpfe vor. Sobald einer läuft, geht es hier hinein.',
+    playerEnded: 'Diese Sitzung ist beendet.',
+  },
+
+  /** "Kampf hinzufügen" on the session page (knowledge/features/session-planning.md). */
+  addFight: {
+    title: 'Kampf hinzufügen',
+    name: 'Name des Kampfs',
+    namePlaceholder: 'Leer lassen: wie die Karte',
+    choices: {
+      existing: 'Vorhandene Karte',
+      copy: 'Karte kopieren',
+      fresh: 'Neue Karte',
+    },
+    existingHelp:
+      'Der Kampf nutzt diese Karte. Änderungen an ihr gelten für alle Kämpfe darauf, die noch nicht gelaufen sind.',
+    copyHelp: 'Eine Kopie nur für diesen Kampf: Änderungen daran betreffen keine anderen Kämpfe.',
+    freshHelp:
+      'Eine leere Karte. Der Editor öffnet sich zum Zeichnen, der Kampf ist in seinem Menü „Begegnungen“.',
+    pick: 'Auswählen',
+    /** How many planned fights already use a map. */
+    usedBy: (count: number) =>
+      count === 1 ? 'In 1 geplanten Kampf' : `In ${count} geplanten Kämpfen`,
+    noMaps:
+      'Diese Kampagne hat auf diesem Gerät noch keine Karten. Lege eine neue an, oder synchronisiere, um die Karten vom Server zu holen.',
+    narrow:
+      'Kämpfe bereitest du im Karteneditor vor. Öffne die Sitzung dafür auf einem größeren Bildschirm.',
+    create: 'Anlegen und öffnen',
   },
 
   sessionStatus: {
@@ -430,28 +513,11 @@ export const de = {
   } satisfies Record<import('../api/types').EncounterStatus, string>,
 
   encounters: {
-    title: 'Kämpfe',
-    empty:
-      'Noch keine Kämpfe. Lege mit „Neue Begegnung“ einen auf einer deiner Karten an, oder importiere eine Karte.',
-    importMap: 'Karte importieren',
-    /** "Neue Begegnung": pick a map of the campaign, then the editor opens the new encounter. */
-    create: {
-      button: 'Neue Begegnung',
-      title: 'Neue Begegnung',
-      help: 'Wähle die Karte, auf der gekämpft wird. Die Begegnung öffnet sich im Editor: Dort platzierst du Kreaturen, setzt sie auf bereit und startest sie. Der Hintergrund der Karte kommt mit.',
-      pick: 'Auswählen',
-      noMaps:
-        'Diese Kampagne hat auf diesem Gerät noch keine Karten. Lege unter „Karten“ eine an, oder synchronisiere, um die Karten vom Server zu holen.',
-      narrow:
-        'Begegnungen bereitest du im Karteneditor vor. Öffne die Kampagne dafür auf einem größeren Bildschirm.',
-    },
     /** Grid size in squares, then meters, e.g. "20 × 12 Felder (30 m × 18 m)". */
     gridSize: (width: number, height: number, widthMeters: string, heightMeters: string) =>
       `${width} × ${height} Felder (${widthMeters} × ${heightMeters})`,
     creatures: (count: number) => (count === 1 ? '1 Kreatur' : `${count} Kreaturen`),
     setUp: 'Aufstellen und starten',
-    needsSession:
-      'Bereite Kämpfe startet die Spielleitung der laufenden Sitzung. Läuft keine, starte zuerst eine Sitzung.',
     oneAtATime:
       'In der laufenden Sitzung läuft schon ein Kampf. Beende ihn, bevor du den nächsten startest.',
     toFight: 'Zum Kampf',
@@ -1044,7 +1110,9 @@ export const de = {
     dateInvalid: 'Bitte wähle ein Datum.',
     notADm: 'Diese Person gehört nicht zur Spielleitung der Kampagne.',
     anotherSessionActive: 'In dieser Kampagne läuft schon eine Sitzung. Beende sie zuerst.',
-    sessionEnded: 'Diese Sitzung ist schon beendet.',
+    sessionEnded: 'Diese Sitzung ist beendet. Setze sie zuerst fort.',
+    notSessionDm: 'Die Kämpfe einer Sitzung plant nur ihre Spielleitung.',
+    sessionInvalid: 'Diese Sitzung gibt es in der Kampagne nicht (mehr).',
     textTooLong: 'Ein Text in der Datei ist zu lang.',
     mapSizeInvalid: 'Eine Karte ist 1 bis 40 Felder breit und hoch.',
     layoutVersionUnsupported: 'Diese Kartendatei stammt aus einer neueren Version der App.',
@@ -1285,6 +1353,12 @@ export const de = {
     menuFlagged: 'Auf einer Begegnung steht eine Kreatur nicht mehr gültig.',
     listEmpty: 'Noch keine Begegnung auf dieser Karte.',
     newEncounter: 'Neue Begegnung',
+    /** "Neue Begegnung" asks which session the fight goes in. */
+    pickSession: 'Für welche Sitzung?',
+    noSession:
+      'Du leitest keine geplante oder laufende Sitzung. Lege auf der Kampagnenseite eine an; danach synchronisieren.',
+    /** The session a fight belongs to, e.g. "Sitzung: Die Seilbrücke". */
+    sessionOf: (title: string) => `Sitzung: ${title}`,
     archive: 'Archivieren',
     restore: 'Zurückholen',
     /** Accessible names of the list's archive and restore buttons. */
@@ -1337,7 +1411,8 @@ export const de = {
     start: 'Starten',
     startNeedsReady: 'Zum Starten muss die Begegnung bereit sein.',
     startOffline: 'Zum Starten brauchst du eine Verbindung zum Server.',
-    startNeedsSession: 'Zum Starten muss eine Sitzung laufen, in der du die Spielleitung bist.',
+    startNeedsSession:
+      'Zum Starten muss die Sitzung dieses Kampfs laufen, und du musst sie leiten.',
     startArchived: 'Eine archivierte Begegnung lässt sich nicht starten.',
     startMisplaced: 'Starten geht erst, wenn alle Kreaturen gültig stehen.',
     startBlocked:

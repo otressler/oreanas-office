@@ -115,10 +115,10 @@ export async function saveAsNewDraft(db: OfflineDb, id: string): Promise<string 
     const record = await db.encounters.get(id)
     const server = conflictOf(record)
     if (!record || !server) return null
+    // It stays in its session; if that has ended, the push says so and the DM moves it.
     const draft = asNewItem(record, {
       status: 'draft',
       tokens: withNewTokenIds(record),
-      sessionId: null,
       mapCopy: null,
     })
     await db.encounters.put(draft as LocalEncounter)

@@ -52,11 +52,13 @@ async function startFight(browser: Browser, page: Page) {
   await sessions.getByRole('button', { name: text.newSession }).click()
   await sessions.getByLabel(text.sessionTitle).fill('Sitzung 1 – Die Hängebrücke')
   await sessions.getByRole('button', { name: text.create }).click()
-  await sessions.getByRole('button', { name: text.activate }).click()
-  await expect(sessions).toContainText(text.activeStatus)
+  // The session's page holds its fights (knowledge/features/session-planning.md).
+  await sessions.getByRole('link', { name: 'Sitzung 1 – Die Hängebrücke' }).click()
+  await oreana.getByRole('button', { name: text.activate }).click()
+  await expect(oreana.getByText(text.activeStatus, { exact: true }).first()).toBeVisible()
   await panel(oreana, 'Kämpfe').getByRole('link', { name: 'Karte importieren' }).click()
   await oreana.getByRole('button', { name: /Schluchtübergang/ }).click()
-  await panel(oreana, 'Kämpfe').getByRole('link', { name: 'Aufstellen und starten' }).click()
+  await panel(oreana, 'Kämpfe').getByRole('button', { name: 'Aufstellen und starten' }).click()
 
   // Ilse goes to the forest path, at (0, 5).
   await oreana.getByRole('checkbox', { name: 'Ilse kämpft mit' }).check()

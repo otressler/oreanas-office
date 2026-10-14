@@ -10,6 +10,7 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { PasswordResetPage } from './pages/PasswordResetPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RoadmapPage } from './pages/RoadmapPage'
+import { SessionPage } from './pages/SessionPage'
 import { SignInPage } from './pages/SignInPage'
 import { ServerGateOutlet } from './server/ServerGate'
 
@@ -30,6 +31,7 @@ export const routes: RouteObject[] = [
               { index: true, element: <HomePage /> },
               { path: 'profil', element: <ProfilePage /> },
               { path: 'kampagnen/:campaignId', element: <CampaignPage /> },
+              { path: 'kampagnen/:campaignId/sitzungen/:sessionId', element: <SessionPage /> },
               // The board pages load on demand: Konva alone would double the app shell.
               {
                 path: 'kampagnen/:campaignId/kampf/:encounterId',
@@ -44,7 +46,7 @@ export const routes: RouteObject[] = [
                 }),
               },
               {
-                path: 'kampagnen/:campaignId/karten/importieren',
+                path: 'kampagnen/:campaignId/sitzungen/:sessionId/importieren',
                 lazy: async () => ({
                   Component: (await import('./pages/MapImportPage')).MapImportPage,
                 }),

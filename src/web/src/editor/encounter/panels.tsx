@@ -28,6 +28,7 @@ import {
   type NotReadyReason,
 } from './tokens'
 import { useOnline } from './useOnline'
+import { setupPath } from '../../sessions/paths'
 
 const t = de.encounterEditor
 
@@ -206,9 +207,8 @@ export function EncounterPanel() {
 }
 
 /**
- * "Starten" for a ready, valid, unarchived encounter, when online and the signed-in user
- * is the session DM of the campaign's active session. The server fixes the rest at the
- * setup page.
+ * "Starten" for a ready, valid, unarchived encounter, when online, its session runs and the
+ * signed-in user is that session's DM. The server fixes the rest at the setup page.
  */
 function StartEncounter({ ready, reason }: { ready: boolean; reason: NotReadyReason | null }) {
   const online = useOnline()
@@ -219,7 +219,7 @@ function StartEncounter({ ready, reason }: { ready: boolean; reason: NotReadyRea
 
 function StartOnline({ reason }: { reason: NotReadyReason | null }) {
   const store = useEncounterStore()
-  const { campaignId, encounterId } = useEncounter((s) => s.meta)
+  const { campaignId, encounterId, sessionId } = useEncounter((s) => s.meta)
   const { db } = useLocalUser()
   const navigate = useNavigate()
   const sessions = useSessions(campaignId)
@@ -228,8 +228,10 @@ function StartOnline({ reason }: { reason: NotReadyReason | null }) {
 
   if (sessions.isPending) return null
   if (sessions.isError) return <Help>{t.startOffline}</Help>
-  // The session this user runs right now, if any: only its DM starts fights.
-  const session = sessions.data.find((s) => s.status === 'active' && s.isSessionDm)
+  // The fight's own session, while it runs and this user leads it.
+  const session = sessions.data.find(
+    (s) => s.id === sessionId && s.status === 'active' && s.isSessionDm,
+  )
   if (!session) return <Help>{t.startNeedsSession}</Help>
   if (session.activeEncounter) return <Help>{de.encounters.oneAtATime}</Help>
 
@@ -245,9 +247,7 @@ function StartOnline({ reason }: { reason: NotReadyReason | null }) {
       }
       const check = await syncThenStart(db, encounterId)
       if (check.proceed) {
-        void navigate(
-          `/kampagnen/${campaignId}/sitzungen/${session!.id}/kampf/${encounterId}/aufstellen`,
-        )
+        void navigate(setupPath(campaignId, sessionId, encounterId))
         return
       }
       setMessage(check.message)

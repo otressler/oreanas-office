@@ -14,6 +14,7 @@ import {
 import { pull } from './pull'
 import {
   CAMPAIGN,
+  SESSION,
   fakeServer,
   seedCampaign,
   seedEncounter,
@@ -62,7 +63,7 @@ describe('push', () => {
       `battleMap:${map.id}`,
       `encounter:${encounter.id}`,
     ])
-    expect(server.push()!.headers.get(SYNC_VERSION_HEADER)).toBe('1')
+    expect(server.push()!.headers.get(SYNC_VERSION_HEADER)).toBe('2')
   })
 
   it('never pushes active or ended encounters', async () => {
@@ -288,7 +289,8 @@ describe('resolving a conflict', () => {
     const draftId = await saveAsNewDraft(db, encounter.id)
 
     const draft = await db.encounters.get(draftId!)
-    expect(draft).toMatchObject({ status: 'draft', sessionId: null })
+    // It stays in its session; a push says so if that session has ended.
+    expect(draft).toMatchObject({ status: 'draft', sessionId: SESSION })
     expect(draft!.tokens[0]!.id).not.toBe('t1')
     expect(draft!.sync).toMatchObject({ baseVersion: 0, changed: true })
     expect(await db.encounters.get(encounter.id)).toMatchObject({
@@ -588,7 +590,7 @@ describe('before starting an encounter', () => {
         status: 'ready',
         archivedAt: null,
         tokens: [],
-        sessionId: null,
+        sessionId: SESSION,
         mapCopy: null,
       },
     })

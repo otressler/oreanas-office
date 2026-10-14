@@ -6,6 +6,7 @@ import { FightScreen } from '../encounters/FightScreen'
 import { useBoard } from '../encounters/queries'
 import { FightTable } from '../table/FightTable'
 import { de } from '../text/de'
+import { sessionPath } from '../sessions/paths'
 
 const t = de.encounters
 
@@ -52,13 +53,12 @@ export function EncounterPage() {
       board={board.data}
       actions={
         isSessionDm &&
-        sessionId &&
         status === 'active' && (
           <EndEncounterButton
             campaignId={campaignId}
             sessionId={sessionId}
             encounterId={encounterId}
-            onEnded={() => void navigate(`/kampagnen/${campaignId}`)}
+            onEnded={() => void navigate(sessionPath(campaignId, sessionId))}
           />
         )
       }

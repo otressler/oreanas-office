@@ -29,7 +29,14 @@ export interface SyncResult {
 }
 
 export type SyncReason =
-  'button' | 'leaveEditor' | 'online' | 'editorOpen' | 'beforeStart' | 'store'
+  | 'button'
+  | 'leaveEditor'
+  | 'online'
+  | 'editorOpen'
+  | 'beforeStart'
+  | 'store'
+  /** The session page opened, or a fight was moved or archived there. */
+  | 'session'
 
 // ---- One sync at a time -----------------------------------------------------------------
 

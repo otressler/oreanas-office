@@ -1,5 +1,5 @@
-// Encounters in the browser (knowledge/domain/encounter.md): prepared on a map in the
-// editor. Every change marks the encounter as not synced; nothing is ever deleted.
+// Encounters in the browser (knowledge/domain/encounter.md): planned for a session and
+// prepared on a map in the editor. Every change marks the encounter as not synced; nothing is ever deleted.
 // Devices change only draft and ready encounters; active and ended ones come from the
 // server and stay as they are (knowledge/decisions/offline-prep-pwa.md).
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -30,21 +30,35 @@ export function getEncounter(db: OfflineDb, id: string): Promise<LocalEncounter 
   return db.encounters.get(id)
 }
 
-/** A new draft encounter on the map, named after it, with an id made here. */
+/** The session's encounters, archived ones included, in the order they were added. */
+export async function listSessionEncounters(
+  db: OfflineDb,
+  sessionId: string,
+): Promise<LocalEncounter[]> {
+  const encounters = await db.encounters.where('sessionId').equals(sessionId).toArray()
+  return encounters.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+}
+
+/**
+ * A new draft encounter on the map in the session, with an id made here. Named after the
+ * map unless a name is given.
+ */
 export async function createEncounter(
   db: OfflineDb,
   map: Pick<LocalMap, 'id' | 'campaignId' | 'name'>,
+  sessionId: string,
+  name?: string,
 ): Promise<LocalEncounter> {
   const time = now()
   const record: LocalEncounter = {
     id: crypto.randomUUID(),
     campaignId: map.campaignId,
     battleMapId: map.id,
-    name: map.name,
+    name: name?.trim() || map.name,
     status: 'draft',
     archivedAt: null,
     tokens: [],
-    sessionId: null,
+    sessionId,
     mapCopy: null,
     createdAt: time,
     updatedAt: time,
@@ -89,6 +103,20 @@ export async function setEncounterArchived(
     await db.encounters.put({
       ...stored,
       archivedAt: archived ? now() : null,
+      updatedAt: now(),
+      sync: markChanged(stored.sync),
+    })
+  })
+}
+
+/** Moves a draft or ready encounter to another session (knowledge/domain/session.md). */
+export async function moveEncounter(db: OfflineDb, id: string, sessionId: string): Promise<void> {
+  await db.transaction('rw', db.encounters, async () => {
+    const stored = await db.encounters.get(id)
+    if (!stored || !editable(stored) || stored.sessionId === sessionId) return
+    await db.encounters.put({
+      ...stored,
+      sessionId,
       updatedAt: now(),
       sync: markChanged(stored.sync),
     })

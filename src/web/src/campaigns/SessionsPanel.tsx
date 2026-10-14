@@ -1,5 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState, type FormEvent } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import { useState, type FormEvent, type ReactNode } from 'react'
+import { Link } from 'react-router'
 import { api } from '../api/client'
 import { unwrap } from '../api/errors'
 import type { Campaign, Member, Session } from '../api/types'
@@ -15,14 +16,15 @@ import {
   TextField,
 } from '../components/ui'
 import { formatDate, todayIso } from '../lib/dates'
-import { de } from '../text/de'
-import { campaignKeys, useSessions } from './queries'
 import { limits } from '../lib/limits'
-import { EndEncounterButton } from '../encounters/EndEncounterButton'
+import { fightPath, sessionPath } from '../sessions/paths'
+import { de } from '../text/de'
+import { useInvalidateSessions, useSessions } from './queries'
 
 /**
- * Game nights of the campaign. `dm` members create them; the session DM or the
- * default DM (`canManage`) starts, ends and hands them over. One runs at a time.
+ * The campaign's game nights, each with its fights (knowledge/features/session-planning.md):
+ * the running one first, then the planned ones by date, then the ended ones collapsed.
+ * `dm` members create them; everything else happens on the session page.
  */
 export function SessionsPanel({ campaign }: { campaign: Campaign }) {
   const sessions = useSessions(campaign.id)
@@ -45,24 +47,95 @@ export function SessionsPanel({ campaign }: { campaign: Campaign }) {
       ) : sessions.data.length === 0 ? (
         !adding && <p className="text-dim">{de.sessions.empty}</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-line">
-          {sessions.data.map((session) => (
-            <SessionRow key={session.id} campaignId={campaign.id} session={session} dms={dms} />
-          ))}
-        </ul>
+        <SessionGroups campaign={campaign} sessions={sessions.data} />
       )}
     </Panel>
   )
 }
 
-/** After any change to a session: the campaign (active session) and the landing page. */
-function useInvalidateSessions(campaignId: string) {
-  const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: campaignKeys.detail(campaignId) }),
-      queryClient.invalidateQueries({ queryKey: campaignKeys.list }),
-    ])
+function SessionGroups({ campaign, sessions }: { campaign: Campaign; sessions: Session[] }) {
+  const running = sessions.filter((s) => s.status === 'active')
+  // The server lists the newest date first; planned nights read best soonest first.
+  const planned = sessions.filter((s) => s.status === 'planned').reverse()
+  const ended = sessions.filter((s) => s.status === 'ended')
+  const card = (session: Session) => (
+    <SessionCard key={session.id} campaign={campaign} session={session} />
+  )
+  return (
+    <div className="flex flex-col gap-4">
+      {running.length > 0 && <Group title={de.sessions.runningTitle}>{running.map(card)}</Group>}
+      {planned.length > 0 && <Group title={de.sessions.plannedTitle}>{planned.map(card)}</Group>}
+      {ended.length > 0 && (
+        <details className="rounded-lg border border-line px-3 py-1">
+          <summary className="cursor-pointer py-1 text-sm text-dim">
+            {de.sessions.endedTitle(ended.length)}
+          </summary>
+          <ul className="flex flex-col gap-2 py-2">{ended.map(card)}</ul>
+        </details>
+      )}
+    </div>
+  )
+}
+
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-xs font-semibold tracking-wide text-dim uppercase">{title}</h3>
+      <ul className="flex flex-col gap-2">{children}</ul>
+    </div>
+  )
+}
+
+/** One session: what it is, its fights for `dm` members, and the way into a running fight. */
+function SessionCard({ campaign, session }: { campaign: Campaign; session: Session }) {
+  const fights = session.encounters.filter((encounter) => encounter.archivedAt === null)
+  const running = session.status === 'active'
+  return (
+    <li
+      className={`flex flex-col gap-2 rounded-lg border p-3 ${running ? 'border-candle/60' : 'border-line'}`}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <Link
+          to={sessionPath(campaign.id, session.id)}
+          className="font-semibold text-parchment underline-offset-4 hover:text-candle hover:underline"
+        >
+          {session.title}
+        </Link>
+        <Badge tone={running ? 'candle' : 'dim'}>{de.sessionStatus[session.status]}</Badge>
+      </div>
+      <span className="text-sm text-dim">
+        {formatDate(session.date)} · {de.sessions.dmName(session.dmDisplayName)}
+      </span>
+      {campaign.myRole === 'dm' &&
+        (fights.length === 0 ? (
+          session.status !== 'ended' && <p className="text-sm text-dim">{de.sessions.noFights}</p>
+        ) : (
+          <ul
+            aria-label={de.sessions.fights(fights.length)}
+            className="flex flex-wrap gap-x-3 gap-y-1"
+          >
+            {fights.map((fight) => (
+              <li key={fight.id} className="flex items-center gap-1 text-sm">
+                <span className="text-parchment">{fight.name}</span>
+                <Badge tone={fight.status === 'active' ? 'candle' : 'dim'}>
+                  {de.encounterStatus[fight.status]}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        ))}
+      {session.activeEncounter && (
+        <div className="flex flex-wrap items-center gap-2 border-l-2 border-candle pl-3">
+          <span className="text-sm text-parchment">
+            {de.encounters.running}: {session.activeEncounter.name}
+          </span>
+          <ButtonLink variant="primary" to={fightPath(campaign.id, session.activeEncounter.id)}>
+            {de.encounters.toFight}
+          </ButtonLink>
+        </div>
+      )}
+    </li>
+  )
 }
 
 function SessionForm({
@@ -142,123 +215,5 @@ function SessionForm({
         </Button>
       </div>
     </form>
-  )
-}
-
-function SessionRow({
-  campaignId,
-  session,
-  dms,
-}: {
-  campaignId: string
-  session: Session
-  dms: Member[]
-}) {
-  const invalidate = useInvalidateSessions(campaignId)
-  const [choosingDm, setChoosingDm] = useState(false)
-  const [newDm, setNewDm] = useState(session.dmUserId)
-  const params = { params: { path: { campaignId, sessionId: session.id } } }
-
-  const action = useMutation({
-    mutationFn: (kind: 'activate' | 'end' | 'dm') =>
-      unwrap(
-        kind === 'activate'
-          ? api.POST('/api/campaigns/{campaignId}/sessions/{sessionId}/activate', params)
-          : kind === 'end'
-            ? api.POST('/api/campaigns/{campaignId}/sessions/{sessionId}/end', params)
-            : api.PUT('/api/campaigns/{campaignId}/sessions/{sessionId}/dm', {
-                ...params,
-                body: { userId: newDm },
-              }),
-      ),
-    onSuccess: () => {
-      setChoosingDm(false)
-      return invalidate()
-    },
-  })
-
-  const busy = (kind: 'activate' | 'end' | 'dm') => action.isPending && action.variables === kind
-  const open = session.status !== 'ended'
-  const canHandOver = dms.length > 1
-
-  return (
-    <li className="flex flex-col gap-2 py-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-semibold text-parchment">{session.title}</span>
-        <Badge tone={session.status === 'active' ? 'candle' : 'dim'}>
-          {de.sessionStatus[session.status]}
-        </Badge>
-      </div>
-      <span className="text-sm text-dim">
-        {formatDate(session.date)} · {de.sessions.dmName(session.dmDisplayName)}
-      </span>
-      {session.activeEncounter && (
-        <div className="flex flex-col gap-2 border-l-2 border-candle pl-3">
-          <span className="text-xs font-semibold tracking-wide text-candle uppercase">
-            {de.encounters.running}
-          </span>
-          <span className="text-parchment">{session.activeEncounter.name}</span>
-          <div className="flex flex-wrap items-center gap-2">
-            <ButtonLink
-              variant="primary"
-              to={`/kampagnen/${campaignId}/kampf/${session.activeEncounter.id}`}
-            >
-              {de.encounters.toFight}
-            </ButtonLink>
-            {session.isSessionDm && (
-              <EndEncounterButton
-                campaignId={campaignId}
-                sessionId={session.id}
-                encounterId={session.activeEncounter.id}
-              />
-            )}
-          </div>
-        </div>
-      )}
-      {session.canManage && open && (
-        <div className="flex flex-wrap gap-2">
-          {session.status === 'planned' && (
-            <Button
-              variant="primary"
-              onClick={() => action.mutate('activate')}
-              busy={busy('activate')}
-            >
-              {de.sessions.activate}
-            </Button>
-          )}
-          <Button onClick={() => action.mutate('end')} busy={busy('end')}>
-            {de.sessions.end}
-          </Button>
-          {canHandOver && !choosingDm && (
-            <Button variant="quiet" onClick={() => setChoosingDm(true)}>
-              {de.sessions.changeDm}
-            </Button>
-          )}
-        </div>
-      )}
-      {choosingDm && open && (
-        <div className="flex flex-wrap items-end gap-2">
-          <SelectField
-            label={de.sessions.dm}
-            className="min-w-48 flex-1"
-            value={newDm}
-            onChange={(event) => setNewDm(event.target.value)}
-          >
-            {dms.map((member) => (
-              <option key={member.userId} value={member.userId}>
-                {member.displayName}
-              </option>
-            ))}
-          </SelectField>
-          <Button variant="primary" onClick={() => action.mutate('dm')} busy={busy('dm')}>
-            {de.sessions.applyDm}
-          </Button>
-          <Button variant="quiet" onClick={() => setChoosingDm(false)}>
-            {de.common.cancel}
-          </Button>
-        </div>
-      )}
-      <ErrorAlert error={action.error} />
-    </li>
   )
 }

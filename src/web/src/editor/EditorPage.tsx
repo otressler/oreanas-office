@@ -217,6 +217,7 @@ function EncounterEditor({
       campaignId: map.campaignId,
       mapId: map.id,
       encounterId: encounter.id,
+      sessionId: encounter.sessionId,
       readOnly,
     }),
   )

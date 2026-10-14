@@ -76,13 +76,14 @@ test('two people register, create and join a campaign, and run a session', async
   await sessions.getByRole('button', { name: text.newSession }).click()
   await sessions.getByLabel(text.sessionTitle).fill('Sitzung 1 – Die Hängebrücke')
   await sessions.getByRole('button', { name: text.create }).click()
-  await sessions.getByRole('button', { name: text.activate }).click()
-  await expect(sessions).toContainText(text.activeStatus)
+  await sessions.getByRole('link', { name: 'Sitzung 1 – Die Hängebrücke' }).click()
+  await mira.getByRole('button', { name: text.activate }).click()
+  await expect(mira.getByText(text.activeStatus, { exact: true }).first()).toBeVisible()
 
-  await sessions.getByRole('button', { name: 'Spielleitung wechseln' }).click()
-  await sessions.getByLabel('Spielleitung').selectOption({ label: 'Brom' })
-  await sessions.getByRole('button', { name: 'Übernehmen' }).click()
-  await expect(sessions).toContainText('Spielleitung: Brom')
+  await mira.getByRole('button', { name: 'Spielleitung wechseln' }).click()
+  await mira.getByLabel('Spielleitung').selectOption({ label: 'Brom' })
+  await mira.getByRole('button', { name: 'Übernehmen' }).click()
+  await expect(mira.getByText('Spielleitung: Brom')).toBeVisible()
 
   // Brom's landing page shows the running session with him as DM.
   await brom.goto('/')

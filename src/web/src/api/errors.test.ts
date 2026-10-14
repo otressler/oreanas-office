@@ -25,6 +25,8 @@ const ALL_CODES = {
   notADm: true,
   anotherSessionActive: true,
   sessionEnded: true,
+  notSessionDm: true,
+  sessionInvalid: true,
   textTooLong: true,
   mapSizeInvalid: true,
   layoutVersionUnsupported: true,

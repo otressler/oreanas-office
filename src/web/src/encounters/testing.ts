@@ -21,7 +21,7 @@ export function smallBoard(fields: Partial<BoardState> = {}): BoardState {
   return {
     encounterId: ids.encounter,
     campaignId: ids.campaign,
-    sessionId: null,
+    sessionId: ids.session,
     name: 'Kleine Lichtung',
     status: 'ready',
     map: {
@@ -79,6 +79,8 @@ export function session(fields: Partial<Session> = {}): Session {
     canManage: true,
     isSessionDm: true,
     activeEncounter: null,
+    interruptedEncounter: null,
+    encounters: [],
     ...fields,
   }
 }
@@ -89,10 +91,11 @@ export function encounter(fields: Partial<Encounter> = {}): Encounter {
     name: 'Kleine Lichtung',
     status: 'ready',
     battleMapId: 'm1',
+    battleMapName: 'Kleine Lichtung',
     width: 4,
     height: 2,
     creatureCount: 1,
-    sessionId: null,
+    sessionId: ids.session,
     createdAt: '2026-10-12T18:00:00Z',
     version: 1,
     archivedAt: null,

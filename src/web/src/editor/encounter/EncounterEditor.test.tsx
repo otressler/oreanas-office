@@ -19,7 +19,7 @@ beforeEach(() => mockApi({}))
 async function seed() {
   await seedOffline()
   const map = await seedMap(mapWith([], roomCells()))
-  const encounter = await createEncounter(offlineDb(testUser.id), map)
+  const encounter = await createEncounter(offlineDb(testUser.id), map, 's1')
   return { map, encounter, db: offlineDb(testUser.id) }
 }
 

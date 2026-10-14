@@ -4,7 +4,7 @@ import { placeToken, removeToken, renameEncounter, type EncounterDoc } from './t
 
 const doc: EncounterDoc = { name: 'Hinterhalt', status: 'draft', archivedAt: null, tokens: [] }
 const goblin = { id: 'goblin', name: 'Goblin', size: 'small' as const }
-const meta = { campaignId: 'c1', mapId: 'm1', encounterId: 'e1', readOnly: false }
+const meta = { campaignId: 'c1', mapId: 'm1', encounterId: 'e1', sessionId: 's1', readOnly: false }
 
 describe('encounter store', () => {
   it('undoes and redoes changes', () => {

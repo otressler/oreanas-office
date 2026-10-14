@@ -16,6 +16,7 @@ import {
 } from '../encounters/placement'
 import { useBoard, useStartEncounter } from '../encounters/queries'
 import { de } from '../text/de'
+import { sessionPath } from '../sessions/paths'
 
 const t = de.encounters.setup
 
@@ -39,12 +40,13 @@ export function EncounterSetupPage() {
 
   const session = sessions.data.find((s) => s.id === sessionId)
   if (!session || session.status !== 'active' || !session.isSessionDm) {
-    return <CannotSetUp campaignId={campaignId} message={t.notSessionDm} />
+    return <CannotSetUp campaignId={campaignId} sessionId={sessionId} message={t.notSessionDm} />
   }
   if (board.data.status !== 'ready') {
     return (
       <CannotSetUp
         campaignId={campaignId}
+        sessionId={sessionId}
         message={t.notReady}
         fightId={board.data.status === 'active' ? encounterId : undefined}
       />
@@ -62,10 +64,12 @@ export function EncounterSetupPage() {
 
 function CannotSetUp({
   campaignId,
+  sessionId,
   message,
   fightId,
 }: {
   campaignId: string
+  sessionId: string
   message: string
   fightId?: string
 }) {
@@ -79,7 +83,7 @@ function CannotSetUp({
             {de.encounters.toFight}
           </ButtonLink>
         )}
-        <ButtonLink to={`/kampagnen/${campaignId}`}>{de.encounters.back}</ButtonLink>
+        <ButtonLink to={sessionPath(campaignId, sessionId)}>{de.sessionPage.toSession}</ButtonLink>
       </div>
     </div>
   )

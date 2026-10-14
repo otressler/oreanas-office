@@ -62,7 +62,7 @@ export function previewBoard(
   return {
     encounterId: PREVIEW_ID,
     campaignId: '',
-    sessionId: null,
+    sessionId: '',
     name: doc.name,
     status: 'draft',
     map: {

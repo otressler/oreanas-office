@@ -9,7 +9,7 @@ const fixture = gorgeFixture as unknown as BoardState
 const gorge: BoardState = {
   ...fixture,
   status: 'ready',
-  sessionId: null,
+  sessionId: 's1',
   tokens: fixture.tokens.filter((token) => token.kind === 'creature'),
 }
 const grid = buildGrid(gorge.map)

@@ -6,7 +6,7 @@ import { offlineDb } from '../../offline/db'
 import { mockApi, json, testUser } from '../../test/api'
 import { de } from '../../text/de'
 import { feature, mapWith, roomCells } from '../features/fixtures'
-import { seedOffline, CAMPAIGN_ID } from '../testing'
+import { seedOffline, CAMPAIGN_ID, SESSION_ID } from '../testing'
 import { EncounterListPanel } from './EncounterListPanel'
 import { createEncounter, listEncounters } from './encounters'
 import { EncounterPanel, PlacePanel, SelectCreaturePanel } from './panels'
@@ -292,7 +292,7 @@ describe('starting', () => {
 
 describe('encounter list', () => {
   const seedEncounter = (name: string) =>
-    createEncounter(dbOf(), { id: MAP_ID, campaignId: CAMPAIGN_ID, name })
+    createEncounter(dbOf(), { id: MAP_ID, campaignId: CAMPAIGN_ID, name }, 's1')
 
   it('creates a draft encounter named after the map', async () => {
     const user = userEvent.setup()
@@ -306,9 +306,44 @@ describe('encounter list', () => {
       name: 'Klamm',
       status: 'draft',
       battleMapId: MAP_ID,
+      sessionId: SESSION_ID,
       tokens: [],
       sync: { baseVersion: 0, changed: true },
     })
+  })
+
+  // knowledge/features/session-planning.md: a fight goes in a planned or running session
+  // the user runs.
+  it('asks for the session when the user runs several, and leaves out ended ones', async () => {
+    const user = userEvent.setup()
+    const sessions = dbOf().sessions
+    const base = await sessions.get(SESSION_ID)
+    await sessions.bulkPut([
+      { ...base!, id: 's2', title: 'Die Rückkehr', date: '2026-10-24' },
+      { ...base!, id: 's3', title: 'Vorbei', status: 'ended' },
+      { ...base!, id: 's4', title: 'Bei Yara', dmUserId: 'someone-else' },
+    ])
+    renderInEncounter(<EncounterListPanel />, encounterFixture())
+    await user.click(await screen.findByRole('button', { name: t.newEncounter }))
+
+    expect(await screen.findByText(t.pickSession)).toBeInTheDocument()
+    expect(screen.getByText('Die Seilbrücke')).toBeInTheDocument()
+    expect(screen.queryByText('Vorbei')).not.toBeInTheDocument()
+    expect(screen.queryByText('Bei Yara')).not.toBeInTheDocument()
+    const row = screen.getByText('Die Rückkehr').closest('li')!
+    await user.click(within(row).getByRole('button', { name: t.newEncounter }))
+    await waitFor(async () => expect(await listEncounters(dbOf(), MAP_ID)).toHaveLength(1))
+    expect((await listEncounters(dbOf(), MAP_ID))[0]).toMatchObject({ sessionId: 's2' })
+  })
+
+  it('says a session is needed when the user runs none', async () => {
+    const user = userEvent.setup()
+    await dbOf().sessions.clear()
+    renderInEncounter(<EncounterListPanel />, encounterFixture())
+    await user.click(await screen.findByRole('button', { name: t.newEncounter }))
+
+    expect(await screen.findByText(t.noSession)).toBeInTheDocument()
+    expect(await listEncounters(dbOf(), MAP_ID)).toHaveLength(0)
   })
 
   it('lists status and creature count, and marks an encounter with a misplaced creature', async () => {

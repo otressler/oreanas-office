@@ -9,7 +9,7 @@ import { LocalUserContext } from '../../offline/localUser'
 import { testUser } from '../../test/api'
 import { mapWith, roomCells } from '../features/fixtures'
 import type { EditorMap } from '../model'
-import { CAMPAIGN_ID } from '../testing'
+import { CAMPAIGN_ID, SESSION_ID } from '../testing'
 import { createEditorStore, EditorStoreContext, type EditorStore } from '../store'
 import type { CellPointer, EditorTool, ToolContext } from '../tools'
 import {
@@ -49,6 +49,7 @@ export function encounterFixture(
     campaignId: CAMPAIGN_ID,
     mapId: MAP_ID,
     encounterId: ENCOUNTER_ID,
+    sessionId: SESSION_ID,
     readOnly: false,
     ...meta,
   })
