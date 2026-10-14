@@ -6,6 +6,7 @@ import { Badge, ButtonLink, LoadError, Loading, Panel } from '../components/ui'
 import { formatMeters } from '../lib/units'
 import { syncThenStart, useSyncDb } from '../sync'
 import { de } from '../text/de'
+import { NewEncounterButton } from './NewEncounterButton'
 import { useEncounters } from './queries'
 
 /**
@@ -33,9 +34,12 @@ export function EncountersPanel({ campaign }: { campaign: Campaign }) {
     <Panel
       title={de.encounters.title}
       action={
-        <ButtonLink to={`/kampagnen/${campaign.id}/karten/importieren`}>
-          {de.encounters.importMap}
-        </ButtonLink>
+        <div className="flex flex-wrap gap-2">
+          <NewEncounterButton campaignId={campaign.id} />
+          <ButtonLink to={`/kampagnen/${campaign.id}/karten/importieren`}>
+            {de.encounters.importMap}
+          </ButtonLink>
+        </div>
       }
     >
       {encounters.isPending ? (

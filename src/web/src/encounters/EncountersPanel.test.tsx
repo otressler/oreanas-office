@@ -6,6 +6,8 @@ import { offlineDb } from '../offline/db'
 import { syncBeforeStart } from '../sync/client'
 import { json, mockApi, renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
+import { emptyMap } from '../editor/model'
+import { seedMap } from '../editor/testing'
 import { encounter, ids, session } from './testing'
 
 vi.mock('../sync/client', async (importOriginal) => ({
@@ -137,6 +139,52 @@ describe('EncountersPanel', () => {
 
     await vi.waitFor(() =>
       expect(calls.some((c) => c.method === 'POST' && c.path.endsWith('/end'))).toBe(true),
+    )
+  })
+})
+
+describe('Neue Begegnung', () => {
+  const t = de.encounters.create
+
+  it('picks one of the campaign’s maps and opens a new encounter on it in the editor', async () => {
+    api('dm', [session()], [])
+    const map = await seedMap(emptyMap('Schlucht', 20, 12), ids.campaign)
+    await seedMap(emptyMap('Woanders', 5, 5), 'another-campaign')
+    const { router } = renderApp(`/kampagnen/${ids.campaign}`)
+    const user = userEvent.setup()
+
+    await user.click(within(await panel()).getByRole('button', { name: t.button }))
+    const dialog = screen.getByRole('dialog', { name: t.title })
+    expect(await within(dialog).findByText('Schlucht')).toBeInTheDocument()
+    expect(dialog).toHaveTextContent('20 × 12 Felder')
+    expect(dialog).not.toHaveTextContent('Woanders')
+
+    await user.click(await within(dialog).findByRole('button', { name: t.pick }))
+    await vi.waitFor(() =>
+      expect(router.state.location.pathname).toMatch(
+        new RegExp(`^/kampagnen/${ids.campaign}/karten/${map.id}/begegnungen/[0-9a-f-]+$`),
+      ),
+    )
+    const encounterId = router.state.location.pathname.split('/').at(-1)!
+    expect(await offlineDb(testUser.id).encounters.get(encounterId)).toMatchObject({
+      battleMapId: map.id,
+      campaignId: ids.campaign,
+      name: 'Schlucht',
+      status: 'draft',
+    })
+  })
+
+  it('says how to get a map when the campaign has none on this device', async () => {
+    api('dm', [session()], [])
+    renderApp(`/kampagnen/${ids.campaign}`)
+    const user = userEvent.setup()
+
+    await user.click(within(await panel()).getByRole('button', { name: t.button }))
+    const dialog = screen.getByRole('dialog', { name: t.title })
+    expect(await within(dialog).findByText(t.noMaps)).toBeInTheDocument()
+    expect(within(dialog).getByRole('link', { name: de.maps.campaignLink })).toHaveAttribute(
+      'href',
+      `/kampagnen/${ids.campaign}/karten`,
     )
   })
 })

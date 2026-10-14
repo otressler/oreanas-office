@@ -431,8 +431,20 @@ export const de = {
 
   encounters: {
     title: 'Kämpfe',
-    empty: 'Noch keine Kämpfe. Importiere eine Karte, um einen vorzubereiten.',
+    empty:
+      'Noch keine Kämpfe. Lege mit „Neue Begegnung“ einen auf einer deiner Karten an, oder importiere eine Karte.',
     importMap: 'Karte importieren',
+    /** "Neue Begegnung": pick a map of the campaign, then the editor opens the new encounter. */
+    create: {
+      button: 'Neue Begegnung',
+      title: 'Neue Begegnung',
+      help: 'Wähle die Karte, auf der gekämpft wird. Die Begegnung öffnet sich im Editor: Dort platzierst du Kreaturen, setzt sie auf bereit und startest sie. Der Hintergrund der Karte kommt mit.',
+      pick: 'Auswählen',
+      noMaps:
+        'Diese Kampagne hat auf diesem Gerät noch keine Karten. Lege unter „Karten“ eine an, oder synchronisiere, um die Karten vom Server zu holen.',
+      narrow:
+        'Begegnungen bereitest du im Karteneditor vor. Öffne die Kampagne dafür auf einem größeren Bildschirm.',
+    },
     /** Grid size in squares, then meters, e.g. "20 × 12 Felder (30 m × 18 m)". */
     gridSize: (width: number, height: number, widthMeters: string, heightMeters: string) =>
       `${width} × ${height} Felder (${widthMeters} × ${heightMeters})`,
