@@ -11,7 +11,8 @@ namespace OreanasOffice.Server.Tests;
 
 // What synced changes mean for starting and running a fight: archived encounters and
 // creatures that no longer fit the map don't start, and a fight keeps the map and the
-// sizes it began with (knowledge/domain/encounter.md, "Starting" and `layout`).
+// sizes it began with (knowledge/domain/encounter.md, "Starting" and `layout`). Only the
+// session DM changes a session's fights (knowledge/domain/session.md).
 [Collection("App")]
 public sealed class EncounterSyncTests(AppFixture fixture)
 {
@@ -36,7 +37,7 @@ public sealed class EncounterSyncTests(AppFixture fixture)
         var current = await table.Dm.FetchOneAsync(table.CampaignId, table.Encounter.Id);
         var data = current.Encounter!;
         var result = await table.Dm.PushOneAsync(
-            Encounter(table.CampaignId, data.BattleMapId, current.Id, current.Version, data.Name, data.Status, archivedAt, [.. data.Tokens]));
+            Encounter(table.CampaignId, data.SessionId, data.BattleMapId, current.Id, current.Version, data.Name, data.Status, archivedAt, [.. data.Tokens]));
         Assert.Equal(SyncOutcome.Saved, result.Outcome);
         return result;
     }
@@ -127,6 +128,61 @@ public sealed class EncounterSyncTests(AppFixture fixture)
         // The prepared map itself did change.
         var current = await table.Dm.FetchOneAsync(table.CampaignId, ended.Map.Id);
         Assert.DoesNotContain(current.Map!.Layout.Cells, c => c.X == 7);
+    }
+
+    // Sessions
+
+    private static async Task<SyncItemResult> PushInSessionAsync(EncounterTable table, Person by, Guid sessionId, string name = "Klamm")
+    {
+        var current = await table.Dm.FetchOneAsync(table.CampaignId, table.Encounter.Id);
+        var data = current.Encounter!;
+        return await by.PushOneAsync(
+            Encounter(table.CampaignId, sessionId, data.BattleMapId, current.Id, current.Version, name, data.Status, data.ArchivedAt, [.. data.Tokens]));
+    }
+
+    [Fact]
+    public async Task Only_the_session_dm_changes_its_fights()
+    {
+        var table = await fixture.App.CreateEncounterTableAsync();
+
+        var byOtherDm = await PushInSessionAsync(table, table.SecondDm, table.Session.Id, "Umbenannt");
+        var bySessionDm = await PushInSessionAsync(table, table.Dm, table.Session.Id, "Umbenannt");
+
+        Assert.Equal((SyncOutcome.Rejected, new ApiError(ApiErrorCode.NotSessionDm, "sessionId")), (byOtherDm.Outcome, byOtherDm.Error));
+        Assert.Equal(SyncOutcome.Saved, bySessionDm.Outcome);
+    }
+
+    [Fact]
+    public async Task A_fight_moves_only_between_sessions_of_the_same_dm()
+    {
+        var table = await fixture.App.CreateEncounterTableAsync();
+        var mine = await table.Dm.CreateSessionAsync(table.CampaignId, "Nächste Woche");
+        var theirs = await table.Dm.CreateSessionAsync(table.CampaignId, "Bei Yara", dmUserId: table.SecondDm.Id);
+
+        var toTheirs = await PushInSessionAsync(table, table.Dm, theirs.Id);
+        var toMine = await PushInSessionAsync(table, table.Dm, mine.Id);
+        var unknown = await PushInSessionAsync(table, table.Dm, Guid.NewGuid());
+
+        Assert.Equal(new ApiError(ApiErrorCode.NotSessionDm, "sessionId"), toTheirs.Error);
+        Assert.Equal((SyncOutcome.Saved, mine.Id), (toMine.Outcome, toMine.Server!.Encounter!.SessionId));
+        Assert.Equal(new ApiError(ApiErrorCode.SessionInvalid, "sessionId"), unknown.Error);
+    }
+
+    // An ended session is frozen until it is continued, but its unplayed fights can move on.
+    [Fact]
+    public async Task The_fights_of_an_ended_session_only_move_out()
+    {
+        var table = await fixture.App.CreateEncounterTableAsync();
+        var next = await table.Dm.CreateSessionAsync(table.CampaignId, "Nächste Woche");
+        await table.Dm.Client.PostAsync($"/api/campaigns/{table.CampaignId}/sessions/{table.Session.Id}/end", null);
+
+        var edited = await PushInSessionAsync(table, table.Dm, table.Session.Id, "Umbenannt");
+        var moved = await PushInSessionAsync(table, table.Dm, next.Id);
+        var backIn = await PushInSessionAsync(table, table.Dm, table.Session.Id);
+
+        Assert.Equal(new ApiError(ApiErrorCode.SessionEnded, "sessionId"), edited.Error);
+        Assert.Equal(SyncOutcome.Saved, moved.Outcome);
+        Assert.Equal(new ApiError(ApiErrorCode.SessionEnded, "sessionId"), backIn.Error);
     }
 
     [Fact]

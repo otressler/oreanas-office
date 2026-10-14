@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Rules;
+using OreanasOffice.Server.Sessions;
 using OreanasOffice.Server.Sync;
 using static OreanasOffice.Server.Tests.CampaignTestApi;
 using static OreanasOffice.Server.Tests.SyncTestApi;
@@ -30,7 +31,8 @@ public sealed class SyncPullTests(AppFixture fixture)
             CreatureType(campaignId, name: "Ork", archivedAt: archivedAt),
             Map(campaignId),
             Map(campaignId, data: HallData(archivedAt: archivedAt)));
-        var encounter = await dm.PushOneAsync(Encounter(campaignId, results[2].Id, archivedAt: archivedAt));
+        var session = await dm.CreateSessionAsync(campaignId, "Die Seilbrücke");
+        var encounter = await dm.PushOneAsync(Encounter(campaignId, session.Id, results[2].Id, archivedAt: archivedAt));
         await dm.PushOneAsync(CreatureType(campaignId, results[0].Id, "Goblin", CreatureSize.Large, 1));
         await otherDm.PushAsync(CreatureType(otherCampaignId), Map(otherCampaignId));
 
@@ -42,6 +44,9 @@ public sealed class SyncPullTests(AppFixture fixture)
         Assert.Equal(2, versions.BattleMaps.Count);
         Assert.Equal([results[2].Id, results[3].Id], versions.BattleMaps.Select(v => v.Id).OrderBy(id => id != results[2].Id));
         Assert.Equal([(encounter.Id, 1)], versions.Encounters.Select(v => (v.Id, v.Version)));
+        Assert.Equal(
+            [new SyncSession(session.Id, "Die Seilbrücke", session.Date, SessionStatus.Planned, dm.Id, "Oreana")],
+            versions.Sessions);
     }
 
     [Fact]
@@ -64,7 +69,7 @@ public sealed class SyncPullTests(AppFixture fixture)
         var (dm, campaignId) = await DmWithCampaignAsync("Oreana");
         var (otherDm, otherCampaignId) = await DmWithCampaignAsync("Yara");
         var mine = await dm.PushAsync(CreatureType(campaignId), Map(campaignId));
-        var encounter = await dm.PushOneAsync(Encounter(campaignId, mine[1].Id, tokens: [Token(mine[0].Id, 1, 1)]));
+        var encounter = await dm.PushOneAsync(Encounter(campaignId, (await dm.CreateSessionAsync(campaignId)).Id, mine[1].Id, tokens: [Token(mine[0].Id, 1, 1)]));
         var theirs = await otherDm.PushAsync(CreatureType(otherCampaignId), Map(otherCampaignId));
 
         var response = await dm.FetchAsync(
@@ -110,11 +115,11 @@ public sealed class SyncPullTests(AppFixture fixture)
     public async Task The_minimum_version_comes_from_the_configuration()
     {
         var user = await fixture.App.CreateUserAsync("Oreana");
-        await using var app = fixture.CreateApp(configuration: new Dictionary<string, string?> { ["Sync:MinimumVersion"] = "2" });
+        await using var app = fixture.CreateApp(configuration: new Dictionary<string, string?> { ["Sync:MinimumVersion"] = "3" });
         var person = new Person(user, app.CreateClientFor(user));
 
-        await AssertOutdatedAsync(await person.SendPushAsync(new SyncPushRequest([]), "1"));
-        Assert.Equal(HttpStatusCode.OK, (await person.SendPushAsync(new SyncPushRequest([]), "2")).StatusCode);
+        await AssertOutdatedAsync(await person.SendPushAsync(new SyncPushRequest([]), "2"));
+        Assert.Equal(HttpStatusCode.OK, (await person.SendPushAsync(new SyncPushRequest([]), "3")).StatusCode);
     }
 
     [Fact]

@@ -375,7 +375,7 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
-                    b.Property<Guid?>("SessionId")
+                    b.Property<Guid>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("StartedAt")
@@ -685,6 +685,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid>("DmUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("InterruptedEncounterId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -884,7 +887,8 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasOne("OreanasOffice.Server.Sessions.GameSession", "Session")
                         .WithMany("Encounters")
                         .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
                         .WithMany()

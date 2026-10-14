@@ -11,6 +11,8 @@ namespace OreanasOffice.Server.Tests;
 public sealed class MapImportTests
 {
     private static readonly Guid CampaignId = Guid.NewGuid();
+
+    private static readonly Guid SessionId = Guid.NewGuid();
     private static readonly DateTimeOffset Now = new(2026, 10, 17, 19, 0, 0, TimeSpan.Zero);
 
     public static TheoryData<string, ImportMapRequest, ApiErrorCode, string> Broken()
@@ -89,7 +91,7 @@ public sealed class MapImportTests
     public void A_broken_file_is_refused_with_the_offending_entry(
         string because, ImportMapRequest request, ApiErrorCode code, string field)
     {
-        var error = MapImport.Build(request, CampaignId, [], Now, null, out var result);
+        var error = MapImport.Build(request, CampaignId, SessionId, [], Now, null, out var result);
 
         Assert.True(error == new ApiError(code, field), $"{because}: {error}");
         Assert.Null(result);
@@ -193,6 +195,7 @@ public sealed class MapImportTests
         var error = MapImport.Build(
             map with { Creatures = [new ImportCreature(" goblin ", CreatureSize.Huge, 0, 0, null)] },
             CampaignId,
+            SessionId,
             [goblin],
             Now,
             null,
@@ -263,7 +266,7 @@ public sealed class MapImportTests
 
     private static MapImport.Result Build(ImportMapRequest request)
     {
-        var error = MapImport.Build(request, CampaignId, [], Now, null, out var result);
+        var error = MapImport.Build(request, CampaignId, SessionId, [], Now, null, out var result);
         Assert.Null(error);
         return result!;
     }

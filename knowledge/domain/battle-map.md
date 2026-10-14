@@ -65,7 +65,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 
 # Import file
 
-Until the [map editor](/features/dm-map-editor.md) exists, a `dm` member of the campaign imports a map as a JSON file, or picks one of the sample maps. One import creates the battle map, an [encounter](/domain/encounter.md) with the same name in status `ready`, its creature [tokens](/domain/token.md), and any [creature types](/domain/creature-type.md) the campaign doesn't have yet.
+The session DM imports a map as a JSON file, or picks one of the sample maps, from the page of a planned or running session ([session planning](/features/session-planning.md)). One import creates the battle map, an [encounter](/domain/encounter.md) in that session with the same name in status `ready`, its creature [tokens](/domain/token.md), and any [creature types](/domain/creature-type.md) the campaign doesn't have yet.
 
 ```json
 {

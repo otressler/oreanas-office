@@ -101,27 +101,29 @@ public sealed class SyncPushTests(AppFixture fixture)
     }
 
     [Fact]
-    public async Task A_campaign_its_map_and_an_encounter_go_in_one_push()
+    // A campaign made offline has no sessions yet, so its fights wait until one exists
+    // (knowledge/decisions/offline-prep-pwa.md, "Campaigns offline").
+    public async Task A_campaign_and_its_map_go_in_one_push_but_its_fights_need_a_session()
     {
         var person = await fixture.App.CreatePersonAsync("Oreana");
         var campaignId = Guid.NewGuid();
         var typeId = Guid.NewGuid();
         var mapId = Guid.NewGuid();
-        var encounterId = Guid.NewGuid();
         var token = Token(typeId, 1, 1);
 
         var results = await person.PushAsync(
             NewCampaign(campaignId),
             CreatureType(campaignId, typeId),
             Map(campaignId, mapId),
-            Encounter(campaignId, mapId, encounterId, status: EncounterStatus.Ready, tokens: [token]));
+            Encounter(campaignId, Guid.NewGuid(), mapId, status: EncounterStatus.Ready, tokens: [token]));
 
-        Assert.All(results, r => Assert.Equal(SyncOutcome.Created, r.Outcome));
-        Assert.Equal([1, 1, 1, 1], results.Select(r => r.Server!.Version));
+        Assert.All(results[..3], r => Assert.Equal(SyncOutcome.Created, r.Outcome));
+        Assert.Equal([1, 1, 1], results[..3].Select(r => r.Server!.Version));
+        AssertRejected(results[3], ApiErrorCode.SessionInvalid, "sessionId");
         var versions = await person.VersionsAsync(campaignId);
         Assert.Equal([typeId], versions.CreatureTypes.Select(v => v.Id));
         Assert.Equal([mapId], versions.BattleMaps.Select(v => v.Id));
-        Assert.Equal([encounterId], versions.Encounters.Select(v => v.Id));
+        Assert.Empty(versions.Encounters);
     }
 
     [Fact]
@@ -136,7 +138,7 @@ public sealed class SyncPushTests(AppFixture fixture)
             NewCampaign(campaignId, " "),
             CreatureType(campaignId, typeId),
             Map(campaignId, mapId),
-            Encounter(campaignId, mapId, tokens: [Token(typeId, 1, 1)]));
+            Encounter(campaignId, Guid.NewGuid(), mapId, tokens: [Token(typeId, 1, 1)]));
 
         AssertRejected(results[0], ApiErrorCode.NameInvalid, "name");
         Assert.All(results.Skip(1), r =>
@@ -161,8 +163,8 @@ public sealed class SyncPushTests(AppFixture fixture)
             CreatureType(campaignId, badTypeId, name: " "),
             Map(campaignId, goodMapId),
             CreatureType(campaignId, goodTypeId),
-            Encounter(campaignId, badMapId),
-            Encounter(campaignId, goodMapId, tokens: [Token(goodTypeId, 0, 0), Token(badTypeId, 1, 1)]));
+            Encounter(campaignId, Guid.NewGuid(), badMapId),
+            Encounter(campaignId, Guid.NewGuid(), goodMapId, tokens: [Token(goodTypeId, 0, 0), Token(badTypeId, 1, 1)]));
 
         Assert.Equal(ApiErrorCode.LayoutInvalid, results[0].Error!.Code);
         Assert.Equal(ApiErrorCode.NameInvalid, results[1].Error!.Code);
@@ -233,7 +235,7 @@ public sealed class SyncPushTests(AppFixture fixture)
         var typeId = (await dm.PushOneAsync(CreatureType(campaignId))).Id;
 
         AssertRejected(await dm.PushOneAsync(Map(campaignId, typeId)), ApiErrorCode.IdTaken);
-        AssertRejected(await dm.PushOneAsync(Encounter(campaignId, Guid.NewGuid(), typeId)), ApiErrorCode.IdTaken);
+        AssertRejected(await dm.PushOneAsync(Encounter(campaignId, Guid.NewGuid(), Guid.NewGuid(), typeId)), ApiErrorCode.IdTaken);
     }
 
     [Fact]
@@ -242,7 +244,7 @@ public sealed class SyncPushTests(AppFixture fixture)
         var (dm, campaignId) = await DmWithCampaignAsync();
 
         var results = await dm.PushAsync(
-            CreatureType(campaignId, baseVersion: 2), Map(campaignId, baseVersion: 1), Encounter(campaignId, Guid.NewGuid(), baseVersion: 3));
+            CreatureType(campaignId, baseVersion: 2), Map(campaignId, baseVersion: 1), Encounter(campaignId, Guid.NewGuid(), Guid.NewGuid(), baseVersion: 3));
 
         Assert.All(results, r => AssertRejected(r, ApiErrorCode.ItemNotFound));
     }
@@ -383,13 +385,14 @@ public sealed class SyncPushTests(AppFixture fixture)
 
     // Encounters
 
-    private sealed record Prepared(Person Dm, Guid CampaignId, Guid MapId, Guid TypeId);
+    private sealed record Prepared(Person Dm, Guid CampaignId, Guid MapId, Guid TypeId, Guid SessionId);
 
     private async Task<Prepared> PreparedAsync()
     {
         var (dm, campaignId) = await DmWithCampaignAsync();
         var results = await dm.PushAsync(Map(campaignId), CreatureType(campaignId));
-        return new Prepared(dm, campaignId, results[0].Id, results[1].Id);
+        var session = await dm.CreateSessionAsync(campaignId);
+        return new Prepared(dm, campaignId, results[0].Id, results[1].Id, session.Id);
     }
 
     [Fact]
@@ -398,11 +401,11 @@ public sealed class SyncPushTests(AppFixture fixture)
         var p = await PreparedAsync();
         var tokens = new[] { Token(p.TypeId, 6, 1, "Goblin 1"), Token(p.TypeId, 0, 0, "Goblin 2"), Token(p.TypeId, 2, 3, "Ogre", CreatureSize.Large) };
 
-        var created = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, status: EncounterStatus.Ready, tokens: tokens));
+        var created = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, status: EncounterStatus.Ready, tokens: tokens));
 
         Assert.Equal(SyncOutcome.Created, created.Outcome);
         var data = created.Server!.Encounter!;
-        Assert.Equal((EncounterStatus.Ready, p.MapId, (Guid?)null, (EncounterMapCopy?)null), (data.Status, data.BattleMapId, data.SessionId, data.MapCopy));
+        Assert.Equal((EncounterStatus.Ready, p.MapId, p.SessionId, (EncounterMapCopy?)null), (data.Status, data.BattleMapId, data.SessionId, data.MapCopy));
         Assert.Equal(ToJson(tokens), ToJson(data.Tokens));
         await using var scope = fixture.App.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -425,7 +428,7 @@ public sealed class SyncPushTests(AppFixture fixture)
         // A token id belongs to one encounter, so each push gets fresh ids.
         static SyncCreatureToken[] Fresh(params SyncCreatureToken[] tokens) => [.. tokens.Select(t => t with { Id = Guid.NewGuid() })];
         Task<SyncItemResult> Push(EncounterStatus status, params SyncCreatureToken[] tokens) =>
-            p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, status: status, tokens: Fresh(tokens)));
+            p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, status: status, tokens: Fresh(tokens)));
 
         var draft = await Push(EncounterStatus.Draft, onPillar, offMap, overlap, fine, halfOut);
         var onPillarReady = await Push(EncounterStatus.Ready, fine, onPillar);
@@ -448,10 +451,10 @@ public sealed class SyncPushTests(AppFixture fixture)
         var p = await PreparedAsync();
         var id = Guid.NewGuid();
         var goblin = Token(p.TypeId, 4, 3);
-        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, id, tokens: [goblin]));
+        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, id, tokens: [goblin]));
 
-        var stillBad = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, id, 1, status: EncounterStatus.Ready, tokens: [goblin]));
-        var moved = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, id, 1, status: EncounterStatus.Ready, tokens: [goblin with { X = 3 }]));
+        var stillBad = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, id, 1, status: EncounterStatus.Ready, tokens: [goblin]));
+        var moved = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, id, 1, status: EncounterStatus.Ready, tokens: [goblin with { X = 3 }]));
 
         AssertRejected(stillBad, ApiErrorCode.CreaturesMisplaced, "tokens[0]");
         Assert.Equal(SyncOutcome.Saved, moved.Outcome);
@@ -466,9 +469,9 @@ public sealed class SyncPushTests(AppFixture fixture)
         var a = Token(p.TypeId, 0, 0, "A");
         var b = Token(p.TypeId, 1, 0, "B");
         var c = Token(p.TypeId, 2, 0, "C");
-        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, id, tokens: [a, b]));
+        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, id, tokens: [a, b]));
 
-        var saved = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, id, 1, "Neuer Name", tokens: [c, b with { X = 5, Label = " B2 " }]));
+        var saved = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, id, 1, "Neuer Name", tokens: [c, b with { X = 5, Label = " B2 " }]));
 
         Assert.Equal(SyncOutcome.Saved, saved.Outcome);
         Assert.Equal(["C", "B2"], saved.Server!.Encounter!.Tokens.Select(t => t.Label));
@@ -486,23 +489,23 @@ public sealed class SyncPushTests(AppFixture fixture)
         var (otherDm, otherCampaignId) = await DmWithCampaignAsync("Yara");
         var foreign = await otherDm.PushAsync(Map(otherCampaignId), CreatureType(otherCampaignId));
         var taken = Token(p.TypeId, 0, 0);
-        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, tokens: [taken]));
+        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, tokens: [taken]));
         var sameTwice = Token(p.TypeId, 1, 0);
 
         var results = await p.Dm.PushAsync(
-            Encounter(p.CampaignId, p.MapId, name: " "),
-            Encounter(p.CampaignId, p.MapId, name: new string('a', 81)),
-            Encounter(p.CampaignId, p.MapId, status: EncounterStatus.Active),
-            Encounter(p.CampaignId, p.MapId, status: EncounterStatus.Ended),
-            Encounter(p.CampaignId, foreign[0].Id),
-            Encounter(p.CampaignId, Guid.NewGuid()),
-            Encounter(p.CampaignId, p.MapId, tokens: [Token(p.TypeId, 0, 0), Token(foreign[1].Id, 1, 0)]),
-            Encounter(p.CampaignId, p.MapId, tokens: [Token(Guid.NewGuid(), 1, 0)]),
-            Encounter(p.CampaignId, p.MapId, tokens: [Token(p.TypeId, 0, 0, label: " ")]),
-            Encounter(p.CampaignId, p.MapId, tokens: [Token(p.TypeId, 0, 0, label: new string('a', 41))]),
-            Encounter(p.CampaignId, p.MapId, tokens: [sameTwice, sameTwice with { X = 2 }]),
-            Encounter(p.CampaignId, p.MapId, tokens: [Token(p.TypeId, 3, 0, id: taken.Id)]),
-            Encounter(p.CampaignId, p.MapId, tokens: [Token(p.TypeId, 3, 0, id: Guid.Empty)]));
+            Encounter(p.CampaignId, p.SessionId, p.MapId, name: " "),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, name: new string('a', 81)),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, status: EncounterStatus.Active),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, status: EncounterStatus.Ended),
+            Encounter(p.CampaignId, p.SessionId, foreign[0].Id),
+            Encounter(p.CampaignId, p.SessionId, Guid.NewGuid()),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, tokens: [Token(p.TypeId, 0, 0), Token(foreign[1].Id, 1, 0)]),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, tokens: [Token(Guid.NewGuid(), 1, 0)]),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, tokens: [Token(p.TypeId, 0, 0, label: " ")]),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, tokens: [Token(p.TypeId, 0, 0, label: new string('a', 41))]),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, tokens: [sameTwice, sameTwice with { X = 2 }]),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, tokens: [Token(p.TypeId, 3, 0, id: taken.Id)]),
+            Encounter(p.CampaignId, p.SessionId, p.MapId, tokens: [Token(p.TypeId, 3, 0, id: Guid.Empty)]));
 
         AssertRejected(results[0], ApiErrorCode.NameInvalid, "name");
         AssertRejected(results[1], ApiErrorCode.NameInvalid, "name");
@@ -527,7 +530,9 @@ public sealed class SyncPushTests(AppFixture fixture)
         var results = await dm.PushAsync(
             Map(campaignId, data: HallData(archivedAt: archivedAt)), CreatureType(campaignId, archivedAt: archivedAt));
 
-        var created = await dm.PushOneAsync(Encounter(campaignId, results[0].Id, status: EncounterStatus.Ready, tokens: [Token(results[1].Id, 0, 0)]));
+        var session = await dm.CreateSessionAsync(campaignId);
+
+        var created = await dm.PushOneAsync(Encounter(campaignId, session.Id, results[0].Id, status: EncounterStatus.Ready, tokens: [Token(results[1].Id, 0, 0)]));
 
         Assert.Equal(SyncOutcome.Created, created.Outcome);
     }
@@ -538,9 +543,9 @@ public sealed class SyncPushTests(AppFixture fixture)
         var p = await PreparedAsync();
         var id = Guid.NewGuid();
         var archivedAt = new DateTimeOffset(2026, 10, 2, 8, 30, 0, TimeSpan.Zero);
-        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, id));
+        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, id));
 
-        var saved = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, id, 1, archivedAt: archivedAt));
+        var saved = await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, id, 1, archivedAt: archivedAt));
 
         Assert.Equal(archivedAt, saved.Server!.Encounter!.ArchivedAt);
         var versions = await p.Dm.VersionsAsync(p.CampaignId);
@@ -555,7 +560,7 @@ public sealed class SyncPushTests(AppFixture fixture)
         var data = copy.Encounter!;
         SyncPushItem Push(int baseVersion, EncounterStatus status) => new(
             copy.Id, SyncItemKind.Encounter, table.CampaignId, baseVersion, null, null, null,
-            new SyncEncounterData(data.Name + "!", data.BattleMapId, status, null, data.Tokens));
+            new SyncEncounterData(data.Name + "!", data.BattleMapId, status, null, data.Tokens, data.SessionId));
         await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, table.Encounter.Id);
         var active = await table.Dm.FetchOneAsync(table.CampaignId, copy.Id);
 
@@ -581,7 +586,7 @@ public sealed class SyncPushTests(AppFixture fixture)
         var p = await PreparedAsync();
         var typeItem = CreatureType(p.CampaignId, name: "Ork");
         var mapItem = Map(p.CampaignId, data: HallData(copiedFromMapId: Guid.NewGuid()));
-        var encounterItem = Encounter(p.CampaignId, p.MapId, status: EncounterStatus.Ready, tokens: [Token(p.TypeId, 3, 0, "B"), Token(p.TypeId, 1, 0, "A"), Token(p.TypeId, 2, 2, "C", CreatureSize.Large)]);
+        var encounterItem = Encounter(p.CampaignId, p.SessionId, p.MapId, status: EncounterStatus.Ready, tokens: [Token(p.TypeId, 3, 0, "B"), Token(p.TypeId, 1, 0, "A"), Token(p.TypeId, 2, 2, "C", CreatureSize.Large)]);
         var items = new[] { typeItem, mapItem, encounterItem };
 
         var first = await p.Dm.PushAsync(items);
@@ -615,7 +620,7 @@ public sealed class SyncPushTests(AppFixture fixture)
     {
         var p = await PreparedAsync();
         var encounterId = Guid.NewGuid();
-        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.MapId, encounterId, tokens: [Token(p.TypeId, 0, 0)]));
+        await p.Dm.PushOneAsync(Encounter(p.CampaignId, p.SessionId, p.MapId, encounterId, tokens: [Token(p.TypeId, 0, 0)]));
 
         for (var round = 0; round < 3; round++)
         {
@@ -626,7 +631,7 @@ public sealed class SyncPushTests(AppFixture fixture)
                 Enumerable.Range(0, 2).Select(i => p.Dm.PushAsync(
                     CreatureType(p.CampaignId, p.TypeId, "Goblin", CreatureSize.Small, typeVersion, notes: $"Gerät {i}"),
                     Map(p.CampaignId, p.MapId, mapVersion, HallData($"Halle {i}")),
-                    Encounter(p.CampaignId, p.MapId, encounterId, encounterVersion, $"Überfall {i}", tokens: [Token(p.TypeId, i, 0)]))));
+                    Encounter(p.CampaignId, p.SessionId, p.MapId, encounterId, encounterVersion, $"Überfall {i}", tokens: [Token(p.TypeId, i, 0)]))));
 
             for (var item = 0; item < 3; item++)
             {
@@ -657,7 +662,7 @@ public sealed class SyncPushTests(AppFixture fixture)
 
         // A token id pushed with two new encounters at once ends up in one of them.
         var tokenItems = new[] { Guid.NewGuid(), Guid.NewGuid() }
-            .Select(id => Encounter(p.CampaignId, p.MapId, id, tokens: [Token(p.TypeId, 0, 0, id: tokenId)]))
+            .Select(id => Encounter(p.CampaignId, p.SessionId, p.MapId, id, tokens: [Token(p.TypeId, 0, 0, id: tokenId)]))
             .ToArray();
         var tokenPushes = await Task.WhenAll(tokenItems.Select(item => p.Dm.PushOneAsync(item)));
         Assert.Equal([SyncOutcome.Created, SyncOutcome.Rejected], tokenPushes.Select(r => r.Outcome).Order());
@@ -692,7 +697,7 @@ public sealed class SyncPushTests(AppFixture fixture)
             CreatureType(p.CampaignId, p.TypeId, "Goblin", CreatureSize.Large, 1),
             Map(p.CampaignId, newMap),
             CreatureType(p.CampaignId, name: " "),
-            Encounter(p.CampaignId, newMap));
+            Encounter(p.CampaignId, p.SessionId, newMap));
 
         Assert.Equal(
             [SyncOutcome.Conflict, SyncOutcome.Created, SyncOutcome.Rejected, SyncOutcome.Created],
@@ -709,7 +714,7 @@ public sealed class SyncPushTests(AppFixture fixture)
         {
             Content = System.Net.Http.Json.JsonContent.Create(new SyncPushRequest([]), options: Json),
         };
-        message.Headers.Add(SyncProtocol.VersionHeader, "1");
+        message.Headers.Add(SyncProtocol.VersionHeader, CurrentVersion);
 
         var response = await anonymous.SendAsync(message);
 

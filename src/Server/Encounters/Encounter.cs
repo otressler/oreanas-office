@@ -10,9 +10,9 @@ using OreanasOffice.Server.Sessions;
 
 namespace OreanasOffice.Server.Encounters;
 
-// knowledge/domain/encounter.md: one fight on a battle map, prepared at campaign
-// level and linked to a session when the session DM starts it. The active encounter
-// of a session isn't a column: it is the encounter with status Active, and a filtered
+// knowledge/domain/encounter.md: one fight on a battle map, planned for a session and
+// run in it (knowledge/features/session-planning.md). The active encounter of a
+// session isn't a column: it is the encounter with status Active, and a filtered
 // unique index allows at most one per session.
 public class Encounter
 {
@@ -24,8 +24,8 @@ public class Encounter
 
     public Guid BattleMapId { get; set; }
 
-    // Set when the encounter is started.
-    public Guid? SessionId { get; set; }
+    // The session the fight is planned for and runs in. Moves only while draft or ready.
+    public Guid SessionId { get; set; }
 
     public required string Name { get; set; }
 
@@ -61,7 +61,7 @@ public class Encounter
 
     public BattleMap BattleMap { get; set; } = null!;
 
-    public GameSession? Session { get; set; }
+    public GameSession Session { get; set; } = null!;
 
     public List<Token> Tokens { get; } = [];
 }

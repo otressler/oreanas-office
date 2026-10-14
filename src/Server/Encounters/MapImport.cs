@@ -24,6 +24,7 @@ public static class MapImport
     public static ApiError? Build(
         ImportMapRequest request,
         Guid campaignId,
+        Guid sessionId,
         IEnumerable<CreatureType> campaignTypes,
         DateTimeOffset now,
         Guid? userId,
@@ -91,6 +92,7 @@ public static class MapImport
         var encounter = new Encounter
         {
             CampaignId = campaignId,
+            SessionId = sessionId,
             BattleMap = map,
             Name = name,
             Status = EncounterStatus.Ready,

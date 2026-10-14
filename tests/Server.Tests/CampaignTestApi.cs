@@ -93,9 +93,11 @@ public static class CampaignTestApi
         return await response.ReadAsync<CharacterResponse>(HttpStatusCode.Created);
     }
 
-    public static async Task<EncounterSummaryResponse> ImportMapAsync(this Person dm, Guid campaignId, ImportMapRequest? map = null)
+    public static async Task<EncounterSummaryResponse> ImportMapAsync(
+        this Person dm, Guid campaignId, Guid sessionId, ImportMapRequest? map = null)
     {
-        var response = await dm.Client.PostAsJsonAsync($"/api/campaigns/{campaignId}/encounters/import", map ?? TestMaps.Gorge(), Json);
+        var response = await dm.Client.PostAsJsonAsync(
+            $"/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/import", map ?? TestMaps.Gorge(), Json);
         return await response.ReadAsync<EncounterSummaryResponse>(HttpStatusCode.Created);
     }
 

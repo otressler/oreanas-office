@@ -27,7 +27,7 @@ The next stage starts only after the gate passes. Gate findings are fixed inside
 | 4 | 1 | Live table | Players and the DM move tokens, live on all devices |
 | 5 | 2 | Offline map editor | The DM builds a map on a laptop with no connection |
 | 6 | 2 | Bestiary, encounter prep and sync | The DM preps a whole encounter offline, syncs it and runs it |
-| 7 | 3 | AI backgrounds | The editor generates backgrounds, the DM picks one, and the board shows it |
+| 7 | 3 | AI backgrounds and session planning | The editor generates backgrounds, the DM picks one, and the board shows it; the DM plans a session's fights and runs them from the session page |
 | 8 | 3 | Token icons and portraits | Creatures get generated icons, characters get portraits |
 | 9 | 4 | Measuring tools | Ruler and area templates |
 | 10 | 4 | DM control at the table | Pings, hidden tokens, and HP and conditions |
@@ -84,6 +84,7 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 15 | Can campaigns be created offline? | Stage 6 | **Answered:** yes, only creating; no join code, members, characters or sessions until it syncs ([offline prep](/decisions/offline-prep-pwa.md)). Built with sync in stage 6 |
 | 16 | Does a copy from the map store take the chosen background image? ([battle map](/domain/battle-map.md)) | Stage 7 | **Answered:** yes, the copy points to the same image asset, and its DMs can regenerate it |
 | 17 | Stage 7 details | Stage 7 | **Answered:** an encounter saves the picked background when it starts; changing a map's size makes its backgrounds outdated; nothing is generated without the DM confirming the job; the map syncs before a job is queued; any `dm` member generates; production uses the same Foundry deployment as development ([AI map generation](/features/ai-map-generation.md), [battle map](/domain/battle-map.md)) |
+| 18 | How do sessions and fights relate? | Stage 7 | **Answered** at the stage 7 gate: every fight belongs to a session; only the session DM plans its fights; continuing an ended session brings back the fight it interrupted; built inside stage 7 ([session planning](/features/session-planning.md)) |
 
 # T0 — Image spike (parallel track)
 
@@ -326,6 +327,35 @@ Needs the T0 gate, passed on 2026-10-14. The image budget is set (question 11).
 - [ ] Start an encounter, then pick another version on the map: the running fight keeps its image.
 - [ ] In a second campaign, add the map from the store: the copy shows the same image to that campaign's players.
 
+## Session planning (added at the gate)
+
+The project owner found sessions and fights unconnected on the campaign page and decided on 2026-10-14 to build [session planning](/features/session-planning.md) inside stage 7.
+
+**Feature set**
+
+- `Encounter.sessionId` required, `Session.interruptedEncounterId`. The migration deletes every existing session and fight with their tokens and moves; maps, creature types and characters stay. The app isn't in real use yet (project owner, 2026-10-15). Devices drop their local fights on the next start.
+- Rights: only the session DM adds, edits, archives, moves and marks ready the session's fights, also at sync ([offline prep](/decisions/offline-prep-pwa.md), "Server checks"). The pull carries the campaign's sessions read-only.
+- Campaign page: sessions as cards with their fights, the running one on top; the "Kämpfe" panel goes.
+- Session page: fights with status, start, move, archive; "Kampf hinzufügen" with Vorhandene Karte, Karte kopieren and Neue Karte; the import moves here; editing title and date.
+- The editor's "Neue Begegnung" asks for the session.
+- "Sitzung fortsetzen": ended → active, with the interrupted fight back as running.
+- The roadmap page (`de.roadmap`) moves "Mehrere Kämpfe pro Sitzung" into stage 7.
+
+**Order**
+
+1. *Sequential:* migration, endpoint stubs (session page data, add fight, move, continue), sync format change with a raised minimum, generated types.
+2. *Parallel, two lanes:* **backend** (rights, sync checks, continue with the interrupted fight, import into a session) and **frontend** (campaign cards, session page, add-fight dialog, the editor's session pick).
+3. *Sequential:* integrate; Playwright: plan two fights, start the session, run one, end the session mid-fight, continue it and find the tokens where they were.
+
+**Manual gate**
+
+- [ ] Create a planned session and add three fights: one on an existing map, one on a copy, one on a new map. The campaign page shows them in the session's card.
+- [ ] A second `dm` member sees the planned fights but can't change them, also not by syncing an offline edit.
+- [ ] Start the session, start a planned fight, place the players: the phones show it. End it: everyone is back on the session page.
+- [ ] During the running session, add a fight on a new map, place two goblins, mark it ready and start it.
+- [ ] End the session while a fight runs. Continue the session: the fight comes back with every token where it stood, and the phones land on it.
+- [ ] Move an unplayed fight from the ended session to the next planned one.
+
 # Stage 8 — Token icons and portraits
 
 Completes roadmap phase 3. Reuses the stage 7 queue, so it is smaller.
@@ -383,5 +413,5 @@ The [backlog](/backlog.md) items are not scheduled. When they are, they fit natu
 
 - **Shared table:** table view, join by QR code, who's here, local mode.
 - **Board extras:** free draw, status rings and terrain statuses, map reveal, monster reveal and spawn, removing tokens.
-- **Running the session:** several fights per session, undo for the DM.
+- **Running the session:** undo for the DM.
 - **Player extras:** colour and portrait, show my token, haptic feedback. These are small and could also be folded into stage 4 or 8 if the project owner wants them earlier.

@@ -40,6 +40,7 @@ public static class SyncTestApi
 
     public static SyncPushItem Encounter(
         Guid campaignId,
+        Guid sessionId,
         Guid mapId,
         Guid? id = null,
         int baseVersion = 0,
@@ -55,7 +56,7 @@ public static class SyncTestApi
             null,
             null,
             null,
-            new SyncEncounterData(name, mapId, status, archivedAt, [.. tokens]));
+            new SyncEncounterData(name, mapId, status, archivedAt, [.. tokens], sessionId));
 
     public static SyncCreatureToken Token(
         Guid typeId, int x, int y, string label = "Goblin 1", CreatureSize size = CreatureSize.Small, Guid? id = null) =>
@@ -75,7 +76,11 @@ public static class SyncTestApi
     public static SyncMapData HallData(string name = "Halle", Guid? copiedFromMapId = null, DateTimeOffset? archivedAt = null) =>
         new(name, 8, 5, Hall(), "Eine Halle", "düster", "Fackeln", archivedAt, copiedFromMapId);
 
-    public static async Task<HttpResponseMessage> SendPushAsync(this Person person, SyncPushRequest request, string? version = "1")
+    // SyncProtocol.CurrentVersion as the header carries it.
+    public const string CurrentVersion = "2";
+
+    public static async Task<HttpResponseMessage> SendPushAsync(
+        this Person person, SyncPushRequest request, string? version = CurrentVersion)
     {
         var message = new HttpRequestMessage(HttpMethod.Post, "/api/sync/push") { Content = JsonContent.Create(request, options: Json) };
         if (version is not null)
@@ -115,7 +120,7 @@ public static class SyncTestApi
     private static Task<HttpResponseMessage> SendWithVersionAsync(Person person, HttpMethod method, string url, HttpContent? content)
     {
         var message = new HttpRequestMessage(method, url) { Content = content };
-        message.Headers.Add(SyncProtocol.VersionHeader, "1");
+        message.Headers.Add(SyncProtocol.VersionHeader, CurrentVersion);
         return person.Client.SendAsync(message);
     }
 }

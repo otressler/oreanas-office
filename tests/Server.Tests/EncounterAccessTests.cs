@@ -9,7 +9,7 @@ using static OreanasOffice.Server.Tests.CampaignTestApi;
 namespace OreanasOffice.Server.Tests;
 
 // Who may reach the encounter routes (knowledge/domain/encounter.md, session.md):
-// `dm` members prepare, only the session DM runs a fight, members see the board.
+// the session DM prepares and runs its fights, `dm` members see them, members see the board.
 [Collection("App")]
 public sealed class EncounterAccessTests(AppFixture fixture)
 {
@@ -18,47 +18,59 @@ public sealed class EncounterAccessTests(AppFixture fixture)
     {
         var table = await CreateTableAsync();
         var outsider = await fixture.App.CreatePersonAsync("Fremd");
+        var session = await table.Dm.CreateSessionAsync(table.CampaignId);
         var campaign = $"/api/campaigns/{table.CampaignId}";
 
-        var list = await outsider.Client.GetAsync($"{campaign}/encounters");
-        var import = await outsider.Client.PostAsJsonAsync($"{campaign}/encounters/import", new { }, Json);
+        var sessionRead = await outsider.Client.GetAsync($"{campaign}/sessions/{session.Id}");
+        var import = await outsider.Client.PostAsJsonAsync($"{campaign}/sessions/{session.Id}/encounters/import", new { }, Json);
         var board = await outsider.Client.GetAsync($"{campaign}/encounters/{Guid.NewGuid()}/board");
 
         Assert.Equal(
             [HttpStatusCode.Forbidden, HttpStatusCode.Forbidden, HttpStatusCode.Forbidden],
-            [list.StatusCode, import.StatusCode, board.StatusCode]);
+            [sessionRead.StatusCode, import.StatusCode, board.StatusCode]);
     }
 
+    // The default DM created the campaign and can manage the session, but neither imports
+    // into, starts nor ends fights of a session someone else leads; neither does any other
+    // `dm` member or a player (knowledge/domain/session.md).
     [Fact]
-    public async Task Players_cannot_see_or_import_prepared_encounters()
-    {
-        var table = await CreateTableAsync();
-        var campaign = $"/api/campaigns/{table.CampaignId}";
-
-        var list = await table.Player.Client.GetAsync($"{campaign}/encounters");
-        var import = await table.Player.Client.PostAsJsonAsync($"{campaign}/encounters/import", new { }, Json);
-
-        Assert.Equal([HttpStatusCode.Forbidden, HttpStatusCode.Forbidden], [list.StatusCode, import.StatusCode]);
-    }
-
-    // The default DM created the campaign and can manage the session, but runs no fight
-    // in a session someone else leads; neither does any other `dm` member.
-    [Fact]
-    public async Task Only_the_session_dm_starts_and_ends_encounters()
+    public async Task Only_the_session_dm_imports_starts_and_ends_encounters()
     {
         var table = await CreateTableAsync();
         var session = await table.Dm.CreateSessionAsync(table.CampaignId, dmUserId: table.SecondDm.Id);
-        var encounter = $"/api/campaigns/{table.CampaignId}/sessions/{session.Id}/encounters/{Guid.NewGuid()}";
+        var encounters = $"/api/campaigns/{table.CampaignId}/sessions/{session.Id}/encounters";
+        var encounter = $"{encounters}/{Guid.NewGuid()}";
         var start = new StartEncounterRequest([]);
 
         foreach (var person in new[] { table.Dm, table.ThirdDm, table.Player })
         {
+            var imported = await person.Client.PostAsJsonAsync($"{encounters}/import", TestMaps.Gorge(), Json);
             var started = await person.Client.PostAsJsonAsync($"{encounter}/start", start, Json);
             var ended = await person.Client.PostAsync($"{encounter}/end", null);
 
+            Assert.Equal(HttpStatusCode.Forbidden, imported.StatusCode);
             Assert.Equal(HttpStatusCode.Forbidden, started.StatusCode);
             Assert.Equal(HttpStatusCode.Forbidden, ended.StatusCode);
         }
+
+        Assert.Equal(HttpStatusCode.Created, (await table.SecondDm.Client.PostAsJsonAsync($"{encounters}/import", TestMaps.Gorge(), Json)).StatusCode);
+    }
+
+    // Players see the session but none of its prepared fights.
+    [Fact]
+    public async Task Players_see_no_prepared_encounters()
+    {
+        var table = await CreateTableAsync();
+        var session = await table.Dm.CreateSessionAsync(table.CampaignId);
+        await table.Dm.ImportMapAsync(table.CampaignId, session.Id);
+
+        var asPlayer = await (await table.Player.Client.GetAsync($"/api/campaigns/{table.CampaignId}/sessions/{session.Id}"))
+            .ReadAsync<OreanasOffice.Server.Sessions.SessionResponse>(HttpStatusCode.OK);
+        var asOtherDm = await (await table.SecondDm.Client.GetAsync($"/api/campaigns/{table.CampaignId}/sessions/{session.Id}"))
+            .ReadAsync<OreanasOffice.Server.Sessions.SessionResponse>(HttpStatusCode.OK);
+
+        Assert.Empty(asPlayer.Encounters);
+        Assert.Single(asOtherDm.Encounters);
     }
 
     // The sample maps go through the import endpoint, so they must bind with the API's

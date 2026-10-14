@@ -32,6 +32,10 @@ public enum ApiErrorCode
     NotADm,
     AnotherSessionActive,
     SessionEnded,
+    // NotSessionDm: only the session's DM plans its fights (knowledge/domain/session.md).
+    NotSessionDm,
+    // SessionInvalid: the session isn't one of this campaign.
+    SessionInvalid,
 
     // Map imports. Field is the JSON path of the offending entry, e.g. "layout.cells[12]".
     TextTooLong,

@@ -250,7 +250,7 @@ public sealed class TableHubTests(AppFixture fixture)
         var stranger = await App.CreatePersonAsync("Fremder");
         await using var strangerDevice = await TableTestClient.ConnectAsync(App, stranger);
         await using var player = await TableTestClient.ConnectAsync(App, fight.Table.Player);
-        var ready = await fight.Table.Dm.ImportMapAsync(fight.CampaignId, TestMaps.Gorge() with { Name = "Zweite Klamm" });
+        var ready = await fight.Table.Dm.ImportMapAsync(fight.CampaignId, fight.Table.Session.Id, TestMaps.Gorge() with { Name = "Zweite Klamm" });
 
         Assert.Equal(ApiErrorCode.TokenNotFound, (await strangerDevice.JoinEncounterAsync(fight.EncounterId)).Error);
         Assert.Equal(ApiErrorCode.TokenNotFound, (await strangerDevice.MoveAsync(fight.Thorin, 1, 0)).Error);

@@ -7,7 +7,8 @@ namespace OreanasOffice.Server.Sync;
 public static class SyncProtocol
 {
     // Raised whenever the sync format changes; the app sends it in VersionHeader.
-    public const int CurrentVersion = 1;
+    // 2: encounters carry their session (knowledge/features/session-planning.md).
+    public const int CurrentVersion = 2;
 
     public const string VersionHeader = "X-Sync-Version";
 

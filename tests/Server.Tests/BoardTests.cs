@@ -40,7 +40,7 @@ public sealed class BoardTests(AppFixture fixture)
         var ended = await (await table.SecondDm.GetBoardAsync(table.CampaignId, table.Encounter.Id))
             .ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
 
-        Assert.Equal((EncounterStatus.Ready, (Guid?)null, false), (ready.Status, ready.SessionId, ready.IsSessionDm));
+        Assert.Equal((EncounterStatus.Ready, table.Session.Id, false), (ready.Status, ready.SessionId, ready.IsSessionDm));
         Assert.Equal((EncounterStatus.Ended, table.Session.Id, false), (ended.Status, ended.SessionId, ended.IsSessionDm));
     }
 

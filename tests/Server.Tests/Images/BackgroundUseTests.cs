@@ -103,7 +103,7 @@ public sealed class BackgroundUseTests(AppFixture fixture)
         fixture.App.ResetFakeImages();
         var table = await fixture.App.CreateEncounterTableAsync();
         var (dm, campaignId, mapId) = (table.Dm, table.CampaignId, table.Encounter.BattleMapId);
-        var draft = (await dm.PushOneAsync(Encounter(campaignId, mapId, name: "Später"))).Id;
+        var draft = (await dm.PushOneAsync(Encounter(campaignId, table.Session.Id, mapId, name: "Später"))).Id;
         Assert.Null((await BoardAsync(dm, campaignId, table.Encounter.Id)).Background);
 
         var first = await fixture.App.GenerateAndWaitAsync(dm, campaignId, mapId);
@@ -150,8 +150,8 @@ public sealed class BackgroundUseTests(AppFixture fixture)
         var otherPlayer = await fixture.App.CreatePersonAsync("Lhorbarth");
         await otherPlayer.JoinAsync((await otherDm.GetCampaignAsync(otherCampaign)).JoinCode!);
         var copy = await AddFromStoreAsync(otherDm, otherCampaign, copyOf: mapId);
-        var encounter = (await otherDm.PushOneAsync(Encounter(otherCampaign, copy.Id, status: EncounterStatus.Ready))).Id;
         var session = await otherDm.CreateSessionAsync(otherCampaign);
+        var encounter = (await otherDm.PushOneAsync(Encounter(otherCampaign, session.Id, copy.Id, status: EncounterStatus.Ready))).Id;
         await otherDm.ActivateSessionAsync(otherCampaign, session.Id);
         Assert.Equal(HttpStatusCode.OK, (await otherDm.StartEncounterAsync(otherCampaign, session.Id, encounter)).StatusCode);
 

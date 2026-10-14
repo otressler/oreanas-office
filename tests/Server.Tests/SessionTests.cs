@@ -24,10 +24,11 @@ public sealed class SessionTests(AppFixture fixture)
 
         var session = await response.ReadAsync<SessionResponse>(HttpStatusCode.Created);
         Assert.Equal($"/api/campaigns/{table.CampaignId}/sessions/{session.Id}", response.Headers.Location?.OriginalString);
+        Assert.Empty(session.Encounters);
         Assert.Equal(
             new SessionResponse(
                 session.Id, "Die Seilbrücke", Saturday, SessionStatus.Planned, table.Dm.Id, "Oreana", table.SecondDm.Id,
-                CanManage: false, IsSessionDm: false, ActiveEncounter: null),
+                CanManage: false, IsSessionDm: false, ActiveEncounter: null, InterruptedEncounter: null, Encounters: session.Encounters),
             session);
     }
 
@@ -147,17 +148,78 @@ public sealed class SessionTests(AppFixture fixture)
     }
 
     [Fact]
-    public async Task An_ended_session_cannot_be_activated_or_handed_over()
+    public async Task An_ended_session_cannot_be_handed_over()
     {
         var table = await CreateTableAsync();
         var session = await table.Dm.CreateSessionAsync(table.CampaignId);
         await PostAsync(table.Dm, table.CampaignId, session.Id, "end");
 
-        var activate = await PostAsync(table.Dm, table.CampaignId, session.Id, "activate");
         var handOver = await ChangeDmAsync(table.Dm, table.CampaignId, session.Id, table.SecondDm.Id);
 
-        await activate.AssertErrorAsync(HttpStatusCode.Conflict, ApiErrorCode.SessionEnded);
         await handOver.AssertErrorAsync(HttpStatusCode.Conflict, ApiErrorCode.SessionEnded);
+    }
+
+    // knowledge/domain/session.md, "Continuing": when the group didn't get through it.
+    [Fact]
+    public async Task An_ended_session_can_be_continued_by_its_dm_or_the_default_dm()
+    {
+        var table = await CreateTableAsync();
+        var session = await table.Dm.CreateSessionAsync(table.CampaignId, dmUserId: table.SecondDm.Id);
+        await PostAsync(table.SecondDm, table.CampaignId, session.Id, "end");
+
+        var byDefaultDm = await PostAsync(table.Dm, table.CampaignId, session.Id, "activate");
+
+        Assert.Equal(SessionStatus.Active, (await byDefaultDm.ReadAsync<SessionResponse>(HttpStatusCode.OK)).Status);
+    }
+
+    [Fact]
+    public async Task An_ended_session_is_not_continued_while_another_runs()
+    {
+        var table = await CreateTableAsync();
+        var first = await table.Dm.CreateSessionAsync(table.CampaignId);
+        var second = await table.Dm.CreateSessionAsync(table.CampaignId);
+        await PostAsync(table.Dm, table.CampaignId, first.Id, "end");
+        await PostAsync(table.Dm, table.CampaignId, second.Id, "activate");
+
+        var response = await PostAsync(table.Dm, table.CampaignId, first.Id, "activate");
+
+        await response.AssertErrorAsync(HttpStatusCode.Conflict, ApiErrorCode.AnotherSessionActive);
+    }
+
+    // Only the session DM edits title and date.
+    [Fact]
+    public async Task The_session_dm_changes_title_and_date()
+    {
+        var table = await CreateTableAsync();
+        var session = await table.Dm.CreateSessionAsync(table.CampaignId, dmUserId: table.SecondDm.Id);
+        var path = $"/api/campaigns/{table.CampaignId}/sessions/{session.Id}";
+        var request = new UpdateSessionRequest("  Die Rückkehr  ", Saturday.AddDays(7));
+
+        var byDefaultDm = await table.Dm.Client.PutAsJsonAsync(path, request, Json);
+        var bySessionDm = await table.SecondDm.Client.PutAsJsonAsync(path, request, Json);
+        var empty = await table.SecondDm.Client.PutAsJsonAsync(path, request with { Title = " " }, Json);
+
+        Assert.Equal(HttpStatusCode.Forbidden, byDefaultDm.StatusCode);
+        var updated = await bySessionDm.ReadAsync<SessionResponse>(HttpStatusCode.OK);
+        Assert.Equal(("Die Rückkehr", Saturday.AddDays(7), SessionStatus.Planned), (updated.Title, updated.Date, updated.Status));
+        await empty.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.NameInvalid, "title");
+    }
+
+    [Fact]
+    public async Task A_session_is_read_by_members_only()
+    {
+        var table = await CreateTableAsync();
+        var session = await table.Dm.CreateSessionAsync(table.CampaignId);
+        var outsider = await fixture.App.CreatePersonAsync("Fremd");
+        var path = $"/api/campaigns/{table.CampaignId}/sessions";
+
+        var asPlayer = await table.Player.Client.GetAsync($"{path}/{session.Id}");
+        var asOutsider = await outsider.Client.GetAsync($"{path}/{session.Id}");
+        var unknown = await table.Player.Client.GetAsync($"{path}/{Guid.NewGuid()}");
+
+        Assert.Equal(session.Id, (await asPlayer.ReadAsync<SessionResponse>(HttpStatusCode.OK)).Id);
+        Assert.Equal(HttpStatusCode.Forbidden, asOutsider.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
     }
 
     [Fact]
@@ -320,8 +382,10 @@ public sealed class SessionTests(AppFixture fixture)
         Assert.Equal(new ApiError(ApiErrorCode.DateInvalid, "date"), await response.ReadAsync<ApiError>(HttpStatusCode.BadRequest));
     }
 
+    // Either order is a valid outcome now that an ended session can be continued: ended,
+    // or running again when the start came after the end. It never stays planned.
     [Fact]
-    public async Task Starting_and_ending_at_once_never_leaves_an_ended_session_running()
+    public async Task Starting_and_ending_at_once_never_leaves_the_session_planned()
     {
         var dm = await fixture.App.CreatePersonAsync("Mira");
         var campaign = await dm.CreateCampaignAsync();
@@ -331,10 +395,11 @@ public sealed class SessionTests(AppFixture fixture)
             var session = await dm.CreateSessionAsync(campaign.Id, $"Runde {round}");
             var path = $"/api/campaigns/{campaign.Id}/sessions/{session.Id}";
 
-            await Task.WhenAll(dm.Client.PostAsync($"{path}/activate", null), dm.Client.PostAsync($"{path}/end", null));
+            var responses = await Task.WhenAll(dm.Client.PostAsync($"{path}/activate", null), dm.Client.PostAsync($"{path}/end", null));
 
+            Assert.All(responses, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
             var status = (await ListAsync(dm, campaign.Id)).Single(s => s.Id == session.Id).Status;
-            Assert.Equal(SessionStatus.Ended, status);
+            Assert.NotEqual(SessionStatus.Planned, status);
         }
     }
 

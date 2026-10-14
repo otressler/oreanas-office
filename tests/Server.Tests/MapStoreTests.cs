@@ -51,7 +51,7 @@ public sealed class MapStoreTests(AppFixture fixture)
     {
         var c = await TwoCampaignsAsync();
         var types = await c.Gruft.PushAsync(Map(c.GruftId, data: HallData("Thronsaal")), CreatureType(c.GruftId));
-        await c.Gruft.PushOneAsync(Encounter(c.GruftId, types[0].Id, tokens: [Token(types[1].Id, 0, 0)]));
+        await c.Gruft.PushOneAsync(Encounter(c.GruftId, (await c.Gruft.CreateSessionAsync(c.GruftId)).Id, types[0].Id, tokens: [Token(types[1].Id, 0, 0)]));
 
         var copy = await AddedAsync(c.Wald, c.WaldId, types[0].Id);
 

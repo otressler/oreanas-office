@@ -886,6 +886,105 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/sessions/{sessionId}": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/sessions/{sessionId}/activate": {
       "post": {
         "tags": [
@@ -1043,89 +1142,6 @@
         }
       }
     },
-    "/api/campaigns/{campaignId}/encounters": {
-      "get": {
-        "tags": [
-          "Encounters"
-        ],
-        "parameters": [
-          {
-            "name": "campaignId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EncounterSummaryResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/campaigns/{campaignId}/encounters/import": {
-      "post": {
-        "tags": [
-          "Encounters"
-        ],
-        "parameters": [
-          {
-            "name": "campaignId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ImportMapRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EncounterSummaryResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/campaigns/{campaignId}/encounters/{encounterId}/board": {
       "get": {
         "tags": [
@@ -1164,6 +1180,75 @@
           },
           "404": {
             "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/import": {
+      "post": {
+        "tags": [
+          "Encounters"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportMapRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterSummaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
         }
       }
@@ -1779,6 +1864,8 @@
           "notADm",
           "anotherSessionActive",
           "sessionEnded",
+          "notSessionDm",
+          "sessionInvalid",
           "textTooLong",
           "mapSizeInvalid",
           "layoutVersionUnsupported",
@@ -1942,10 +2029,7 @@
             "format": "uuid"
           },
           "sessionId": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": "string",
             "format": "uuid"
           },
           "name": {
@@ -2326,6 +2410,7 @@
           "name",
           "status",
           "battleMapId",
+          "battleMapName",
           "width",
           "height",
           "creatureCount",
@@ -2350,6 +2435,9 @@
             "type": "string",
             "format": "uuid"
           },
+          "battleMapName": {
+            "type": "string"
+          },
           "width": {
             "type": "integer",
             "format": "int32"
@@ -2363,10 +2451,7 @@
             "format": "int32"
           },
           "sessionId": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": "string",
             "format": "uuid"
           },
           "createdAt": {
@@ -2443,6 +2528,8 @@
               "notADm",
               "anotherSessionActive",
               "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -3395,6 +3482,8 @@
               "notADm",
               "anotherSessionActive",
               "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -3552,7 +3641,9 @@
           "createdByUserId",
           "canManage",
           "isSessionDm",
-          "activeEncounter"
+          "activeEncounter",
+          "interruptedEncounter",
+          "encounters"
         ],
         "type": "object",
         "properties": {
@@ -3596,6 +3687,22 @@
                 "$ref": "#/components/schemas/ActiveEncounterSummary"
               }
             ]
+          },
+          "interruptedEncounter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActiveEncounterSummary"
+              }
+            ]
+          },
+          "encounters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EncounterSummaryResponse"
+            }
           }
         }
       },
@@ -3741,7 +3848,8 @@
           "battleMapId",
           "status",
           "archivedAt",
-          "tokens"
+          "tokens",
+          "sessionId"
         ],
         "type": "object",
         "properties": {
@@ -3767,6 +3875,10 @@
             "items": {
               "$ref": "#/components/schemas/SyncCreatureToken"
             }
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -3806,10 +3918,7 @@
             }
           },
           "sessionId": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": "string",
             "format": "uuid"
           },
           "mapCopy": {
@@ -4173,11 +4282,46 @@
           }
         }
       },
+      "SyncSession": {
+        "required": [
+          "id",
+          "title",
+          "date",
+          "status",
+          "dmUserId",
+          "dmDisplayName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SessionStatus"
+          },
+          "dmUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dmDisplayName": {
+            "type": "string"
+          }
+        }
+      },
       "SyncVersionList": {
         "required": [
           "creatureTypes",
           "battleMaps",
-          "encounters"
+          "encounters",
+          "sessions"
         ],
         "type": "object",
         "properties": {
@@ -4197,6 +4341,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SyncItemVersion"
+            }
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncSession"
             }
           }
         }
@@ -4308,6 +4458,22 @@
         "properties": {
           "displayName": {
             "type": "string"
+          }
+        }
+      },
+      "UpdateSessionRequest": {
+        "required": [
+          "title",
+          "date"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
           }
         }
       },

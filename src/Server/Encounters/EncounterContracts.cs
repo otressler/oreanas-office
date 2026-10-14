@@ -5,16 +5,17 @@ namespace OreanasOffice.Server.Encounters;
 
 // Request and response types for encounters and the board.
 
-// An encounter in the DM's list. SessionId is set once it has been started.
+// An encounter in a session's list of fights.
 public record EncounterSummaryResponse(
     Guid Id,
     string Name,
     EncounterStatus Status,
     Guid BattleMapId,
+    string BattleMapName,
     int Width,
     int Height,
     int CreatureCount,
-    Guid? SessionId,
+    Guid SessionId,
     DateTimeOffset CreatedAt,
     int Version,
     DateTimeOffset? ArchivedAt);
@@ -36,7 +37,7 @@ public record ActiveEncounterSummary(Guid Id, string Name);
 public record BoardStateResponse(
     Guid EncounterId,
     Guid CampaignId,
-    Guid? SessionId,
+    Guid SessionId,
     string Name,
     EncounterStatus Status,
     BoardMap Map,
