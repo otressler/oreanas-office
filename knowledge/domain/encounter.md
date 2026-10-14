@@ -18,6 +18,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 | `name` | string | e.g. "Goblin ambush" |
 | `status` | enum `draft` \| `ready` \| `active` \| `ended` | |
 | `layout` | JSON document, nullable | A copy of the battle map's layout, saved when the encounter starts. The live fight and the ended encounter use this copy, so later edits to the map never change them |
+| `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The map's picked background, saved together with `layout` when the encounter starts. Picking another version on the map later doesn't change a running or ended fight. Empty when the map had no usable background |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the encounter |
 
 # Contains
@@ -35,7 +36,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 
 - Any `dm` member of the campaign prepares encounters: imports maps now, uses the editor later. Prepared encounters are visible only to `dm` members.
 - Encounters are never deleted. A `dm` member archives one and can bring it back. An archived encounter can't be started.
-- **When the map changes:** draft and ready encounters use the current map. The editor marks creatures that now stand where they may not, and the encounter can't be marked ready or started until they're moved. Active and ended encounters keep their own copy of the layout.
+- **When the map changes:** draft and ready encounters use the current map. The editor marks creatures that now stand where they may not, and the encounter can't be marked ready or started until they're moved. Active and ended encounters keep their own copy of the layout and background.
 - Only the session DM starts and ends an encounter ([session](/domain/session.md)).
 - A session has at most one active encounter. Like the active session, it isn't stored as a column: it is the encounter with `status: active`, and a unique index allows at most one per session.
 

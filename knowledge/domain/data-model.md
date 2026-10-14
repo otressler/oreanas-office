@@ -31,6 +31,7 @@ erDiagram
     CHARACTER |o--o{ TOKEN : "appears as"
     CREATURE_TYPE |o--o{ TOKEN : "appears as"
     BATTLE_MAP |o--o{ ASSET : "backgrounds"
+    ENCOUNTER }o--o| ASSET : "background at start"
     CREATURE_TYPE |o--o| ASSET : "icon"
 ```
 

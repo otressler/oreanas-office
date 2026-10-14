@@ -19,7 +19,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `scene` | text | What the place is: "rope bridge over a misty gorge" |
 | `vibe` | text | Mood: "tense, overcast, wind" |
 | `lighting` | text | e.g. "dusk", "torchlight" |
-| `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The chosen generated image. Other versions stay as assets |
+| `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The chosen generated image. Other versions stay as assets. Not shown while the image was made for a different size (see Background image) |
 | `copiedFromMapId` | → Battle map, nullable | The map this one was duplicated or added from. Set once and never changed |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the map |
 
@@ -29,7 +29,14 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 - **Archive, never delete.** Only `dm` members archive a map, and they can bring it back from the archived maps in the list. An archived map can't be picked for a new encounter and isn't offered in other campaigns' stores. Encounters that already use it keep working. Archiving only sets a field, so it syncs like any other change ([offline prep](/decisions/offline-prep-pwa.md)).
 - **Duplicate.** A copy in the same campaign, for a map that needs only small changes to be used again. It gets a new id and `copiedFromMapId`. Later changes to either map don't reach the other.
 - **Store.** Maps from other campaigns. Adding one makes a copy in the campaign with `copiedFromMapId` set; the source stays as it is. The store leaves out the campaign's own maps, maps the campaign already has an unarchived copy of, and copies made from the campaign's own maps. If the campaign's copy is archived, the store still offers the map, and adding it brings the archived copy back instead of making a new one. For now every map that isn't archived is in the store, whoever made it; choosing which maps to publish is in the [backlog](/backlog.md). The store needs a connection.
-- **What a copy takes:** name, size, layout, scene, vibe and lighting. Encounters and their creatures aren't copied. Whether the background image comes along is decided in stage 7 of the [implementation plan](/implementation-plan.md).
+- **What a copy takes:** name, size, layout, scene, vibe, lighting and the picked background image. The copy points to the same image [asset](/domain/asset.md) rather than a copy of the file; the copy's DMs can regenerate it for their own map. Other versions of the source's background don't come along. Encounters and their creatures aren't copied.
+
+# Background image
+
+- The DM generates backgrounds with [AI map generation](/features/ai-map-generation.md) and picks one version as `backgroundAssetId`.
+- **Changing the size makes the background outdated.** Every version made for another size is outdated: the board doesn't show it and uses the plain rendering instead, and the editor says a new image is needed. Nothing is generated automatically; the DM starts a new generation. Undoing the resize, back to the image's size, makes the image usable again.
+- Other layout changes, such as a moved wall, keep the image. The editor notes that the layout changed since the image was made, so the DM can decide to regenerate.
+- An encounter saves the picked background when it starts, together with its copy of the layout ([encounter](/domain/encounter.md)).
 
 # Layout document
 

@@ -35,7 +35,7 @@ TERRAIN = {
     "difficult": ((170, 150, 60), "ochre", "difficult terrain (rubble, undergrowth, mud, shallow scree)"),
     "water": ((40, 90, 200), "blue", "water"),
     "wall": ((0, 0, 0), "black", "solid walls or impassable rock"),
-    "void": ((90, 40, 110), "dark purple", "outside the play area: scenery that fits (cliff drop, darkness, dense forest)"),
+    "void": ((90, 40, 110), "dark purple", "outside the play area, where nobody can stand: scenery that fits (cliff drop, solid bedrock, darkness, dense forest), never open water or walkable floor"),
 }
 ASCII = {".": "floor", ",": "difficult", "~": "water", "#": "wall", " ": "void", "_": "void"}
 
@@ -127,6 +127,23 @@ def main():
     if W * H < MIN_PIXELS:
         sys.exit(f"{W}x{H} is below the model's minimum of {MIN_PIXELS} px; raise --cell.")
 
+    # Void that can't reach the map edge through other void cells is enclosed by the map, like
+    # the solid rock between a dungeon's corridors. Shown in the outside colour, the model paints
+    # it as an extra room or pool, so it is drawn as wall instead.
+    outside = set()
+    todo = [(x, y) for y in range(rows) for x in range(cols)
+            if grid[y][x] == "void" and (x in (0, cols - 1) or y in (0, rows - 1))]
+    while todo:
+        x, y = todo.pop()
+        if (x, y) in outside:
+            continue
+        outside.add((x, y))
+        for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if 0 <= nx < cols and 0 <= ny < rows and grid[ny][nx] == "void" and (nx, ny) not in outside:
+                todo.append((nx, ny))
+    grid = [["wall" if t == "void" and (x, y) not in outside else t for x, t in enumerate(row)]
+            for y, row in enumerate(grid)]
+
     colour = [[TERRAIN.get(t, TERRAIN["floor"])[0] for t in row] for row in grid]
     used = {t for row in grid for t in row}
     legend = [f"{TERRAIN[t][1]} = {TERRAIN[t][2]}" for t in TERRAIN if t in used]
@@ -143,12 +160,12 @@ def main():
                 colour[y][x] = rgb
         span = lambda start, size: f"{start + 1}" if size == 1 else f"{start + 1}-{start + size}"
         legend.append(f"{name} at column {span(f['x'], f['w'])}, row {span(f['y'], f['h'])} "
-                      f"= {f.get('label') or f['kind']}")
+                      f"= {f['kind']}" + (f' ("{f["label"]}")' if f.get("label") and f["label"] != f["kind"] else ""))
     for e in entrances:
         for x, y in e.get("cells", []):
             colour[y][x] = ENTRANCE[0]
     if entrances:
-        legend.append(f"{ENTRANCE[1]} = openings at the map edge: " + ", ".join(e.get("label", e["kind"]) for e in entrances))
+        legend.append(f"{ENTRANCE[1]} = openings at the map edge, painted as the path, doorway or stairs that leads away: " + ", ".join(e.get("label", e["kind"]) for e in entrances))
 
     pixels = []
     for y in range(H):

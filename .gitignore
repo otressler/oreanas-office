@@ -3,6 +3,9 @@
 *-workspace/
 .claude/worktrees/
 
+# Generated spike images (image-assets skill)
+assets/generated/
+
 # .NET
 bin/
 obj/

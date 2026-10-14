@@ -77,12 +77,13 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 8 | Elevation and flying in the distance preview | Deferred | **Deferred** with the distance rules |
 | 9 | [Offline prep and PWA](/decisions/offline-prep-pwa.md) is only proposed | Stage 5 | **Answered:** accepted, including campaigns created offline (question 15). The stage 6 sync protocol is still approved separately |
 | 10 | Largest grid size | Stage 5 | **Answered:** 40×40. A map wider than 3:1 gets padding painted as dead terrain or darkness ([image generation approach](/decisions/image-generation-approach.md)) |
-| 11 | [Image budget](/decisions/image-budget.md) | Stage 7 | Set after T0 records the cost per image |
+| 11 | [Image budget](/decisions/image-budget.md) | Stage 7 | **Answered:** $20 a month for all image generation, no limit per map, high quality by default |
 | 12 | Are ruler and area templates shared with everyone, or only on the measuring device? | Stage 9 | Shared, like pings, and not saved |
 | 13 | What "HP and conditions" means, and how it relates to status rings in the [backlog](/backlog.md) | Stage 10 | Designed with the project owner at the start of stage 10 |
-| 14 | How do images reach the browser: public blob container, short-lived signed links, or through the app? ([persistence](/decisions/persistence.md)) | Stage 7 | Short-lived signed links, so one campaign's images stay private |
+| 14 | How do images reach the browser: public blob container, short-lived signed links, or through the app? ([persistence](/decisions/persistence.md)) | Stage 7 | **Answered:** through the app at `/api/assets/{id}`, for members of a campaign that uses the image, cached for good by the browser and the service worker |
 | 15 | Can campaigns be created offline? | Stage 6 | **Answered:** yes, only creating; no join code, members, characters or sessions until it syncs ([offline prep](/decisions/offline-prep-pwa.md)). Built with sync in stage 6 |
-| 16 | Does a copy from the map store take the chosen background image? ([battle map](/domain/battle-map.md)) | Stage 7 | Yes, the copy points to the same image asset |
+| 16 | Does a copy from the map store take the chosen background image? ([battle map](/domain/battle-map.md)) | Stage 7 | **Answered:** yes, the copy points to the same image asset, and its DMs can regenerate it |
+| 17 | Stage 7 details | Stage 7 | **Answered:** an encounter saves the picked background when it starts; changing a map's size makes its backgrounds outdated; nothing is generated without the DM confirming the job; the map syncs before a job is queued; any `dm` member generates; production uses the same Foundry deployment as development ([AI map generation](/features/ai-map-generation.md), [battle map](/domain/battle-map.md)) |
 
 # T0 — Image spike (parallel track)
 
@@ -94,7 +95,7 @@ Runs alongside stages 1–6. It needs only the `image-assets` skill and no app c
 
 **Order:** strictly one generation at a time because of the rate limit. Claude runs it as one background job between stage work, never as parallel agents.
 
-**Gate:** the project owner looks at the review sheets and decides whether the [image generation approach](/decisions/image-generation-approach.md) is accepted, and sets the image budget. Stage 7 needs both.
+**Gate:** the project owner looks at the review sheets and decides whether the [image generation approach](/decisions/image-generation-approach.md) is accepted. Stage 7 needs that. **Passed on 2026-10-14:** the approach is accepted, with high quality as the default. The image budget is already set (question 11); T0's cost numbers let the app count costs against it.
 
 # Stage 1 — Walking skeleton
 
@@ -291,15 +292,18 @@ Completes roadmap phase 2.
 
 # Stage 7 — AI backgrounds
 
-Needs the T0 gate and the image budget (question 11).
+Needs the T0 gate, passed on 2026-10-14. The image budget is set (question 11).
 
 **Feature set**
 
 - Server-side guide renderer, a C# port of the skill's `render_guide.py` with the same colours and legend, and the prompt builder from the skill's prompt templates ([AI map generation](/features/ai-map-generation.md)). Maps wider than 3:1 are padded, and the prompt asks for dead terrain or darkness in the padding ([image generation approach](/decisions/image-generation-approach.md)).
-- Foundry client with the local size checks.
+- Foundry client with the local size checks, asking for high quality and WebP output, so phones load a few hundred kilobytes rather than 2–3 MB PNGs.
 - Job queue in the database: [asset](/domain/asset.md) rows `queued → running → done | failed`, one worker that runs jobs one at a time within 2 requests per minute and honours 429 waits. The worker is woken when a job is added and on startup, never by polling ([hosting](/decisions/hosting.md)).
-- Images in Blob Storage, a "done" notification to the editor over SignalR, a version gallery, picking `backgroundAssetId`, and the budget limit enforced.
+- Generate button for `dm` members with a confirm step before the job is queued, and a sync of the map first. Nothing is ever generated automatically ([AI map generation](/features/ai-map-generation.md)).
+- Images in a private Blob container, served at `/api/assets/{id}` to members of a campaign that uses them ([persistence](/decisions/persistence.md)), a "done" notification to the editor over SignalR, a version gallery, picking `backgroundAssetId`, and the monthly limit enforced: each image's cost is recorded, and new jobs are refused once the month reaches $20 ([image budget](/decisions/image-budget.md)).
 - Board: the image under the app-drawn grid, with the plain rendering as fallback. The service worker caches images by URL.
+- Starting an encounter saves the picked background with the layout copy. A resized map's backgrounds are outdated and not shown; the editor asks for a new one. Store copies take the picked background ([battle map](/domain/battle-map.md)).
+- Production gets the Foundry endpoint and key through `infra/deploy.ps1` as Container Apps secrets; it uses the same deployment as development ([hosting](/decisions/hosting.md)).
 
 **Order**
 
@@ -317,6 +321,10 @@ Needs the T0 gate and the image budget (question 11).
 - [ ] Restart the container while a job runs: the job finishes after the restart.
 - [ ] A failed job leaves the plain rendering, and the fight is still playable.
 - [ ] Offline, the editor says generation needs a connection instead of failing silently.
+- [ ] Nothing is generated until the DM confirms the job.
+- [ ] Resize the map: the board falls back to the plain rendering and the editor asks for a new image. Undo the resize: the image is back.
+- [ ] Start an encounter, then pick another version on the map: the running fight keeps its image.
+- [ ] In a second campaign, add the map from the store: the copy shows the same image to that campaign's players.
 
 # Stage 8 — Token icons and portraits
 
@@ -324,7 +332,7 @@ Completes roadmap phase 3. Reuses the stage 7 queue, so it is smaller.
 
 **Feature set**
 
-- Generate one icon per creature type from its name and appearance, with a transparent background and the fixed style template ([token icons](/features/token-icons.md)); automatic or on request as the image budget says.
+- Generate one icon per creature type from its name and appearance, with a transparent background and the fixed style template ([token icons](/features/token-icons.md)); only on request and after the DM confirms the job ([image budget](/decisions/image-budget.md)).
 - Character portraits: generated, or uploaded from the phone (type and size checks, resized on the server).
 - Tokens show the icon cropped to a circle with the creature or character ring colour, falling back to the first letter.
 

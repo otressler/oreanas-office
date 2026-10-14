@@ -18,9 +18,15 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:45:10Z }
 | `prompt` | text, nullable | The full prompt sent to the model |
 | `model` | string, nullable | Model deployment used |
 | `status` | enum `queued` \| `running` \| `done` \| `failed` | Generation runs as a background job. These rows are the job queue, so queued jobs survive the container stopping ([hosting](/decisions/hosting.md)) |
-| `url` | string, nullable | Location in blob storage ([persistence](/decisions/persistence.md)) |
+| `blobName` | string, nullable | Where the image lies in the private blob container. The browser loads it from `/api/assets/{id}` ([persistence](/decisions/persistence.md)) |
+| `gridWidth`, `gridHeight` | int, cells, nullable | For a map background: the map's size when the image was made. A background whose size no longer matches the map is outdated |
+| `costUsd` | decimal, nullable | What the generation cost, counted against the monthly [image budget](/decisions/image-budget.md) |
 | `createdAt` | timestamp | |
 
 # Notes
 
 A battle map can have several background assets: every "regenerate" adds one. `BattleMap.backgroundAssetId` points to the one the DM picked. Keeping the prompt and model makes it possible to repeat or tweak a result later.
+
+A map copied from the store points to the same background asset as its source, so `ownerId` stays the map it was generated for. Regenerating on the copy makes a new asset owned by the copy ([battle map](/domain/battle-map.md)).
+
+No job is ever queued automatically. A person starts every generation and confirms it first ([image budget](/decisions/image-budget.md)).

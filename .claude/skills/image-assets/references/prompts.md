@@ -15,7 +15,7 @@ The colours mark where things are. Keep every region exactly where it is and the
 <Elevation in words, if it matters: "The bridge hangs high above a deep gorge.">
 <Edge notes, if any: "The whole bottom row is a solid stone wall.">
 
-Paint real materials, not the flat guide colours. Straight-down camera, no perspective, no horizon.
+Paint real materials, not the flat guide colours: no trace of the purple or magenta may remain. Straight-down camera, no perspective, no horizon.
 No grid lines, no text, no labels, no frame, no compass.
 ```
 

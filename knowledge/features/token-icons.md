@@ -17,7 +17,7 @@ Every enemy type has its own recognisable icon.[^brief] All goblins share one ic
 
 # Requirements
 
-1. Generate one icon per [creature type](/domain/creature-type.md) from its `name` and `appearance`.
+1. Generate one icon per [creature type](/domain/creature-type.md) from its `name` and `appearance`, only when a DM asks for it and confirms the job, never automatically ([image budget](/decisions/image-budget.md)).
 2. Use a fixed style template so all icons look like one set: centred subject, top-down or portrait framing, transparent background.
 3. The app crops icons to a circle and adds a coloured ring: one colour for creatures, another for characters.
 4. Characters can use a generated portrait or an uploaded picture ([character](/domain/character.md)).
