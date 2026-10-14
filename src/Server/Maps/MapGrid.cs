@@ -28,14 +28,13 @@ public sealed class MapGrid
         // Later features in the list lie on top of earlier ones.
         foreach (var feature in layout.Features)
         {
-            for (var y = feature.Y; y < feature.Y + feature.H; y++)
+            // Clipped to the grid first: pushed layouts are checked with this grid, and a
+            // feature of a billion cells must not keep the server busy.
+            for (var y = Math.Max(0L, feature.Y); y < Math.Min(Height, (long)feature.Y + feature.H); y++)
             {
-                for (var x = feature.X; x < feature.X + feature.W; x++)
+                for (var x = Math.Max(0L, feature.X); x < Math.Min(Width, (long)feature.X + feature.W); x++)
                 {
-                    if (Inside(x, y))
-                    {
-                        _features[Index(x, y)] = feature;
-                    }
+                    _features[Index((int)x, (int)y)] = feature;
                 }
             }
         }

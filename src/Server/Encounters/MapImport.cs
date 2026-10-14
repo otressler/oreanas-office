@@ -17,7 +17,7 @@ public static class MapImport
 
     // Feature kinds, labels and ids, entrance labels and ids, and creature labels: as
     // long as a token's label, since the board shows them the same way.
-    private const int TextMaxLength = Token.LabelMaxLength;
+    public const int TextMaxLength = Token.LabelMaxLength;
 
     public sealed record Result(BattleMap Map, Encounter Encounter, List<CreatureType> NewTypes);
 
@@ -67,6 +67,13 @@ public static class MapImport
             return layoutError;
         }
 
+        // The shared layout rules catch what the parsing above lets through: overlapping
+        // features, entrance cells that aren't walkable or that two entrances share.
+        if (MapChecks.Check(name, request.Width, request.Height, layout, scene, vibe, lighting) is [var problem, ..])
+        {
+            return ToError(problem);
+        }
+
         var map = new BattleMap
         {
             CampaignId = campaignId,
@@ -108,6 +115,31 @@ public static class MapImport
     {
         elevation = Math.Round(meters ?? 0, 1, MidpointRounding.AwayFromZero);
         return Math.Abs(elevation) < MaxElevation;
+    }
+
+    // The import's error code and JSON path for the first problem of the shared checks.
+    // The parsing above has caught most rules already; what reaches this is mostly
+    // overlapping features and entrance cells that aren't walkable or are shared.
+    private static ApiError ToError(LayoutProblem problem)
+    {
+        var index = problem.Item.Index;
+        var path = problem.Item.Kind switch
+        {
+            LayoutItemKind.Cell => $"layout.cells[{index}]",
+            LayoutItemKind.Feature => $"layout.features[{index}]",
+            LayoutItemKind.Entrance => $"layout.entrances[{index}]",
+            _ => problem.Field?.ToString().ToLowerInvariant(),
+        };
+        return (problem.Code, problem.Item.Kind) switch
+        {
+            (LayoutProblemCode.TextTooLong, _) => new ApiError(ApiErrorCode.TextTooLong, path),
+            (_, LayoutItemKind.Cell) => new ApiError(ApiErrorCode.CellInvalid, path),
+            (_, LayoutItemKind.Feature) => new ApiError(ApiErrorCode.FeatureInvalid, path),
+            (_, LayoutItemKind.Entrance) => new ApiError(ApiErrorCode.EntranceInvalid, path),
+            (LayoutProblemCode.MapSizeInvalid, _) => new ApiError(ApiErrorCode.MapSizeInvalid, "width"),
+            (LayoutProblemCode.LayoutVersionUnsupported, _) => new ApiError(ApiErrorCode.LayoutVersionUnsupported, "layout.schemaVersion"),
+            _ => new ApiError(ApiErrorCode.NameInvalid, "name"),
+        };
     }
 
     private static ApiError? Description(string? text, string field, out string value)
