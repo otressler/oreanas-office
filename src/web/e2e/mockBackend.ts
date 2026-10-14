@@ -122,6 +122,19 @@ export class MockBackend {
   syncStore: S['StoreMapResponse'][] = []
   /** The oldest sync version the server accepts (the real one: Sync:MinimumVersion). */
   syncMinimumVersion = 1
+  // ---- Map backgrounds (stage 7) ----------------------------------------------------------
+  /** Every background version, newest last. */
+  readonly backgrounds: S['MapBackground'][] = []
+  /** The picked background per map id. */
+  readonly pickedBackgrounds = new Map<string, string | null>()
+  imageBudget: S['ImageBudgetResponse'] = {
+    spentUsd: 0.42,
+    limitUsd: 20,
+    monthStart: new Date().toISOString().slice(0, 8) + '01T00:00:00Z',
+    available: true,
+  }
+  /** What GET /api/assets/{id} serves for every done version: a small PNG. */
+  imageBytes = readFileSync(new URL('../public/pwa-192x192.png', import.meta.url))
   googleEnabled = false
   private readonly signedIn = new Map<BrowserContext, string | null>()
 
@@ -237,13 +250,117 @@ export class MockBackend {
   private async handle(context: BrowserContext, route: Route) {
     const request = route.request()
     const url = new URL(request.url())
+    const asset = matchPath('/api/assets/:assetId', url.pathname)
+    if (asset) {
+      const done = this.backgrounds.find((b) => b.id === asset.assetId && b.status === 'done')
+      if (!this.userId(context) || !done) return route.fulfill({ status: 404 })
+      return route.fulfill({
+        status: 200,
+        contentType: 'image/png',
+        headers: { 'Cache-Control': 'private, max-age=31536000, immutable' },
+        body: this.imageBytes,
+      })
+    }
     const [status, body] =
-      this.dispatchSync(context, request, url) ?? this.dispatch(context, request, url)
+      this.dispatchSync(context, request, url) ??
+      this.dispatchImages(context, request, url) ??
+      this.dispatch(context, request, url)
     await route.fulfill(
       body === undefined
         ? { status }
         : { status, contentType: 'application/json', body: JSON.stringify(body) },
     )
+  }
+
+  // ---- Map backgrounds (stage 7) ----------------------------------------------------------
+  // Follows src/Server/Images/ImageEndpoints.cs: the maps are the synced ones, a job is
+  // queued after the map version check, and the test finishes it (finishBackground).
+
+  /** A queued or running job of the map is done: its picture is served from now on. */
+  finishBackground(id: string): S['MapBackground'] {
+    const background = this.backgrounds.find((b) => b.id === id)
+    if (!background) throw new Error(`No background ${id}`)
+    background.status = 'done'
+    background.url = `/api/assets/${id}`
+    background.finishedAt = new Date().toISOString()
+    this.imageBudget.spentUsd = Math.round((this.imageBudget.spentUsd + 0.05) * 100) / 100
+    return { ...background }
+  }
+
+  private backgroundOf(b: S['MapBackground'], map: S['SyncMapData']): S['MapBackground'] {
+    const outdated = b.gridWidth !== map.width || b.gridHeight !== map.height
+    return { ...b, outdated }
+  }
+
+  private dispatchImages(context: BrowserContext, request: Request, url: URL): Reply | null {
+    const params =
+      matchPath('/api/campaigns/:campaignId/maps/:mapId/backgrounds', url.pathname) ??
+      matchPath('/api/campaigns/:campaignId/maps/:mapId/background', url.pathname)
+    if (!params) return null
+    const me = this.users.find((u) => u.id === this.signedIn.get(context)) ?? null
+    if (!me) return [401]
+    const campaign = this.campaigns.find((c) => c.id === params.campaignId)
+    if (!campaign) return [404]
+    if (memberOf(campaign, me.id)?.role !== 'dm') return [403]
+    const item = this.syncItems.get(params.mapId!)
+    if (!item?.map || item.campaignId !== campaign.id) return [404]
+    const map = item.map
+    const method = request.method()
+    const body = (request.postDataJSON() ?? {}) as Record<string, unknown>
+    const own = this.backgrounds.filter((b) => b.mapId === item.id)
+
+    if (url.pathname.endsWith('/backgrounds') && method === 'GET') {
+      return [
+        200,
+        {
+          pickedAssetId: this.pickedBackgrounds.get(item.id) ?? null,
+          versions: own.toReversed().map((b) => this.backgroundOf(b, map)),
+          budget: this.imageBudget,
+        },
+      ]
+    }
+    if (url.pathname.endsWith('/backgrounds') && method === 'POST') {
+      if (body.mapVersion !== item.version) return error('mapChanged', undefined, 409)
+      if (own.some((b) => b.status === 'queued' || b.status === 'running')) {
+        return error('generationRunning', undefined, 409)
+      }
+      if (!this.imageBudget.available) return error('imagesUnavailable', undefined, 409)
+      if (this.imageBudget.spentUsd >= this.imageBudget.limitUsd) {
+        return error('imageBudgetExhausted', undefined, 409)
+      }
+      const background: S['MapBackground'] = {
+        id: randomUUID(),
+        mapId: item.id,
+        status: 'queued',
+        url: null,
+        gridWidth: map.width,
+        gridHeight: map.height,
+        x: 0,
+        y: 0,
+        width: map.width,
+        height: map.height,
+        outdated: false,
+        layoutChanged: false,
+        failure: null,
+        createdAt: new Date().toISOString(),
+        finishedAt: null,
+      }
+      this.backgrounds.push(background)
+      return [202, background]
+    }
+    if (url.pathname.endsWith('/background') && method === 'PUT') {
+      const assetId = (body.assetId as string | null) ?? null
+      if (assetId !== null) {
+        const picked = own.find((b) => b.id === assetId && b.status === 'done')
+        if (!picked) return error('backgroundNotFound', undefined, 409)
+        if (this.backgroundOf(picked, map).outdated) {
+          return error('backgroundOutdated', undefined, 409)
+        }
+      }
+      this.pickedBackgrounds.set(item.id, assetId)
+      return [204]
+    }
+    return [404]
   }
 
   // ---- Sync and the map store (stage 6) ---------------------------------------------------

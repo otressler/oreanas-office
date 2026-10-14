@@ -510,38 +510,52 @@ export function gridAlpha(cellDevicePx: number, dpr: number): number {
 
 /**
  * The grid, one device pixel wide at every zoom: each line is snapped to the middle
- * of a device pixel, drawn without the world transform.
+ * of a device pixel, drawn without the world transform. Over a background picture each
+ * line gets a light twin one pixel further, so the grid reads on dark and light ground.
  */
-export function drawGrid(ctx: CanvasRenderingContext2D, scene: MapScene, dpr: number): void {
+export function drawGrid(
+  ctx: CanvasRenderingContext2D,
+  scene: MapScene,
+  dpr: number,
+  { onPicture = false }: { onPicture?: boolean } = {},
+): void {
   const m = ctx.getTransform()
   const alpha = gridAlpha(m.a * CELL, dpr)
   if (alpha <= 0) return
   const { width: cw, height: ch } = ctx.canvas
   const sx = (cellX: number) => Math.round(m.a * cellX * CELL + m.e)
   const sy = (cellY: number) => Math.round(m.d * cellY * CELL + m.f)
+  const stroke = (offset: number, color: string) => {
+    ctx.beginPath()
+    for (const s of scene.gridLines) {
+      const x1 = sx(s.x1)
+      const y1 = sy(s.y1)
+      const x2 = sx(s.x2)
+      const y2 = sy(s.y2)
+      if (Math.max(x1, x2) < -1 || Math.min(x1, x2) > cw + 1) continue
+      if (Math.max(y1, y2) < -1 || Math.min(y1, y2) > ch + 1) continue
+      // One pixel longer at the end, so corners close.
+      if (x1 === x2) {
+        ctx.moveTo(x1 + 0.5 + offset, y1)
+        ctx.lineTo(x1 + 0.5 + offset, y2 + 1)
+      } else {
+        ctx.moveTo(x1, y1 + 0.5 + offset)
+        ctx.lineTo(x2 + 1, y1 + 0.5 + offset)
+      }
+    }
+    ctx.strokeStyle = color
+    ctx.stroke()
+  }
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.beginPath()
-  for (const s of scene.gridLines) {
-    const x1 = sx(s.x1)
-    const y1 = sy(s.y1)
-    const x2 = sx(s.x2)
-    const y2 = sy(s.y2)
-    if (Math.max(x1, x2) < -1 || Math.min(x1, x2) > cw + 1) continue
-    if (Math.max(y1, y2) < -1 || Math.min(y1, y2) > ch + 1) continue
-    // One pixel longer at the end, so corners close.
-    if (x1 === x2) {
-      ctx.moveTo(x1 + 0.5, y1)
-      ctx.lineTo(x1 + 0.5, y2 + 1)
-    } else {
-      ctx.moveTo(x1, y1 + 0.5)
-      ctx.lineTo(x2 + 1, y1 + 0.5)
-    }
-  }
-  ctx.strokeStyle = PATTERN_COLORS.grid(alpha)
   ctx.lineWidth = 1
   ctx.lineCap = 'butt'
-  ctx.stroke()
+  if (onPicture) {
+    stroke(0, PATTERN_COLORS.gridOnPicture(alpha))
+    stroke(1, PATTERN_COLORS.gridOnPictureLight(alpha))
+  } else {
+    stroke(0, PATTERN_COLORS.grid(alpha))
+  }
   ctx.restore()
 }
 

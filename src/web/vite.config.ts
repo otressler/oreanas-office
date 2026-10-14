@@ -45,11 +45,26 @@ export default defineConfig({
       },
       workbox: {
         // App shell and static files only. API calls, sign-in and SignalR are
-        // never cached (knowledge/decisions/frontend-stack.md).
+        // never cached (knowledge/decisions/frontend-stack.md), except images below.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/hubs(\/|$)/, /^\/signin-/, /^\/signout/],
         cleanupOutdatedCaches: true,
+        // Generated images never change once made, so the board shows them again offline
+        // and after reloads without a download (knowledge/decisions/persistence.md, "How
+        // images reach the browser"). Only /api/assets/; no other API route is cached.
+        runtimeCaching: [
+          {
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && url.pathname.startsWith('/api/assets/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'oreana-images',
+              expiration: { maxEntries: 60 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
     }),
   ],

@@ -1,13 +1,17 @@
 // The preview: the map as the board shows it, with a test token (lane: terrain and
 // elevation). Clicking a cell puts the test token there if the stage 4 target check
 // passes; the cells its top-left corner may go to are highlighted. Nothing is saved.
-import { useId, useMemo, useState } from 'react'
-import type { CreatureSize } from '../../api/types'
+// Inside the editor it shows the map's picked background (the "Hintergrund" panel's query)
+// while online and as long as it fits the map's size.
+import { useContext, useId, useMemo, useState } from 'react'
+import type { BoardBackground, CreatureSize } from '../../api/types'
 import { Board } from '../../board/Board'
 import { buildGrid, placementElevation, type GridPoint } from '../../board/geometry'
 import { inputClass } from '../../components/styles'
 import { formatElevation } from '../../lib/units'
 import { de } from '../../text/de'
+import { pickedBoardBackground, useMapBackgrounds } from '../background/backgrounds'
+import { EditorTargetContext, type EditorTarget } from '../encounter/store'
 import type { EditorMap } from '../model'
 import { canStand, previewBoard, standCells, type TestToken } from './placement'
 
@@ -18,6 +22,27 @@ const SIZES = Object.keys(de.sizes) as CreatureSize[]
 type Message = { kind: 'placed' | 'blocked'; text: string } | null
 
 export function PreviewPane({ doc }: { doc: EditorMap }) {
+  const target = useContext(EditorTargetContext)
+  return target ? (
+    <WithBackground target={target} doc={doc} />
+  ) : (
+    <Preview doc={doc} background={null} />
+  )
+}
+
+/** The preview of a map the server may have pictures for. */
+function WithBackground({ target, doc }: { target: EditorTarget; doc: EditorMap }) {
+  const { query, enabled } = useMapBackgrounds(target.campaignId, target.mapId)
+  const { width, height } = doc
+  const data = enabled ? query.data : undefined
+  const background = useMemo(
+    () => pickedBoardBackground(data, { width, height }),
+    [data, width, height],
+  )
+  return <Preview doc={doc} background={background} />
+}
+
+function Preview({ doc, background }: { doc: EditorMap; background: BoardBackground | null }) {
   const grid = useMemo(() => buildGrid(doc), [doc])
   const [size, setSize] = useState<CreatureSize>('medium')
   const [token, setToken] = useState<TestToken | null>(null)
@@ -27,7 +52,10 @@ export function PreviewPane({ doc }: { doc: EditorMap }) {
   const highlight = useMemo(() => standCells(grid, size), [grid, size])
   // A token from before the map changed stays only where it may still stand.
   const shown = token && canStand(grid, token.size, token.x, token.y) ? token : null
-  const board = useMemo(() => previewBoard(doc, grid, t.token, shown), [doc, grid, shown])
+  const board = useMemo(
+    () => previewBoard(doc, grid, t.token, shown, background),
+    [doc, grid, shown, background],
+  )
 
   const placedText = (next: TestToken) =>
     t.placed(
