@@ -1,7 +1,7 @@
 // The preview's data: the map as a board state the stage 3 renderer understands, and
 // where a test token may stand (the placement rule of knowledge/domain/encounter.md,
 // with no other tokens on the map).
-import type { BoardState, BoardToken, CreatureSize } from '../../api/types'
+import type { BoardBackground, BoardState, BoardToken, CreatureSize } from '../../api/types'
 import { cellKey, fitsAt, placementElevation, type MapGrid } from '../../board/geometry'
 import type { EditorMap } from '../model'
 
@@ -30,12 +30,16 @@ export function standCells(grid: MapGrid, size: CreatureSize): Set<string> {
   return cells
 }
 
-/** The map as the board shows it to players, with the test token if one stands on it. */
+/**
+ * The map as the board shows it to players, with the test token if one stands on it and
+ * the picked background picture if it fits the map.
+ */
 export function previewBoard(
   doc: EditorMap,
   grid: MapGrid,
   label: string,
   token: TestToken | null,
+  background: BoardBackground | null = null,
 ): BoardState {
   const tokens: BoardToken[] = token
     ? [
@@ -67,7 +71,7 @@ export function previewBoard(
       width: doc.width,
       height: doc.height,
       layout: doc.layout,
-      background: null,
+      background,
     },
     tokens,
     isSessionDm: false,

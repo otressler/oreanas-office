@@ -917,9 +917,72 @@ export const de = {
     gateWaking: 'Inzwischen Karten bearbeiten',
 
     /** The editor's side panel and header (src/editor/scene). */
-    /** The "Hintergrund" tool (lane: frontend fills the rest). */
+    /** The "Hintergrund" tool (src/editor/background): generate, follow, compare and pick. */
     background: {
       tool: 'Hintergrund',
+      help: 'Ein Bildmodell malt aus dem Layout und der Beschreibung ein Bild der Karte. Das Raster zeichnet die App darüber.',
+      offline:
+        'Hintergründe brauchen eine Verbindung: zum Erzeugen, für die Versionen und zum Auswählen.',
+      notSynced:
+        'Diese Karte ist noch nicht auf dem Server. Beim Erzeugen wird sie zuerst synchronisiert.',
+      loadFailed: 'Die Hintergründe ließen sich nicht laden.',
+      generate: 'Hintergrund erzeugen',
+      regenerate: 'Neu erzeugen',
+      running: 'Ein Hintergrund wird gerade erzeugt. Du kannst so lange weiterarbeiten.',
+      budgetExhausted:
+        'Das Bildbudget für diesen Monat ist aufgebraucht. Ab dem nächsten Monat lassen sich wieder Hintergründe erzeugen.',
+      unavailable:
+        'Auf dem Server ist gerade kein Bildmodell eingerichtet. Hintergründe lassen sich nicht erzeugen.',
+      /** The month's spending, e.g. "Diesen Monat: 0,42 $ von 20,00 $". */
+      spent: (spent: string, limit: string) => `Diesen Monat: ${spent} von ${limit}`,
+      /** The picked background was made for another size. */
+      pickedOutdated:
+        'Der gewählte Hintergrund passt nicht mehr zur Kartengröße. Für die neue Größe braucht es ein neues Bild; bis dahin zeigt das Brett die einfache Darstellung.',
+      syncing: 'Die Karte wird synchronisiert…',
+      syncOffline:
+        'Ohne Verbindung lässt sich die Karte nicht synchronisieren. Es wurde nichts erzeugt.',
+      syncBlocked:
+        'Die Karte ließ sich nicht synchronisieren. Kläre zuerst das Problem bei der Synchronisierung (oben „Sync“), dann versuch es noch einmal. Es wurde nichts erzeugt.',
+      queued: 'Der Auftrag ist angenommen. Das Bild ist in etwa einer halben Minute fertig.',
+      confirm: {
+        title: 'Hintergrund erzeugen?',
+        sync: 'Die Karte wird zuerst synchronisiert, denn der Server malt nach seiner Kopie.',
+        quality:
+          'Das Bildmodell malt den Hintergrund in hoher Qualität. Das dauert etwa eine halbe Minute; der Editor bleibt so lange benutzbar.',
+        cost: 'Jedes Bild kostet ein paar Cent vom monatlichen Bildbudget.',
+        ok: 'Erzeugen',
+      },
+      versions: 'Versionen',
+      empty: 'Für diese Karte gibt es noch keinen Hintergrund.',
+      /** The alt text of a version's picture. */
+      versionAlt: (time: string) => `Hintergrund vom ${time}`,
+      status: {
+        queued: 'In der Warteschlange',
+        running: 'Wird gemalt…',
+        done: 'Fertig',
+        failed: 'Fehlgeschlagen',
+      },
+      rejected:
+        'Das Bildmodell hat diese Szene abgelehnt. Versuch es mit anderen Texten unter „Beschreibung“.',
+      failed: 'Das hat nicht geklappt. Versuch es noch einmal.',
+      outdated: 'Veraltet',
+      outdatedHint: 'Für eine andere Kartengröße gemalt; lässt sich nicht mehr auswählen.',
+      layoutChanged:
+        'Das Layout hat sich seitdem geändert. Das Bild passt zur Größe, zeigt aber vielleicht nicht mehr alles richtig.',
+      picked: 'Ausgewählt',
+      pick: 'Auswählen',
+      pickNone: 'Ohne Hintergrund',
+      noneHint: 'Ohne Hintergrund zeigt das Brett die einfache Darstellung des Layouts.',
+      enlarge: 'Größer ansehen',
+      compare: {
+        title: 'Hintergründe vergleichen',
+        previous: 'Vorherige',
+        next: 'Nächste',
+        /** "2 von 5". */
+        position: (index: number, count: number) => `${index} von ${count}`,
+        grid: 'Mit dem Raster der Karte darüber, so wie das Brett es zeichnet.',
+        close: 'Schließen',
+      },
     },
     scene: {
       /** The toolbar entry with the scene, vibe and lighting texts. */
