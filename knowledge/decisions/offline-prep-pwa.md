@@ -125,6 +125,13 @@ The "Sync" button, before starting an encounter, when leaving the editor, when t
 - An existing ID must belong to the campaign the push names, and a new item's ID must not exist anywhere.
 - References stay inside the campaign: an encounter's map and its tokens' creature types belong to the same campaign.
 
+# As built (stage 5)
+
+- Offline data lives in an IndexedDB database per user (`oreana-<userId>`, Dexie), with battle maps and a copy of the user's campaigns. Each map carries `baseVersion`, the "changed" flag and the edit counter of the sync protocol.
+- The map pages open without the server and outside the waking screen. They trust the last user the server confirmed on this device, kept in local storage; signing out forgets that user but keeps their data. Without a remembered user the pages send people to sign in.
+- The campaign copy is refreshed whenever the campaign list or a campaign page loads.
+- The browser is asked to keep the storage when a map is created or imported.
+
 # Why split it this way
 
 Scale-to-zero already makes waking the server cheap, so offline editing isn't needed to save money. Its value is that prep works anywhere and stays fast. Live play is real-time across devices and can't work offline, so that part always uses the server.

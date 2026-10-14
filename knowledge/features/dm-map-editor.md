@@ -37,4 +37,17 @@ Let the DM build a fight quickly. This is not a full level editor: the DM places
 - Works on a laptop first. DMs prepare at a desk, and phone editing isn't needed. Below about 1024 px of width the editor isn't offered: the page says "Der Karteneditor ist für Laptops gedacht" and shows the map list without editing (decided by the project owner on 2026-10-14).
 - The map is playable even before an image exists, using the plain layout rendering.
 
+# As built (stage 5)
+
+Built on `stage/5-offline-map-editor`; not yet confirmed by the project owner at the gate.
+
+- **Pages.** `/kampagnen/:id/karten` lists the campaign's maps in this browser, `/kampagnen/:id/karten/:mapId` is the editor, and `/karten` lists the DM's campaigns from the offline copy. The offline and waking screens link to `/karten`, and the campaign page links to its maps.
+- **Tools and keys.** Terrain: brush `B`, rectangle `R`, fill `F`, with digits 1–5 for Boden, Schwieriges Gelände, Wasser, Wand and Leer (void). Elevation: brush `H` and rectangle, with quick values −3, −1,5, 0, +1,5 and +3; cell heights show as labels while an elevation tool is active. Alt+click takes the terrain or height of a cell. Features: select `V`, place `O`; entrances: `E`. Undo is Ctrl+Z, redo Ctrl+Shift+Z or Ctrl+Y. The right or middle mouse button, or Space, pans; the wheel zooms.
+- **Suggested feature kinds** preset "blocks movement": Brücke, Tür, Treppe, Leiter and Podest don't block; Säule, Baum, Felsen, Kiste, Fass, Tisch, Altar, Brunnen, Wagen and Statue do. The DM can change it.
+- **Prüfung.** A side panel lists every layout rule break ([battle map](/domain/battle-map.md)); clicking one selects the item. The rules are written as shared test cases in `src/web/src/editor/validation.cases.json` for the server's checks in stage 6.
+- **Resize** keeps entrance cells that are no longer on the edge; the Prüfung panel flags them.
+- **Preview.** The map as the board draws it, with a test token of a chosen size that may stand only where the stage 4 target check allows. Nothing is saved.
+- **Saving.** Every change is saved in the browser about 0.4 s after the last edit, and at once when the page hides or the editor closes. The header says "Auf diesem Gerät gespeichert"; maps show "Nur auf diesem Gerät" until stage 6 syncs them.
+- **Map files.** The editor exports the map in the import-file format (without creatures). The map list imports such a file as a new map in the browser; a file that breaks layout rules is still imported, and the list says how many problems the Prüfung panel shows.
+
 [^brief]: Original project brief

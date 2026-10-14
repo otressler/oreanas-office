@@ -271,7 +271,7 @@ Completes roadmap phase 2.
 
 **Order**
 
-1. *Sequential:* the [sync protocol](/decisions/offline-prep-pwa.md) is approved (2026-10-14). Write the endpoint stubs and types for push and the per-campaign pull list, the `Version` and `archivedAt` columns, the encounter's layout copy and the token's `size`, and the shared check test cases.
+1. *Sequential:* the [sync protocol](/decisions/offline-prep-pwa.md) is approved (2026-10-14). Write the endpoint stubs and types for push and the per-campaign pull list, the `Version` and `archivedAt` columns, the encounter's layout copy and the token's `size`, and the shared check test cases: the server reads `src/web/src/editor/validation.cases.json` from stage 5. The server's import checks still differ from them: they don't reject overlapping features, entrance cells that aren't walkable or that two entrances share, or extra decimals, they fill in missing ids, and they stop at the first problem.
 2. *Parallel, three lanes:*
    - **Sync backend:** push with per-item answers, the pull list, rights and ID checks, concurrency and retry tests.
    - **Sync client:** the Dexie change queue, push and pull, the conflict and rejection dialogs, the status in the editor header, Web Locks.
