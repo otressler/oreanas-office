@@ -232,6 +232,7 @@ export const de = {
             title: 'Kreaturen, Kampfvorbereitung und Abgleich',
             items: [
               'Kreaturenarten anlegen und auf der Karte platzieren, automatisch nummeriert: Goblin 1, Goblin 2 …',
+              'Objektkatalog mit Symbolen und Suche: Brücken, Türen, Säulen, Lagerfeuer und mehr.',
               'Kämpfe offline vorbereiten und als Entwurf oder bereit speichern.',
               'Mit dem Server abgleichen. Bei Konflikten fragt die App, welche Fassung bleibt.',
               'Kämpfe direkt aus dem Editor starten.',

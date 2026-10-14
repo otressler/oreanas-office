@@ -6,7 +6,7 @@ import { de } from '../text/de'
  * The last stage of knowledge/implementation-plan.md that is built and on `main`.
  * Raise it when a stage is merged.
  */
-export const BUILT_THROUGH_STAGE = 5
+export const BUILT_THROUGH_STAGE = 6
 
 const t = de.roadmap
 
