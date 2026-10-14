@@ -397,7 +397,81 @@ export const de = {
   },
 
   /** Terrain, elevation, resizing and the preview (src/editor/terrain, src/editor/preview). */
-  editorTerrain: {},
+  editorTerrain: {
+    tools: {
+      brush: 'Pinsel',
+      rect: 'Rechteck',
+      fill: 'Füllen',
+      elevationBrush: 'Höhenpinsel',
+      elevationRect: 'Höhenrechteck',
+    },
+    /** What the terrain tools paint; "Leer" takes cells out of the map. */
+    terrains: {
+      floor: 'Boden',
+      difficult: 'Schwieriges Gelände',
+      water: 'Wasser',
+      wall: 'Wand',
+      void: 'Leer',
+    } satisfies Record<import('../api/types').Terrain, string>,
+    terrainChoice: 'Gelände',
+    toolHints: {
+      brush: 'Ziehen malt jedes Feld unter dem Zeiger.',
+      rect: 'Ein Rechteck aufziehen, beim Loslassen wird es gemalt.',
+      fill: 'Ein Klick füllt die zusammenhängende Fläche mit gleichem Gelände.',
+      elevationBrush: 'Ziehen setzt die Höhe auf jedes Feld unter dem Zeiger.',
+      elevationRect: 'Ein Rechteck aufziehen, beim Loslassen bekommt es die Höhe.',
+    },
+    terrainKeys: 'Tasten 1–5 wählen das Gelände, Alt+Klick übernimmt es von einem Feld.',
+    voidHint: '„Leer“ nimmt Felder aus der Karte, ihre Höhe mit.',
+    elevation: 'Höhe in Metern',
+    /** `max` is already formatted, e.g. "10.000 m". */
+    elevationInvalid: (max: string) =>
+      `Eine Zahl mit höchstens einer Nachkommastelle wie „1,5“ oder „-3“, unter ${max}.`,
+    elevationQuick: 'Schnellwahl',
+    elevationKeys:
+      'Tasten 1–5 wählen die Schnellwahl, Alt+Klick übernimmt die Höhe eines Feldes. Leere Felder gehören nicht zur Karte und bekommen keine Höhe.',
+    resize: {
+      title: 'Größe',
+      /** The size in cells, e.g. "20 × 15 Felder". */
+      cells: (width: number, height: number) => `${width} × ${height} Felder`,
+      /** The size in meters; both are already formatted, e.g. "30 m × 22,5 m". */
+      meters: (width: string, height: string) => `${width} × ${height}`,
+      edges: 'Spalten und Zeilen hinzufügen oder entfernen',
+      left: 'Links',
+      right: 'Rechts',
+      top: 'Oben',
+      bottom: 'Unten',
+      hint: 'Plus fügt hinzu, Minus nimmt weg. Neue Felder sind leer.',
+      after: (width: number, height: number) => `Danach: ${width} × ${height} Felder`,
+      notWhole: 'Bitte nur ganze Zahlen eingeben.',
+      outOfRange: (max: number) => `Jede Seite braucht 1 bis ${max} Felder.`,
+      /** What the resize removes, e.g. "Dabei fallen 2 Objekte und 1 Eingang weg." */
+      losses: (features: number, entrances: number) => {
+        const parts = [
+          features > 0 ? (features === 1 ? '1 Objekt' : `${features} Objekte`) : '',
+          entrances > 0
+            ? entrances === 1
+              ? '1 Ein- oder Ausgang'
+              : `${entrances} Ein- und Ausgänge`
+            : '',
+        ].filter(Boolean)
+        return `Dabei ${features + entrances === 1 ? 'fällt' : 'fallen'} ${parts.join(' und ')} weg. Rückgängig holt sie zurück.`
+      },
+      apply: 'Größe ändern',
+    },
+    preview: {
+      bar: 'Testfigur',
+      size: 'Größe',
+      hint: 'Klicke auf ein Feld, um die Testfigur mit ihrer linken oberen Ecke dort hinzustellen. Markierte Felder sind erlaubt. Nichts davon wird gespeichert.',
+      token: 'Testfigur',
+      blocked: 'Dort kann die Testfigur nicht stehen.',
+      /** Where the test token stands; `elevation` is already formatted, e.g. "Höhe 1,5 m". */
+      placed: (x: number, y: number, elevation: string) =>
+        `Die Testfigur steht auf ${x}, ${y} (${elevation}).`,
+      sizeDoesNotFit: 'In dieser Größe passt die Testfigur dort nicht hin.',
+      remove: 'Testfigur entfernen',
+    },
+  },
 
   /** Features, entrances and layout checks (src/editor/features). */
   editorFeatures: {},
