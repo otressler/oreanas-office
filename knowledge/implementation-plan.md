@@ -228,13 +228,13 @@ Distance rules are out of the proof of concept: no path, no distance preview and
 
 - First, remove speed from the code: the character form and list, the setup screen, creature types and the database column. The map import ignores `speedMeters` ([character](/domain/character.md)).
 - Dexie (IndexedDB) storage for battle maps, with a version number and a "changed" flag per item, ready for stage 6 sync.
-- Editor for laptops: new map N×M up to the grid limit; terrain brush with single cell, rectangle and fill; elevation painting; features with footprint, kind, label, elevation and "blocks movement"; entrances and exits on edge cells; scene, vibe and lighting text ([DM map editor](/features/dm-map-editor.md)).
+- Editor for laptops: new map N×M up to the grid limit, resized later at any edge; terrain brush with single cell, rectangle and fill; elevation painting; features with footprint, kind, label, elevation and "blocks movement"; entrances and exits on walkable cells at the grid edge; scene, vibe and lighting text ([DM map editor](/features/dm-map-editor.md)). The layout rules on the [battle map](/domain/battle-map.md) are checked in the editor and become the shared checks of stage 6. Below about 1024 px of width only the map list is shown, with a hint that the editor is meant for laptops.
 - Undo and redo inside the editor.
 - Preview with the stage 3 renderer, and a test placement with the stage 4 target check.
 - Works completely offline, with the editor routes in the cached app shell. Export and import of the layout JSON stays as a tool.
 - Map list per campaign: open a map to edit it, duplicate it, archive it and bring it back. Nothing is deleted ([battle map](/domain/battle-map.md)).
 - Offline storage per user, with GUIDs made in the browser, a request to keep the storage, and a "not synced yet" mark. A copy of the user's campaigns from the last time online, so maps can be built for them offline ([offline prep](/decisions/offline-prep-pwa.md)).
-- Maps built here stay in the browser until stage 6 adds sync; stage 6 follows right after this gate.
+- Maps built here stay in the browser until stage 6 adds sync; stage 6 follows right after this gate. The map list shows only the maps in the browser: maps on the server, such as imports and samples, join it with the stage 6 pull.
 
 **Order**
 
@@ -251,6 +251,7 @@ Distance rules are out of the proof of concept: no path, no distance preview and
 - [ ] Close the browser, reopen it offline: the map is still there.
 - [ ] A test token stands on the bridge but not on a wall or in the gorge.
 - [ ] Undo and redo behave as expected while painting.
+- [ ] Grow the map by two columns on the left: the layout moves along and the new cells are void. Shrink it again: features outside the grid are gone, and undo brings them back.
 - [ ] Duplicate the gorge crossing and change the copy: the original stays as it was. Archive the copy: it can no longer be picked. Bring it back: it can be picked again.
 
 # Stage 6 — Bestiary, encounter prep and sync

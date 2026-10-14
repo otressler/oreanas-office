@@ -52,9 +52,9 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 - **`cells`**: each cell appears at most once. A cell missing from the list is `void`, so only the map's own cells need to be written down. Walls are part of the map and must be listed. `elevation` defaults to 0.
 - **`terrain`**: `void` (not part of the map) | `floor` | `difficult` | `water` | `wall`. The walkable area is everything that isn't `void` or `wall`.
 - **`elevation`**: height in meters (one decimal) relative to the map's base level. Unlike distances, it isn't tied to whole squares. Shown to players. How it affects movement is an open question in the [movement rules](/rules/movement-distance.md).
-- **`features`**: the few important objects (bridge, pillar, door, stairs…). `kind` is free text, which also feeds the image prompt. The footprint is a rectangle in cells.
+- **`features`**: the few important objects (bridge, pillar, door, stairs…). `kind` is free text, which also feeds the image prompt. The footprint is a rectangle in cells that lies inside the grid. Features don't overlap each other, but may lie over `void` or walls (a bridge over a gorge, a door in a wall).
 - **`schemaVersion`**: the layout format version. Older layouts are upgraded when loaded ([backward compatibility](/decisions/backward-compatibility.md)).
-- **`entrances`**: `entrance` | `exit` | `both`, on edge cells.
+- **`entrances`**: `entrance` | `exit` | `both`. Every cell lies on the outer edge of the grid and is one a token may stand on: walkable terrain, or the footprint of a feature that doesn't block movement.
 
 # Import file
 
