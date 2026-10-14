@@ -25,6 +25,7 @@ import { useWideScreen } from '../lib/useWideScreen'
 import { useCampaignCopy } from '../offline/campaigns'
 import { useLocalUser } from '../offline/localUser'
 import { de } from '../text/de'
+import { checkLayout } from '../editor/validation'
 import { MapFileError, parseMapFile } from './mapFile'
 import { keepStorage } from './storage'
 import { SyncMark } from './SyncMark'
@@ -346,7 +347,9 @@ function ImportPanel({
       const map = parseMapFile(await file.text())
       await createMap(db, campaignId, map)
       keepStorage()
-      onDone({ note: t.imported(map.name) })
+      // Imported as it is: the DM fixes rule breaks in the editor, which lists them.
+      const problems = checkLayout(map).length
+      onDone({ note: problems ? t.importedWithProblems(map.name, problems) : t.imported(map.name) })
     } catch (error) {
       onDone({ error: error instanceof MapFileError ? error.message : t.file.unreadable })
     } finally {

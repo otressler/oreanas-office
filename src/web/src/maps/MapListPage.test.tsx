@@ -188,6 +188,33 @@ describe('MapListPage', () => {
     await waitFor(() => expect(persist).toHaveBeenCalledTimes(1))
   })
 
+  it('imports a map that breaks layout rules and says how many problems the editor shows', async () => {
+    const user = userEvent.setup()
+    await seedOffline()
+    await openList()
+
+    // An entrance in the middle of the map, on void.
+    const content = JSON.stringify({
+      name: 'Schief',
+      width: 6,
+      height: 6,
+      layout: {
+        schemaVersion: 1,
+        cells: [],
+        entrances: [{ id: 'e1', kind: 'entrance', label: '', cells: [[3, 3]] }],
+      },
+    })
+    await user.upload(
+      screen.getByLabelText(t.importLabel),
+      new File([content], 'schief.json', { type: 'application/json' }),
+    )
+
+    expect(
+      await screen.findByText(/„Schief“ ist importiert\. Die Prüfung im Editor meldet/),
+    ).toBeInTheDocument()
+    expect(await listMaps(db(), CAMPAIGN_ID)).toHaveLength(1)
+  })
+
   it('refuses a file that isn’t a map, with a German message', async () => {
     const user = userEvent.setup()
     await seedOffline()

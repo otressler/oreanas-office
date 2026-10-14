@@ -646,6 +646,9 @@ export const de = {
       'Eine Kartendatei im JSON-Format, etwa eine exportierte Karte. Kreaturen in der Datei werden hier nicht übernommen.',
     importLabel: 'Datei wählen',
     imported: (name: string) => `„${name}“ ist importiert.`,
+    /** After an import whose layout breaks rules; the editor's Prüfung lists them. */
+    importedWithProblems: (name: string, count: number) =>
+      `„${name}“ ist importiert. Die Prüfung im Editor meldet ${count === 1 ? 'ein Problem' : `${count} Probleme`}.`,
     file: {
       unreadable: 'Diese Datei lässt sich nicht lesen. Ist es wirklich eine JSON-Datei?',
       notAMap: 'Diese Datei ist keine Kartendatei.',

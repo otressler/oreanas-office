@@ -61,11 +61,11 @@ test('two people register, create and join a campaign, and run a session', async
   await characters.getByRole('button', { name: text.newCharacter }).click()
   await characters.getByLabel(text.characterName).fill('Brom Eisenbart')
   await characters.getByRole('button', { name: text.create }).click()
-  await expect(characters).toContainText('Geschwindigkeit 9 m')
+  await expect(characters).toContainText('Mittelgroß')
 
   await mira.reload()
   await expect(panel(mira, text.charactersTitle)).toContainText('Brom Eisenbart')
-  await expect(panel(mira, text.charactersTitle)).toContainText('Geschwindigkeit 9 m')
+  await expect(panel(mira, text.charactersTitle)).toContainText('Mittelgroß')
 
   // Mira promotes Brom, creates a session, starts it and hands it to him.
   const members = panel(mira, 'Mitglieder')

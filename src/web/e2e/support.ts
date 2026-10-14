@@ -64,19 +64,27 @@ export const text = {
   editorNarrowTitle: 'Der Karteneditor ist für Laptops gedacht',
 }
 
-/** The screen position of a cell's centre on the board, read from the Konva stage's transform. */
-export async function cellCentre(page: Page, x: number, y: number) {
-  const surface = await page.locator('[data-board-surface]').boundingBox()
+/**
+ * The screen position of a cell's centre on the board (or, with `surface`, the map
+ * editor's canvas), read from the newest Konva stage's transform.
+ */
+export async function cellCentre(
+  page: Page,
+  x: number,
+  y: number,
+  surface = '[data-board-surface]',
+) {
+  const box = await page.locator(surface).boundingBox()
   const stage = await page.evaluate(() => {
     const s = (
       window as unknown as { Konva: { stages: { x(): number; y(): number; scaleX(): number }[] } }
-    ).Konva.stages[0]!
+    ).Konva.stages.at(-1)!
     return { x: s.x(), y: s.y(), scale: s.scaleX() }
   })
   const cell = 64 * stage.scale
   return {
-    x: surface!.x + stage.x + (x + 0.5) * cell,
-    y: surface!.y + stage.y + (y + 0.5) * cell,
+    x: box!.x + stage.x + (x + 0.5) * cell,
+    y: box!.y + stage.y + (y + 0.5) * cell,
   }
 }
 

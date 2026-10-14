@@ -64,6 +64,9 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     restoreMocks: true,
+    // Form tests type through user-event and some open the lazily loaded editor; under a
+    // full parallel run on a laptop they can take longer than the default 5 s.
+    testTimeout: 15_000,
     unstubGlobals: true,
   },
 })

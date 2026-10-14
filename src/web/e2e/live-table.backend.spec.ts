@@ -45,7 +45,7 @@ async function startFight(browser: Browser, page: Page) {
   await characters.getByRole('button', { name: text.newCharacter }).click()
   await characters.getByLabel(text.characterName).fill('Ilse')
   await characters.getByRole('button', { name: text.create }).click()
-  await expect(characters).toContainText('Geschwindigkeit 9 m')
+  await expect(characters).toContainText('Mittelgroß')
 
   await oreana.reload()
   const sessions = panel(oreana, text.sessionsTitle)
