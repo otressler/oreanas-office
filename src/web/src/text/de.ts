@@ -403,7 +403,113 @@ export const de = {
   editorFeatures: {},
 
   /** The map list, scene text, offline pages and file export (src/editor/scene, src/maps). */
-  maps: {},
+  maps: {
+    /** The map list's heading; `campaign` is the campaign's name. */
+    title: (campaign: string) => `Karten – ${campaign}`,
+    back: 'Zur Kampagne',
+    intro: 'Karten entstehen in diesem Browser und lassen sich auch ohne Verbindung bearbeiten.',
+    /** The link on the campaign page. */
+    campaignLink: 'Karten',
+    campaignLinkHint: 'Karten anlegen und bearbeiten, auch ohne Verbindung.',
+    activeTitle: 'Karten',
+    empty: 'Noch keine Karten. Lege eine neue an oder importiere eine Kartendatei.',
+    archivedTitle: (count: number) => `Archiviert (${count})`,
+    archivedHint: 'Archivierte Karten werden nicht zum Auswählen angeboten. Gelöscht wird nichts.',
+    /** Size in cells, then meters, e.g. "20 × 15 Felder (30 m × 22,5 m)". */
+    size: (width: number, height: number, widthMeters: string, heightMeters: string) =>
+      `${width} × ${height} Felder (${widthMeters} × ${heightMeters})`,
+    /** `when` is formatted, e.g. "14.10., 18:30". */
+    changedAt: (when: string) => `Geändert ${when}`,
+    /** A map the server has never seen (stage 5: every map). */
+    localOnly: 'Nur auf diesem Gerät',
+    localOnlyTitle: 'Diese Karte liegt nur in diesem Browser und ist noch nicht synchronisiert.',
+    /** A synced map with local changes (from stage 6 on). */
+    notSynced: 'Nicht synchronisiert',
+    edit: 'Bearbeiten',
+    duplicate: 'Duplizieren',
+    archive: 'Archivieren',
+    restore: 'Zurückholen',
+    /** Accessible names of a row's buttons, which repeat for every map. */
+    editMap: (name: string) => `${name} bearbeiten`,
+    duplicateMap: (name: string) => `${name} duplizieren`,
+    archiveMap: (name: string) => `${name} archivieren`,
+    restoreMap: (name: string) => `${name} zurückholen`,
+    copyName: (name: string) => `${name} (Kopie)`,
+    duplicated: (name: string) => `„${name}“ ist angelegt.`,
+    archived: (name: string) => `„${name}“ ist archiviert.`,
+    restored: (name: string) => `„${name}“ ist zurück.`,
+    actionFailed: 'Das hat auf diesem Gerät nicht geklappt. Versuch es bitte noch einmal.',
+
+    newTitle: 'Neue Karte',
+    name: 'Name',
+    namePlaceholder: 'z. B. Schluchtübergang',
+    nameRequired: 'Bitte gib der Karte einen Namen.',
+    width: 'Breite in Feldern',
+    height: 'Höhe in Feldern',
+    /** Under the size fields: `meters` is formatted, e.g. "30 m × 22,5 m". */
+    sizeHint: (meters: string) => `Ein Feld ist 1,5 m breit, die Karte also ${meters} groß.`,
+    sizeInvalid: (max: number) => `Breite und Höhe sind ganze Zahlen von 1 bis ${max}.`,
+    create: 'Anlegen',
+
+    importTitle: 'Kartendatei importieren',
+    importBody:
+      'Eine Kartendatei im JSON-Format, etwa eine exportierte Karte. Kreaturen in der Datei werden hier nicht übernommen.',
+    importLabel: 'Datei wählen',
+    imported: (name: string) => `„${name}“ ist importiert.`,
+    file: {
+      unreadable: 'Diese Datei lässt sich nicht lesen. Ist es wirklich eine JSON-Datei?',
+      notAMap: 'Diese Datei ist keine Kartendatei.',
+      noName: 'Die Karte in der Datei hat keinen Namen.',
+      nameTooLong: (max: number) => `Der Name der Karte ist länger als ${max} Zeichen.`,
+      textTooLong: (field: string, max: number) => `${field} ist länger als ${max} Zeichen.`,
+      tooLarge: (max: number) =>
+        `Die Karte ist zu groß. Breite und Höhe sind ganze Zahlen von 1 bis ${max}.`,
+      newerVersion:
+        'Diese Datei stammt aus einer neueren Version der App. Lade die Seite neu und versuch es dann noch einmal.',
+      badLayout: (place: string) => `Das Layout der Datei stimmt nicht: ${place}.`,
+      cell: (n: number) => `Feld ${n}`,
+      feature: (n: number) => `Objekt ${n}`,
+      entrance: (n: number) => `Eingang ${n}`,
+      layout: 'Felder, Objekte oder Eingänge fehlen',
+      fields: { scene: 'Die Szene', vibe: 'Die Stimmung', lighting: 'Das Licht' },
+    },
+
+    notDmTitle: 'Nur für die Spielleitung',
+    notDmBody: 'Die Karten einer Kampagne sehen und bearbeiten nur Mitglieder der Spielleitung.',
+    unknownTitle: 'Diese Kampagne kennt das Gerät nicht',
+    unknownBody:
+      'Öffne die Liste deiner Kampagnen einmal mit Verbindung. Danach lassen sich ihre Karten auch ohne Verbindung bearbeiten.',
+
+    offlineTitle: 'Deine Karten',
+    offlineIntro:
+      'Kampagnen, in denen du Spielleitung bist, so wie dieses Gerät sie zuletzt mit Verbindung gesehen hat.',
+    offlineEmpty:
+      'Auf diesem Gerät ist noch keine Kampagne gespeichert, in der du Spielleitung bist. Öffne die Liste deiner Kampagnen einmal mit Verbindung.',
+    mapCount: (count: number) => (count === 1 ? '1 Karte' : `${count} Karten`),
+    home: 'Zur Startseite',
+
+    /** Links on the server gate's screens. */
+    gateOffline: 'Karten ohne Verbindung bearbeiten',
+    gateWaking: 'Inzwischen Karten bearbeiten',
+
+    /** The editor's side panel and header (src/editor/scene). */
+    scene: {
+      panel: 'Karte',
+      name: 'Name',
+      nameEmpty: (previous: string) =>
+        `Eine Karte braucht einen Namen. Gespeichert bleibt „${previous}“.`,
+      scene: 'Szene',
+      sceneHint: 'Was ist das für ein Ort? z. B. „Hängebrücke über einer nebligen Schlucht“',
+      vibe: 'Stimmung',
+      vibeHint: 'Wie fühlt es sich an? z. B. „angespannt, windig, grau“',
+      lighting: 'Licht',
+      lightingHint: 'z. B. „Abenddämmerung“, „Fackelschein“, „bewölkter Morgen“',
+      /** Characters left, shown near the limit. */
+      left: (count: number) => `Noch ${count} Zeichen`,
+      export: 'Exportieren',
+      exportTitle: 'Karte als Kartendatei (JSON) herunterladen',
+    },
+  },
 
   /** One text per error code the API can send. A new code is a type error here. */
   errors: {

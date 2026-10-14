@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { Outlet } from 'react-router'
+import { OfflineMapsLink } from '../maps/OfflineMapsLink'
 import { de } from '../text/de'
 import { startServerGate, useServerStatus } from './serverStatus'
 
@@ -32,6 +33,7 @@ export function ServerGate({ children }: { children: ReactNode }) {
           title={de.serverGate.offlineTitle}
           body={de.serverGate.offlineBody}
           testId="offline-screen"
+          extra={<OfflineMapsLink label={de.maps.gateOffline} />}
         />
       )
     case 'error':
@@ -50,6 +52,7 @@ export function ServerGate({ children }: { children: ReactNode }) {
           body={de.serverGate.wakingBody}
           testId="waking-screen"
           busy
+          extra={<OfflineMapsLink label={de.maps.gateWaking} />}
         />
       )
   }
@@ -61,12 +64,15 @@ function GateMessage({
   testId,
   busy = false,
   action,
+  extra,
 }: {
   title: string
   body: string
   testId: string
   busy?: boolean
   action?: { label: string; onClick: () => void }
+  /** More below the message, e.g. the way to the offline map pages. */
+  extra?: ReactNode
 }) {
   return (
     <section
@@ -95,6 +101,7 @@ function GateMessage({
           {action.label}
         </button>
       )}
+      {extra}
     </section>
   )
 }
