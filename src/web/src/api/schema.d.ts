@@ -1922,6 +1922,12 @@ export interface components {
             /** Format: double */
             elevation: null | number;
         };
+        LayoutCellRef: {
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+        };
         LayoutEntrance: {
             id: string;
             kind: components["schemas"]["EntranceKind"];
@@ -1966,18 +1972,29 @@ export interface components {
             elevation: null | number;
             blocksMovement: null | boolean;
         };
+        /** @enum {unknown} */
+        LayoutItemKind: "map" | "cell" | "feature" | "entrance";
         LayoutProblem: {
             code: components["schemas"]["LayoutProblemCode"];
-            field?: null | string;
-            id?: null | string;
+            item: components["schemas"]["LayoutProblemItem"];
+            field?: null | components["schemas"]["LayoutTextField"];
+            cell?: null | components["schemas"]["LayoutCellRef"];
             otherId?: null | string;
+        };
+        /** @enum {unknown} */
+        LayoutProblemCode: "mapSizeInvalid" | "layoutVersionUnsupported" | "nameMissing" | "textTooLong" | "cellOutside" | "cellDuplicate" | "terrainInvalid" | "elevationInvalid" | "idMissing" | "featureIdDuplicate" | "featureKindMissing" | "featureSizeInvalid" | "featureOutside" | "featureOverlap" | "entranceIdDuplicate" | "entranceKindInvalid" | "entranceEmpty" | "entranceCellOutside" | "entranceCellNotOnEdge" | "entranceCellNotWalkable" | "entranceCellDuplicate" | "entranceCellShared";
+        LayoutProblemItem: {
+            kind: components["schemas"]["LayoutItemKind"];
+            /** Format: int32 */
+            index?: null | number;
             /** Format: int32 */
             x?: null | number;
             /** Format: int32 */
             y?: null | number;
+            id?: null | string;
         };
         /** @enum {unknown} */
-        LayoutProblemCode: "mapSizeInvalid" | "layoutVersionUnsupported" | "nameMissing" | "textTooLong" | "cellOutside" | "cellDuplicate" | "terrainInvalid" | "elevationInvalid" | "idMissing" | "featureIdDuplicate" | "featureKindMissing" | "featureSizeInvalid" | "featureOutside" | "featureOverlap" | "entranceIdDuplicate" | "entranceKindInvalid" | "entranceEmpty" | "entranceCellOutside" | "entranceCellNotOnEdge" | "entranceCellNotWalkable" | "entranceCellDuplicate" | "entranceCellShared";
+        LayoutTextField: "name" | "scene" | "vibe" | "lighting" | "id" | "kind" | "label" | null;
         LoginRequest: {
             email: string;
             password: string;

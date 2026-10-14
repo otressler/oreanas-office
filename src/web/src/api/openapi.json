@@ -2437,6 +2437,23 @@
           }
         }
       },
+      "LayoutCellRef": {
+        "required": [
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "LayoutEntrance": {
         "required": [
           "id",
@@ -2611,25 +2628,45 @@
           }
         }
       },
+      "LayoutItemKind": {
+        "enum": [
+          "map",
+          "cell",
+          "feature",
+          "entrance"
+        ]
+      },
       "LayoutProblem": {
         "required": [
-          "code"
+          "code",
+          "item"
         ],
         "type": "object",
         "properties": {
           "code": {
             "$ref": "#/components/schemas/LayoutProblemCode"
           },
+          "item": {
+            "$ref": "#/components/schemas/LayoutProblemItem"
+          },
           "field": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LayoutTextField"
+              }
             ]
           },
-          "id": {
-            "type": [
-              "null",
-              "string"
+          "cell": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LayoutCellRef"
+              }
             ]
           },
           "otherId": {
@@ -2637,20 +2674,6 @@
               "null",
               "string"
             ]
-          },
-          "x": {
-            "type": [
-              "null",
-              "integer"
-            ],
-            "format": "int32"
-          },
-          "y": {
-            "type": [
-              "null",
-              "integer"
-            ],
-            "format": "int32"
           }
         }
       },
@@ -2678,6 +2701,56 @@
           "entranceCellNotWalkable",
           "entranceCellDuplicate",
           "entranceCellShared"
+        ]
+      },
+      "LayoutProblemItem": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/LayoutItemKind"
+          },
+          "index": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "x": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "y": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "LayoutTextField": {
+        "enum": [
+          "name",
+          "scene",
+          "vibe",
+          "lighting",
+          "id",
+          "kind",
+          "label",
+          null
         ]
       },
       "LoginRequest": {

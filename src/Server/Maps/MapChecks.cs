@@ -10,12 +10,37 @@ public static class MapChecks
         string? name, int width, int height, MapLayout? layout, string? scene, string? vibe, string? lighting) => [];
 }
 
-// Where and why a layout breaks a rule. Field: the text that is too long ("name",
-// "scene", "vibe", "lighting", "id", "kind", "label"). Id: the feature or entrance the
-// problem is on. OtherId: the other feature or entrance in an overlap or a shared cell.
-// X and Y: the listed cell, or the entrance cell, the problem is about.
+// Where and why a layout breaks a rule, shaped like LayoutProblem in validation.ts.
+// Item: what the problem is on. Field: the text that is too long or the id that is
+// missing. Cell: the entrance cell the problem is about. OtherId: the other feature or
+// entrance in an overlap or a shared cell.
 public record LayoutProblem(
-    LayoutProblemCode Code, string? Field = null, string? Id = null, string? OtherId = null, int? X = null, int? Y = null);
+    LayoutProblemCode Code, LayoutProblemItem Item, LayoutTextField? Field = null, LayoutCellRef? Cell = null, string? OtherId = null);
+
+// The TypeScript LayoutItem union, flattened. Index: the position in layout.cells,
+// features or entrances. X and Y: set for a cell. Id: set for a feature or entrance.
+public record LayoutProblemItem(LayoutItemKind Kind, int? Index = null, int? X = null, int? Y = null, string? Id = null);
+
+public record LayoutCellRef(int X, int Y);
+
+public enum LayoutItemKind
+{
+    Map,
+    Cell,
+    Feature,
+    Entrance,
+}
+
+public enum LayoutTextField
+{
+    Name,
+    Scene,
+    Vibe,
+    Lighting,
+    Id,
+    Kind,
+    Label,
+}
 
 // The same codes as the LayoutProblemCode union in validation.ts, as PascalCase names
 // (sent as camelCase).
