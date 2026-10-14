@@ -12,7 +12,7 @@ public sealed class FoundryImageClientTests
     private static readonly byte[] Guide = [1, 2, 3, 4];
     private static readonly byte[] Picture = [9, 8, 7];
 
-    private static readonly ImageEditRequest Request = new("Male die Halle.", Guide, 1536, 960, "high", "webp", 85);
+    private static readonly ImageEditRequest Request = new("Male die Halle.", Guide, 1536, 960, "high", "jpeg", 85);
 
     [Fact]
     public async Task Sends_the_guide_as_a_multipart_edit_and_reads_the_image_and_usage()
@@ -21,7 +21,7 @@ public sealed class FoundryImageClientTests
             {
               "created": 1,
               "data": [{ "b64_json": "{{Convert.ToBase64String(Picture)}}" }],
-              "output_format": "webp",
+              "output_format": "jpeg",
               "usage": {
                 "input_tokens": 1921,
                 "input_tokens_details": { "image_tokens": 1536, "text_tokens": 385 },
@@ -35,7 +35,7 @@ public sealed class FoundryImageClientTests
         var result = await client.EditAsync(Request, CancellationToken.None);
 
         Assert.Equal(Picture, result.Image);
-        Assert.Equal(("image/webp", new ImageUsage(1536, 385, 1372), "req-1"), (result.ContentType, result.Usage, result.RequestId));
+        Assert.Equal(("image/jpeg", new ImageUsage(1536, 385, 1372), "req-1"), (result.ContentType, result.Usage, result.RequestId));
         var sent = Assert.Single(handler.Requests);
         Assert.Equal((HttpMethod.Post, "https://foundry.test/openai/v1/images/edits"), (sent.Method, sent.Url));
         Assert.Equal("Bearer secret-key", sent.Authorization);
@@ -47,7 +47,7 @@ public sealed class FoundryImageClientTests
                 ["prompt"] = "Male die Halle.",
                 ["size"] = "1536x960",
                 ["quality"] = "high",
-                ["output_format"] = "webp",
+                ["output_format"] = "jpeg",
                 ["output_compression"] = "85",
                 ["n"] = "1",
             },
@@ -62,9 +62,9 @@ public sealed class FoundryImageClientTests
     {
         var handler = new Handler(_ => Json(HttpStatusCode.OK, $$"""{ "data": [{ "b64_json": "{{Convert.ToBase64String(Picture)}}" }] }"""));
 
-        var result = await Client(handler).EditAsync(Request with { OutputFormat = "jpeg" }, CancellationToken.None);
+        var result = await Client(handler).EditAsync(Request with { OutputFormat = "png" }, CancellationToken.None);
 
-        Assert.Equal(("image/jpeg", new ImageUsage(0, 0, 0), (string?)null), (result.ContentType, result.Usage, result.RequestId));
+        Assert.Equal(("image/png", new ImageUsage(0, 0, 0), (string?)null), (result.ContentType, result.Usage, result.RequestId));
     }
 
     [Fact]

@@ -30,8 +30,10 @@ public sealed class BackgroundEndpointTests(AppFixture fixture)
             (AssetKind.MapBackground, AssetOwnerType.BattleMap, mapId, campaignId, AssetOrigin.Generated, "fake-image", "high", dm.Id),
             (asset.Kind, asset.OwnerType, asset.OwnerId, asset.CampaignId, asset.Origin, asset.Model, asset.Quality, asset.CreatedByUserId));
         Assert.Equal(LayoutFingerprint.Of(8, 5, Hall()), asset.LayoutHash);
-        Assert.Contains("Eine Halle", asset.Prompt);
         await watcher.EndedAsync(queued.Id);
+
+        // The worker builds the prompt from the map when the job runs.
+        Assert.Contains("Eine Halle", (await fixture.App.AssetAsync(queued.Id)).Prompt);
     }
 
     [Fact]

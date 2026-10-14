@@ -25,6 +25,9 @@ public sealed class ImageJobWorker(
     // The migration runs in the background after start; checked in memory only.
     private static readonly TimeSpan MigrationCheckInterval = TimeSpan.FromMilliseconds(200);
 
+    // 429 waits per job before it fails; they don't count as attempts.
+    private const int MaxRateLimitedWaits = 10;
+
     private readonly ImageOptions _options = options.Value;
 
     // When the last request to the model started, in memory: a restart may send the next
@@ -70,7 +73,7 @@ public sealed class ImageJobWorker(
                 next = await NextJobAsync(stoppingToken);
                 if (next is { } assetId)
                 {
-                    await RunAsync(assetId, stoppingToken);
+                    await RunOrRecoverAsync(assetId, stoppingToken);
                     continue;
                 }
             }
@@ -106,6 +109,39 @@ public sealed class ImageJobWorker(
         if (requeued > 0)
         {
             logger.LogInformation("Put {Count} background jobs cut off by a restart back in the queue", requeued);
+        }
+    }
+
+    // A job that breaks anywhere (rendering, saving, storing the image) mustn't stay Running:
+    // that would block its map with GenerationRunning and keep the editor's hub connection
+    // open. It goes back to the queue, or fails once it has used its attempts, and the
+    // worker moves on to the next job.
+    private async Task RunOrRecoverAsync(Guid assetId, CancellationToken stoppingToken)
+    {
+        try
+        {
+            await RunAsync(assetId, stoppingToken);
+        }
+        catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+        {
+            logger.LogError(ex, "Background job {AssetId} broke", assetId);
+            await using var scope = scopes.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var asset = await db.Assets.SingleOrDefaultAsync(a => a.Id == assetId, CancellationToken.None);
+            if (asset is not { Status: AssetStatus.Running })
+            {
+                return;
+            }
+
+            if (asset.Attempts >= _options.MaxAttempts)
+            {
+                await FailAsync(db, asset, AssetFailure.Error, null, $"no image after {asset.Attempts} attempts");
+                return;
+            }
+
+            asset.Status = AssetStatus.Queued;
+            await db.SaveChangesAsync(CancellationToken.None);
+            await NotifyAsync(db, asset, null);
         }
     }
 
@@ -148,6 +184,7 @@ public sealed class ImageJobWorker(
             "Background job {AssetId} for map {MapId} started, attempt {Attempt}", asset.Id, asset.OwnerId, asset.Attempts);
         await NotifyAsync(db, asset, null);
 
+        var rateLimitedWaits = 0;
         while (true)
         {
             await WaitForRequestSlotAsync(stoppingToken);
@@ -178,6 +215,13 @@ public sealed class ImageJobWorker(
             {
                 // Shutting down: the job stays Running and goes back to Queued at the next start.
                 throw;
+            }
+            catch (ImageRateLimitedException ex) when (++rateLimitedWaits > MaxRateLimitedWaits)
+            {
+                // The deployment's quota is gone, not just busy: give up rather than hold the
+                // map and the editor's connection for good.
+                await FailAsync(db, asset, AssetFailure.Error, map, $"the image model stayed busy after {MaxRateLimitedWaits} waits: {ex.Message}");
+                return;
             }
             catch (ImageRateLimitedException ex)
             {
@@ -323,7 +367,6 @@ public sealed class ImageJobWorker(
 
     private static string Extension(string contentType) => contentType switch
     {
-        "image/webp" => "webp",
         "image/png" => "png",
         "image/jpeg" => "jpg",
         _ => "bin",

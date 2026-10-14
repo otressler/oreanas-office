@@ -35,7 +35,7 @@ public sealed class ImageJobWorkerTests(AppFixture fixture)
         var request = Assert.Single(fake.Requests);
         var frame = GuideRenderer.Measure(8, 5);
         Assert.Equal(
-            (frame.PixelWidth, frame.PixelHeight, "high", "webp", 85),
+            (frame.PixelWidth, frame.PixelHeight, "high", "jpeg", 85),
             (request.Width, request.Height, request.Quality, request.OutputFormat, request.OutputCompression));
         var asset = await fixture.App.AssetAsync(queued.Id);
         Assert.Equal(

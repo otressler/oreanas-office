@@ -37,6 +37,16 @@ Generation runs as a background job (expect 10–60 s). The editor stays usable 
 - The app draws the grid on top of the image; the model never draws it.
 - If generation fails or the DM rejects every version, the board uses a simple textured rendering of the layout. A fight never depends on the AI.
 
+# As built (stage 7)
+
+- **Editor:** "Hintergrund" in the toolbar's "Karte" group. The panel lists the versions newest first, with their state (in the queue, being painted, failed, outdated for another size, layout changed since), marks the picked one, and offers "Auswählen" and "Ohne Hintergrund". A larger view compares versions with the grid drawn over them. The confirm dialog names the sync, high quality, about half a minute, a few cents, and this month's spending against the limit; with the limit reached or no model configured it offers no confirm. Generating first saves edits the autosave hasn't written yet, then syncs the map.
+- **First version picked by itself:** when a job finishes and the map has no background it can show (none picked, or the picked one outdated), the new one becomes the map's background. The DM can still pick another or none.
+- **Jobs:** one worker runs them one at a time, at most one request every 30 seconds. A 429 waits as long as the model asks, up to ten times per job; other errors try again up to three attempts; a refused request fails at once as "rejected". A job cut off by a restart goes back to the queue at the next start. A map has at most one queued or running job.
+- **Images:** JPEG at high quality, about 0.6 MB for a 20 × 12 map. The edits endpoint refuses WebP. Served at `/api/assets/{id}` and cached for good by the browser and the service worker; signing in or out clears the service worker's image cache.
+- **Board:** with a picture loaded, the board draws only the picture, the grid, highlights and tokens; the picture paints terrain and objects itself. Until it loads, or if it fails, the plain rendering stays.
+- **Live updates:** the editor connects to the image hub only while one of its map's jobs is queued or running.
+- **Limits:** the monthly limit is checked when a job is queued. Jobs queued on several maps just before the limit can still finish, so the month can end a few cents over. A store copy shares its source's picked picture only while it stays picked: after the copy picks another version, the shared one is no longer listed.
+
 See [image generation approach](/decisions/image-generation-approach.md) for the reasoning.
 
 [^brief]: Original project brief

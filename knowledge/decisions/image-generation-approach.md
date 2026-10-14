@@ -67,4 +67,4 @@ All four stage 3 sample maps were generated at medium quality, the default the [
 
 **High quality fixed the crypt.** v4 used the v3 guide and prompt unchanged, at `high` instead of `medium`: the enclosed area came out as dark rock, and everything else still lines up. The model painted shallow water over most floors, which fits "flooded crypt"; the pool still stands out as deeper water. A faint purple haze stays in the void outside the map. It took 25 s. One sample doesn't show whether high is reliably better, only that it fixed the case medium failed three times.
 
-**File size:** the PNGs are 2–3.4 MB. Stage 7 should ask the model for WebP or JPEG output, so phones load a few hundred kilobytes rather than megabytes.
+**File size:** the PNGs are 2–3.4 MB. Stage 7 asks the model for JPEG output, so phones load a few hundred kilobytes rather than megabytes. WebP would be smaller, but the edits endpoint refuses it (only PNG and JPEG work there).

@@ -206,7 +206,7 @@ export function syncBeforeStart(
  * server paints from its own copy (knowledge/features/ai-map-generation.md, "Sync first").
  * Resolves 'ready' with the map's server version when the server has the device's version,
  * 'blocked' when a conflict or rejection must be resolved first, 'offline' without a
- * connection. A map this device doesn't have is the server's already: 'ready' without version.
+ * connection. The editor always holds its map; one missing from this device is 'blocked'.
  */
 export function syncMapBeforeGenerate(
   db: OfflineDb,
@@ -215,7 +215,7 @@ export function syncMapBeforeGenerate(
   return withSyncLock(userIdOf(db), async () => {
     const map = await db.maps.get(mapId)
     if (!navigator.onLine) return { result: 'offline' as const, version: null }
-    if (!map) return { result: 'ready' as const, version: null }
+    if (!map) return { result: 'blocked' as const, version: null }
 
     const campaign = await db.campaigns.get(map.campaignId)
     const scope = {

@@ -22,7 +22,8 @@ public record ImageEditRequest(
     string OutputFormat,
     int OutputCompression);
 
-// ContentType: image/webp, image/png or image/jpeg. RequestId: the response's id, logged.
+// ContentType: image/jpeg or image/png (the edits endpoint refuses WebP). RequestId: the
+// response's id, logged.
 public record ImageResult(byte[] Image, string ContentType, ImageUsage Usage, string? RequestId);
 
 // From the response's `usage`: input image and text tokens, output tokens.

@@ -118,6 +118,23 @@ describe('generating', () => {
     expect(posts()).toEqual([])
   })
 
+  it('saves edits the autosave has not written yet before syncing', async () => {
+    const user = userEvent.setup()
+    const { mapId, store, db } = await renderInMapEditor(<BackgroundPanel />)
+    store.getState().apply((doc) => ({ ...doc, scene: 'Eine Klamm im Nebel' }))
+    let synced: string | undefined
+    syncMapBeforeGenerate.mockImplementation(async () => {
+      synced = (await db.maps.get(mapId))?.scene
+      return { result: 'ready', version: 4 }
+    })
+
+    await user.click(await generateButton())
+    await user.click(screen.getByRole('button', { name: t.confirm.ok }))
+
+    await screen.findByText(t.queued)
+    expect(synced).toBe('Eine Klamm im Nebel')
+  })
+
   it('syncs the map, then posts with the synced version', async () => {
     const user = userEvent.setup()
     const { mapId } = await renderInMapEditor(<BackgroundPanel />)

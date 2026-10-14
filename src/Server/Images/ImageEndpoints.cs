@@ -127,9 +127,9 @@ public static class ImageEndpoints
                 return new Outcome(null, ApiErrorCode.ImageBudgetExhausted);
             }
 
-            // The worker renders the guide again from the map as it is then; this one gives
-            // the prompt its legend and the version its frame.
-            var guide = GuideRenderer.Render(map.Width, map.Height, map.Layout, settings.GuideTargetPixels);
+            // Only the frame here: the worker renders the guide and builds the prompt from the
+            // map as it is when the job runs, and records what it sends.
+            var frame = GuideRenderer.Measure(map.Width, map.Height, settings.GuideTargetPixels);
             var asset = new Asset
             {
                 Id = Guid.NewGuid(),
@@ -139,15 +139,14 @@ public static class ImageEndpoints
                 CampaignId = map.CampaignId,
                 Origin = AssetOrigin.Generated,
                 Status = AssetStatus.Queued,
-                Prompt = Truncate(BackgroundPrompt.Build(map.Scene, map.Vibe, map.Lighting, map.Layout, guide)),
                 Model = settings.Deployment,
                 Quality = settings.Quality,
                 GridWidth = map.Width,
                 GridHeight = map.Height,
-                FrameX = guide.FrameX,
-                FrameY = guide.FrameY,
-                FrameWidth = guide.FrameWidth,
-                FrameHeight = guide.FrameHeight,
+                FrameX = frame.X,
+                FrameY = frame.Y,
+                FrameWidth = frame.Width,
+                FrameHeight = frame.Height,
                 LayoutHash = LayoutFingerprint.Of(map.Width, map.Height, map.Layout),
                 CreatedAt = now,
                 CreatedByUserId = userId,
@@ -253,9 +252,6 @@ public static class ImageEndpoints
         var spent = await MapBackgrounds.SpentSinceAsync(db, monthStart, cancellationToken);
         return new ImageBudgetResponse(spent, options.MonthlyLimitUsd, monthStart, options.Configured);
     }
-
-    private static string Truncate(string prompt) =>
-        prompt.Length <= Asset.PromptMaxLength ? prompt : prompt[..Asset.PromptMaxLength];
 
     private sealed record Outcome(MapBackground? Background, ApiErrorCode? Error);
 }

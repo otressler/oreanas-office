@@ -59,6 +59,7 @@ export default defineConfig({
               sameOrigin && url.pathname.startsWith('/api/assets/'),
             handler: 'CacheFirst',
             options: {
+              // Cleared on every sign-in and sign-out (IMAGE_CACHE in src/auth/auth.ts).
               cacheName: 'oreana-images',
               expiration: { maxEntries: 60 },
               cacheableResponse: { statuses: [200] },

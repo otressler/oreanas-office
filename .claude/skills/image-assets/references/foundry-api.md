@@ -11,7 +11,7 @@ Base: `AZURE_OPENAI_ENDPOINT` from `.env` (`https://<resource>.services.ai.azure
 | Text to image | `POST /images/generations` | JSON |
 | Image to image, mask | `POST /images/edits` | multipart form: `image` (or several `image[]`), optional `mask`, other fields as text |
 
-Fields: `model` (deployment name), `prompt`, `size` (`WxH` or `auto`), `n`, `quality` (`low` / `medium` / `high` / `auto`, default medium), `background` (`transparent` / `opaque` / `auto`), `output_format` (`png` / `webp` / `jpeg`), `output_compression` (0–100, webp/jpeg).
+Fields: `model` (deployment name), `prompt`, `size` (`WxH` or `auto`), `n`, `quality` (`low` / `medium` / `high` / `auto`, default medium), `background` (`transparent` / `opaque` / `auto`), `output_format` (`png` / `webp` / `jpeg`; the edits endpoint refuses `webp` with a 400, only `png` and `jpeg` work there, seen 2026-10-14), `output_compression` (0–100, webp/jpeg).
 
 Response: `data[].b64_json`, plus `size`, `quality`, `background`, `output_format` and `usage` (input text and image tokens, output image tokens). Transparent PNGs come back as RGBA with a real alpha channel.
 

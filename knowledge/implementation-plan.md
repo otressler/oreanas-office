@@ -297,7 +297,7 @@ Needs the T0 gate, passed on 2026-10-14. The image budget is set (question 11).
 **Feature set**
 
 - Server-side guide renderer, a C# port of the skill's `render_guide.py` with the same colours and legend, and the prompt builder from the skill's prompt templates ([AI map generation](/features/ai-map-generation.md)). Maps wider than 3:1 are padded, and the prompt asks for dead terrain or darkness in the padding ([image generation approach](/decisions/image-generation-approach.md)).
-- Foundry client with the local size checks, asking for high quality and WebP output, so phones load a few hundred kilobytes rather than 2–3 MB PNGs.
+- Foundry client with the local size checks, asking for high quality and JPEG output (the edits endpoint refuses WebP), so phones load a few hundred kilobytes rather than 2–3 MB PNGs.
 - Job queue in the database: [asset](/domain/asset.md) rows `queued → running → done | failed`, one worker that runs jobs one at a time within 2 requests per minute and honours 429 waits. The worker is woken when a job is added and on startup, never by polling ([hosting](/decisions/hosting.md)).
 - Generate button for `dm` members with a confirm step before the job is queued, and a sync of the map first. Nothing is ever generated automatically ([AI map generation](/features/ai-map-generation.md)).
 - Images in a private Blob container, served at `/api/assets/{id}` to members of a campaign that uses them ([persistence](/decisions/persistence.md)), a "done" notification to the editor over SignalR, a version gallery, picking `backgroundAssetId`, and the monthly limit enforced: each image's cost is recorded, and new jobs are refused once the month reaches $20 ([image budget](/decisions/image-budget.md)).

@@ -19,11 +19,11 @@ public sealed class ImageOptions
     public bool Configured =>
         !string.IsNullOrWhiteSpace(Endpoint) && !string.IsNullOrWhiteSpace(ApiKey) && !string.IsNullOrWhiteSpace(Deployment);
 
-    // knowledge/decisions/image-budget.md: high quality by default, WebP so phones load a
-    // few hundred kilobytes.
+    // knowledge/decisions/image-budget.md: high quality by default, JPEG so phones load a
+    // few hundred kilobytes rather than a 2–3 MB PNG. The edits endpoint refuses WebP.
     public string Quality { get; set; } = "high";
 
-    public string OutputFormat { get; set; } = "webp";
+    public string OutputFormat { get; set; } = "jpeg";
 
     public int OutputCompression { get; set; } = 85;
 

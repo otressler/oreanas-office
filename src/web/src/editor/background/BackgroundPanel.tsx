@@ -12,7 +12,9 @@ import { syncMapBeforeGenerate } from '../../sync'
 import { de } from '../../text/de'
 import { useEditorTarget } from '../encounter/store'
 import { useOnline } from '../encounter/useOnline'
-import { useEditor } from '../store'
+import { saveMap } from '../maps'
+import { editorMapOf } from '../model'
+import { useEditor, useEditorStore } from '../store'
 import {
   backgroundsKey,
   budgetBlock,
@@ -78,6 +80,7 @@ function OnlinePanel() {
     onWatching: () => void refetch(),
   })
 
+  const store = useEditorStore()
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<Message>(null)
@@ -95,7 +98,13 @@ function OnlinePanel() {
     setBusy(true)
     setMessage({ kind: 'info', text: t.syncing })
     try {
-      // The server paints from its own copy: sync the map first.
+      // The server paints from its own copy: save edits the autosave hasn't written yet,
+      // then sync the map.
+      const doc = store.getState().doc
+      const stored = await db.maps.get(mapId)
+      if (stored && JSON.stringify(editorMapOf(stored)) !== JSON.stringify(doc)) {
+        await saveMap(db, mapId, doc)
+      }
       const synced = await syncMapBeforeGenerate(db, mapId)
       if (synced.result === 'offline') {
         setMessage({ kind: 'error', text: t.syncOffline })
