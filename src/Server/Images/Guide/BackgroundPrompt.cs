@@ -12,8 +12,16 @@ public static partial class BackgroundPrompt
 {
     private const string Opening = "Repaint this colour-coded layout as a top-down orthographic fantasy battle map for a tabletop game.";
     private const string Rules = "The colours mark where things are. Keep every region exactly where it is and the same shape:";
-    private const string Materials = "Paint real materials, not the flat guide colours: no trace of the purple or magenta may remain. Straight-down camera, no perspective, no horizon.";
+    // The model tends to keep the guide's signal colours as tints, glows and haze (a purple
+    // mist, a magenta glow on stairs, orange doors), so the prompt says the colours are only a
+    // code and names the signal colours this guide uses.
+    private const string Colours = "Ignore the colours of the input image: they are only a code for where things are, not colours to paint. Take every colour from the scene, mood and lighting alone, so stone looks like stone, water like water and wood like wood.";
+    private const string Camera = "Straight-down camera, no perspective, no horizon.";
     private const string NoMarks = "No grid lines, no text, no labels, no frame, no compass.";
+
+    // Guide colours that real materials have anyway (floor, wall, water, bridge, tree); all
+    // other guide colours are signal colours that must not show in the picture.
+    private static readonly HashSet<string> NaturalColours = ["grey", "black", "blue", "brown", "dark brown", "dark green"];
 
     // "<colour> at column <span>, row <span> = <kind>[ (\"<label>\")]", as GuideRenderer writes it.
     [GeneratedRegex("""^(?<colour>[a-z ]+?) at column (?<column>[\d-]+), row (?<row>[\d-]+) = (?<what>.+)$""")]
@@ -47,8 +55,17 @@ public static partial class BackgroundPrompt
             padding.Add($"The dark purple band along the {sides} lies outside the map: paint it as dead terrain or darkness that fits the scene.");
         }
 
+        var closing = new List<string> { Colours };
+        if (SignalColours(guide.Legend) is { Count: > 0 } signals)
+        {
+            closing.Add($"No {Join(signals)} from the guide may show anywhere in the picture, not even as a tint, glow, haze, light or stain.");
+        }
+
+        closing.Add(Camera);
+        closing.Add(NoMarks);
+
         var legend = guide.Legend.Select(l => new Entry(l)).ToList();
-        var prompt = Compose(intro, legend, elevation, padding);
+        var prompt = Compose(intro, legend, elevation, padding, closing);
         if (prompt.Length <= Asset.PromptMaxLength)
         {
             return prompt;
@@ -57,7 +74,7 @@ public static partial class BackgroundPrompt
         // Too long (a map full of features): one line per colour and kind with all its
         // positions, then positions cut from the longest lines.
         var grouped = Group(legend);
-        prompt = Compose(intro, grouped, elevation, padding);
+        prompt = Compose(intro, grouped, elevation, padding, closing);
         while (prompt.Length > Asset.PromptMaxLength)
         {
             var longest = grouped.Where(e => e.Positions is { Count: > 1 }).MaxBy(e => e.Text.Length);
@@ -82,23 +99,36 @@ public static partial class BackgroundPrompt
                 grouped.RemoveAt(last);
             }
 
-            prompt = Compose(intro, grouped, elevation, padding);
+            prompt = Compose(intro, grouped, elevation, padding, closing);
         }
 
         return prompt;
     }
 
-    private static string Compose(List<string> intro, List<Entry> legend, List<string> elevation, List<string> padding)
+    private static string Compose(
+        List<string> intro, List<Entry> legend, List<string> elevation, List<string> padding, List<string> closing)
     {
         var lines = new List<string>(intro) { "", Rules };
         lines.AddRange(legend.Select(e => $"- {e.Text}"));
         lines.AddRange(elevation);
         lines.AddRange(padding);
         lines.Add("");
-        lines.Add(Materials);
-        lines.Add(NoMarks);
+        lines.AddRange(closing);
         return string.Join('\n', lines);
     }
+
+    // The colour names the legend uses, in legend order, without the natural ones.
+    private static List<string> SignalColours(IEnumerable<string> legend) =>
+    [
+        .. legend
+            .Select(line => line.Split(" = ")[0].Split(" at column")[0].Trim())
+            .Where(colour => !NaturalColours.Contains(colour))
+            .Distinct(),
+    ];
+
+    // "purple", "purple or magenta", "purple, magenta or orange".
+    private static string Join(List<string> items) =>
+        items.Count == 1 ? items[0] : $"{string.Join(", ", items[..^1])} or {items[^1]}";
 
     // Features with the same colour and kind share a line; everything else stays as it is.
     private static List<Entry> Group(List<Entry> legend)

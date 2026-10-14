@@ -15,11 +15,14 @@ The colours mark where things are. Keep every region exactly where it is and the
 <Elevation in words, if it matters: "The bridge hangs high above a deep gorge.">
 <Edge notes, if any: "The whole bottom row is a solid stone wall.">
 
-Paint real materials, not the flat guide colours: no trace of the purple or magenta may remain. Straight-down camera, no perspective, no horizon.
+Ignore the colours of the input image: they are only a code for where things are, not colours to paint. Take every colour from the scene, mood and lighting alone, so stone looks like stone, water like water and wood like wood.
+No <signal colours of this guide, e.g. ochre, dark purple, white or magenta> from the guide may show anywhere in the picture, not even as a tint, glow, haze, light or stain.
+Straight-down camera, no perspective, no horizon.
 No grid lines, no text, no labels, no frame, no compass.
 ```
 
 Notes:
+- The signal colours are every colour in the legend except the ones real materials have anyway: grey, black, blue, brown, dark brown and dark green. Naming them stops the model from keeping them as a purple haze, a magenta glow on stairs or orange doors (the app's `BackgroundPrompt` does the same).
 - The legend comes straight from `render_guide.py`. Rewrite a line when the scene calls for a specific material ("grey = mossy flagstones of a ruined keep").
 - Small props (barrels, torches, rubble) are fine and add life, but only on walkable cells, and nothing big enough to look like it blocks movement where the layout says floor.
 - For a dark scene, still ask for readable floor: "dark but every floor cell clearly visible".

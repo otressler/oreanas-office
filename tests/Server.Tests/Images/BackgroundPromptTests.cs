@@ -8,8 +8,12 @@ namespace OreanasOffice.Server.Tests.Images;
 // no database, no Docker.
 public sealed class BackgroundPromptTests
 {
-    private const string Closing =
-        "\n\nPaint real materials, not the flat guide colours: no trace of the purple or magenta may remain. Straight-down camera, no perspective, no horizon.\n"
+    private const string Colours =
+        "\n\nIgnore the colours of the input image: they are only a code for where things are, not colours to paint. "
+        + "Take every colour from the scene, mood and lighting alone, so stone looks like stone, water like water and wood like wood.\n";
+
+    private const string Tail =
+        "Straight-down camera, no perspective, no horizon.\n"
         + "No grid lines, no text, no labels, no frame, no compass.";
 
     private const string Opening =
@@ -37,8 +41,27 @@ public sealed class BackgroundPromptTests
             + "- brown at column 9-12, row 6-7 = bridge (\"Hängebrücke\")\n"
             + "- white at column 4, row 3 = pillar (\"Menhir\")\n"
             + "- magenta = openings at the map edge, painted as the path, doorway or stairs that leads away: Waldweg"
-            + Closing,
+            + Colours
+            + "No ochre, dark purple, white or magenta from the guide may show anywhere in the picture, not even as a tint, glow, haze, light or stain.\n"
+            + Tail,
             prompt.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public void Only_signal_colours_are_named_and_natural_ones_are_left_to_the_scene()
+    {
+        // Floor, walls and water are grey, black and blue, which stone and water are anyway.
+        var plain = GuideSamples.Floor(4, 2);
+        var plainPrompt = BackgroundPrompt.Build("a hall", "", "", plain, GuideRenderer.Render(4, 2, plain));
+        Assert.DoesNotContain("from the guide may show", plainPrompt);
+        Assert.Contains(Colours.TrimStart('\n'), plainPrompt);
+
+        var crypt = GuideSamples.Load("crypt");
+        var cryptPrompt = BackgroundPrompt.Build(
+            crypt.Scene, crypt.Vibe, crypt.Lighting, crypt.Layout, GuideRenderer.Render(crypt.Width, crypt.Height, crypt.Layout));
+        Assert.Contains(
+            "\nNo ochre, dark purple, orange, white, red or magenta from the guide may show anywhere in the picture, not even as a tint, glow, haze, light or stain.\n",
+            cryptPrompt);
     }
 
     [Fact]
@@ -155,7 +178,7 @@ public sealed class BackgroundPromptTests
         var prompt = BackgroundPrompt.Build("ein Wald", "still", "Mittag", layout, guide);
 
         Assert.True(prompt.Length <= Asset.PromptMaxLength, $"{prompt.Length} characters");
-        Assert.EndsWith(Closing, prompt);
+        Assert.EndsWith(Tail, prompt);
         Assert.Contains("\n- dark green = tree (\"Eiche\") at column 1, row 1; ", prompt);
         Assert.Contains("; and more\n", prompt);
         // One line per colour, kind and label now: the pillars have two labels.
