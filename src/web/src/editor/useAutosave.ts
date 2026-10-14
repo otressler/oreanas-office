@@ -1,9 +1,11 @@
 // Saves the map to the browser shortly after every change, and at once when the page
 // hides or the editor closes, so closing the browser loses nothing
 // (knowledge/implementation-plan.md, stage 5 gate).
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { StoreApi } from 'zustand'
 import type { OfflineDb } from '../offline/db'
 import { saveMap } from './maps'
+import type { EditorMap } from './model'
 import type { EditorStore } from './store'
 
 export type SaveStatus = 'saved' | 'saving' | 'failed'
@@ -12,6 +14,19 @@ export type SaveStatus = 'saved' | 'saving' | 'failed'
 export const AUTOSAVE_DELAY_MS = 400
 
 export function useAutosave(store: EditorStore, db: OfflineDb, mapId: string): SaveStatus {
+  const save = useCallback((doc: EditorMap) => saveMap(db, mapId, doc), [db, mapId])
+  return useAutosaveOf(store, save)
+}
+
+/**
+ * The same for any store that keeps a document and a revision (encounter mode saves its
+ * encounter this way). `save` should keep its identity between renders; it resolves false
+ * when the write didn't happen.
+ */
+export function useAutosaveOf<T>(
+  store: StoreApi<{ revision: number; doc: T }>,
+  save: (doc: T) => Promise<boolean>,
+): SaveStatus {
   const [status, setStatus] = useState<SaveStatus>('saved')
 
   useEffect(() => {
@@ -34,7 +49,7 @@ export function useAutosave(store: EditorStore, db: OfflineDb, mapId: string): S
       setStatus('saving')
       // Each write stores the whole map, so only the last one decides the status.
       running = running
-        .then(() => saveMap(db, mapId, doc))
+        .then(() => save(doc))
         .then(
           (saved) => saved,
           () => false,
@@ -72,7 +87,7 @@ export function useAutosave(store: EditorStore, db: OfflineDb, mapId: string): S
       window.removeEventListener('pagehide', flush)
       flush()
     }
-  }, [store, db, mapId])
+  }, [store, save])
 
   return status
 }

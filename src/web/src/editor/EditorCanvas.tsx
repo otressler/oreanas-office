@@ -8,7 +8,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Layer, Shape, Stage } from 'react-konva'
 import { useStore } from 'zustand'
 import { buildScene, type MapScene } from '../board/scene'
-import { drawLabels, drawMap, visibleCells } from '../board/render'
+import { drawLabels, drawMap, drawTokens, visibleCells } from '../board/render'
+import { tokenMarks } from '../board/palette'
 import { wheelZoomFactor } from '../board/gestures'
 import { useElementSize } from '../board/useElementSize'
 import {
@@ -24,9 +25,12 @@ import {
   type Size,
   type Viewport,
 } from '../board/viewport'
-import type { GridPoint } from '../board/geometry'
+import { footprint, type GridPoint } from '../board/geometry'
 import { de } from '../text/de'
 import type { EditorMap } from './model'
+import type { LocalCreatureToken } from '../offline/model'
+import { useOptionalEncounter, type EncounterStore } from './encounter/store'
+import { gridOf, misplacedIds, toBoardToken } from './encounter/tokens'
 import { useEditorStore, type Overlay, type OverlayStyle, type Selection } from './store'
 import type { CellPointer, EditorTool } from './tools'
 
@@ -39,16 +43,22 @@ const OVERLAY_COLORS: Record<OverlayStyle, { fill: string; stroke: string }> = {
 
 export interface EditorCanvasProps {
   tool: EditorTool | undefined
+  /** Encounter mode: the encounter whose creatures are drawn and that the creature tools change. */
+  encounter?: EncounterStore | null
   /** Called with the cell under the pointer (null when it leaves), for the status bar. */
   onHover?: (cell: GridPoint | null) => void
   className?: string
 }
 
-export function EditorCanvas({ tool, onHover, className }: EditorCanvasProps) {
+const NO_TOKENS: readonly LocalCreatureToken[] = []
+
+export function EditorCanvas({ tool, encounter = null, onHover, className }: EditorCanvasProps) {
   const store = useEditorStore()
   const doc = useStore(store, (s) => s.doc)
   const overlay = useStore(store, (s) => s.overlay)
   const selection = useStore(store, (s) => s.selection)
+  const tokens = useOptionalEncounter(encounter, (s) => s.doc.tokens, NO_TOKENS)
+  const selectedTokenId = useOptionalEncounter(encounter, (s) => s.selectedId, null)
 
   const surfaceRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
@@ -102,7 +112,7 @@ export function EditorCanvas({ tool, onHover, className }: EditorCanvasProps) {
   useEffect(() => {
     const surface = surfaceRef.current
     if (!surface) return
-    const ctx = { store }
+    const ctx = { store, encounter: encounter ?? undefined }
     let space = false
     let pan: { x: number; y: number } | null = null
     let toolPointer: number | null = null
@@ -245,7 +255,7 @@ export function EditorCanvas({ tool, onHover, className }: EditorCanvasProps) {
       for (const [target, type, listener, options] of listeners)
         target.removeEventListener(type, listener as EventListener, options)
     }
-  }, [store, applyView])
+  }, [store, encounter, applyView])
 
   const drawMapShape = useCallback(
     (con: Konva.Context) => {
@@ -261,6 +271,29 @@ export function EditorCanvas({ tool, onHover, className }: EditorCanvasProps) {
       drawLabels(ctx, scene, dpr)
     },
     [scene],
+  )
+
+  // Creatures, with a red frame where one doesn't stand validly on the map.
+  const drawTokenShape = useCallback(
+    (con: Konva.Context) => {
+      if (tokens.length === 0) return
+      const ctx = con._context
+      const cssScale = ctx.getTransform().a / con.canvas.getPixelRatio()
+      const grid = gridOf(doc)
+      const bad = misplacedIds(grid, tokens)
+      const drawn = tokens.map((token) => toBoardToken(token, grid))
+      drawTokens(ctx, drawn, { selectedTokenId, cssScale, marks: tokenMarks(drawn) })
+      for (const token of tokens) {
+        if (!bad.has(token.id)) continue
+        const n = footprint(token.size)
+        drawOverlay(
+          ctx,
+          { kind: 'rect', x: token.x, y: token.y, w: n, h: n, style: 'invalid' },
+          cssScale,
+        )
+      }
+    },
+    [doc, tokens, selectedTokenId],
   )
 
   const drawOverlayShape = useCallback(
@@ -291,6 +324,9 @@ export function EditorCanvas({ tool, onHover, className }: EditorCanvasProps) {
             <Stage ref={stageRef} width={size.width} height={size.height} listening={false}>
               <Layer listening={false}>
                 <Shape sceneFunc={drawMapShape} listening={false} />
+              </Layer>
+              <Layer listening={false}>
+                <Shape sceneFunc={drawTokenShape} listening={false} />
               </Layer>
               <Layer listening={false}>
                 <Shape sceneFunc={drawOverlayShape} listening={false} />

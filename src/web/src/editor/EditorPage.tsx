@@ -1,26 +1,46 @@
 // /kampagnen/:campaignId/karten/:mapId — the map editor (knowledge/features/dm-map-editor.md).
 // Works offline: the map comes from the browser and every change is saved there.
+// With /begegnungen/:encounterId it is in encounter mode: the same page with the map
+// fixed, only the creature tools, and the encounter's own undo, autosave and panels.
 // A full-screen page for laptops: the toolbar on the left, the map in the middle,
 // the active tool's panel and the map's panels on the right.
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { buildGrid, type GridPoint } from '../board/geometry'
 import { ButtonLink, Loading, PageTitle } from '../components/ui'
+import { inputClass } from '../components/styles'
 import { formatElevation } from '../lib/units'
 import { useWideScreen } from '../lib/useWideScreen'
 import { useCampaignCopy } from '../offline/campaigns'
 import { useLocalUser } from '../offline/localUser'
+import type { LocalEncounter } from '../offline/model'
 import { de } from '../text/de'
 import { EditorCanvas } from './EditorCanvas'
+import { creatureTools, encounterModePanels } from './encounter'
+import { editable, getEncounter, saveEncounter } from './encounter/encounters'
+import {
+  createEncounterStore,
+  EditorTargetContext,
+  EncounterStoreContext,
+  useEncounter,
+  useEncounterStore,
+  useOptionalEncounterStore,
+  type EncounterStore,
+} from './encounter/store'
+import {
+  cleanEncounterName,
+  encounterDocOf,
+  ENCOUNTER_NAME_MAX,
+  renameEncounter,
+} from './encounter/tokens'
 import { getMap } from './maps'
-import { mapListPath } from './paths'
+import { editorPath, mapListPath } from './paths'
 import { editorMapOf, type LocalMap } from './model'
 import {
   DEFAULT_TOOL_ID,
   editorHeaderItems,
   editorPanels,
   editorTools,
-  findTool,
   PreviewPane,
 } from './registry'
 import {
@@ -31,36 +51,60 @@ import {
   type EditorStore,
 } from './store'
 import type { EditorTool, ToolGroup } from './tools'
-import { useAutosave, type SaveStatus } from './useAutosave'
+import { useAutosave, useAutosaveOf, type SaveStatus } from './useAutosave'
 
 const t = de.editor
+const te = de.encounterEditor
 
 export function EditorPage() {
-  const { campaignId = '', mapId = '' } = useParams()
+  const { campaignId = '', mapId = '', encounterId } = useParams()
   const { db } = useLocalUser()
   const wide = useWideScreen()
   const campaign = useCampaignCopy(db, campaignId)
   // Read once: the editor owns the map while it's open.
   const [record, setRecord] = useState<LocalMap | null | undefined>(undefined)
+  const [encounter, setEncounter] = useState<LocalEncounter | null | undefined>(undefined)
   useEffect(() => {
     let current = true
     void getMap(db, mapId).then((map) => {
       if (current) setRecord(map && map.campaignId === campaignId ? map : null)
     })
+    void (encounterId ? getEncounter(db, encounterId) : Promise.resolve(undefined)).then(
+      (found) => {
+        if (!current) return
+        const ours = found?.campaignId === campaignId && found.battleMapId === mapId
+        setEncounter(encounterId ? (ours ? found : null) : null)
+      },
+    )
     return () => {
       current = false
     }
-  }, [db, mapId, campaignId])
+  }, [db, mapId, campaignId, encounterId])
 
   if (!wide) return <Message campaignId={campaignId} title={t.narrowTitle} body={t.narrowBody} />
-  if (record === undefined || campaign === undefined) return <Loading />
+  if (record === undefined || campaign === undefined || (encounterId && encounter === undefined))
+    return <Loading />
   if (record === null) {
     return <Message campaignId={campaignId} title={t.notFoundTitle} body={t.notFoundBody} />
   }
   if (campaign?.myRole !== 'dm') {
     return <Message campaignId={campaignId} title={t.notDmTitle} body={t.notDmBody} />
   }
-  return <MapEditor record={record} />
+  if (encounterId) {
+    if (!encounter) {
+      return <Message campaignId={campaignId} title={te.notFoundTitle} body={te.notFoundBody} />
+    }
+    return (
+      <EditorTargetContext.Provider value={{ campaignId, mapId }}>
+        <EncounterEditor key={encounter.id} map={record} encounter={encounter} />
+      </EditorTargetContext.Provider>
+    )
+  }
+  return (
+    <EditorTargetContext.Provider value={{ campaignId, mapId }}>
+      <MapEditor record={record} />
+    </EditorTargetContext.Provider>
+  )
 }
 
 function Message({ campaignId, title, body }: { campaignId: string; title: string; body: string }) {
@@ -82,48 +126,121 @@ function MapEditor({ record }: { record: LocalMap }) {
 
   return (
     <EditorStoreContext.Provider value={store}>
-      <EditorFrame campaignId={record.campaignId} status={status} />
+      <EditorFrame campaignId={record.campaignId} mapId={record.id} status={status} />
     </EditorStoreContext.Provider>
   )
 }
 
-function EditorFrame({ campaignId, status }: { campaignId: string; status: SaveStatus }) {
+/** The map is fixed and its own store never changes; the encounter has the undo and the saving. */
+function EncounterEditor({ map, encounter }: { map: LocalMap; encounter: LocalEncounter }) {
+  const { db } = useLocalUser()
+  // Active and ended encounters are the server's; they open on their own copy of the map.
+  const readOnly = !editable(encounter)
+  const [mapStore] = useState(() => {
+    const doc = editorMapOf(map)
+    const copy = readOnly ? encounter.mapCopy : null
+    return createEditorStore(
+      copy ? { ...doc, width: copy.width, height: copy.height, layout: copy.layout } : doc,
+      creatureTools[0]!.id,
+    )
+  })
+  const [store] = useState(() =>
+    createEncounterStore(encounterDocOf(encounter), {
+      campaignId: map.campaignId,
+      mapId: map.id,
+      encounterId: encounter.id,
+      readOnly,
+    }),
+  )
+  const save = useCallback(
+    async (doc: ReturnType<typeof encounterDocOf>) => {
+      const saved = await saveEncounter(db, encounter.id, doc)
+      if (saved) store.setState({ savedDoc: doc })
+      return saved
+    },
+    [db, encounter.id, store],
+  )
+  const status = useAutosaveOf(store, save)
+
+  return (
+    <EditorStoreContext.Provider value={mapStore}>
+      <EncounterStoreContext.Provider value={store}>
+        <EditorFrame campaignId={map.campaignId} mapId={map.id} status={status} />
+      </EncounterStoreContext.Provider>
+    </EditorStoreContext.Provider>
+  )
+}
+
+function EditorFrame({
+  campaignId,
+  mapId,
+  status,
+}: {
+  campaignId: string
+  mapId: string
+  status: SaveStatus
+}) {
   const store = useEditorStore()
+  // In encounter mode the toolbar has only the creature tools (none for a read-only
+  // encounter), the map can't change, and undo and redo act on the encounter.
+  const encounter = useOptionalEncounterStore()
+  const tools = !encounter ? editorTools : encounter.getState().meta.readOnly ? [] : creatureTools
   const name = useEditor((s) => s.doc.name)
   const toolId = useEditor((s) => s.toolId)
-  const tool = findTool(toolId)
+  const tool = tools.find((item) => item.id === toolId)
   const [mode, setMode] = useState<'edit' | 'preview'>('edit')
   const [hover, setHover] = useState<GridPoint | null>(null)
-  useEditorKeys(store, tool, mode === 'edit')
-  useToolLifecycle(store, tool)
+  useEditorKeys(store, encounter, tools, tool, mode === 'edit')
+  useToolLifecycle(store, encounter, tool)
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-table text-parchment">
       <header className="flex min-h-12 shrink-0 items-center gap-3 border-b border-line bg-panel/80 px-3">
         <Link
-          to={mapListPath(campaignId)}
+          to={encounter ? editorPath(campaignId, mapId) : mapListPath(campaignId)}
           className="flex min-h-9 items-center gap-1 rounded-lg pr-2 text-sm text-candle hover:underline"
         >
           <span aria-hidden="true">←</span>
-          {t.back}
+          {encounter ? te.backToMap : t.back}
         </Link>
-        <h1 className="min-w-0 truncate text-base font-semibold">{name}</h1>
+        {encounter && <EncounterName />}
+        <h1 className="min-w-0 truncate text-base font-semibold">
+          {encounter ? te.mapOf(name) : name}
+        </h1>
         <SaveMark status={status} />
         <div className="ml-auto flex items-center gap-2">
-          {editorHeaderItems.map((Item, i) => (
+          {/* The map's own items (export, "only on this device") stay in map mode: the sync status is first. */}
+          {(encounter ? editorHeaderItems.slice(0, 1) : editorHeaderItems).map((Item, i) => (
             <Item key={i} />
           ))}
-          <UndoRedo />
-          <ModeSwitch mode={mode} onChange={setMode} />
+          {encounter ? (
+            !encounter.getState().meta.readOnly && <EncounterUndoRedo />
+          ) : (
+            <>
+              <MapUndoRedo />
+              <ModeSwitch mode={mode} onChange={setMode} />
+            </>
+          )}
         </div>
       </header>
       {mode === 'preview' ? (
         <PreviewSlot />
       ) : (
         <div className="flex min-h-0 flex-1">
-          <Toolbar activeId={toolId} onPick={(id) => store.getState().setTool(id)} />
+          {tools.length > 0 && (
+            <Toolbar
+              tools={tools}
+              activeId={toolId}
+              onPick={(id) => store.getState().setTool(id)}
+            />
+          )}
           <div className="flex min-w-0 flex-1 flex-col">
-            <EditorCanvas tool={tool} onHover={setHover} className="min-h-0 flex-1" />
+            <EditorCanvas
+              tool={tool}
+              encounter={encounter}
+              onHover={setHover}
+              className="min-h-0 flex-1"
+            />
             <StatusBar hover={hover} />
           </div>
           <aside className="flex w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l border-line bg-panel/60 p-4">
@@ -132,7 +249,7 @@ function EditorFrame({ campaignId, status }: { campaignId: string; status: SaveS
                 <tool.Panel />
               </PanelSection>
             )}
-            {editorPanels.map((panel) => (
+            {(encounter ? encounterModePanels : editorPanels).map((panel) => (
               <PanelSection key={panel.id} title={panel.title}>
                 <panel.Component />
               </PanelSection>
@@ -174,11 +291,33 @@ function SaveMark({ status }: { status: SaveStatus }) {
   )
 }
 
-function UndoRedo() {
+function MapUndoRedo() {
   const canUndo = useEditor((s) => s.past.length > 0)
   const canRedo = useEditor((s) => s.future.length > 0)
   const undo = useEditor((s) => s.undo)
   const redo = useEditor((s) => s.redo)
+  return <UndoRedo canUndo={canUndo} canRedo={canRedo} undo={undo} redo={redo} />
+}
+
+function EncounterUndoRedo() {
+  const canUndo = useEncounter((s) => s.past.length > 0)
+  const canRedo = useEncounter((s) => s.future.length > 0)
+  const undo = useEncounter((s) => s.undo)
+  const redo = useEncounter((s) => s.redo)
+  return <UndoRedo canUndo={canUndo} canRedo={canRedo} undo={undo} redo={redo} />
+}
+
+function UndoRedo({
+  canUndo,
+  canRedo,
+  undo,
+  redo,
+}: {
+  canUndo: boolean
+  canRedo: boolean
+  undo: () => void
+  redo: () => void
+}) {
   const button =
     'min-h-9 rounded-lg border border-line px-3 text-sm hover:border-candle disabled:opacity-40 disabled:hover:border-line'
   return (
@@ -218,9 +357,17 @@ function ModeSwitch({
   )
 }
 
-function Toolbar({ activeId, onPick }: { activeId: string; onPick: (id: string) => void }) {
+function Toolbar({
+  tools,
+  activeId,
+  onPick,
+}: {
+  tools: EditorTool[]
+  activeId: string
+  onPick: (id: string) => void
+}) {
   const groups = new Map<ToolGroup, EditorTool[]>()
-  for (const tool of editorTools) groups.set(tool.group, [...(groups.get(tool.group) ?? []), tool])
+  for (const tool of tools) groups.set(tool.group, [...(groups.get(tool.group) ?? []), tool])
   return (
     <nav
       aria-label={t.toolbar}
@@ -279,8 +426,17 @@ function StatusBar({ hover }: { hover: GridPoint | null }) {
   )
 }
 
-/** Undo, redo, tool shortcuts, Escape, then the active tool's own keys. */
-function useEditorKeys(store: EditorStore, tool: EditorTool | undefined, enabled: boolean) {
+/**
+ * Undo, redo, tool shortcuts, Escape, then the active tool's own keys. In encounter mode
+ * undo and redo act on the encounter.
+ */
+function useEditorKeys(
+  store: EditorStore,
+  encounter: EncounterStore | null,
+  tools: EditorTool[],
+  tool: EditorTool | undefined,
+  enabled: boolean,
+) {
   useEffect(() => {
     if (!enabled) return
     const onKeyDown = (e: KeyboardEvent) => {
@@ -291,43 +447,89 @@ function useEditorKeys(store: EditorStore, tool: EditorTool | undefined, enabled
       )
         return
       const state = store.getState()
+      const history = encounter ? encounter.getState() : state
+      const ctx = { store, encounter: encounter ?? undefined }
       const mod = e.ctrlKey || e.metaKey
       const key = e.key.toLowerCase()
       if (mod && key === 'z') {
         e.preventDefault()
-        if (e.shiftKey) state.redo()
-        else state.undo()
+        if (e.shiftKey) history.redo()
+        else history.undo()
         return
       }
       if (mod && key === 'y') {
         e.preventDefault()
-        state.redo()
+        history.redo()
         return
       }
       if (e.key === 'Escape' && state.gestureBase) {
         state.cancelGesture()
-        tool?.onPointerLeave?.({ store })
+        tool?.onPointerLeave?.(ctx)
         return
       }
       if (!mod && !e.altKey) {
-        const picked = editorTools.find((item) => item.shortcut === key)
+        const picked = tools.find((item) => item.shortcut === key)
         if (picked) {
           state.setTool(picked.id)
           return
         }
       }
-      if (tool?.onKeyDown?.(e, { store })) e.preventDefault()
+      if (tool?.onKeyDown?.(e, ctx)) e.preventDefault()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [store, tool, enabled])
+  }, [store, encounter, tools, tool, enabled])
 }
 
 /** Tells tools when they become active and when they stop. */
-function useToolLifecycle(store: EditorStore, tool: EditorTool | undefined) {
+function useToolLifecycle(
+  store: EditorStore,
+  encounter: EncounterStore | null,
+  tool: EditorTool | undefined,
+) {
   useEffect(() => {
     if (!tool) return
-    tool.onActivate?.({ store })
-    return () => tool.onDeactivate?.({ store })
-  }, [store, tool])
+    const ctx = { store, encounter: encounter ?? undefined }
+    tool.onActivate?.(ctx)
+    return () => tool.onDeactivate?.(ctx)
+  }, [store, encounter, tool])
+}
+
+/** The encounter's name in the header: the DM can rename it, trimmed, 1 to 80 characters. */
+function EncounterName() {
+  const store = useEncounterStore()
+  const id = useId()
+  const name = useEncounter((s) => s.doc.name)
+  const readOnly = useEncounter((s) => s.meta.readOnly)
+  // What the field shows while it has focus; the encounter keeps the last valid name.
+  const [draft, setDraft] = useState<string | null>(null)
+  const invalid = draft !== null && cleanEncounterName(draft) === null
+  if (readOnly) return <span className="min-w-0 truncate text-base font-semibold">{name}</span>
+
+  const commit = () => {
+    if (draft !== null) store.getState().apply((doc) => renameEncounter(doc, draft))
+    setDraft(null)
+  }
+  return (
+    <input
+      id={id}
+      aria-label={te.encounterName}
+      className={`${inputClass} max-w-64 min-h-9 py-1 text-base font-semibold`}
+      value={draft ?? name}
+      maxLength={ENCOUNTER_NAME_MAX}
+      autoComplete="off"
+      aria-invalid={invalid || undefined}
+      title={invalid ? te.encounterNameInvalid : undefined}
+      onFocus={() => setDraft(name)}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') event.currentTarget.blur()
+        if (event.key === 'Escape') {
+          setDraft(null)
+          event.currentTarget.blur()
+        }
+      }}
+    />
+  )
 }
