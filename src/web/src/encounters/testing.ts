@@ -30,7 +30,7 @@ export function smallBoard(fields: Partial<BoardState> = {}): BoardState {
       width: 4,
       height: 2,
       layout: { schemaVersion: 1, cells, features: [], entrances: [] },
-      backgroundUrl: null,
+      background: null,
     },
     tokens: [
       {

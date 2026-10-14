@@ -44,6 +44,29 @@
         }
       }
     },
+    "/api/assets/{assetId}": {
+      "get": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/auth/options": {
       "get": {
         "tags": [
@@ -1500,6 +1523,163 @@
           }
         }
       }
+    },
+    "/api/campaigns/{campaignId}/maps/{mapId}/backgrounds": {
+      "get": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapBackgroundsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateBackgroundRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapBackground"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/maps/{mapId}/background": {
+      "put": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickBackgroundRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1627,7 +1807,28 @@
           "tokenInvalid",
           "encounterArchived",
           "creaturesMisplaced",
-          "mapNotInStore"
+          "mapNotInStore",
+          "imagesUnavailable",
+          "imageBudgetExhausted",
+          "generationRunning",
+          "mapChanged",
+          "backgroundNotFound",
+          "backgroundOutdated"
+        ]
+      },
+      "AssetFailure": {
+        "enum": [
+          "rejected",
+          "error",
+          null
+        ]
+      },
+      "AssetStatus": {
+        "enum": [
+          "queued",
+          "running",
+          "done",
+          "failed"
         ]
       },
       "AuthOptionsResponse": {
@@ -1641,6 +1842,42 @@
           }
         }
       },
+      "BoardBackground": {
+        "required": [
+          "assetId",
+          "url",
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "BoardMap": {
         "required": [
           "id",
@@ -1648,7 +1885,7 @@
           "width",
           "height",
           "layout",
-          "backgroundUrl"
+          "background"
         ],
         "type": "object",
         "properties": {
@@ -1670,10 +1907,14 @@
           "layout": {
             "$ref": "#/components/schemas/MapLayout"
           },
-          "backgroundUrl": {
-            "type": [
-              "null",
-              "string"
+          "background": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BoardBackground"
+              }
             ]
           }
         }
@@ -2152,6 +2393,18 @@
           "both"
         ]
       },
+      "GenerateBackgroundRequest": {
+        "required": [
+          "mapVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "mapVersion": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "HealthResponse": {
         "required": [
           "status"
@@ -2219,10 +2472,54 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
               null
             ]
           }
         }
+      },
+      "ImageBudgetResponse": {
+        "required": [
+          "spentUsd",
+          "limitUsd",
+          "monthStart",
+          "available"
+        ],
+        "type": "object",
+        "properties": {
+          "spentUsd": {
+            "type": "number",
+            "format": "double"
+          },
+          "limitUsd": {
+            "type": "number",
+            "format": "double"
+          },
+          "monthStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "available": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ImageHubClientMethod": {
+        "enum": [
+          "BackgroundUpdated"
+        ],
+        "type": "string"
+      },
+      "ImageHubMethod": {
+        "enum": [
+          "WatchMap"
+        ],
+        "type": "string"
       },
       "ImportCreature": {
         "required": [
@@ -2768,6 +3065,122 @@
           }
         }
       },
+      "MapBackground": {
+        "required": [
+          "id",
+          "mapId",
+          "status",
+          "url",
+          "gridWidth",
+          "gridHeight",
+          "x",
+          "y",
+          "width",
+          "height",
+          "outdated",
+          "layoutChanged",
+          "failure",
+          "createdAt",
+          "finishedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mapId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssetStatus"
+          },
+          "url": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "gridWidth": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gridHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "outdated": {
+            "type": "boolean"
+          },
+          "layoutChanged": {
+            "type": "boolean"
+          },
+          "failure": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssetFailure"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "MapBackgroundsResponse": {
+        "required": [
+          "pickedAssetId",
+          "versions",
+          "budget"
+        ],
+        "type": "object",
+        "properties": {
+          "pickedAssetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapBackground"
+            }
+          },
+          "budget": {
+            "$ref": "#/components/schemas/ImageBudgetResponse"
+          }
+        }
+      },
       "MapLayout": {
         "required": [
           "schemaVersion",
@@ -3011,6 +3424,12 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
               null
             ]
           },
@@ -3045,6 +3464,21 @@
           "y": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "PickBackgroundRequest": {
+        "required": [
+          "assetId"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -3910,6 +4344,9 @@
   "tags": [
     {
       "name": "Health"
+    },
+    {
+      "name": "Images"
     },
     {
       "name": "Auth"

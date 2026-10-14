@@ -9,8 +9,7 @@ using OreanasOffice.Server.Campaigns;
 namespace OreanasOffice.Server.Maps;
 
 // knowledge/domain/battle-map.md. The layout is one JSON column, not a table of cells
-// (knowledge/decisions/persistence.md). The background image arrives with assets in
-// stage 7.
+// (knowledge/decisions/persistence.md).
 public class BattleMap
 {
     public const int NameMaxLength = 80;
@@ -52,6 +51,12 @@ public class BattleMap
     // foreign key. Set once, never changed (knowledge/domain/battle-map.md, "Store").
     public Guid? CopiedFromMapId { get; set; }
 
+    // The picked background (knowledge/domain/battle-map.md, "Background image"): an Asset
+    // of this map, or of the map it was copied from. Not shown while the asset was made for
+    // another size. Online only and not part of the sync item, so picking never conflicts
+    // with offline edits. No foreign key: a store copy points to another campaign's asset.
+    public Guid? BackgroundAssetId { get; set; }
+
     public Campaign Campaign { get; set; } = null!;
 }
 
@@ -81,6 +86,7 @@ internal sealed class BattleMapConfiguration : IEntityTypeConfiguration<BattleMa
         map.Property(m => m.Version).IsConcurrencyToken();
         map.HasOne<AppUser>().WithMany().HasForeignKey(m => m.UpdatedByUserId).OnDelete(DeleteBehavior.Restrict);
         map.HasIndex(m => new { m.CampaignId, m.CopiedFromMapId });
+        map.HasIndex(m => m.BackgroundAssetId);
         map.HasOne(m => m.Campaign).WithMany().HasForeignKey(m => m.CampaignId).OnDelete(DeleteBehavior.Cascade);
     }
 }

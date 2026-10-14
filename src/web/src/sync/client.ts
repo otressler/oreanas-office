@@ -201,6 +201,53 @@ export function syncBeforeStart(
   })
 }
 
+/**
+ * Pushes the map (and its campaign when made offline) before a background job, since the
+ * server paints from its own copy (knowledge/features/ai-map-generation.md, "Sync first").
+ * Resolves 'ready' with the map's server version when the server has the device's version,
+ * 'blocked' when a conflict or rejection must be resolved first, 'offline' without a
+ * connection. A map this device doesn't have is the server's already: 'ready' without version.
+ */
+export function syncMapBeforeGenerate(
+  db: OfflineDb,
+  mapId: string,
+): Promise<{ result: 'ready' | 'blocked' | 'offline'; version: number | null }> {
+  return withSyncLock(userIdOf(db), async () => {
+    const map = await db.maps.get(mapId)
+    if (!navigator.onLine) return { result: 'offline' as const, version: null }
+    if (!map) return { result: 'ready' as const, version: null }
+
+    const campaign = await db.campaigns.get(map.campaignId)
+    const scope = {
+      campaignIds: new Set(campaign?.local ? [campaign.id] : []),
+      ids: {
+        creatureType: new Set<string>(),
+        battleMap: new Set([map.id]),
+        encounter: new Set<string>(),
+      },
+    }
+    useSyncStore.setState((s) => ({ running: s.running + 1 }))
+    try {
+      const planned = await planPush(db, scope)
+      if (planned.length > 0) noteCampaigns((await push(db, planned)).campaignsCreated)
+      noteSuccess()
+    } catch (error) {
+      noteFailure(error)
+      const result =
+        error instanceof SyncFailure && error.kind === 'offline' ? 'offline' : 'blocked'
+      return { result, version: null }
+    } finally {
+      useSyncStore.setState((s) => ({ running: s.running - 1 }))
+    }
+
+    const after = await db.maps.get(mapId)
+    const stuck = !after || after.sync.changed || after.sync.issue !== null
+    return stuck
+      ? { result: 'blocked' as const, version: null }
+      : { result: 'ready' as const, version: after.sync.baseVersion }
+  })
+}
+
 /** The current status, live. */
 export function useSyncStatus(): SyncStatus {
   const db = useSyncDb()

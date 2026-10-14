@@ -4,6 +4,7 @@
 // The layout has one rule per region: the toolbar picks what you work on, the side panel
 // shows only the active tool's panel, the header holds what belongs to the whole map or
 // encounter, and the status bar shows live information.
+import { backgroundTool } from './background'
 import { creatureTools, EncounterMenu, encounterTool } from './encounter'
 import { ChecksStatus, featureTools } from './features'
 import { descriptionTool, sceneHeaderItems, sceneStatusItems } from './scene'
@@ -19,6 +20,7 @@ export const editorTools: EditorTool[] = [
   ...terrainTools,
   ...featureTools,
   descriptionTool,
+  backgroundTool,
   resizeTool,
 ].sort((a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group))
 

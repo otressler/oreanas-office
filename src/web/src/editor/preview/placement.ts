@@ -67,7 +67,7 @@ export function previewBoard(
       width: doc.width,
       height: doc.height,
       layout: doc.layout,
-      backgroundUrl: null,
+      background: null,
     },
     tokens,
     isSessionDm: false,

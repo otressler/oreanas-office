@@ -917,6 +917,10 @@ export const de = {
     gateWaking: 'Inzwischen Karten bearbeiten',
 
     /** The editor's side panel and header (src/editor/scene). */
+    /** The "Hintergrund" tool (lane: frontend fills the rest). */
+    background: {
+      tool: 'Hintergrund',
+    },
     scene: {
       /** The toolbar entry with the scene, vibe and lighting texts. */
       tool: 'Beschreibung',
@@ -998,6 +1002,15 @@ export const de = {
     creaturesMisplaced:
       'Eine Kreatur steht nicht gültig auf der Karte. Korrigiere die Aufstellung, bevor die Begegnung bereit ist oder startet.',
     mapNotInStore: 'Diese Karte wird im Kartenspeicher dieser Kampagne nicht angeboten.',
+    imagesUnavailable:
+      'Auf dem Server ist kein Bildmodell eingerichtet. Hintergründe können gerade nicht erzeugt werden.',
+    imageBudgetExhausted:
+      'Das Bildbudget für diesen Monat ist aufgebraucht. Ab dem nächsten Monat geht es wieder.',
+    generationRunning: 'Für diese Karte wird schon ein Hintergrund erzeugt.',
+    mapChanged:
+      'Die Karte hat sich auf dem Server geändert. Synchronisiere und bestätige den Auftrag noch einmal.',
+    backgroundNotFound: 'Diesen Hintergrund gibt es für diese Karte nicht.',
+    backgroundOutdated: 'Dieser Hintergrund wurde für eine andere Kartengröße erzeugt.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */

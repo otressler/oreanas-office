@@ -29,7 +29,7 @@ public sealed class AppFactory(
 
         // UseSetting, unlike ConfigureAppConfiguration, is visible while Program.cs
         // still configures services, where AddAccounts reads the Google client.
-        foreach (var (key, value) in configuration ?? new Dictionary<string, string?>())
+        foreach (var (key, value) in FakeImageClientExtensions.Settings.Concat(configuration ?? new Dictionary<string, string?>()))
         {
             builder.UseSetting(key, value);
         }
@@ -38,6 +38,7 @@ public sealed class AppFactory(
         {
             services.AddTestAuth();
             services.AddFakeGoogleAnswers();
+            services.AddFakeImageClient();
         });
     }
 }

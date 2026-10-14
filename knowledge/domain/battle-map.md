@@ -33,7 +33,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 
 # Background image
 
-- The DM generates backgrounds with [AI map generation](/features/ai-map-generation.md) and picks one version as `backgroundAssetId`.
+- The DM generates backgrounds with [AI map generation](/features/ai-map-generation.md) and picks one version as `backgroundAssetId`. Picking needs a connection and isn't part of the map's sync item, so it never conflicts with offline edits and doesn't raise the map's version.
 - **Changing the size makes the background outdated.** Every version made for another size is outdated: the board doesn't show it and uses the plain rendering instead, and the editor says a new image is needed. Nothing is generated automatically; the DM starts a new generation. Undoing the resize, back to the image's size, makes the image usable again.
 - Other layout changes, such as a moved wall, keep the image. The editor notes that the layout changed since the image was made, so the DM can decide to regenerate.
 - An encounter saves the picked background when it starts, together with its copy of the layout ([encounter](/domain/encounter.md)).

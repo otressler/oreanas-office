@@ -54,6 +54,12 @@ const ALL_CODES = {
   encounterArchived: true,
   creaturesMisplaced: true,
   mapNotInStore: true,
+  imagesUnavailable: true,
+  imageBudgetExhausted: true,
+  generationRunning: true,
+  mapChanged: true,
+  backgroundNotFound: true,
+  backgroundOutdated: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

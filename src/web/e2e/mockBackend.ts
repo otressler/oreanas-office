@@ -776,7 +776,7 @@ export class MockBackend {
         width,
         height,
         layout: { schemaVersion: 1, cells, features, entrances },
-        backgroundUrl: null,
+        background: null,
       },
       tokens: [],
       createdAt: new Date().toISOString(),

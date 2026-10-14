@@ -1,0 +1,27 @@
+{
+  "guide": "tests/Server.Tests/Images/Golden/open-field.png",
+  "size": "1280x1216",
+  "cell_px": 32,
+  "grid": "40x38",
+  "legend": [
+    "grey = walkable ground (floor, path, earth, flagstones as fits the scene)",
+    "ochre = difficult terrain (rubble, undergrowth, mud, shallow scree)",
+    "blue = water",
+    "black = solid walls or impassable rock",
+    "dark green at column 6, row 6 = tree (\"Eiche\")",
+    "dark green at column 9, row 4 = tree (\"Eiche\")",
+    "dark green at column 15, row 10 = tree (\"Eiche\")",
+    "dark green at column 4, row 15 = tree (\"Eiche\")",
+    "dark green at column 19, row 18 = tree (\"Eiche\")",
+    "dark green at column 36, row 31 = tree (\"Eiche\")",
+    "dark green at column 34, row 21 = tree (\"Eiche\")",
+    "dark green at column 13, row 35 = tree (\"Eiche\")",
+    "dark green at column 38, row 4 = tree (\"Eiche\")",
+    "red at column 30-32, row 9-11 = standing stones (\"Steinkreis\")",
+    "cyan at column 26, row 33 = well (\"Brunnen\")",
+    "magenta = openings at the map edge, painted as the path, doorway or stairs that leads away: Feldweg, Hohlweg"
+  ],
+  "scene": "open grassland with a reedy pond, a ruined farmhouse and a hill crowned by standing stones",
+  "vibe": "wide, windswept, hunted",
+  "lighting": "late afternoon sun"
+}

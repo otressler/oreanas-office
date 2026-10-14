@@ -1,0 +1,24 @@
+{
+  "guide": "tests/Server.Tests/Images/Golden/crypt.png",
+  "size": "1536x1024",
+  "cell_px": 64,
+  "grid": "24x16",
+  "legend": [
+    "grey = walkable ground (floor, path, earth, flagstones as fits the scene)",
+    "ochre = difficult terrain (rubble, undergrowth, mud, shallow scree)",
+    "blue = water",
+    "black = solid walls or impassable rock",
+    "dark purple = outside the play area, where nobody can stand: scenery that fits (cliff drop, solid bedrock, darkness, dense forest), never open water or walkable floor",
+    "orange at column 8, row 5 = door (\"T\u00fcr\")",
+    "orange at column 17, row 5 = door (\"T\u00fcr\")",
+    "orange at column 9, row 11 = door (\"T\u00fcr\")",
+    "orange at column 16, row 11 = door (\"T\u00fcr\")",
+    "white at column 11, row 13 = pillar (\"S\u00e4ule\")",
+    "white at column 14, row 13 = pillar (\"S\u00e4ule\")",
+    "red at column 12-13, row 11 = altar (\"Altar\")",
+    "magenta = openings at the map edge, painted as the path, doorway or stairs that leads away: Treppe nach oben"
+  ],
+  "scene": "a flooded crypt of three chambers joined by narrow corridors, an altar on a raised dais",
+  "vibe": "eerie, damp, silent",
+  "lighting": "torchlight"
+}

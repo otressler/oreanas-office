@@ -83,4 +83,20 @@ public enum ApiErrorCode
     CreaturesMisplaced,
     // MapNotInStore: the map isn't offered in this campaign's store.
     MapNotInStore,
+
+    // Map backgrounds (knowledge/features/ai-map-generation.md).
+    // ImagesUnavailable: the server has no image model configured.
+    ImagesUnavailable,
+    // ImageBudgetExhausted: this month's image generation reached the limit
+    // (knowledge/decisions/image-budget.md).
+    ImageBudgetExhausted,
+    // GenerationRunning: the map already has a queued or running background job.
+    GenerationRunning,
+    // MapChanged: the server's map isn't the version the editor confirmed the job for;
+    // sync and confirm again.
+    MapChanged,
+    // BackgroundNotFound: no finished background with this id for this map.
+    BackgroundNotFound,
+    // BackgroundOutdated: the background was made for another size of the map.
+    BackgroundOutdated,
 }

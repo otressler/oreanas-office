@@ -52,6 +52,11 @@ public class Encounter
     // encounter use it, so later map edits don't change them.
     public EncounterMapCopy? MapCopy { get; set; }
 
+    // The map's picked background when the encounter started, saved with MapCopy; null when
+    // the map had none that fits its size (knowledge/domain/encounter.md). No foreign key,
+    // like BattleMap.BackgroundAssetId.
+    public Guid? BackgroundAssetId { get; set; }
+
     public Campaign Campaign { get; set; } = null!;
 
     public BattleMap BattleMap { get; set; } = null!;
@@ -106,5 +111,6 @@ internal sealed class EncounterConfiguration : IEntityTypeConfiguration<Encounte
             .HasFilter($"[{nameof(Encounter.Status)}] = N'{nameof(EncounterStatus.Active)}'")
             .HasDatabaseName("IX_Encounters_SessionId_Active");
         encounter.HasIndex(e => new { e.CampaignId, e.Status });
+        encounter.HasIndex(e => e.BackgroundAssetId);
     }
 }

@@ -1,0 +1,17 @@
+{
+  "guide": "tests/Server.Tests/Images/Golden/gorge-crossing.png",
+  "size": "1280x768",
+  "cell_px": 64,
+  "grid": "20x12",
+  "legend": [
+    "grey = walkable ground (floor, path, earth, flagstones as fits the scene)",
+    "ochre = difficult terrain (rubble, undergrowth, mud, shallow scree)",
+    "dark purple = outside the play area, where nobody can stand: scenery that fits (cliff drop, solid bedrock, darkness, dense forest), never open water or walkable floor",
+    "brown at column 9-12, row 6-7 = bridge (\"H\u00e4ngebr\u00fccke\")",
+    "white at column 4, row 3 = pillar (\"Menhir\")",
+    "magenta = openings at the map edge, painted as the path, doorway or stairs that leads away: Waldweg"
+  ],
+  "scene": "rope bridge over a misty gorge",
+  "vibe": "tense, windy",
+  "lighting": "overcast morning"
+}
