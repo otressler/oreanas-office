@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router'
 import { api } from '../api/client'
 import { unwrap } from '../api/errors'
 import type { CampaignSummary } from '../api/types'
+import { useLocalCampaigns } from '../campaigns/localCampaigns'
 import { campaignKeys, useCampaigns } from '../campaigns/queries'
 import {
   Badge,
@@ -17,6 +18,8 @@ import {
   TextField,
 } from '../components/ui'
 import { formatDate } from '../lib/dates'
+import { SyncMark } from '../maps/SyncMark'
+import type { CampaignCopy } from '../offline/db'
 import { de } from '../text/de'
 import { limits } from '../lib/limits'
 
@@ -24,6 +27,9 @@ import { limits } from '../lib/limits'
 export function HomePage() {
   const campaigns = useCampaigns()
   useLandOnFight(campaigns.data)
+  // Campaigns made offline that the server doesn't list yet.
+  const listed = new Set(campaigns.data?.map((campaign) => campaign.id))
+  const local = (useLocalCampaigns() ?? []).filter((copy) => !listed.has(copy.id))
 
   return (
     <div className="flex flex-col pb-8">
@@ -32,10 +38,15 @@ export function HomePage() {
         <Loading />
       ) : campaigns.isError ? (
         <LoadError error={campaigns.error} onRetry={() => void campaigns.refetch()} />
-      ) : campaigns.data.length === 0 ? (
+      ) : campaigns.data.length === 0 && local.length === 0 ? (
         <p className="text-dim">{de.home.empty}</p>
       ) : (
         <ul className="flex flex-col gap-3">
+          {local.map((copy) => (
+            <li key={copy.id}>
+              <LocalCampaignCard copy={copy} />
+            </li>
+          ))}
           {campaigns.data.map((campaign) => (
             <li key={campaign.id}>
               <CampaignCard campaign={campaign} />
@@ -74,6 +85,19 @@ function useLandOnFight(campaigns: CampaignSummary[] | undefined) {
     }
     void navigate(fights[0]!)
   }, [campaigns, navigate])
+}
+
+/** A campaign made on this device: no fight, no join code until it is synced. */
+function LocalCampaignCard({ copy }: { copy: CampaignCopy }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4 has-[>a:hover]:border-candle">
+      <Link to={`/kampagnen/${copy.id}`} className="flex flex-wrap items-center gap-2">
+        <span className="text-lg font-semibold text-parchment">{copy.name}</span>
+        <Badge>{de.roles[copy.myRole]}</Badge>
+        {copy.sync && <SyncMark sync={copy.sync} />}
+      </Link>
+    </div>
+  )
 }
 
 function CampaignCard({ campaign }: { campaign: CampaignSummary }) {

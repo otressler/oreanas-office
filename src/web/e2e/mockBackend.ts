@@ -116,6 +116,12 @@ export class MockBackend {
   readonly creatureTypes: CreatureType[] = []
   readonly encounters: Encounter[] = []
   readonly moves: TokenMove[] = []
+  // ---- Sync (stage 6): the items devices push, as the server keeps them ----------------
+  readonly syncItems = new Map<string, S['SyncServerItem']>()
+  /** What the map store offers; tests fill it. */
+  syncStore: S['StoreMapResponse'][] = []
+  /** The oldest sync version the server accepts (the real one: Sync:MinimumVersion). */
+  syncMinimumVersion = 1
   googleEnabled = false
   private readonly signedIn = new Map<BrowserContext, string | null>()
 
@@ -147,9 +153,14 @@ export class MockBackend {
     return invite
   }
 
-  addCampaign(name: string, dm: User, joinCode = this.newJoinCode()): Campaign {
+  addCampaign(
+    name: string,
+    dm: User,
+    joinCode = this.newJoinCode(),
+    id: string = randomUUID(),
+  ): Campaign {
     const campaign: Campaign = {
-      id: randomUUID(),
+      id,
       name,
       defaultDmUserId: dm.id,
       joinCode,
@@ -226,12 +237,189 @@ export class MockBackend {
   private async handle(context: BrowserContext, route: Route) {
     const request = route.request()
     const url = new URL(request.url())
-    const [status, body] = this.dispatch(context, request, url)
+    const [status, body] =
+      this.dispatchSync(context, request, url) ?? this.dispatch(context, request, url)
     await route.fulfill(
       body === undefined
         ? { status }
         : { status, contentType: 'application/json', body: JSON.stringify(body) },
     )
+  }
+
+  // ---- Sync and the map store (stage 6) ---------------------------------------------------
+  // Follows the contract in knowledge/decisions/offline-prep-pwa.md ("Sync protocol"): ids
+  // and versions come from the device, a push answers per item, and the pull lists versions.
+
+  /** A map as another device saved it: the server holds it at `version`. */
+  addSyncedMap(campaign: Campaign, name: string, dm: User, version = 1): S['SyncServerItem'] {
+    const item: S['SyncServerItem'] = {
+      id: randomUUID(),
+      kind: 'battleMap',
+      campaignId: campaign.id,
+      version,
+      updatedAt: new Date().toISOString(),
+      updatedByDisplayName: dm.displayName,
+      campaign: null,
+      creatureType: null,
+      encounter: null,
+      map: {
+        name,
+        width: 8,
+        height: 6,
+        layout: { schemaVersion: 1, cells: [], features: [], entrances: [] },
+        scene: '',
+        vibe: '',
+        lighting: '',
+        archivedAt: null,
+        copiedFromMapId: null,
+      },
+    }
+    this.syncItems.set(item.id, item)
+    return item
+  }
+
+  /** Another device renames a synced map: the version goes up. */
+  renameSyncedMap(id: string, name: string, by: User) {
+    const item = this.syncItems.get(id)
+    if (!item?.map) throw new Error(`No synced map ${id}`)
+    this.syncItems.set(id, {
+      ...item,
+      version: item.version + 1,
+      updatedAt: new Date().toISOString(),
+      updatedByDisplayName: by.displayName,
+      map: { ...item.map, name },
+    })
+  }
+
+  /** The sync and map store endpoints; null for every other path. */
+  private dispatchSync(context: BrowserContext, request: Request, url: URL): Reply | null {
+    const path = url.pathname
+    const method = request.method()
+    const store = matchPath('/api/campaigns/:campaignId/map-store/*', path)
+    if (!path.startsWith('/api/sync/') && !store) return null
+    const me = this.users.find((u) => u.id === this.signedIn.get(context)) ?? null
+    if (!me) return [401]
+    const body = (request.postDataJSON() ?? {}) as Record<string, unknown>
+
+    if (path.startsWith('/api/sync/')) {
+      const version = Number(request.headers()['x-sync-version'])
+      if (!(version >= this.syncMinimumVersion)) return error('syncOutdated', undefined, 426)
+    }
+    if (path === '/api/sync/push' && method === 'POST') {
+      const items = (body.items ?? []) as S['SyncPushItem'][]
+      return [200, { results: items.map((item) => this.pushSyncItem(me, item)) }]
+    }
+    if (store) {
+      const campaign = this.campaigns.find((c) => c.id === store.campaignId)
+      if (!campaign) return [404]
+      if (memberOf(campaign, me.id)?.role !== 'dm') return [403]
+      if (method === 'GET') return [200, this.syncStore]
+      const offered = this.syncStore.find((m) => m.id === path.split('/').pop())
+      if (!offered) return error('mapNotInStore', undefined, 409)
+      const copy = this.addSyncedMap(campaign, offered.name, me)
+      copy.map = {
+        ...copy.map!,
+        width: offered.width,
+        height: offered.height,
+        layout: offered.layout,
+        copiedFromMapId: offered.id,
+      }
+      this.syncStore = this.syncStore.filter((m) => m.id !== offered.id)
+      return [200, copy]
+    }
+    const sync = matchPath('/api/sync/campaigns/:campaignId/:what', path)
+    if (sync) {
+      const campaign = this.campaigns.find((c) => c.id === sync.campaignId)
+      if (!campaign) return [404]
+      if (memberOf(campaign, me.id)?.role !== 'dm') return [403]
+      const own = [...this.syncItems.values()].filter((i) => i.campaignId === campaign.id)
+      if (sync.what === 'versions') {
+        const list = (kind: S['SyncItemKind']) =>
+          own.filter((i) => i.kind === kind).map(({ id, version }) => ({ id, version }))
+        return [
+          200,
+          {
+            creatureTypes: list('creatureType'),
+            battleMaps: list('battleMap'),
+            encounters: list('encounter'),
+          },
+        ]
+      }
+      const ids = new Set((body.ids ?? []) as string[])
+      return [200, own.filter((i) => ids.has(i.id))]
+    }
+    return [404]
+  }
+
+  private pushSyncItem(me: User, item: S['SyncPushItem']): S['SyncItemResult'] {
+    const result = (
+      outcome: S['SyncOutcome'],
+      fields: Partial<S['SyncItemResult']> = {},
+    ): S['SyncItemResult'] => ({
+      id: item.id,
+      kind: item.kind,
+      outcome,
+      server: null,
+      error: null,
+      dependsOnId: null,
+      problems: null,
+      existingCreatureTypeId: null,
+      ...fields,
+    })
+    const rejected = (code: ErrorCode) => result('rejected', { error: { code } })
+
+    if (item.kind === 'campaign') {
+      const existing = this.campaigns.find((c) => c.id === item.id)
+      if (existing && !memberOf(existing, me.id)) return rejected('idTaken')
+      const name = String(item.campaign?.name ?? '').trim()
+      if (!name) return rejected('nameInvalid')
+      const campaign = existing ?? this.addCampaign(name, me, undefined, item.id)
+      return result(existing ? 'saved' : 'created', { server: this.campaignSyncItem(campaign) })
+    }
+    const campaign = this.campaigns.find((c) => c.id === item.campaignId)
+    if (!campaign || memberOf(campaign, me.id)?.role !== 'dm') return rejected('notADm')
+
+    const stored = this.syncItems.get(item.id)
+    const next = (version: number): S['SyncServerItem'] => ({
+      id: item.id,
+      kind: item.kind,
+      campaignId: item.campaignId,
+      version,
+      updatedAt: new Date().toISOString(),
+      updatedByDisplayName: me.displayName,
+      campaign: null,
+      creatureType: trimName(item.creatureType),
+      map: trimName(item.map),
+      encounter: item.encounter && { ...trimName(item.encounter)!, sessionId: null, mapCopy: null },
+    })
+    if (!stored) {
+      if (item.baseVersion > 0) return rejected('itemNotFound')
+      const created = next(1)
+      this.syncItems.set(item.id, created)
+      return result('created', { server: created })
+    }
+    if (stored.kind !== item.kind || stored.campaignId !== item.campaignId) {
+      return rejected('idTaken')
+    }
+    if (stored.version !== item.baseVersion) return result('conflict', { server: stored })
+    const saved = next(stored.version + 1)
+    this.syncItems.set(item.id, saved)
+    return result('saved', { server: saved })
+  }
+
+  private campaignSyncItem(campaign: Campaign): S['SyncServerItem'] {
+    return {
+      id: campaign.id,
+      kind: 'campaign',
+      campaignId: campaign.id,
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      updatedByDisplayName: null,
+      campaign: { name: campaign.name },
+      creatureType: null,
+      map: null,
+      encounter: null,
+    }
   }
 
   private dispatch(context: BrowserContext, request: Request, url: URL): Reply {
@@ -1003,6 +1191,11 @@ function refused(code: ErrorCode): S['MoveResult'] {
 
 function error(code: ErrorCode, field?: string, status = 400): Reply {
   return [status, field ? { code, field } : { code }]
+}
+
+/** The data with its name trimmed, as the server stores it. */
+function trimName<T extends { name: string }>(data: T | null | undefined): T | null {
+  return data ? { ...data, name: data.name.trim() } : null
 }
 
 function memberOf(campaign: Campaign, userId: string) {

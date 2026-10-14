@@ -15,8 +15,11 @@ describe('EditorPage', () => {
       'href',
       `/kampagnen/${CAMPAIGN_ID}/karten`,
     )
-    // Only the header's profile link asks, since the test marks the server as awake.
-    expect(calls.filter((c) => c.path !== '/api/auth/me')).toHaveLength(0)
+    // Only the header's profile link and the sync's pull on opening ask, since the test
+    // marks the server as awake; the map itself comes from the browser.
+    expect(
+      calls.filter((c) => c.path !== '/api/auth/me' && c.path !== '/api/campaigns'),
+    ).toHaveLength(0)
   })
 
   it('says when the map isn’t on this device', async () => {

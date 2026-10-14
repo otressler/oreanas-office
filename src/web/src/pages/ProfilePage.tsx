@@ -6,6 +6,7 @@ import { unwrap } from '../api/errors'
 import { meQueryKey } from '../api/queryClient'
 import { googleLinkUrl, useAuthOptions, useCurrentUser, useSetSignedIn } from '../auth/auth'
 import { GoogleButton } from '../auth/GoogleButton'
+import { useSignOutGuard } from '../auth/useSignOutGuard'
 import { RedirectError } from '../auth/RedirectError'
 import { Button, ButtonLink, ErrorAlert, Note, PageTitle, Panel, TextField } from '../components/ui'
 import { de } from '../text/de'
@@ -17,6 +18,8 @@ export function ProfilePage() {
   const options = useAuthOptions()
   const navigate = useNavigate()
   const setSignedIn = useSetSignedIn()
+  // Warns first when changes on this device are not synced.
+  const signOutGuard = useSignOutGuard()
 
   const signOut = useMutation({
     mutationFn: () => unwrap(api.POST('/api/auth/logout')),
@@ -47,13 +50,17 @@ export function ProfilePage() {
 
       <div className="mt-6 flex flex-wrap gap-3">
         {me.isAdmin && <ButtonLink to="/admin">{de.profile.admin}</ButtonLink>}
-        <Button onClick={() => signOut.mutate()} busy={signOut.isPending}>
+        <Button
+          onClick={() => void signOutGuard.request(() => signOut.mutate())}
+          busy={signOut.isPending}
+        >
           {de.profile.signOut}
         </Button>
       </div>
       <div className="mt-3">
         <ErrorAlert error={signOut.error} />
       </div>
+      {signOutGuard.dialog}
     </div>
   )
 }

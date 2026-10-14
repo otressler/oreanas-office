@@ -35,8 +35,10 @@ function keepOfflineCopy(campaigns: Parameters<typeof saveCampaignCopies>[1]) {
   saveCampaignCopies(offlineDb(user.id), campaigns).catch(() => {})
 }
 
-export function useCampaign(campaignId: string) {
+/** `enabled: false` for a campaign made on this device, which the server doesn't know yet. */
+export function useCampaign(campaignId: string, { enabled = true } = {}) {
   return useQuery({
+    enabled,
     queryKey: campaignKeys.detail(campaignId),
     queryFn: () => unwrap(api.GET('/api/campaigns/{campaignId}', path(campaignId))),
   })

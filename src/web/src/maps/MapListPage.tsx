@@ -26,6 +26,8 @@ import { useCampaignCopy } from '../offline/campaigns'
 import { useLocalUser } from '../offline/localUser'
 import { de } from '../text/de'
 import { checkLayout } from '../editor/validation'
+import { SyncStatusView, useOnline } from '../sync'
+import { MapStoreDialog } from './MapStoreDialog'
 import { MapFileError, parseMapFile } from './mapFile'
 import { keepStorage } from './storage'
 import { SyncMark } from './SyncMark'
@@ -89,6 +91,9 @@ export function MapListPage() {
       <BackLink campaignId={campaignId} />
       <PageTitle>{t.title(campaign.name)}</PageTitle>
       <p className="text-dim">{t.intro}</p>
+      <div className="mt-2">
+        <SyncStatusView />
+      </div>
 
       {!wide && (
         <div className="mt-4 flex flex-col gap-1 rounded-lg border border-candle/40 bg-candle/10 px-3 py-2 text-sm">
@@ -161,6 +166,11 @@ export function MapListPage() {
       {wide && (
         <>
           <NewMapForm campaignId={campaignId} />
+          <StorePanel
+            campaignId={campaignId}
+            local={campaign.local}
+            onAdded={(name) => setOutcome({ note: de.sync.store.added(name) })}
+          />
           <ImportPanel campaignId={campaignId} onDone={(result) => setOutcome(result)} />
         </>
       )}
@@ -326,6 +336,38 @@ function NewMapForm({ campaignId }: { campaignId: string }) {
           {t.create}
         </Button>
       </form>
+    </Panel>
+  )
+}
+
+/** The map store needs the server: offline, and for a campaign it doesn't know, it only hints. */
+function StorePanel({
+  campaignId,
+  local,
+  onAdded,
+}: {
+  campaignId: string
+  local: boolean
+  onAdded: (name: string) => void
+}) {
+  const online = useOnline()
+  const [open, setOpen] = useState(false)
+  const blocked = !online || local
+  return (
+    <Panel title={de.sync.store.title}>
+      <p className="text-sm text-dim">
+        {!online
+          ? de.sync.store.offlineHint
+          : local
+            ? de.sync.store.localHint
+            : de.sync.store.intro}
+      </p>
+      <Button className="self-start" disabled={blocked} onClick={() => setOpen(true)}>
+        {de.sync.store.open}
+      </Button>
+      {open && (
+        <MapStoreDialog campaignId={campaignId} onAdded={onAdded} onClose={() => setOpen(false)} />
+      )}
     </Panel>
   )
 }

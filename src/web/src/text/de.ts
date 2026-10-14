@@ -774,6 +774,141 @@ export const de = {
   /** Sync and the map store (lane: sync client). */
   sync: {
     title: 'Synchronisieren',
+    close: 'Schließen',
+    /** "<Name> (Kopie)" for the local copy kept next to the server's version. */
+    copyName: (name: string) => `${name} (Kopie)`,
+    kinds: {
+      campaign: 'Kampagne',
+      creatureType: 'Kreaturenart',
+      battleMap: 'Karte',
+      encounter: 'Begegnung',
+    },
+
+    /** The status next to the "Sync" button. */
+    status: {
+      syncing: 'Synchronisiere…',
+      allSynced: 'Alles synchronisiert',
+      pendingOne: '1 Änderung nicht synchronisiert',
+      pending: (count: number) => `${count} Änderungen nicht synchronisiert`,
+      offline: 'Offline',
+      /** `pending` is the pending text, e.g. "3 Änderungen nicht synchronisiert". */
+      offlinePending: (pending: string) => `Offline – ${pending}`,
+      attentionOnly: 'Nicht synchronisiert',
+      reviewOne: '1 Problem prüfen',
+      review: (count: number) => `${count} Probleme prüfen`,
+      outdated: 'Bitte neu laden',
+      reload: 'Neu laden',
+      signedOut: 'Bitte neu anmelden',
+      signIn: 'Anmelden',
+      failed: 'Synchronisieren hat nicht geklappt.',
+      button: 'Sync',
+    },
+
+    /** Marks on lists, next to "Nur auf diesem Gerät" and "Nicht synchronisiert". */
+    marks: {
+      conflict: 'Konflikt',
+      conflictTitle:
+        'Dieser Eintrag wurde auch auf dem Server geändert. Du entscheidest, welche Version gilt.',
+      rejected: 'Abgelehnt',
+      rejectedTitle: 'Der Server hat diese Änderungen nicht angenommen.',
+      vanished: 'Nicht mehr auf dem Server',
+    },
+
+    /** The dialogs for conflicts and rejections. */
+    dialog: {
+      title: 'Synchronisierung prüfen',
+      allDone: 'Alles erledigt.',
+      failed: 'Das hat nicht geklappt. Versuch es bitte noch einmal.',
+      conflictTitle: (kind: string, name: string) => `Konflikt: ${kind} „${name}“`,
+      conflictBody:
+        'Dieser Eintrag wurde auf diesem Gerät und auf dem Server geändert. Es wird nichts zusammengeführt: Du entscheidest, welche Version gilt.',
+      startedBody:
+        'Diese Begegnung wurde auf dem Server schon gestartet oder beendet. Deine Version lässt sich dort nicht mehr speichern.',
+      more: (count: number) =>
+        count === 1 ? 'Danach wartet noch ein Konflikt.' : `Danach warten noch ${count} Konflikte.`,
+      thisDevice: 'Auf diesem Gerät',
+      thisDeviceWho: 'diesem Gerät',
+      onServer: 'Auf dem Server',
+      unknownPerson: 'unbekannt',
+      /** `when` is formatted, e.g. "14.10., 18:30". */
+      changedBy: (who: string, when: string) => `Zuletzt geändert von ${who}, ${when}`,
+      sizeLine: (width: number, height: number) => `${width} × ${height} Felder`,
+      sizeOf: (size: string) => `Größe: ${size}`,
+      statusLine: (status: string) => `Status: ${status}`,
+      creatures: (count: number) => (count === 1 ? '1 Kreatur' : `${count} Kreaturen`),
+      archived: 'Archiviert',
+      preview: (version: string) => `Vorschau des Layouts: ${version}`,
+      keepMine: 'Meine behalten',
+      takeServer: 'Server-Version übernehmen',
+      keepBoth: 'Beide behalten',
+      saveAsDraft: 'Als neuen Entwurf speichern',
+      discard: 'Verwerfen',
+
+      problemsTitle: 'Nicht synchronisiert',
+      problemsBody:
+        'Diese Änderungen sind nur auf diesem Gerät. Behebe das Problem und synchronisiere erneut, nimm die Server-Version oder exportiere die Karte.',
+      vanished:
+        'Der Server listet diesen Eintrag nicht mehr, zum Beispiel weil du nicht mehr zur Spielleitung der Kampagne gehörst. Deine Änderungen bleiben auf diesem Gerät.',
+      layoutProblems: (count: number) =>
+        count === 1 ? '(1 Problem im Layout)' : `(${count} Probleme im Layout)`,
+      dependsOn: (name: string) => `Hängt ab von „${name}“, das nicht gespeichert werden konnte.`,
+      unknownItem: 'einem anderen Eintrag',
+      serverMissing: 'Der Server hat diesen Eintrag nicht (mehr).',
+      open: 'Öffnen',
+      openItem: (name: string) => `${name} öffnen`,
+      exportMap: 'Kartendatei exportieren',
+      syncAgain: 'Erneut synchronisieren',
+      useExisting: 'Vorhandene Art verwenden',
+      rename: 'Umbenennen',
+      renameTitle: (name: string) => `„${name}“ umbenennen`,
+      renameBody:
+        'In dieser Kampagne gibt es schon eine Kreaturenart mit diesem Namen. Gib der Art auf diesem Gerät einen anderen Namen.',
+      newName: 'Neuer Name',
+      nameInvalid: 'Bitte gib einen Namen mit höchstens 40 Zeichen an.',
+      renameAndSend: 'Umbenennen und erneut senden',
+    },
+
+    /** The warning before signing out. */
+    signOut: {
+      title: 'Ungesicherte Änderungen',
+      body: (count: number) =>
+        count === 1
+          ? 'Auf diesem Gerät ist noch eine Änderung nicht synchronisiert.'
+          : `Auf diesem Gerät sind noch ${count} Änderungen nicht synchronisiert.`,
+      issuesBody: 'Außerdem warten Konflikte oder abgelehnte Änderungen auf dich.',
+      keptNote:
+        'Die Daten bleiben in diesem Browser für dich erhalten, auch wenn du dich abmeldest.',
+      syncNow: 'Jetzt synchronisieren',
+      anyway: 'Trotzdem abmelden',
+    },
+
+    /** Campaigns made offline. */
+    localCampaign: {
+      newTitle: 'Neue Kampagne',
+      name: 'Name der Kampagne',
+      hint: 'Auch ohne Verbindung. Sie wird synchronisiert, sobald du online bist.',
+      nameRequired: 'Bitte gib der Kampagne einen Namen.',
+      create: 'Anlegen',
+      localBody:
+        'Diese Kampagne gibt es nur auf diesem Gerät. Sie wird zuerst synchronisiert; danach gibt es Beitrittscode, Einladungen, Charaktere und Sitzungen.',
+    },
+
+    /** The map store on the map list. */
+    store: {
+      open: 'Aus dem Kartenspeicher',
+      title: 'Kartenspeicher',
+      intro: 'Karten aus anderen Kampagnen, die du hier als Kopie hinzufügen kannst.',
+      offlineHint: 'Der Kartenspeicher braucht eine Verbindung.',
+      localHint: 'Der Kartenspeicher geht erst, wenn die Kampagne synchronisiert ist.',
+      empty: 'Im Kartenspeicher gibt es gerade nichts Neues für diese Kampagne.',
+      add: 'Hinzufügen',
+      addBack: 'Archivierte Kopie zurückholen',
+      addBackHint: 'Diese Kampagne hat eine archivierte Kopie der Karte. Sie kommt zurück.',
+      addLabel: (name: string) => `${name} hinzufügen`,
+      fromCampaign: (name: string) => `Aus der Kampagne „${name}“`,
+      added: (name: string) => `„${name}“ ist hinzugefügt.`,
+      preview: (name: string) => `Vorschau von ${name}`,
+    },
   },
 
   /** Creature types and the bestiary (lane: bestiary). */

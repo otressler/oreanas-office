@@ -7,7 +7,10 @@ import { ButtonLink, Loading, PageTitle } from '../components/ui'
 import { mapListPath } from '../editor/paths'
 import { useCampaignCopies } from '../offline/campaigns'
 import { useLocalUser } from '../offline/localUser'
+import { SyncStatusView } from '../sync'
 import { de } from '../text/de'
+import { NewCampaignForm } from './NewCampaignForm'
+import { SyncMark } from './SyncMark'
 
 const t = de.maps
 
@@ -29,6 +32,7 @@ export function OfflineMapsPage() {
   return (
     <div className="flex flex-col gap-3 pb-8">
       <PageTitle>{t.offlineTitle}</PageTitle>
+      <SyncStatusView />
       {mine.length === 0 ? (
         <>
           <p className="text-dim">{t.offlineEmpty}</p>
@@ -47,8 +51,11 @@ export function OfflineMapsPage() {
                   className="flex min-h-11 items-center gap-3 rounded-xl border border-line bg-panel p-4 hover:border-candle"
                 >
                   <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="font-semibold break-words text-parchment">
-                      {campaign.name}
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold break-words text-parchment">
+                        {campaign.name}
+                      </span>
+                      {campaign.local && campaign.sync && <SyncMark sync={campaign.sync} />}
                     </span>
                     <span className="text-sm text-dim">
                       {t.mapCount(counts.get(campaign.id) ?? 0)}
@@ -63,6 +70,7 @@ export function OfflineMapsPage() {
           </ul>
         </>
       )}
+      <NewCampaignForm />
     </div>
   )
 }

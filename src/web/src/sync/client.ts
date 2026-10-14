@@ -1,10 +1,15 @@
 // The sync client's entry points (knowledge/decisions/offline-prep-pwa.md, "Sync
-// protocol"). Stubs in the stage 6 contract; the sync client lane builds them.
+// protocol"): one sync at a time per browser, a push then a pull, and a status for the
+// editor header. The dialogs and the header item are in components.tsx.
+import { useLiveQuery } from 'dexie-react-hooks'
 import type { OfflineDb } from '../offline/db'
+import { SYNC_VERSION, SYNC_VERSION_HEADER, SyncFailure } from './api'
+import { useSyncDb } from './context'
+import { pull } from './pull'
+import { planPush, push, pushAll } from './push'
+import { countUnsynced, heldRecords, useOnline, useSyncStore } from './state'
 
-/** Matches SyncProtocol.CurrentVersion on the server. */
-export const SYNC_VERSION = 1
-export const SYNC_VERSION_HEADER = 'X-Sync-Version'
+export { SYNC_VERSION, SYNC_VERSION_HEADER }
 
 export type SyncStatus =
   /** "Alles synchronisiert" when pending is 0, else "3 Änderungen nicht synchronisiert". */
@@ -26,9 +31,106 @@ export interface SyncResult {
 export type SyncReason =
   'button' | 'leaveEditor' | 'online' | 'editorOpen' | 'beforeStart' | 'store'
 
-/** Runs one sync (push, then pull) for the local user; one at a time per browser (Web Locks). */
-export function syncNow(_db: OfflineDb, _options?: { reason?: SyncReason }): Promise<SyncResult> {
-  return Promise.resolve({ ok: true, issues: 0 })
+// ---- One sync at a time -----------------------------------------------------------------
+
+const memoryLocks = new Map<string, Promise<unknown>>()
+
+/**
+ * Runs `job` while holding the browser-wide lock of this user (Web Locks API), so two tabs
+ * never sync at once. Without the API (old browsers, tests) it queues in this page.
+ */
+export function withSyncLock<T>(userId: string, job: () => Promise<T>): Promise<T> {
+  const name = `oreana-sync-${userId}`
+  if (typeof navigator !== 'undefined' && typeof navigator.locks?.request === 'function') {
+    return navigator.locks.request(name, job)
+  }
+  const run = (memoryLocks.get(name) ?? Promise.resolve()).catch(() => {}).then(job)
+  memoryLocks.set(name, run)
+  return run
+}
+
+const userIdOf = (db: OfflineDb) => db.name.replace(/^oreana-/, '')
+
+interface Waiting {
+  promise: Promise<SyncResult>
+  /** A push and a pull, not only a pull. */
+  full: boolean
+}
+
+/** The sync waiting for its turn, per database. */
+const waiting = new Map<string, Waiting>()
+
+/**
+ * Runs one sync (push, then pull) for the local user; one at a time per browser (Web Locks).
+ * Requests that come in while a sync runs share one more run afterwards. The editor opening
+ * only pulls.
+ */
+export function syncNow(db: OfflineDb, options: { reason?: SyncReason } = {}): Promise<SyncResult> {
+  const reason = options.reason ?? 'button'
+  // Automatic syncs never complain about a missing connection.
+  if (reason !== 'button' && reason !== 'store' && !navigator.onLine) {
+    return issuesOf(db).then((issues) => ({ ok: false, issues }))
+  }
+  const full = reason !== 'editorOpen'
+  const queued = waiting.get(db.name)
+  if (queued) {
+    queued.full ||= full
+    return queued.promise
+  }
+  const entry: Waiting = { full, promise: Promise.resolve({ ok: false, issues: 0 }) }
+  entry.promise = withSyncLock(userIdOf(db), () => {
+    waiting.delete(db.name)
+    return round(db, entry.full)
+  })
+  waiting.set(db.name, entry)
+  return entry.promise
+}
+
+/** What a failed sync leaves in the status. */
+function noteFailure(error: unknown): void {
+  const kind = error instanceof SyncFailure ? error.kind : 'failed'
+  if (kind === 'offline') useSyncStore.setState({ offline: true, failed: false })
+  else if (kind === 'outdated') useSyncStore.setState({ blocked: 'outdated', failed: false })
+  else if (kind === 'signedOut') useSyncStore.setState({ blocked: 'signedOut', failed: false })
+  else useSyncStore.setState({ failed: true })
+}
+
+function noteSuccess(): void {
+  useSyncStore.setState({ offline: false, failed: false, blocked: null })
+}
+
+function noteCampaigns(created: number): void {
+  if (created > 0) useSyncStore.setState((s) => ({ campaignsCreated: s.campaignsCreated + 1 }))
+}
+
+async function round(db: OfflineDb, full: boolean): Promise<SyncResult> {
+  const store = useSyncStore
+  // An old app version stays refused until the page reloads.
+  if (store.getState().blocked === 'outdated') {
+    return { ok: false, issues: await issuesOf(db) }
+  }
+  store.setState((s) => ({ running: s.running + 1 }))
+  let ok = true
+  try {
+    if (full) noteCampaigns((await pushAll(db)).campaignsCreated)
+    await pull(db, { held: heldRecords() })
+    noteSuccess()
+  } catch (error) {
+    ok = false
+    noteFailure(error)
+  } finally {
+    store.setState((s) => ({ running: s.running - 1 }))
+  }
+  return { ok, issues: await issuesOf(db) }
+}
+
+/** Never rejects: a closed or missing database only means nothing is left to count. */
+async function issuesOf(db: OfflineDb): Promise<number> {
+  try {
+    return (await countUnsynced(db)).issues
+  } catch {
+    return 0
+  }
 }
 
 /**
@@ -37,13 +139,61 @@ export function syncNow(_db: OfflineDb, _options?: { reason?: SyncReason }): Pro
  * rejection must be resolved first, 'offline' without a connection.
  */
 export function syncBeforeStart(
-  _db: OfflineDb,
-  _encounterId: string,
+  db: OfflineDb,
+  encounterId: string,
 ): Promise<'ready' | 'blocked' | 'offline'> {
-  return Promise.resolve('ready')
+  return withSyncLock(userIdOf(db), async () => {
+    const encounter = await db.encounters.get(encounterId)
+    if (!encounter) return 'blocked'
+    if (!navigator.onLine) return 'offline'
+
+    const campaign = await db.campaigns.get(encounter.campaignId)
+    const typeIds = new Set(encounter.tokens.map((token) => token.creatureTypeId))
+    const scope = {
+      campaignIds: new Set(campaign?.local ? [campaign.id] : []),
+      ids: {
+        creatureType: typeIds,
+        battleMap: new Set([encounter.battleMapId]),
+        encounter: new Set([encounter.id]),
+      },
+    }
+    useSyncStore.setState((s) => ({ running: s.running + 1 }))
+    try {
+      const planned = await planPush(db, scope)
+      if (planned.length > 0) noteCampaigns((await push(db, planned)).campaignsCreated)
+      noteSuccess()
+    } catch (error) {
+      noteFailure(error)
+      return error instanceof SyncFailure && error.kind === 'offline' ? 'offline' : 'blocked'
+    } finally {
+      useSyncStore.setState((s) => ({ running: s.running - 1 }))
+    }
+
+    // Everything the fight needs must be on the server: nothing changed, no issue left.
+    const needed = [
+      await db.encounters.get(encounter.id),
+      await db.maps.get(encounter.battleMapId),
+      ...(await db.creatureTypes.bulkGet([...typeIds])),
+      ...(campaign?.local ? [campaign] : []),
+    ]
+    const stuck = needed.some(
+      (record) => record?.sync && (record.sync.changed || record.sync.issue),
+    )
+    return stuck ? 'blocked' : 'ready'
+  })
 }
 
 /** The current status, live. */
 export function useSyncStatus(): SyncStatus {
-  return { state: 'idle', pending: 0 }
+  const db = useSyncDb()
+  const { running, blocked, offline } = useSyncStore()
+  const online = useOnline()
+  const counts = useLiveQuery(async () => (db ? countUnsynced(db) : null), [db])
+  const { pending, issues } = counts ?? { pending: 0, issues: 0 }
+
+  if (running > 0) return { state: 'syncing' }
+  if (blocked) return { state: blocked }
+  if (issues > 0) return { state: 'attention', pending, issues }
+  if (offline || !online) return { state: 'offline', pending }
+  return { state: 'idle', pending }
 }
