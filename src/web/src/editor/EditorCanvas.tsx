@@ -339,6 +339,10 @@ function drawEditorGrid(ctx: CanvasRenderingContext2D, scene: MapScene, dpr: num
 }
 
 function drawOverlay(ctx: CanvasRenderingContext2D, shape: Overlay, cssScale: number) {
+  if (shape.kind === 'labels') {
+    drawCellLabels(ctx, shape.items, cssScale)
+    return
+  }
   const colors = OVERLAY_COLORS[shape.style]
   ctx.save()
   ctx.fillStyle = colors.fill
@@ -352,6 +356,30 @@ function drawOverlay(ctx: CanvasRenderingContext2D, shape: Overlay, cssScale: nu
     for (const cell of shape.cells) ctx.rect(cell.x * CELL, cell.y * CELL, CELL, CELL)
     ctx.fill()
     if (shape.cells.length <= 64) ctx.stroke()
+  }
+  ctx.restore()
+}
+
+/** Texts centred in cells, in a fixed screen size; left out while cells are too small. */
+function drawCellLabels(
+  ctx: CanvasRenderingContext2D,
+  items: readonly { x: number; y: number; text: string }[],
+  cssScale: number,
+) {
+  if (CELL * cssScale < 28) return
+  ctx.save()
+  ctx.font = `600 ${11 / cssScale}px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = 3 / cssScale
+  ctx.strokeStyle = 'rgba(14, 15, 19, 0.85)'
+  ctx.fillStyle = '#ece6d8'
+  for (const item of items) {
+    const cx = (item.x + 0.5) * CELL
+    const cy = (item.y + 0.5) * CELL
+    ctx.strokeText(item.text, cx, cy)
+    ctx.fillText(item.text, cx, cy)
   }
   ctx.restore()
 }

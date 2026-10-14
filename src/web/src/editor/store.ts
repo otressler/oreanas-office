@@ -20,6 +20,8 @@ export type OverlayStyle = 'paint' | 'erase' | 'select' | 'invalid'
 export type Overlay =
   | { kind: 'cells'; cells: readonly GridPoint[]; style: OverlayStyle }
   | { kind: 'rect'; x: number; y: number; w: number; h: number; style: OverlayStyle }
+  /** Short texts centred in cells, e.g. elevations; drawn only when cells are large enough. */
+  | { kind: 'labels'; items: readonly { x: number; y: number; text: string }[] }
 
 /** How many steps undo goes back. */
 export const UNDO_LIMIT = 200
