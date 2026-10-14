@@ -14,7 +14,7 @@ The [roadmap](/roadmap.md) phases are too big to check in one go, so each phase 
 1. Claude finishes the stage and runs the automated checks: unit tests, Playwright end-to-end tests, and a code review of the stage's diff.
 2. Claude hands over a short report: what was built, test results, anything that differs from the spec, and the manual checklist.
 3. The project owner works through the checklist by hand. The stage passes only when every item passes.
-4. Claude merges the stage into `main`, deploys, and updates the knowledge base: decisions confirmed by the stage, answered open questions, and a dated entry in the [log](/log.md).
+4. Claude merges the stage into `main`, deploys, and updates the knowledge base: decisions confirmed by the stage, answered open questions, and a dated entry in the [log](/log.md). It also raises `BUILT_THROUGH_STAGE` in `src/web/src/pages/RoadmapPage.tsx`, so the app's public roadmap page (`/fahrplan`) marks the stage as done, and updates that page's text in `de.roadmap` when a stage's scope changes.
 
 The next stage starts only after the gate passes. Gate findings are fixed inside the same stage.
 

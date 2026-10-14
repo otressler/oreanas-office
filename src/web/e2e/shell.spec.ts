@@ -31,6 +31,16 @@ test('shows a German not-found page for unknown addresses', async ({ page, conte
   await expect(page.getByRole('heading', { name: text.signInTitle })).toBeVisible()
 })
 
+test('opens the roadmap while the server sleeps', async ({ page, context }) => {
+  await mockHealth(context, 'waking')
+  await page.goto('/fahrplan')
+
+  await expect(shellHeader(page)).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Fahrplan' })).toBeVisible()
+  await expect(page.getByRole('article', { name: 'Messen' })).toBeVisible()
+  await expect(page.getByText(text.wakingTitle)).toHaveCount(0)
+})
+
 test('shows the waking screen while the server answers 503, then the app', async ({
   page,
   context,

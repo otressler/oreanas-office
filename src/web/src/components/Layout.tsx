@@ -23,9 +23,19 @@ export function Layout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-4">
         <Outlet />
       </main>
+      <footer className="border-t border-line pb-[env(safe-area-inset-bottom)]">
+        <div className="mx-auto flex max-w-3xl px-4">
+          <Link
+            to="/fahrplan"
+            className="flex min-h-11 items-center text-sm text-dim hover:text-parchment"
+          >
+            {de.roadmap.link}
+          </Link>
+        </div>
+      </footer>
       <UpdatePrompt />
     </div>
   )
