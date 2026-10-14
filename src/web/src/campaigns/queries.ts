@@ -3,6 +3,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 import { unwrap } from '../api/errors'
+import { saveCampaignCopies } from '../offline/campaigns'
+import { offlineDb } from '../offline/db'
+import { lastUser } from '../offline/identity'
 
 export const campaignKeys = {
   list: ['campaigns'] as const,
@@ -16,8 +19,20 @@ const path = (campaignId: string) => ({ params: { path: { campaignId } } })
 export function useCampaigns() {
   return useQuery({
     queryKey: campaignKeys.list,
-    queryFn: () => unwrap(api.GET('/api/campaigns')),
+    queryFn: async () => {
+      const campaigns = await unwrap(api.GET('/api/campaigns'))
+      keepOfflineCopy(campaigns)
+      return campaigns
+    },
   })
+}
+
+/** The map editor works offline on the campaigns the user had last time online. */
+function keepOfflineCopy(campaigns: Parameters<typeof saveCampaignCopies>[1]) {
+  const user = lastUser()
+  if (!user) return
+  // A browser without IndexedDB still shows the list; only offline editing is lost.
+  saveCampaignCopies(offlineDb(user.id), campaigns).catch(() => {})
 }
 
 export function useCampaign(campaignId: string) {

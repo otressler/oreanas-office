@@ -11,4 +11,14 @@ export const limits = {
   sessionTitle: 100,
   /** AccountInput.PasswordMinLength */
   passwordMin: 8,
+  /** BattleMap.NameMaxLength */
+  mapName: 80,
+  /** BattleMap.DescriptionMaxLength: scene, vibe and lighting */
+  mapDescription: 500,
+  /** BattleMap.MaxSize: cells per side */
+  mapSize: 40,
+  /** MapImport.TextMaxLength (Token.LabelMaxLength): feature kinds and labels, entrance labels */
+  layoutText: 40,
+  /** MapImport.MaxElevation: elevations stay below this many meters either way */
+  elevation: 10000,
 } as const

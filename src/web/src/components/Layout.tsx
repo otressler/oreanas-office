@@ -1,12 +1,14 @@
 import { Link, Outlet } from 'react-router'
 import { useMe } from '../auth/auth'
-import { ServerGate } from '../server/ServerGate'
 import { useServerStatus } from '../server/serverStatus'
 import { de } from '../text/de'
 import { InstallButton } from './InstallButton'
 import { UpdatePrompt } from './UpdatePrompt'
 
-/** The app shell: always rendered from cache, even while the server sleeps. */
+/**
+ * The app shell: always rendered from cache, even while the server sleeps. The routes
+ * decide which pages wait for the server (ServerGateOutlet) and which work offline.
+ */
 export function Layout() {
   return (
     <div className="flex min-h-dvh flex-col pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
@@ -22,9 +24,7 @@ export function Layout() {
         </div>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <ServerGate>
-          <Outlet />
-        </ServerGate>
+        <Outlet />
       </main>
       <UpdatePrompt />
     </div>

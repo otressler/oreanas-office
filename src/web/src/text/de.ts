@@ -360,6 +360,51 @@ export const de = {
     undoFailed: 'Das Rückgängigmachen ist nicht angekommen. Versuch es bitte noch einmal.',
   },
 
+  /** The map editor's frame (src/editor). */
+  editor: {
+    /** Accessible name of the canvas; the name is the map's. */
+    canvasLabel: (name: string) => `Karteneditor: ${name}`,
+    back: 'Zur Kartenliste',
+    toolbar: 'Werkzeuge',
+    undo: 'Rückgängig',
+    redo: 'Wiederholen',
+    /** Tooltip of a tool button: its name and shortcut key. */
+    toolTitle: (label: string, key: string | undefined) =>
+      key ? `${label} (${key.toUpperCase()})` : label,
+    toolGroups: {
+      terrain: 'Gelände',
+      elevation: 'Höhe',
+      features: 'Objekte',
+      entrances: 'Ein- und Ausgänge',
+    } satisfies Record<import('../editor/tools').ToolGroup, string>,
+    edit: 'Bearbeiten',
+    preview: 'Vorschau',
+    saving: 'Speichert…',
+    saved: 'Auf diesem Gerät gespeichert',
+    saveFailed:
+      'Speichern auf diesem Gerät hat nicht geklappt. Bleib auf der Seite und versuch es gleich noch einmal.',
+    notFoundTitle: 'Diese Karte gibt es hier nicht',
+    notFoundBody:
+      'Sie liegt nicht auf diesem Gerät, oder der Link stimmt nicht. Karten vom Server kommen mit der Synchronisierung.',
+    notDmTitle: 'Nur für die Spielleitung',
+    notDmBody: 'Karten bearbeiten nur Mitglieder der Spielleitung dieser Kampagne.',
+    narrowTitle: 'Der Karteneditor ist für Laptops gedacht',
+    narrowBody: 'Öffne die Karte auf einem größeren Bildschirm, um sie zu bearbeiten.',
+    /** The status bar for the cell under the pointer, e.g. "12, 4". */
+    cell: (x: number, y: number) => `${x}, ${y}`,
+    /** The status bar's help line. */
+    help: 'Ziehen mit rechter Maustaste oder Leertaste verschiebt, Mausrad zoomt.',
+  },
+
+  /** Terrain, elevation, resizing and the preview (src/editor/terrain, src/editor/preview). */
+  editorTerrain: {},
+
+  /** Features, entrances and layout checks (src/editor/features). */
+  editorFeatures: {},
+
+  /** The map list, scene text, offline pages and file export (src/editor/scene, src/maps). */
+  maps: {},
+
   /** One text per error code the API can send. A new code is a type error here. */
   errors: {
     inviteInvalid:
@@ -392,8 +437,7 @@ export const de = {
     cellInvalid: 'Ein Feld liegt außerhalb der Karte oder steht doppelt in der Datei.',
     featureInvalid: 'Ein Objekt auf der Karte ist unvollständig oder ragt über den Rand.',
     entranceInvalid: 'Ein Ein- oder Ausgang liegt nicht am Rand der Karte.',
-    creatureTypeInvalid:
-      'Für eine neue Kreaturenart fehlt die Größe, oder ihr Name ist zu lang.',
+    creatureTypeInvalid: 'Für eine neue Kreaturenart fehlt die Größe, oder ihr Name ist zu lang.',
     placementInvalid:
       'Dort ist kein Platz: Die Figur stünde außerhalb der Karte, auf Wand oder Abgrund oder auf einer anderen Figur.',
     characterInvalid: 'Dieser Charakter gehört nicht zur Kampagne oder ist doppelt dabei.',

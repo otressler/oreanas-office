@@ -1,6 +1,16 @@
 import { useEffect, type ReactNode } from 'react'
+import { Outlet } from 'react-router'
 import { de } from '../text/de'
 import { startServerGate, useServerStatus } from './serverStatus'
+
+/** Route element: the child routes need the server (everything but the offline map pages). */
+export function ServerGateOutlet() {
+  return (
+    <ServerGate>
+      <Outlet />
+    </ServerGate>
+  )
+}
 
 /** Renders its children once the server is awake; until then a waking or offline screen. */
 export function ServerGate({ children }: { children: ReactNode }) {

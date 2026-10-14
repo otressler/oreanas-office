@@ -1,6 +1,10 @@
 import '@testing-library/jest-dom/vitest'
+import 'fake-indexeddb/auto'
 import { cleanup, configure } from '@testing-library/react'
+import { Dexie } from 'dexie'
+import { IDBFactory } from 'fake-indexeddb'
 import { afterEach, vi } from 'vitest'
+import { closeOfflineDbs } from '../offline/db'
 
 // The PWA plugin's virtual module exists only in Vite builds; pages rendered in
 // tests (through Layout's UpdatePrompt) see a service worker without updates.
@@ -25,4 +29,10 @@ vi.mock('../table/createConnection', async () => {
 
 afterEach(() => {
   cleanup()
+  // Every test starts with empty offline storage and no remembered user.
+  closeOfflineDbs()
+  const factory = new IDBFactory()
+  globalThis.indexedDB = factory
+  Dexie.dependencies.indexedDB = factory
+  localStorage.clear()
 })

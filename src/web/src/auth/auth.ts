@@ -5,11 +5,17 @@ import { api } from '../api/client'
 import { ApiRequestError } from '../api/errors'
 import { meQueryKey } from '../api/queryClient'
 import type { Me } from '../api/types'
+import { rememberUser } from '../offline/identity'
 
 async function fetchMe(): Promise<Me | null> {
   const { data, response } = await api.GET('/api/auth/me')
-  if (response.status === 401) return null
+  if (response.status === 401) {
+    rememberUser(null)
+    return null
+  }
   if (!response.ok || !data) throw new ApiRequestError(response.status)
+  // The offline pages (map editor) open for this user without asking the server.
+  rememberUser(data)
   return data
 }
 
@@ -32,6 +38,7 @@ export function useCurrentUser(): Me {
 export function useSetSignedIn() {
   const queryClient = useQueryClient()
   return (me: Me | null) => {
+    rememberUser(me)
     queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== meQueryKey[0] })
     queryClient.setQueryData(meQueryKey, me)
   }
