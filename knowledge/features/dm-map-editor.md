@@ -39,10 +39,11 @@ Let the DM build a fight quickly. This is not a full level editor: the DM places
 
 # As built (stage 5)
 
-Built on `stage/5-offline-map-editor`; not yet confirmed by the project owner at the gate.
+Built on `stage/5-offline-map-editor`. The project owner accepted the choices below on 2026-10-14: imports that break layout rules, entrance cells left inside by a resize, the "blocks movement" presets, the "Nur auf diesem Gerät" mark, and the offline link shown to everyone signed in on the device.
 
 - **Pages.** `/kampagnen/:id/karten` lists the campaign's maps in this browser, `/kampagnen/:id/karten/:mapId` is the editor, and `/karten` lists the DM's campaigns from the offline copy. The offline and waking screens link to `/karten`, and the campaign page links to its maps.
 - **Tools and keys.** Terrain: brush `B`, rectangle `R`, fill `F`, with digits 1–5 for Boden, Schwieriges Gelände, Wasser, Wand and Leer (void). Elevation: brush `H` and rectangle, with quick values −3, −1,5, 0, +1,5 and +3; cell heights show as labels while an elevation tool is active. Alt+click takes the terrain or height of a cell. Features: select `V`, place `O`; entrances: `E`. Undo is Ctrl+Z, redo Ctrl+Shift+Z or Ctrl+Y. The right or middle mouse button, or Space, pans; the wheel zooms.
+- **Offline link.** The offline and waking screens offer "Karten ohne Verbindung bearbeiten" to anyone remembered on the device; players find an empty list there.
 - **Suggested feature kinds** preset "blocks movement": Brücke, Tür, Treppe, Leiter and Podest don't block; Säule, Baum, Felsen, Kiste, Fass, Tisch, Altar, Brunnen, Wagen and Statue do. The DM can change it.
 - **Prüfung.** A side panel lists every layout rule break ([battle map](/domain/battle-map.md)); clicking one selects the item. The rules are written as shared test cases in `src/web/src/editor/validation.cases.json` for the server's checks in stage 6.
 - **Resize** keeps entrance cells that are no longer on the edge; the Prüfung panel flags them.
