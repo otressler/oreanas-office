@@ -363,6 +363,19 @@ export const de = {
     size: 'Größe',
     owner: (name: string) => `Gehört ${name}`,
     editTitle: (name: string) => `${name} bearbeiten`,
+    appearance: 'Aussehen',
+    appearanceHint: 'Kurze Beschreibung, aus der ein Porträt gemalt werden kann.',
+    /** The alt text of a character's picked portrait, e.g. "Porträt: Brom". */
+    portraitAlt: (name: string) => `Porträt: ${name}`,
+    /** The portrait part of an existing character's form (knowledge/features/token-icons.md). */
+    portrait: {
+      title: 'Porträt',
+      help: 'Lade ein Bild hoch oder lass eins aus dem Aussehen malen. Die Figur auf dem Brett zeigt das ausgewählte Bild.',
+      generate: 'Porträt erzeugen',
+      regenerate: 'Neues Porträt erzeugen',
+      needsAppearance: 'Beschreib oben das Aussehen, dann lässt sich ein Porträt erzeugen.',
+      saving: 'Die Änderungen am Charakter werden gespeichert…',
+    },
   },
 
   sizes: {
@@ -1359,6 +1372,93 @@ export const de = {
       appearanceTooLong: 'Das Aussehen darf höchstens 500 Zeichen haben.',
       notesTooLong: 'Die Notizen dürfen höchstens 2000 Zeichen haben.',
     } satisfies Record<import('../bestiary/creatureTypes').CreatureTypeProblem, string>,
+    /** The icon part of an existing type's form (knowledge/features/token-icons.md). */
+    icon: {
+      title: 'Symbol',
+      help: 'Ein Bildmodell malt aus Name und Aussehen ein Symbol. Alle Kreaturen dieser Art zeigen es auf dem Brett.',
+      generate: 'Symbol erzeugen',
+      regenerate: 'Neues Symbol erzeugen',
+      notSynced:
+        'Diese Kreaturenart ist noch nicht auf dem Server. Synchronisiere sie zuerst, dann lässt sich ein Symbol erzeugen.',
+      syncNow: 'Jetzt synchronisieren',
+      syncing: 'Die Kreaturenart wird synchronisiert…',
+      /** Why the type couldn't be synced; generating adds `nothingGenerated`. */
+      syncOffline: 'Ohne Verbindung lässt sich die Kreaturenart nicht synchronisieren.',
+      syncBlocked:
+        'Die Kreaturenart ließ sich nicht synchronisieren. Kläre zuerst das Problem bei der Synchronisierung (oben „Sync“), dann versuch es noch einmal.',
+      fixFirst: 'Prüf erst die Eingaben oben.',
+      nothingGenerated: 'Es wurde nichts erzeugt.',
+      /** The alt text of a type's icon in the list, e.g. "Symbol: Goblin". */
+      alt: (name: string) => `Symbol: ${name}`,
+    },
+  },
+
+  /** Icons and portraits: the gallery shared by creature types and characters (src/tokenImages). */
+  tokenImages: {
+    offline:
+      'Bilder brauchen eine Verbindung: zum Erzeugen, zum Hochladen, für die Versionen und zum Auswählen.',
+    loadFailed: 'Die Bilder ließen sich nicht laden.',
+    /** The picked image above the versions, e.g. "Ausgewähltes Bild: Goblin". */
+    pickedAlt: (name: string) => `Ausgewähltes Bild: ${name}`,
+    noneHint: 'Ohne Bild zeigt die Figur auf dem Brett den Anfangsbuchstaben.',
+    pickNone: 'Ohne Bild',
+    pick: 'Auswählen',
+    picked: 'Ausgewählt',
+    versions: 'Versionen',
+    empty: 'Noch keine Bilder.',
+    /** A version's alt text and accessible name, e.g. "Bild vom 15.10., 18:30". */
+    versionAlt: (time: string) => `Bild vom ${time}`,
+    status: {
+      queued: 'In der Warteschlange',
+      running: 'Wird gemalt…',
+      done: 'Fertig',
+      failed: 'Fehlgeschlagen',
+    } satisfies Record<import('../api/types').AssetStatus, string>,
+    kind: {
+      generated: 'Erzeugt',
+      uploaded: 'Hochgeladen',
+      restyled: 'Im Token-Stil',
+    },
+    rejected:
+      'Das Bildmodell hat dieses Bild abgelehnt. Versuch es mit einer anderen Beschreibung unter „Aussehen“.',
+    failed: 'Das hat nicht geklappt. Versuch es noch einmal.',
+    running: 'Ein Bild wird gerade gemalt. Das dauert etwa eine halbe Minute.',
+    queued:
+      'Der Auftrag ist angenommen. Das Bild ist in etwa einer halben Minute fertig und wird dann ausgewählt.',
+    budgetExhausted:
+      'Das Bildbudget für diesen Monat ist aufgebraucht. Ab dem nächsten Monat lassen sich wieder Bilder erzeugen.',
+    unavailable:
+      'Auf dem Server ist gerade kein Bildmodell eingerichtet. Bilder lassen sich nicht erzeugen.',
+    /** The month's spending, e.g. "Diesen Monat: 0,42 $ von 20,00 $". */
+    spent: (spent: string, limit: string) => `Diesen Monat: ${spent} von ${limit}`,
+    confirm: {
+      iconTitle: 'Symbol erzeugen?',
+      portraitTitle: 'Porträt erzeugen?',
+      restyleTitle: 'Im Token-Stil umwandeln?',
+      iconFrom:
+        'Das Bildmodell malt das Symbol aus dem Namen und dem Aussehen. Die Kreaturenart wird zuerst synchronisiert, denn der Server malt nach seiner Kopie.',
+      portraitFrom: 'Das Bildmodell malt das Porträt aus dem Namen und dem Aussehen.',
+      restyleFrom:
+        'Das Bildmodell malt die Person oder Figur auf dem hochgeladenen Bild im Stil der anderen Figuren. Es entsteht eine neue Version; das hochgeladene Bild bleibt.',
+      quality:
+        'Das Bild wird in hoher Qualität gemalt und ist in etwa einer halben Minute fertig. Dann wird es gleich ausgewählt; die früheren Versionen bleiben.',
+      cost: 'Jedes Bild kostet ein paar Cent vom monatlichen Bildbudget, das sich alle teilen.',
+      ok: 'Erzeugen',
+      restyleOk: 'Umwandeln',
+    },
+    restyle: 'Im Token-Stil umwandeln',
+    upload: 'Bild hochladen',
+    uploaded: 'Das Bild ist hochgeladen und ausgewählt.',
+    crop: {
+      title: 'Bildausschnitt wählen',
+      help: 'Schieb das Bild zurecht und zoome mit zwei Fingern, dem Mausrad oder dem Regler. Hochgeladen wird nur dieser Ausschnitt.',
+      zoom: 'Vergrößerung',
+      opening: 'Das Bild wird geöffnet…',
+      unreadable: 'Dieses Bild lässt sich nicht öffnen. Nimm ein JPEG-, PNG- oder WebP-Bild.',
+      failed: 'Der Ausschnitt ließ sich nicht erstellen. Versuch es noch einmal.',
+      alt: 'Das gewählte Bild',
+      ok: 'Hochladen',
+    },
   },
 
   /** The editor's encounter mode: creatures, placement, ready (lane: bestiary). */
