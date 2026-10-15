@@ -22,7 +22,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T07:50:00Z }
 | `elevation` | decimal, meters | Defaults to the cell's elevation. Changeable for flying or climbing |
 | `hidden` | bool | Later: visible only to the DM until revealed |
 
-The image comes from the linked character or creature type. On the board, a character's token has a ring in a fixed colour picked by the order characters were added to the campaign; creatures share one red ring. Until images arrive, a token shows the first letter of its label. Creatures that share a letter show it with a number instead (S1, S2, S3), counted in the natural order of their labels, so "Goblin 1" and "Goblin 2" become G1 and G2. Characters keep the plain letter; their ring colours tell them apart. Each player sees their own characters drawn on top of any other token.
+The image comes from the linked character or creature type: always its currently picked version, also in a running fight. A changed image shows the next time a board loads ([token icons](/features/token-icons.md)). On the board, a character's token has a ring in a fixed colour picked by the order characters were added to the campaign; creatures share one red ring. Until images arrive, a token shows the first letter of its label. Creatures that share a letter show it with a number instead (S1, S2, S3), counted in the natural order of their labels, so "Goblin 1" and "Goblin 2" become G1 and G2. Characters keep the plain letter; their ring colours tell them apart. Each player sees their own characters drawn on top of any other token.
 
 # Who can move it
 

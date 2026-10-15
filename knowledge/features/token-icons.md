@@ -1,10 +1,10 @@
 ---
 type: Feature
 title: Token icons
-description: One generated icon per creature type, plus generated or uploaded portraits for characters.
+description: Generated icons for creature types, and generated, uploaded or restyled portraits for characters, kept as versions to pick from.
 tags: [feature, ai, images, tokens]
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-15T06:28:25Z }
 sources:
   - id: brief
     resource: /references/original-brief.md
@@ -13,15 +13,36 @@ sources:
 
 # Goal
 
-Every enemy type has its own recognisable icon.[^brief] All goblins share one icon and are told apart by their label.
+Every enemy type has its own recognisable icon.[^brief] All goblins share one icon and are told apart by their label. Every character can have a portrait.
 
 # Requirements
 
-1. Generate one icon per [creature type](/domain/creature-type.md) from its `name` and `appearance`, only when a DM asks for it and confirms the job, never automatically ([image budget](/decisions/image-budget.md)).
-2. Use a fixed style template so all icons look like one set: centred subject, top-down or portrait framing, transparent background.
-3. The app crops icons to a circle and adds a coloured ring: one colour for creatures, another for characters.
-4. Characters can use a generated portrait or an uploaded picture ([character](/domain/character.md)).
-5. Icons are stored as [assets](/domain/asset.md) and reused in every encounter.
-6. Without an icon, the token shows the first letter of the name, so it's still playable.
+1. Generate an icon for a [creature type](/domain/creature-type.md) from its `name` and `appearance`. Only `dm` members generate creature icons.
+2. Generate a portrait for a [character](/domain/character.md) from its `name` and `appearance`. The character's owner and every `dm` member of the campaign can do this. Generating is offered once `appearance` is filled in.
+3. Upload a picture as a character's portrait, from a phone's photo library or a computer. A crop step comes first: the person drags and zooms the picture inside the token circle, and only the chosen square is uploaded. The server checks the type and size, and saves it as a square WebP, which also turns it the right way up and drops the photo's metadata, including where it was taken.
+4. Restyle an uploaded portrait: the uploaded picture goes to the model as a reference, which paints a portrait of that person or figure in the shared token style. The result is a new version, and the uploaded one stays.
+5. Every generation, restyling included, is started by a person and confirmed first, never automatic. All of them count against the site-wide monthly limit ([image budget](/decisions/image-budget.md)).
+6. Use a fixed style template so all icons and portraits look like one set: centred subject, top-down or portrait framing, transparent background, nothing important in the corners, no frame or ring painted in. The template is the token template of the `image-assets` skill.
+7. **Versions.** Generating again adds a version instead of replacing the image, as with map backgrounds ([AI map generation](/features/ai-map-generation.md)). A creature type and a character each have a gallery of their versions (generated, uploaded and restyled) and one picked version: `iconAssetId` on the creature type, `tokenAssetId` on the character.
+8. The app crops icons to a circle and adds a coloured ring: creatures share one red ring, and each character has its own colour ([token](/domain/token.md)).
+9. Icons are stored as [assets](/domain/asset.md) and reused in every encounter. The board always shows the creature type's or character's currently picked image, also in running fights: unlike a map's background, encounters don't keep a copy. A changed image isn't pushed to open boards; it shows the next time a board loads.
+10. Without an image, the token shows the first letter of its label, so it's still playable.
+11. Generating, uploading and picking need a connection; offline, the app says so. Picking syncs at once, like backgrounds ([offline prep](/decisions/offline-prep-pwa.md)).
+
+# Decisions
+
+Decided by the project owner on 2026-10-14, before stage 8 ([implementation plan](/implementation-plan.md), question 19):
+
+- Players may generate portraits for their own characters and spend from the shared budget; the site is for a group of friends.
+- Characters get an `appearance` field. Restyling an uploaded picture was the project owner's idea.
+- Uploads get a crop step rather than a server-side middle crop.
+- Creature icons keep versions in a gallery. Portraits follow the same pattern.
+- Changed icons and portraits need no live notification; a reload shows them.
+
+Confirmed by the project owner on 2026-10-15, at the start of stage 8:
+
+- Icons and portraits are generated at high quality, like backgrounds ([image budget](/decisions/image-budget.md)).
+- One style for the whole site: the same style block in every icon and portrait prompt, kept as a server setting. There is no style per campaign or per map.
+- When a new version finishes, it becomes the picked one; the earlier ones stay in the gallery to switch back to.
 
 [^brief]: Original project brief

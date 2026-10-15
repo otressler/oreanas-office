@@ -16,7 +16,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `name` | string | e.g. "Goblin" |
 | `size` | enum | Sets the token footprint ([creature size](/rules/creature-size.md)) |
 | `appearance` | text | Short visual description that feeds the icon prompt |
-| `iconAssetId` | → [Asset](/domain/asset.md), nullable | One icon per type ([token icons](/features/token-icons.md)) |
+| `iconAssetId` | → [Asset](/domain/asset.md), nullable | The picked icon version. Regenerating adds versions to pick from ([token icons](/features/token-icons.md)) |
 | `notes` | text | DM-only notes |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the type. Archived types can't be picked for new tokens; placed tokens keep them. Types are never deleted and can be brought back |
 

@@ -20,6 +20,7 @@ Decided by the project owner on 2026-10-14:
 - **No limit per map.** The monthly limit is the only one, so "regenerate" can be used as often as the month allows.
 - **High quality by default.** No cheaper draft step first. The project owner first chose medium, then switched to high on 2026-10-14 after T0: high fixed the crypt sample that medium got wrong three times, and the extra 2–3 cents per image hardly touch the limit.
 - **Never automatically.** Every image is generated only after a person starts the job and confirms it. This also means [token icons](/features/token-icons.md) are made on request, never when a creature type is created.
+- **Players may spend too.** A player can generate and restyle portraits of their own characters, counted against the same monthly limit (project owner, 2026-10-14: the site is for a group of friends).
 
 # How the app keeps to it
 

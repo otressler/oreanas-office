@@ -16,11 +16,12 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `campaignId` | → [Campaign](/domain/campaign.md) | Characters are campaign-specific |
 | `name` | string | |
 | `size` | enum | See [creature size](/rules/creature-size.md); usually Medium or Small |
-| `tokenAssetId` | → [Asset](/domain/asset.md), nullable | Generated or uploaded portrait ([token icons](/features/token-icons.md)) |
+| `appearance` | text, nullable | Short visual description that feeds the portrait prompt, as on a [creature type](/domain/creature-type.md) |
+| `tokenAssetId` | → [Asset](/domain/asset.md), nullable | The picked portrait version: generated, uploaded or restyled from an upload ([token icons](/features/token-icons.md)) |
 
 # Permissions
 
-A player creates and edits their own characters. Every `dm` member of the campaign can edit any character in it ([campaign member](/domain/campaign-member.md)).
+A player creates and edits their own characters. Every `dm` member of the campaign can edit any character in it ([campaign member](/domain/campaign-member.md)). Whoever can edit a character can also upload, generate and pick its portrait; generating counts against the site-wide [image budget](/decisions/image-budget.md).
 
 # Notes
 
