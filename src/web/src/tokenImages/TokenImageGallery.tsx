@@ -10,11 +10,11 @@ import { errorMessage } from '../api/errors'
 import type { GenerateTokenImageRequest, TokenImage, TokenImages } from '../api/types'
 import { Badge, Button, ErrorAlert } from '../components/ui'
 import { budgetBlock, formatUsd } from '../editor/background/backgrounds'
-import { createImageConnection } from '../editor/background/createConnection'
 import { useOnline } from '../editor/encounter/useOnline'
 import { formatDateTime } from '../lib/dates'
 import { de } from '../text/de'
 import { ConfirmDialog, type TokenJob } from './ConfirmDialog'
+import { createTokenImageConnection } from './createConnection'
 import { CropDialog } from './CropDialog'
 import {
   canPickImage,
@@ -104,7 +104,7 @@ function OnlineGallery({
     active: pending,
     campaignId,
     owner,
-    createConnection: createImageConnection,
+    createConnection: createTokenImageConnection,
     onUpdate: (image) => {
       remember(image)
       // A finished image is picked by the server and counts against the month.
