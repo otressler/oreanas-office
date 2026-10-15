@@ -252,6 +252,7 @@ export const de = {
             items: [
               'Ein Bildmodell malt aus der Karte einen Hintergrund, passend zum Raster.',
               'Mehrere Fassungen erzeugen, vergleichen und eine auswählen.',
+              'Eine Fassung mit eigenen Worten überarbeiten lassen, etwa „mehr Nebel in der Schlucht“.',
               'Ohne Bild bleibt die gezeichnete Karte: Der Kampf ist immer spielbar.',
               'Einen Spielabend planen: Kämpfe vorbereiten und am Tisch der Reihe nach starten.',
               'Eine beendete Sitzung fortsetzen, auch mitten im Kampf.',

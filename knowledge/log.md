@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-10-15
+- **Stage 7 passed the gate**: The project owner passed the stage 7 gate. AI backgrounds and session planning are merged into `main` and deployed ([implementation plan](/implementation-plan.md)); fixed or added inside the stage after the owner's checks: deleting entrances in the entrance tool, the prompt's rule against the guide's signal colours, a new encounter on one's own map, refining a background, and session planning. The roadmap page marks stage 7 as done. Production generates backgrounds once the Foundry values are in `.env.prod` and `infra/deploy.ps1` has run.
 - **Session planning built**: [Session planning](/features/session-planning.md) is on `stage/7-session-planning`, built in its own worktree while another session worked on stage 7 in the main one. Every fight belongs to a session; the session page lists its fights, adds one on an existing map, a copy or a new map, imports, moves, archives and starts them; the campaign page shows the sessions as cards with their fights; the editor's "Neue Begegnung" asks for the session; ending a session remembers the running fight, and "Fortsetzen" brings it back. The sync format is 2. After the background refinement was committed, the branch was merged into `stage/7-ai-backgrounds`, with the session migration generated again on top of the refinement's. Backend, unit and end-to-end tests pass, against the mock and the real backend. Recorded under "As built".
 
 ## 2026-10-14
