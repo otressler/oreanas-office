@@ -127,6 +127,81 @@ public sealed class FoundryImageClientTests
         Assert.DoesNotContain("secret-key", error.Message);
     }
 
+    private static readonly ImageGenerateRequest Generate = new("Token icon for a tabletop battle map: Goblin.", 1024, 1024, "high", "transparent", "png");
+
+    [Fact]
+    public async Task Text_to_image_sends_json_and_reads_the_image_and_usage()
+    {
+        var handler = new Handler(_ => Json(HttpStatusCode.OK, $$"""
+            {
+              "data": [{ "b64_json": "{{Convert.ToBase64String(Picture)}}" }],
+              "output_format": "png",
+              "usage": { "input_tokens_details": { "image_tokens": 0, "text_tokens": 40 }, "output_tokens": 1500 }
+            }
+            """, ("x-request-id", "req-2")));
+
+        var result = await Client(handler, "https://foundry.test/openai/v1/").GenerateAsync(Generate, CancellationToken.None);
+
+        Assert.Equal(Picture, result.Image);
+        Assert.Equal(("image/png", new ImageUsage(0, 40, 1500), "req-2"), (result.ContentType, result.Usage, result.RequestId));
+        var sent = Assert.Single(handler.Requests);
+        Assert.Equal((HttpMethod.Post, "https://foundry.test/openai/v1/images/generations"), (sent.Method, sent.Url));
+        Assert.Equal(("Bearer secret-key", "application/json"), (sent.Authorization, sent.ContentType));
+        Assert.Equal(
+            new Dictionary<string, string>
+            {
+                ["model"] = "gpt-image-test",
+                ["prompt"] = "Token icon for a tabletop battle map: Goblin.",
+                ["size"] = "1024x1024",
+                ["quality"] = "high",
+                ["background"] = "transparent",
+                ["output_format"] = "png",
+                ["n"] = "1",
+            },
+            sent.Fields);
+        Assert.Empty(sent.Files);
+    }
+
+    [Fact]
+    public async Task Text_to_image_fails_like_an_edit()
+    {
+        var busy = new Handler(_ => Json((HttpStatusCode)429, "{}", ("Retry-After", "5")));
+        var rejected = new Handler(_ => Json(HttpStatusCode.BadRequest, """{ "error": { "message": "Your request was rejected by the safety system." } }"""));
+        var broken = new Handler(_ => Json(HttpStatusCode.BadGateway, "{}"));
+
+        var wait = await Assert.ThrowsAsync<ImageRateLimitedException>(() => Client(busy).GenerateAsync(Generate, CancellationToken.None));
+        var refusal = await Assert.ThrowsAsync<ImageRejectedException>(() => Client(rejected).GenerateAsync(Generate, CancellationToken.None));
+        var error = await Assert.ThrowsAsync<HttpRequestException>(() => Client(broken).GenerateAsync(Generate, CancellationToken.None));
+
+        Assert.Equal(TimeSpan.FromSeconds(5), wait.RetryAfter);
+        Assert.Equal("Your request was rejected by the safety system.", refusal.Message);
+        Assert.Equal(HttpStatusCode.BadGateway, error.StatusCode);
+    }
+
+    // A restyled portrait: one PNG input, a transparent PNG back, no compression.
+    [Fact]
+    public async Task An_edit_can_ask_for_a_transparent_png()
+    {
+        var handler = new Handler(_ => Json(HttpStatusCode.OK, $$"""{ "data": [{ "b64_json": "{{Convert.ToBase64String(Picture)}}" }] }"""));
+
+        await Client(handler).EditAsync(Request with { OutputFormat = "png", Background = "transparent" }, CancellationToken.None);
+
+        var sent = Assert.Single(handler.Requests);
+        Assert.Equal(("transparent", "png"), (sent.Fields["background"], sent.Fields["output_format"]));
+        Assert.DoesNotContain("output_compression", sent.Fields.Keys);
+        Assert.Equal("image", Assert.Single(sent.Files).Name);
+    }
+
+    [Fact]
+    public async Task A_background_edit_sends_no_background_field()
+    {
+        var handler = new Handler(_ => Json(HttpStatusCode.OK, $$"""{ "data": [{ "b64_json": "{{Convert.ToBase64String(Picture)}}" }] }"""));
+
+        await Client(handler).EditAsync(Request, CancellationToken.None);
+
+        Assert.DoesNotContain("background", Assert.Single(handler.Requests).Fields.Keys);
+    }
+
     private static FoundryImageClient Client(Handler handler, string endpoint = "https://foundry.test/openai/v1") =>
         new(new HttpClient(handler), Options.Create(new ImageOptions
         {
@@ -173,6 +248,15 @@ public sealed class FoundryImageClientTests
                     {
                         fields[name] = await part.ReadAsStringAsync(cancellationToken);
                     }
+                }
+            }
+            else if (request.Content is { } content)
+            {
+                // A JSON body: each property as text.
+                using var json = System.Text.Json.JsonDocument.Parse(await content.ReadAsStringAsync(cancellationToken));
+                foreach (var property in json.RootElement.EnumerateObject())
+                {
+                    fields[property.Name] = property.Value.ToString();
                 }
             }
 

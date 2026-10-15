@@ -5,6 +5,7 @@ using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Images;
 
 namespace OreanasOffice.Server.Characters;
 
@@ -128,23 +129,35 @@ public static class CharacterEndpoints
         return (await WithColorsAsync(db, campaignId, [character], cancellationToken))[0];
     }
 
-    // ColorIndex is filled in afterwards (WithColorsAsync).
-    private static IQueryable<CharacterResponse> Responses(IQueryable<Character> characters, Guid userId, bool isDm) =>
-        characters.Select(c => new CharacterResponse(
-            c.Id,
-            c.OwnerUserId,
-            c.Owner.DisplayName,
-            c.Name,
-            c.Size,
-            isDm || c.OwnerUserId == userId,
-            0,
-            c.Appearance,
-            c.TokenAssetId == null ? null : "/api/assets/" + c.TokenAssetId));
+    // ColorIndex and PortraitUrl are filled in afterwards (WithColorsAsync): SQL Server
+    // would write the asset id in capitals, and the URL must match the board's.
+    private static IQueryable<Row> Responses(IQueryable<Character> characters, Guid userId, bool isDm) =>
+        characters.Select(c => new Row(
+            new CharacterResponse(
+                c.Id,
+                c.OwnerUserId,
+                c.Owner.DisplayName,
+                c.Name,
+                c.Size,
+                isDm || c.OwnerUserId == userId,
+                0,
+                c.Appearance,
+                null),
+            c.TokenAssetId));
 
     private static async Task<List<CharacterResponse>> WithColorsAsync(
-        AppDbContext db, Guid campaignId, List<CharacterResponse> characters, CancellationToken cancellationToken)
+        AppDbContext db, Guid campaignId, List<Row> characters, CancellationToken cancellationToken)
     {
         var colors = await db.CharacterColorIndexesAsync(campaignId, cancellationToken);
-        return [.. characters.Select(c => c with { ColorIndex = colors[c.Id] })];
+        return
+        [
+            .. characters.Select(c => c.Response with
+            {
+                ColorIndex = colors[c.Response.Id],
+                PortraitUrl = c.TokenAssetId is { } assetId ? MapBackgrounds.Url(assetId) : null,
+            }),
+        ];
     }
+
+    private sealed record Row(CharacterResponse Response, Guid? TokenAssetId);
 }

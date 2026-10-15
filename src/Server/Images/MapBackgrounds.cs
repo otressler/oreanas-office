@@ -82,6 +82,15 @@ public static class MapBackgrounds
             .Where(a => a.Status == AssetStatus.Done && a.FinishedAt >= monthStart && a.CostUsd != null)
             .SumAsync(a => a.CostUsd ?? 0m, cancellationToken);
 
+    // What the month has used, for the lists of backgrounds, icons and portraits.
+    public static async Task<ImageBudgetResponse> BudgetAsync(
+        AppDbContext db, ImageOptions options, TimeProvider time, CancellationToken cancellationToken)
+    {
+        var monthStart = MonthStart(time.GetUtcNow());
+        var spent = await SpentSinceAsync(db, monthStart, cancellationToken);
+        return new ImageBudgetResponse(spent, options.MonthlyLimitUsd, monthStart, options.Configured);
+    }
+
     // Rates are per million tokens.
     public static decimal Cost(ImageUsage usage, ImageOptions options) =>
         Math.Round(

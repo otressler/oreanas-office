@@ -69,8 +69,56 @@ public sealed class ImageHub(AppDbContext db) : Hub<IImageHubClient>, IImageHub
         return new HubResult(null);
     }
 
-    public Task<HubResult> WatchTokenImages(Guid campaignId, AssetOwnerType ownerType, Guid ownerId) =>
-        throw new NotImplementedException();
+    public async Task<HubResult> WatchTokenImages(Guid campaignId, AssetOwnerType ownerType, Guid ownerId)
+    {
+        var cancellationToken = Context.ConnectionAborted;
+        var userId = Context.User!.GetUserId();
+        var isDm = await db.IsCampaignDmAsync(campaignId, userId, cancellationToken);
+        switch (ownerType)
+        {
+            case AssetOwnerType.CreatureType:
+                if (!isDm)
+                {
+                    return new HubResult(ApiErrorCode.NotADm);
+                }
+
+                if (!await db.CreatureTypes.AnyAsync(t => t.Id == ownerId && t.CampaignId == campaignId, cancellationToken))
+                {
+                    return new HubResult(ApiErrorCode.ItemNotFound);
+                }
+
+                break;
+
+            case AssetOwnerType.Character:
+                // Members only, so a stranger learns nothing about the campaign's characters.
+                if (!isDm && !await db.CampaignMembers.AnyAsync(m => m.CampaignId == campaignId && m.UserId == userId, cancellationToken))
+                {
+                    return new HubResult(ApiErrorCode.NotADm);
+                }
+
+                var owner = await db.Characters
+                    .Where(c => c.Id == ownerId && c.CampaignId == campaignId)
+                    .Select(c => (Guid?)c.OwnerUserId)
+                    .SingleOrDefaultAsync(cancellationToken);
+                if (owner is null)
+                {
+                    return new HubResult(ApiErrorCode.ItemNotFound);
+                }
+
+                if (!isDm && owner != userId)
+                {
+                    return new HubResult(ApiErrorCode.NotADm);
+                }
+
+                break;
+
+            default:
+                return new HubResult(ApiErrorCode.ItemNotFound);
+        }
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, TokenGroupName(ownerType, ownerId), cancellationToken);
+        return new HubResult(null);
+    }
 }
 
 // What the job worker calls to reach open editors.
