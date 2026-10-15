@@ -1172,6 +1172,12 @@ export const de = {
     backgroundNotFound: 'Diesen Hintergrund gibt es für diese Karte nicht.',
     backgroundOutdated: 'Dieser Hintergrund wurde für eine andere Kartengröße erzeugt.',
     instructionInvalid: 'Schreib in höchstens 500 Zeichen, was sich am Bild ändern soll.',
+    itemChanged:
+      'Die Kreatur hat sich auf dem Server geändert. Synchronisiere und bestätige den Auftrag noch einmal.',
+    appearanceMissing: 'Beschreib erst das Aussehen, dann kann ein Porträt erzeugt werden.',
+    imageNotFound: 'Dieses Bild gibt es hier nicht mehr.',
+    uploadInvalid: 'Das Bild lässt sich nicht lesen. Nimm ein JPEG-, PNG- oder WebP-Bild.',
+    uploadTooLarge: 'Das Bild ist zu groß. Nimm ein kleineres.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */

@@ -1765,6 +1765,428 @@
           }
         }
       }
+    },
+    "/api/campaigns/{campaignId}/creature-types/icons": {
+      "get": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CreatureTypeIcon"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icons": {
+      "get": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "creatureTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImagesResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "creatureTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icon": {
+      "put": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "creatureTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/characters/{characterId}/portraits": {
+      "get": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImagesResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/characters/{characterId}/portraits/upload": {
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/characters/{characterId}/portrait": {
+      "put": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1901,7 +2323,12 @@
           "mapChanged",
           "backgroundNotFound",
           "backgroundOutdated",
-          "instructionInvalid"
+          "instructionInvalid",
+          "itemChanged",
+          "appearanceMissing",
+          "imageNotFound",
+          "uploadInvalid",
+          "uploadTooLarge"
         ]
       },
       "AssetFailure": {
@@ -1909,6 +2336,19 @@
           "rejected",
           "error",
           null
+        ]
+      },
+      "AssetOrigin": {
+        "enum": [
+          "generated",
+          "uploaded"
+        ]
+      },
+      "AssetOwnerType": {
+        "enum": [
+          "battleMap",
+          "creatureType",
+          "character"
         ]
       },
       "AssetStatus": {
@@ -2076,7 +2516,8 @@
           "elevation",
           "size",
           "colorIndex",
-          "version"
+          "version",
+          "imageUrl"
         ],
         "type": "object",
         "properties": {
@@ -2136,6 +2577,12 @@
           "version": {
             "type": "integer",
             "format": "int32"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2269,6 +2716,12 @@
           },
           "size": {
             "$ref": "#/components/schemas/CreatureSize"
+          },
+          "appearance": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2280,7 +2733,9 @@
           "name",
           "size",
           "canEdit",
-          "colorIndex"
+          "colorIndex",
+          "appearance",
+          "portraitUrl"
         ],
         "type": "object",
         "properties": {
@@ -2307,6 +2762,15 @@
           "colorIndex": {
             "type": "integer",
             "format": "int32"
+          },
+          "appearance": {
+            "type": "string"
+          },
+          "portraitUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2375,6 +2839,27 @@
           "huge",
           "gargantuan"
         ]
+      },
+      "CreatureTypeIcon": {
+        "required": [
+          "creatureTypeId",
+          "assetId",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "creatureTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
       },
       "EncounterMapCopy": {
         "required": [
@@ -2504,6 +2989,25 @@
           }
         }
       },
+      "GenerateTokenImageRequest": {
+        "type": "object",
+        "properties": {
+          "itemVersion": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "restyleAssetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "HealthResponse": {
         "required": [
           "status"
@@ -2580,6 +3084,11 @@
               "backgroundNotFound",
               "backgroundOutdated",
               "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
               null
             ]
           }
@@ -2613,13 +3122,15 @@
       },
       "ImageHubClientMethod": {
         "enum": [
-          "BackgroundUpdated"
+          "BackgroundUpdated",
+          "TokenImageUpdated"
         ],
         "type": "string"
       },
       "ImageHubMethod": {
         "enum": [
-          "WatchMap"
+          "WatchMap",
+          "WatchTokenImages"
         ],
         "type": "string"
       },
@@ -3550,6 +4061,11 @@
               "backgroundNotFound",
               "backgroundOutdated",
               "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
               null
             ]
           },
@@ -3588,6 +4104,21 @@
         }
       },
       "PickBackgroundRequest": {
+        "required": [
+          "assetId"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "PickTokenImageRequest": {
         "required": [
           "assetId"
         ],
@@ -4411,6 +4942,100 @@
           "water",
           "wall"
         ]
+      },
+      "TokenImage": {
+        "required": [
+          "id",
+          "ownerType",
+          "ownerId",
+          "origin",
+          "status",
+          "url",
+          "failure",
+          "sourceAssetId",
+          "createdAt",
+          "finishedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ownerType": {
+            "$ref": "#/components/schemas/AssetOwnerType"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/AssetOrigin"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssetStatus"
+          },
+          "url": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "failure": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssetFailure"
+              }
+            ]
+          },
+          "sourceAssetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "TokenImagesResponse": {
+        "required": [
+          "pickedAssetId",
+          "versions",
+          "budget"
+        ],
+        "type": "object",
+        "properties": {
+          "pickedAssetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenImage"
+            }
+          },
+          "budget": {
+            "$ref": "#/components/schemas/ImageBudgetResponse"
+          }
+        }
       },
       "TokenKind": {
         "enum": [

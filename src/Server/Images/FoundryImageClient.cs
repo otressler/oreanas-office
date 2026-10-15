@@ -72,6 +72,11 @@ public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOp
         return Parse(body, request.OutputFormat, RequestId(response));
     }
 
+    // POST {Endpoint}/images/generations as JSON: model, prompt, size, quality, background,
+    // output_format, n = 1. Same error handling and parsing as EditAsync.
+    public Task<ImageResult> GenerateAsync(ImageGenerateRequest request, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
     private static ImageResult Parse(string body, string requestedFormat, string? requestId)
     {
         using var json = JsonDocument.Parse(body);

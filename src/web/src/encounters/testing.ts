@@ -46,6 +46,7 @@ export function smallBoard(fields: Partial<BoardState> = {}): BoardState {
         size: 'small',
         colorIndex: null,
         version: 0,
+        imageUrl: null,
       },
     ],
     isSessionDm: false,
@@ -63,6 +64,8 @@ export function character(name: string, fields: Partial<Character> = {}): Charac
     size: 'medium',
     canEdit: true,
     colorIndex: 0,
+    appearance: '',
+    portraitUrl: null,
     ...fields,
   }
 }

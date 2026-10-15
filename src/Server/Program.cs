@@ -53,6 +53,7 @@ app.MapEncounterEndpoints();
 app.MapSyncEndpoints();
 app.MapMapStoreEndpoints();
 app.MapImageEndpoints();
+app.MapTokenImageEndpoints();
 app.MapTableHub();
 app.MapImageHub();
 

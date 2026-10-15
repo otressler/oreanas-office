@@ -221,5 +221,6 @@ export function toBoardToken(token: LocalCreatureToken, grid: MapGrid): BoardTok
     size: token.size,
     colorIndex: null,
     version: 0,
+    imageUrl: null,
   }
 }

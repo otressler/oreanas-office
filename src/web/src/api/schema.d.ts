@@ -1910,6 +1910,389 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/campaigns/{campaignId}/creature-types/icons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreatureTypeIcon"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    creatureTypeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TokenImagesResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    creatureTypeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GenerateTokenImageRequest"];
+                };
+            };
+            responses: {
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TokenImage"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    creatureTypeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PickTokenImageRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/characters/{characterId}/portraits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    characterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TokenImagesResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    characterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GenerateTokenImageRequest"];
+                };
+            };
+            responses: {
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TokenImage"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/characters/{characterId}/portraits/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    characterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TokenImage"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/characters/{characterId}/portrait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    characterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PickTokenImageRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1935,9 +2318,13 @@ export interface components {
             field?: null | string;
         };
         /** @enum {unknown} */
-        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid";
+        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge";
         /** @enum {unknown} */
         AssetFailure: "rejected" | "error" | null;
+        /** @enum {unknown} */
+        AssetOrigin: "generated" | "uploaded";
+        /** @enum {unknown} */
+        AssetOwnerType: "battleMap" | "creatureType" | "character";
         /** @enum {unknown} */
         AssetStatus: "queued" | "running" | "done" | "failed";
         AuthOptionsResponse: {
@@ -2003,6 +2390,7 @@ export interface components {
             colorIndex: null | number;
             /** Format: int32 */
             version: number;
+            imageUrl: null | string;
         };
         CampaignResponse: {
             /** Format: uuid */
@@ -2040,6 +2428,7 @@ export interface components {
         CharacterRequest: {
             name: string;
             size: components["schemas"]["CreatureSize"];
+            appearance?: null | string;
         };
         CharacterResponse: {
             /** Format: uuid */
@@ -2052,6 +2441,8 @@ export interface components {
             canEdit: boolean;
             /** Format: int32 */
             colorIndex: number;
+            appearance: string;
+            portraitUrl: null | string;
         };
         CreateCampaignRequest: {
             name: string;
@@ -2072,6 +2463,13 @@ export interface components {
         };
         /** @enum {unknown} */
         CreatureSize: "tiny" | "small" | "medium" | "large" | "huge" | "gargantuan";
+        CreatureTypeIcon: {
+            /** Format: uuid */
+            creatureTypeId: string;
+            /** Format: uuid */
+            assetId: string;
+            url: string;
+        };
         EncounterMapCopy: {
             /** Format: int32 */
             width: number;
@@ -2113,12 +2511,18 @@ export interface components {
             refineAssetId?: null | string;
             instruction?: null | string;
         };
+        GenerateTokenImageRequest: {
+            /** Format: int32 */
+            itemVersion?: null | number;
+            /** Format: uuid */
+            restyleAssetId?: null | string;
+        };
         HealthResponse: {
             status: string;
         };
         HubResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | null;
         };
         ImageBudgetResponse: {
             /** Format: double */
@@ -2130,9 +2534,9 @@ export interface components {
             available: boolean;
         };
         /** @enum {string} */
-        ImageHubClientMethod: "BackgroundUpdated";
+        ImageHubClientMethod: "BackgroundUpdated" | "TokenImageUpdated";
         /** @enum {string} */
-        ImageHubMethod: "WatchMap";
+        ImageHubMethod: "WatchMap" | "WatchTokenImages";
         ImportCreature: {
             type: string;
             size: null | components["schemas"]["CreatureSize"];
@@ -2357,7 +2761,7 @@ export interface components {
         };
         MoveResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | null;
             move: components["schemas"]["TokenMovedEvent"] | null;
         };
         MoveTokenRequest: {
@@ -2369,6 +2773,10 @@ export interface components {
             y: number;
         };
         PickBackgroundRequest: {
+            /** Format: uuid */
+            assetId: null | string;
+        };
+        PickTokenImageRequest: {
             /** Format: uuid */
             assetId: null | string;
         };
@@ -2569,6 +2977,29 @@ export interface components {
         TableHubMethod: "ClearPreview" | "JoinEncounter" | "MarkActive" | "MoveToken" | "PreviewMove" | "UndoMove";
         /** @enum {unknown} */
         Terrain: "void" | "floor" | "difficult" | "water" | "wall";
+        TokenImage: {
+            /** Format: uuid */
+            id: string;
+            ownerType: components["schemas"]["AssetOwnerType"];
+            /** Format: uuid */
+            ownerId: string;
+            origin: components["schemas"]["AssetOrigin"];
+            status: components["schemas"]["AssetStatus"];
+            url: null | string;
+            failure: null | components["schemas"]["AssetFailure"];
+            /** Format: uuid */
+            sourceAssetId: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            finishedAt: null | string;
+        };
+        TokenImagesResponse: {
+            /** Format: uuid */
+            pickedAssetId: null | string;
+            versions: components["schemas"]["TokenImage"][];
+            budget: components["schemas"]["ImageBudgetResponse"];
+        };
         /** @enum {unknown} */
         TokenKind: "character" | "creature";
         TokenMovedEvent: {

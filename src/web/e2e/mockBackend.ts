@@ -1097,6 +1097,7 @@ export class MockBackend {
           ownerUserId: character?.ownerUserId ?? null,
           // Ring colours follow the order characters joined the campaign.
           colorIndex: character ? campaignCharacters.indexOf(character) : null,
+          imageUrl: null,
         }
       }),
       isSessionDm: encounter.status === 'active' && session?.dmUserId === userId,
@@ -1285,6 +1286,8 @@ export class MockBackend {
       colorIndex: this.characters
         .filter((c) => c.campaignId === character.campaignId)
         .indexOf(character),
+      appearance: '',
+      portraitUrl: null,
     }
   }
 

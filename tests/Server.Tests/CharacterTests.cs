@@ -25,7 +25,7 @@ public sealed class CharacterTests(AppFixture fixture)
         var character = await response.ReadAsync<CharacterResponse>(HttpStatusCode.Created);
         Assert.Equal($"/api/campaigns/{campaignId}/characters/{character.Id}", response.Headers.Location?.OriginalString);
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, CanEdit: true, ColorIndex: 0),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null),
             character);
     }
 
@@ -92,7 +92,7 @@ public sealed class CharacterTests(AppFixture fixture)
             .ReadAsync<CharacterResponse>(HttpStatusCode.OK);
 
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, CanEdit: true, ColorIndex: 0),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null),
             updated);
         Assert.Equal(updated, Assert.Single(await ListAsync(player, campaignId)));
     }

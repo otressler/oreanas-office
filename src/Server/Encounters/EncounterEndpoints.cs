@@ -180,7 +180,8 @@ public static class EncounterEndpoints
                     t.Elevation,
                     t.Size,
                     t.CharacterId is { } characterId ? colors[characterId] : null,
-                    t.Version)),
+                    t.Version,
+                    null)),
             ],
             encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId,
             undoable);

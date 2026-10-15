@@ -26,6 +26,11 @@ public class CreatureType
 
     public string Notes { get; set; } = "";
 
+    // The picked icon version (knowledge/features/token-icons.md): a Done TokenIcon asset
+    // owned by this type, or null for the letter. Online only and not part of the sync
+    // item, like BattleMap.BackgroundAssetId, so picking never conflicts with offline edits.
+    public Guid? IconAssetId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     // Sync (knowledge/decisions/offline-prep-pwa.md, "Versions and IDs"): 1 when created,
@@ -56,5 +61,6 @@ internal sealed class CreatureTypeConfiguration : IEntityTypeConfiguration<Creat
         // One "Goblin" per campaign. The database collation ignores case, so "goblin"
         // is the same name, which is how imports match types.
         type.HasIndex(t => new { t.CampaignId, t.Name }).IsUnique();
+        type.HasIndex(t => t.IconAssetId);
     }
 }

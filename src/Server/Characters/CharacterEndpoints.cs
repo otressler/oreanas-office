@@ -45,7 +45,7 @@ public static class CharacterEndpoints
         TimeProvider time,
         CancellationToken cancellationToken)
     {
-        if (Validate(request, out var name) is { } error)
+        if (Validate(request, out var name, out var appearance) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
@@ -57,6 +57,7 @@ public static class CharacterEndpoints
             OwnerUserId = userId,
             Name = name,
             Size = request.Size,
+            Appearance = appearance,
             CreatedAt = time.GetUtcNow(),
         };
         db.Characters.Add(character);
@@ -88,24 +89,31 @@ public static class CharacterEndpoints
             return TypedResults.Forbid();
         }
 
-        if (Validate(request, out var name) is { } error)
+        if (Validate(request, out var name, out var appearance) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
 
         character.Name = name;
         character.Size = request.Size;
+        character.Appearance = appearance;
         await db.SaveChangesAsync(cancellationToken);
 
         return TypedResults.Ok(await LoadAsync(db, campaignId, character.Id, userId, cancellationToken));
     }
 
-    private static ApiError? Validate(CharacterRequest request, out string name)
+    private static ApiError? Validate(CharacterRequest request, out string name, out string appearance)
     {
         name = request.Name?.Trim() ?? "";
+        appearance = request.Appearance?.Trim() ?? "";
         if (name.Length is 0 or > Character.NameMaxLength)
         {
             return new ApiError(ApiErrorCode.NameInvalid, "name");
+        }
+
+        if (appearance.Length > Character.AppearanceMaxLength)
+        {
+            return new ApiError(ApiErrorCode.TextTooLong, "appearance");
         }
 
         return null;
@@ -129,7 +137,9 @@ public static class CharacterEndpoints
             c.Name,
             c.Size,
             isDm || c.OwnerUserId == userId,
-            0));
+            0,
+            c.Appearance,
+            c.TokenAssetId == null ? null : "/api/assets/" + c.TokenAssetId));
 
     private static async Task<List<CharacterResponse>> WithColorsAsync(
         AppDbContext db, Guid campaignId, List<CharacterResponse> characters, CancellationToken cancellationToken)

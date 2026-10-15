@@ -105,4 +105,20 @@ public enum ApiErrorCode
     BackgroundOutdated,
     // InstructionInvalid: a refinement needs an instruction of 1 to 500 characters.
     InstructionInvalid,
+
+    // Token icons and portraits (knowledge/features/token-icons.md). GenerationRunning,
+    // ImagesUnavailable and ImageBudgetExhausted apply here too.
+    // ItemChanged: the server's creature type isn't the version the DM confirmed the job
+    // for; sync and confirm again.
+    ItemChanged,
+    // AppearanceMissing: a character portrait is generated from its appearance, which is empty.
+    AppearanceMissing,
+    // ImageNotFound: no finished version with this id for this creature type or character
+    // (picking), or no uploaded one (restyling).
+    ImageNotFound,
+    // UploadInvalid: the body isn't a JPEG, PNG or WebP picture the server can read, or it
+    // is larger than ImageOptions.UploadMaxPixels on an edge.
+    UploadInvalid,
+    // UploadTooLarge: the body is larger than ImageOptions.UploadMaxBytes.
+    UploadTooLarge,
 }

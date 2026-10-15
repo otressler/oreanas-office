@@ -49,6 +49,8 @@ describe('CharacterForm', () => {
       ownerUserId: 'u1',
       ownerDisplayName: 'Mira',
       colorIndex: 0,
+      appearance: '',
+      portraitUrl: null,
       name: 'Brom',
       size: 'medium',
       canEdit: true,
