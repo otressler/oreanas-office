@@ -78,3 +78,13 @@ export type GenerateBackgroundRequest = Schemas['GenerateBackgroundRequest']
 export type PickBackgroundRequest = Schemas['PickBackgroundRequest']
 export type ImageHubMethod = Schemas['ImageHubMethod']
 export type ImageHubClientMethod = Schemas['ImageHubClientMethod']
+
+// Token icons and portraits (knowledge/features/token-icons.md).
+export type TokenImages = Schemas['TokenImagesResponse']
+export type TokenImage = Schemas['TokenImage']
+export type AssetOrigin = Schemas['AssetOrigin']
+/** Whose icon or portrait: never a battle map. */
+export type TokenImageOwnerType = Exclude<Schemas['AssetOwnerType'], 'battleMap'>
+export type GenerateTokenImageRequest = Schemas['GenerateTokenImageRequest']
+export type PickTokenImageRequest = Schemas['PickTokenImageRequest']
+export type CreatureTypeIcon = Schemas['CreatureTypeIcon']

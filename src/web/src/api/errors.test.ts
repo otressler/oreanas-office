@@ -63,6 +63,11 @@ const ALL_CODES = {
   backgroundNotFound: true,
   backgroundOutdated: true,
   instructionInvalid: true,
+  itemChanged: true,
+  appearanceMissing: true,
+  imageNotFound: true,
+  uploadInvalid: true,
+  uploadTooLarge: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

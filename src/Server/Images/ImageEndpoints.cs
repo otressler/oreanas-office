@@ -58,7 +58,7 @@ public static class ImageEndpoints
             .ToListAsync(cancellationToken);
 
         var fingerprint = LayoutFingerprint.Of(map.Width, map.Height, map.Layout);
-        var budget = await BudgetAsync(db, options.Value, time, cancellationToken);
+        var budget = await MapBackgrounds.BudgetAsync(db, options.Value, time, cancellationToken);
         return TypedResults.Ok(new MapBackgroundsResponse(
             map.BackgroundAssetId,
             [.. assets.Select(a => MapBackgrounds.ToView(a, map.Width, map.Height, fingerprint))],
@@ -273,14 +273,6 @@ public static class ImageEndpoints
             content,
             asset.ContentType ?? "application/octet-stream",
             entityTag: new EntityTagHeaderValue($"\"{assetId:N}\""));
-    }
-
-    private static async Task<ImageBudgetResponse> BudgetAsync(
-        AppDbContext db, ImageOptions options, TimeProvider time, CancellationToken cancellationToken)
-    {
-        var monthStart = MapBackgrounds.MonthStart(time.GetUtcNow());
-        var spent = await MapBackgrounds.SpentSinceAsync(db, monthStart, cancellationToken);
-        return new ImageBudgetResponse(spent, options.MonthlyLimitUsd, monthStart, options.Configured);
     }
 
     private sealed record Outcome(MapBackground? Background, ApiErrorCode? Error);

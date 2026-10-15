@@ -28,6 +28,7 @@ const hero: BoardToken = {
   size: 'medium',
   colorIndex: 0,
   version: 0,
+  imageUrl: null,
 }
 
 function runningBoard(fields: Partial<BoardState> = {}): BoardState {

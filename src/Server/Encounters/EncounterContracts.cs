@@ -63,7 +63,9 @@ public record BoardBackground(Guid AssetId, string Url, int X, int Y, int Width,
 // owner, null for creatures. ColorIndex: characters get a fixed ring colour by the
 // order they were added to the campaign (0, 1, 2…); null for creatures, which share
 // one colour. Size comes from the character or creature type. Version: see
-// Token.Version; devices keep the position with the higher version.
+// Token.Version; devices keep the position with the higher version. ImageUrl: the
+// character's or creature type's picked portrait or icon as it is now, also in a running
+// fight (knowledge/features/token-icons.md); null for the letter.
 public record BoardToken(
     Guid Id,
     TokenKind Kind,
@@ -76,4 +78,5 @@ public record BoardToken(
     decimal Elevation,
     CreatureSize Size,
     int? ColorIndex,
-    int Version);
+    int Version,
+    string? ImageUrl);

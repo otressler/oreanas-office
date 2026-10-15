@@ -41,6 +41,15 @@ interface Character {
   ownerUserId: string
   name: string
   size: S['CreatureSize']
+  appearance: string
+}
+
+/** An icon or portrait version, with what /api/assets serves for it. */
+interface StoredTokenImage {
+  image: S['TokenImage']
+  campaignId: string
+  bytes: Buffer
+  contentType: string
 }
 
 interface Session {
@@ -137,6 +146,15 @@ export class MockBackend {
   }
   /** What GET /api/assets/{id} serves for every done version: a small PNG. */
   imageBytes = readFileSync(new URL('../public/pwa-192x192.png', import.meta.url))
+  // ---- Token icons and portraits (stage 8) -----------------------------------------------
+  /** Every icon and portrait version, newest last. */
+  readonly tokenImages: StoredTokenImage[] = []
+  /** The picked version per creature type or character id. */
+  readonly pickedTokenImages = new Map<string, string | null>()
+  /** How long a generated icon or portrait takes; then it is done and picked. */
+  tokenImageDelayMs = 400
+  /** Called when a version moves on; MockImageHub sends it to the watching devices. */
+  onTokenImageUpdated: ((image: S['TokenImage']) => void) | null = null
   googleEnabled = false
   private readonly signedIn = new Map<BrowserContext, string | null>()
 
@@ -196,6 +214,7 @@ export class MockBackend {
       ownerUserId: owner.id,
       name,
       size: 'medium',
+      appearance: '',
       ...fields,
     }
     this.characters.push(character)
@@ -256,17 +275,21 @@ export class MockBackend {
     const asset = matchPath('/api/assets/:assetId', url.pathname)
     if (asset) {
       const done = this.backgrounds.find((b) => b.id === asset.assetId && b.status === 'done')
-      if (!this.userId(context) || !done) return route.fulfill({ status: 404 })
+      const token = this.tokenImages.find(
+        (t) => t.image.id === asset.assetId && t.image.status === 'done',
+      )
+      if (!this.userId(context) || (!done && !token)) return route.fulfill({ status: 404 })
       return route.fulfill({
         status: 200,
-        contentType: 'image/png',
+        contentType: token?.contentType ?? 'image/png',
         headers: { 'Cache-Control': 'private, max-age=31536000, immutable' },
-        body: this.imageBytes,
+        body: token?.bytes ?? this.imageBytes,
       })
     }
     const [status, body] =
       this.dispatchSync(context, request, url) ??
       this.dispatchImages(context, request, url) ??
+      this.dispatchTokenImages(context, request, url) ??
       this.dispatch(context, request, url)
     await route.fulfill(
       body === undefined
@@ -363,6 +386,191 @@ export class MockBackend {
         }
       }
       this.pickedBackgrounds.set(item.id, assetId)
+      return [204]
+    }
+    return [404]
+  }
+
+  // ---- Token icons and portraits (stage 8) --------------------------------------------------
+  // Follows src/Server/Images/TokenImageEndpoints.cs. A generated version is done after
+  // tokenImageDelayMs with a small transparent PNG, and picked; uploads are done at once.
+
+  /** The picked image's URL of a creature type or character, or null for the letter. */
+  pickedTokenImageUrl(ownerId: string | null): string | null {
+    const id = ownerId ? this.pickedTokenImages.get(ownerId) : null
+    const picked = id && this.tokenImages.find((t) => t.image.id === id)
+    return picked ? picked.image.url : null
+  }
+
+  /** A version, done and picked, as if made earlier (seeding). */
+  addTokenImage(
+    campaign: Campaign,
+    ownerType: 'creatureType' | 'character',
+    ownerId: string,
+  ): S['TokenImage'] {
+    const image = this.newTokenImage(ownerType, ownerId, 'generated', null)
+    this.tokenImages.push({
+      image,
+      campaignId: campaign.id,
+      bytes: this.imageBytes,
+      contentType: 'image/png',
+    })
+    this.finishTokenImage(image)
+    return image
+  }
+
+  private newTokenImage(
+    ownerType: 'creatureType' | 'character',
+    ownerId: string,
+    origin: S['AssetOrigin'],
+    sourceAssetId: string | null,
+  ): S['TokenImage'] {
+    return {
+      id: randomUUID(),
+      ownerType,
+      ownerId,
+      origin,
+      status: 'queued',
+      url: null,
+      failure: null,
+      sourceAssetId,
+      createdAt: new Date().toISOString(),
+      finishedAt: null,
+    }
+  }
+
+  private finishTokenImage(image: S['TokenImage']) {
+    image.status = 'done'
+    image.url = `/api/assets/${image.id}`
+    image.finishedAt = new Date().toISOString()
+    this.pickedTokenImages.set(image.ownerId, image.id)
+  }
+
+  private dispatchTokenImages(context: BrowserContext, request: Request, url: URL): Reply | null {
+    const list = matchPath('/api/campaigns/:campaignId/creature-types/icons', url.pathname)
+    const icon =
+      matchPath('/api/campaigns/:campaignId/creature-types/:ownerId/icons', url.pathname) ??
+      matchPath('/api/campaigns/:campaignId/creature-types/:ownerId/icon', url.pathname)
+    const upload = matchPath(
+      '/api/campaigns/:campaignId/characters/:ownerId/portraits/upload',
+      url.pathname,
+    )
+    const portrait =
+      upload ??
+      matchPath('/api/campaigns/:campaignId/characters/:ownerId/portraits', url.pathname) ??
+      matchPath('/api/campaigns/:campaignId/characters/:ownerId/portrait', url.pathname)
+    const params = list ?? icon ?? portrait
+    if (!params) return null
+    const me = this.users.find((u) => u.id === this.signedIn.get(context)) ?? null
+    if (!me) return [401]
+    const campaign = this.campaigns.find((c) => c.id === params.campaignId)
+    if (!campaign) return [404]
+    const role = memberOf(campaign, me.id)?.role
+    if (!role) return [403]
+    const method = request.method()
+
+    if (list) {
+      if (role !== 'dm') return [403]
+      const icons = [...this.pickedTokenImages.entries()].flatMap(([ownerId, assetId]) => {
+        const picked = this.tokenImages.find(
+          (t) =>
+            t.image.id === assetId &&
+            t.image.ownerType === 'creatureType' &&
+            t.campaignId === campaign.id,
+        )
+        return picked
+          ? [{ creatureTypeId: ownerId, assetId: picked.image.id, url: picked.image.url! }]
+          : []
+      })
+      return [200, icons]
+    }
+
+    const ownerType = icon ? 'creatureType' : 'character'
+    const ownerId = params.ownerId!
+    let character: Character | undefined
+    let typeVersion: number | null = null
+    if (ownerType === 'creatureType') {
+      if (role !== 'dm') return [403]
+      const item = this.syncItems.get(ownerId)
+      const imported = this.creatureTypes.find((t) => t.id === ownerId)
+      if (item?.kind === 'creatureType' && item.campaignId === campaign.id)
+        typeVersion = item.version
+      else if (imported?.campaignId === campaign.id) typeVersion = 1
+      else return [404]
+    } else {
+      character = this.characters.find((c) => c.id === ownerId && c.campaignId === campaign.id)
+      if (!character) return [404]
+      if (role !== 'dm' && character.ownerUserId !== me.id) return [403]
+    }
+    const own = this.tokenImages.filter((t) => t.image.ownerId === ownerId)
+    const store = (image: S['TokenImage'], bytes: Buffer, contentType: string) =>
+      this.tokenImages.push({ image, campaignId: campaign.id, bytes, contentType })
+    const versions = url.pathname.endsWith('s')
+
+    if (upload) {
+      if (method !== 'POST') return [404]
+      const contentType = request.headers()['content-type'] ?? ''
+      const bytes = request.postDataBuffer()
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(contentType) || !bytes?.length) {
+        return error('uploadInvalid')
+      }
+      const image = this.newTokenImage('character', ownerId, 'uploaded', null)
+      this.finishTokenImage(image)
+      store(image, bytes, contentType)
+      return [201, { ...image }]
+    }
+    if (versions && method === 'GET') {
+      return [
+        200,
+        {
+          pickedAssetId: this.pickedTokenImages.get(ownerId) ?? null,
+          versions: own.toReversed().map((t) => ({ ...t.image })),
+          budget: this.imageBudget,
+        },
+      ]
+    }
+    if (versions && method === 'POST') {
+      const body = (request.postDataJSON() ?? {}) as Record<string, unknown>
+      if (ownerType === 'creatureType' && body.itemVersion !== typeVersion) {
+        return error('itemChanged', undefined, 409)
+      }
+      const restyle = typeof body.restyleAssetId === 'string' ? body.restyleAssetId : null
+      if (restyle) {
+        const source = own.find(
+          (t) =>
+            t.image.id === restyle && t.image.origin === 'uploaded' && t.image.status === 'done',
+        )
+        if (!source) return error('imageNotFound', undefined, 409)
+      } else if (character && !character.appearance.trim()) {
+        return error('appearanceMissing', undefined, 409)
+      }
+      if (own.some((t) => t.image.status === 'queued' || t.image.status === 'running')) {
+        return error('generationRunning', undefined, 409)
+      }
+      if (!this.imageBudget.available) return error('imagesUnavailable', undefined, 409)
+      if (this.imageBudget.spentUsd >= this.imageBudget.limitUsd) {
+        return error('imageBudgetExhausted', undefined, 409)
+      }
+      const image = this.newTokenImage(ownerType, ownerId, 'generated', restyle)
+      store(image, TRANSPARENT_PNG, 'image/png')
+      const queued = { ...image }
+      setTimeout(() => {
+        this.finishTokenImage(image)
+        this.imageBudget.spentUsd = Math.round((this.imageBudget.spentUsd + 0.05) * 100) / 100
+        this.onTokenImageUpdated?.({ ...image })
+      }, this.tokenImageDelayMs)
+      return [202, queued]
+    }
+    if (!versions && method === 'PUT') {
+      const body = (request.postDataJSON() ?? {}) as Record<string, unknown>
+      const assetId = (body.assetId as string | null) ?? null
+      if (
+        assetId !== null &&
+        !own.some((t) => t.image.id === assetId && t.image.status === 'done')
+      ) {
+        return error('imageNotFound', undefined, 409)
+      }
+      this.pickedTokenImages.set(ownerId, assetId)
       return [204]
     }
     return [404]
@@ -724,6 +932,7 @@ export class MockBackend {
         ownerUserId: me.id,
         name: String(body.name).trim(),
         size: body.size as S['CreatureSize'],
+        appearance: String(body.appearance ?? '').trim(),
       }
       this.characters.push(character)
       return [201, this.characterResponse(character, me.id, isDm)]
@@ -738,6 +947,7 @@ export class MockBackend {
       if (invalid) return invalid
       character.name = String(body.name).trim()
       character.size = body.size as S['CreatureSize']
+      character.appearance = String(body.appearance ?? '').trim()
       return [200, this.characterResponse(character, me.id, isDm)]
     }
 
@@ -1097,6 +1307,7 @@ export class MockBackend {
           ownerUserId: character?.ownerUserId ?? null,
           // Ring colours follow the order characters joined the campaign.
           colorIndex: character ? campaignCharacters.indexOf(character) : null,
+          imageUrl: this.pickedTokenImageUrl(token.characterId ?? token.creatureTypeId),
         }
       }),
       isSessionDm: encounter.status === 'active' && session?.dmUserId === userId,
@@ -1285,6 +1496,7 @@ export class MockBackend {
       colorIndex: this.characters
         .filter((c) => c.campaignId === character.campaignId)
         .indexOf(character),
+      portraitUrl: this.pickedTokenImageUrl(character.id),
     }
   }
 
@@ -1333,6 +1545,12 @@ export class MockBackend {
     return [...imported, ...pushed]
   }
 }
+
+/** A 1 x 1 transparent PNG: what a generated icon or portrait serves. */
+const TRANSPARENT_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+  'base64',
+)
 
 const FOOTPRINT: Record<S['CreatureSize'], number> = {
   tiny: 1,

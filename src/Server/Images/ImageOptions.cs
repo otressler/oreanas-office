@@ -45,4 +45,25 @@ public sealed class ImageOptions
 
     // The guide's long edge aims at this many pixels (render_guide.py's --target).
     public int GuideTargetPixels { get; set; } = 1536;
+
+    // Token icons and portraits (knowledge/features/token-icons.md). High quality like
+    // backgrounds (project owner, 2026-10-15). The model paints a transparent PNG at
+    // TokenRequestPixels square; the server keeps a TokenPixels square WebP, which is plenty
+    // for a token of about 64 CSS pixels on a phone screen.
+    public string TokenQuality { get; set; } = "high";
+
+    public int TokenRequestPixels { get; set; } = 1024;
+
+    public int TokenPixels { get; set; } = 512;
+
+    // The one style block of every icon and portrait on the site, word for word, so they
+    // read as one set (.claude/skills/image-assets/references/prompts.md).
+    public string TokenStyle { get; set; } =
+        "Painterly fantasy illustration, strong silhouette, rich but not neon colours, soft rim light, readable at small size.";
+
+    // Uploaded portraits: the largest request body accepted, and the largest edge in pixels
+    // the server decodes. The app crops and shrinks a photo before uploading it.
+    public int UploadMaxBytes { get; set; } = 10 * 1024 * 1024;
+
+    public int UploadMaxPixels { get; set; } = 8192;
 }

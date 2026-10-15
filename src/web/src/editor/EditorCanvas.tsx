@@ -11,6 +11,8 @@ import { buildScene, type MapScene } from '../board/scene'
 import { drawLabels, drawMap, drawTokens, visibleCells } from '../board/render'
 import { tokenMarks } from '../board/palette'
 import { wheelZoomFactor } from '../board/gestures'
+import { useTokenPictures } from '../board/tokenPictures'
+import { useCreatureIcons } from '../tokenImages/queries'
 import { useElementSize } from '../board/useElementSize'
 import {
   CELL,
@@ -59,6 +61,14 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
   const selection = useStore(store, (s) => s.selection)
   const tokens = useOptionalEncounter(encounter, (s) => s.doc.tokens, NO_TOKENS)
   const selectedTokenId = useOptionalEncounter(encounter, (s) => s.selectedId, null)
+  // Creature icons need a connection; offline, or until they load, tokens show letters.
+  const campaignId = useOptionalEncounter(encounter, (s) => s.meta.campaignId, null)
+  const icons = useCreatureIcons(campaignId)
+  const iconUrl = useCallback(
+    (token: LocalCreatureToken) => icons.get(token.creatureTypeId)?.url ?? null,
+    [icons],
+  )
+  const images = useTokenPictures(useMemo(() => tokens.map(iconUrl), [tokens, iconUrl]))
 
   const surfaceRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
@@ -281,8 +291,8 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
       const cssScale = ctx.getTransform().a / con.canvas.getPixelRatio()
       const grid = gridOf(doc)
       const bad = misplacedIds(grid, tokens)
-      const drawn = tokens.map((token) => toBoardToken(token, grid))
-      drawTokens(ctx, drawn, { selectedTokenId, cssScale, marks: tokenMarks(drawn) })
+      const drawn = tokens.map((token) => toBoardToken(token, grid, iconUrl(token)))
+      drawTokens(ctx, drawn, { selectedTokenId, cssScale, marks: tokenMarks(drawn), images })
       for (const token of tokens) {
         if (!bad.has(token.id)) continue
         const n = footprint(token.size)
@@ -293,7 +303,7 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
         )
       }
     },
-    [doc, tokens, selectedTokenId],
+    [doc, tokens, selectedTokenId, iconUrl, images],
   )
 
   const drawOverlayShape = useCallback(

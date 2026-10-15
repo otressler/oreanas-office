@@ -1,6 +1,7 @@
 // The image hub's SignalR contract, the twin of src/Server/Images/ImageHub.cs. The editor
 // connects only while one of its map's background jobs is queued or running, and stops the
 // connection when none is left: an open connection keeps the scale-to-zero server awake.
+// Token icons and portraits watch their owner the same way (knowledge/features/token-icons.md).
 // The checks below fail to compile when these maps and the server's interfaces drift apart.
 import type { HubConnection } from '@microsoft/signalr'
 import type {
@@ -8,6 +9,8 @@ import type {
   ImageHubClientMethod,
   ImageHubMethod,
   MapBackground,
+  TokenImage,
+  TokenImageOwnerType,
 } from '../../api/types'
 
 export const IMAGE_HUB_PATH = '/hubs/images'
@@ -16,12 +19,22 @@ export const IMAGE_HUB_PATH = '/hubs/images'
 export interface ImageHubCalls {
   /** Joins the map's group; `dm` members only. Errors: notADm, itemNotFound. */
   WatchMap: { args: [campaignId: string, mapId: string]; result: HubResult }
+  /**
+   * Joins the group of a creature type's icons (`dm` members) or a character's portraits
+   * (owner and `dm` members). Errors: notADm, itemNotFound.
+   */
+  WatchTokenImages: {
+    args: [campaignId: string, ownerType: TokenImageOwnerType, ownerId: string]
+    result: HubResult
+  }
 }
 
 /** Server → editor messages and their arguments. */
 export interface ImageHubEvents {
   /** A version of the map's background is running, done or failed. */
   BackgroundUpdated: [background: MapBackground]
+  /** A version of the watched icon or portrait is running, done or failed. */
+  TokenImageUpdated: [image: TokenImage]
 }
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false

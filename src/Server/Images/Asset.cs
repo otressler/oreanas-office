@@ -8,7 +8,8 @@ namespace OreanasOffice.Server.Images;
 // knowledge/domain/asset.md: a generated or uploaded image. The rows are also the job
 // queue (knowledge/decisions/hosting.md): a queued job survives the container stopping,
 // and ImageJobWorker picks it up when it starts again. Stage 7 makes map backgrounds;
-// stage 8 adds token icons and portraits.
+// stage 8 adds token icons for creature types and portraits for characters, both
+// AssetKind.TokenIcon (knowledge/features/token-icons.md).
 public class Asset
 {
     public const int PromptMaxLength = 4000;
@@ -81,6 +82,10 @@ public class Asset
     public Guid? RefinedFromAssetId { get; set; }
 
     public string? Instruction { get; set; }
+
+    // A portrait restyled from an upload: the uploaded version sent to the model as the
+    // reference (knowledge/features/token-icons.md, requirement 4).
+    public Guid? SourceAssetId { get; set; }
 
     // Requests sent for this job, failed ones included; the worker gives up after
     // ImageOptions.MaxAttempts.

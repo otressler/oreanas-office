@@ -1,11 +1,14 @@
 // The campaign's creature types as a list: pick one (when `onPick` is given), edit it,
 // create a new one, and bring archived ones back. Archived types are in a collapsed
-// part and can't be picked (knowledge/domain/creature-type.md).
+// part and can't be picked (knowledge/domain/creature-type.md). Online, a row shows the
+// type's picked icon (knowledge/features/token-icons.md).
 import { useState } from 'react'
+import { CREATURE_RING, tokenFill } from '../board/palette'
 import { Button } from '../components/ui'
 import { useLocalUser } from '../offline/localUser'
 import type { LocalCreatureType } from '../offline/model'
 import { de } from '../text/de'
+import { useCreatureIcons } from '../tokenImages/queries'
 import { setCreatureTypeArchived, useCreatureTypes } from './creatureTypes'
 import { CreatureTypeForm } from './CreatureTypeForm'
 
@@ -25,6 +28,7 @@ export function BestiaryList({
 }) {
   const { db } = useLocalUser()
   const types = useCreatureTypes(db, campaignId)
+  const icons = useCreatureIcons(campaignId)
   const [form, setForm] = useState<FormState>({ kind: 'closed' })
   if (types === undefined) return null
 
@@ -52,11 +56,17 @@ export function BestiaryList({
                     : 'border-line text-parchment hover:border-candle'
                 }`}
               >
-                <span className="truncate">{type.name}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <Icon url={icons.get(type.id)?.url} name={type.name} />
+                  <span className="truncate">{type.name}</span>
+                </span>
                 <span className="shrink-0 text-xs text-dim">{de.sizes[type.size]}</span>
               </button>
             ) : (
-              <span className="min-w-0 flex-1 truncate px-1 text-sm">{type.name}</span>
+              <span className="flex min-w-0 flex-1 items-center gap-2 px-1 text-sm">
+                <Icon url={icons.get(type.id)?.url} name={type.name} />
+                <span className="truncate">{type.name}</span>
+              </span>
             )}
             <button
               type="button"
@@ -127,5 +137,19 @@ export function BestiaryList({
         </details>
       )}
     </div>
+  )
+}
+
+/** A type's picked icon, small, in the creatures' red ring; nothing without one. */
+function Icon({ url, name }: { url: string | undefined; name: string }) {
+  if (!url) return null
+  return (
+    <img
+      src={url}
+      alt={t.icon.alt(name)}
+      decoding="async"
+      className="h-7 w-7 shrink-0 rounded-full border-2 object-cover"
+      style={{ borderColor: CREATURE_RING, backgroundColor: tokenFill(CREATURE_RING) }}
+    />
   )
 }

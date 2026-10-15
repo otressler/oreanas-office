@@ -5,6 +5,7 @@ using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Images;
 
 namespace OreanasOffice.Server.Characters;
 
@@ -45,7 +46,7 @@ public static class CharacterEndpoints
         TimeProvider time,
         CancellationToken cancellationToken)
     {
-        if (Validate(request, out var name) is { } error)
+        if (Validate(request, out var name, out var appearance) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
@@ -57,6 +58,7 @@ public static class CharacterEndpoints
             OwnerUserId = userId,
             Name = name,
             Size = request.Size,
+            Appearance = appearance,
             CreatedAt = time.GetUtcNow(),
         };
         db.Characters.Add(character);
@@ -88,24 +90,31 @@ public static class CharacterEndpoints
             return TypedResults.Forbid();
         }
 
-        if (Validate(request, out var name) is { } error)
+        if (Validate(request, out var name, out var appearance) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
 
         character.Name = name;
         character.Size = request.Size;
+        character.Appearance = appearance;
         await db.SaveChangesAsync(cancellationToken);
 
         return TypedResults.Ok(await LoadAsync(db, campaignId, character.Id, userId, cancellationToken));
     }
 
-    private static ApiError? Validate(CharacterRequest request, out string name)
+    private static ApiError? Validate(CharacterRequest request, out string name, out string appearance)
     {
         name = request.Name?.Trim() ?? "";
+        appearance = request.Appearance?.Trim() ?? "";
         if (name.Length is 0 or > Character.NameMaxLength)
         {
             return new ApiError(ApiErrorCode.NameInvalid, "name");
+        }
+
+        if (appearance.Length > Character.AppearanceMaxLength)
+        {
+            return new ApiError(ApiErrorCode.TextTooLong, "appearance");
         }
 
         return null;
@@ -120,21 +129,35 @@ public static class CharacterEndpoints
         return (await WithColorsAsync(db, campaignId, [character], cancellationToken))[0];
     }
 
-    // ColorIndex is filled in afterwards (WithColorsAsync).
-    private static IQueryable<CharacterResponse> Responses(IQueryable<Character> characters, Guid userId, bool isDm) =>
-        characters.Select(c => new CharacterResponse(
-            c.Id,
-            c.OwnerUserId,
-            c.Owner.DisplayName,
-            c.Name,
-            c.Size,
-            isDm || c.OwnerUserId == userId,
-            0));
+    // ColorIndex and PortraitUrl are filled in afterwards (WithColorsAsync): SQL Server
+    // would write the asset id in capitals, and the URL must match the board's.
+    private static IQueryable<Row> Responses(IQueryable<Character> characters, Guid userId, bool isDm) =>
+        characters.Select(c => new Row(
+            new CharacterResponse(
+                c.Id,
+                c.OwnerUserId,
+                c.Owner.DisplayName,
+                c.Name,
+                c.Size,
+                isDm || c.OwnerUserId == userId,
+                0,
+                c.Appearance,
+                null),
+            c.TokenAssetId));
 
     private static async Task<List<CharacterResponse>> WithColorsAsync(
-        AppDbContext db, Guid campaignId, List<CharacterResponse> characters, CancellationToken cancellationToken)
+        AppDbContext db, Guid campaignId, List<Row> characters, CancellationToken cancellationToken)
     {
         var colors = await db.CharacterColorIndexesAsync(campaignId, cancellationToken);
-        return [.. characters.Select(c => c with { ColorIndex = colors[c.Id] })];
+        return
+        [
+            .. characters.Select(c => c.Response with
+            {
+                ColorIndex = colors[c.Response.Id],
+                PortraitUrl = c.TokenAssetId is { } assetId ? MapBackgrounds.Url(assetId) : null,
+            }),
+        ];
     }
+
+    private sealed record Row(CharacterResponse Response, Guid? TokenAssetId);
 }

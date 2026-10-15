@@ -1,6 +1,7 @@
 // The form for a creature type (knowledge/domain/creature-type.md): name, size, the
-// appearance that later feeds the icon prompt, and the DM's notes. It writes to the
-// browser; the name must be free in the campaign, ignoring case.
+// appearance that feeds the icon prompt, and the DM's notes. It writes to the browser; the
+// name must be free in the campaign, ignoring case. An existing type also shows its icons
+// (CreatureIconSection), outside the form element.
 import { useId, useState, type FormEvent } from 'react'
 import type { CreatureSize } from '../api/types'
 import { footprint } from '../board/geometry'
@@ -9,6 +10,7 @@ import { inputClass } from '../components/styles'
 import { useLocalUser } from '../offline/localUser'
 import type { LocalCreatureType } from '../offline/model'
 import { de } from '../text/de'
+import { CreatureIconSection } from './CreatureIconSection'
 import {
   CREATURE_APPEARANCE_MAX,
   CREATURE_NOTES_MAX,
@@ -70,6 +72,30 @@ export function CreatureTypeForm({
     }
   }
 
+  /**
+   * Before an icon job: writes edits the DM hasn't saved yet, without closing the form.
+   * False (and the problems shown) when they can't be saved.
+   */
+  async function saveDraft(): Promise<boolean> {
+    if (!type) return false
+    const unchanged =
+      name.trim() === type.name &&
+      size === type.size &&
+      appearance === type.appearance &&
+      notes === type.notes
+    if (unchanged) return true
+    setSubmitted(true)
+    if (problems.length > 0) return false
+    try {
+      const result = await saveCreatureType(db, type.id, input)
+      if (!result.ok) setFailed(true)
+      return result.ok
+    } catch {
+      setFailed(true)
+      return false
+    }
+  }
+
   async function archive() {
     if (!type) return
     await setCreatureTypeArchived(db, type.id, true)
@@ -85,64 +111,63 @@ export function CreatureTypeForm({
         : undefined
 
   return (
-    <form
-      onSubmit={submit}
-      aria-labelledby={`${formId}-title`}
-      className="flex flex-col gap-3 rounded-lg border border-line p-3"
-    >
-      <h3 id={`${formId}-title`} className="font-semibold text-parchment">
-        {type ? t.editTitle(type.name) : t.newTitle}
-      </h3>
-      <TextField
-        label={t.name}
-        value={name}
-        autoComplete="off"
-        invalid={nameProblem !== undefined}
-        hint={nameProblem ?? t.nameHint}
-        onChange={(event) => setName(event.target.value)}
-      />
-      <SelectField
-        label={t.size}
-        value={size}
-        onChange={(event) => setSize(event.target.value as CreatureSize)}
-      >
-        {CREATURE_SIZES.map((value) => (
-          <option key={value} value={value}>
-            {t.sizeOption(de.sizes[value], footprint(value))}
-          </option>
-        ))}
-      </SelectField>
-      <TextArea
-        label={t.appearance}
-        value={appearance}
-        max={CREATURE_APPEARANCE_MAX}
-        hint={has('appearanceTooLong') ? t.problems.appearanceTooLong : t.appearanceHint}
-        invalid={has('appearanceTooLong')}
-        onChange={setAppearance}
-      />
-      <TextArea
-        label={t.notes}
-        value={notes}
-        max={CREATURE_NOTES_MAX}
-        hint={has('notesTooLong') ? t.problems.notesTooLong : t.notesHint}
-        invalid={has('notesTooLong')}
-        onChange={setNotes}
-      />
-      {failed && <ErrorAlert error={t.saveFailed} />}
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" variant="primary">
-          {type ? t.save : t.create}
-        </Button>
-        <Button variant="quiet" onClick={onCancel}>
-          {t.cancel}
-        </Button>
-        {type && (
-          <Button variant="quiet" className="ml-auto" onClick={() => void archive()}>
-            {t.archive}
+    <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+      <form onSubmit={submit} aria-labelledby={`${formId}-title`} className="flex flex-col gap-3">
+        <h3 id={`${formId}-title`} className="font-semibold text-parchment">
+          {type ? t.editTitle(type.name) : t.newTitle}
+        </h3>
+        <TextField
+          label={t.name}
+          value={name}
+          autoComplete="off"
+          invalid={nameProblem !== undefined}
+          hint={nameProblem ?? t.nameHint}
+          onChange={(event) => setName(event.target.value)}
+        />
+        <SelectField
+          label={t.size}
+          value={size}
+          onChange={(event) => setSize(event.target.value as CreatureSize)}
+        >
+          {CREATURE_SIZES.map((value) => (
+            <option key={value} value={value}>
+              {t.sizeOption(de.sizes[value], footprint(value))}
+            </option>
+          ))}
+        </SelectField>
+        <TextArea
+          label={t.appearance}
+          value={appearance}
+          max={CREATURE_APPEARANCE_MAX}
+          hint={has('appearanceTooLong') ? t.problems.appearanceTooLong : t.appearanceHint}
+          invalid={has('appearanceTooLong')}
+          onChange={setAppearance}
+        />
+        <TextArea
+          label={t.notes}
+          value={notes}
+          max={CREATURE_NOTES_MAX}
+          hint={has('notesTooLong') ? t.problems.notesTooLong : t.notesHint}
+          invalid={has('notesTooLong')}
+          onChange={setNotes}
+        />
+        {failed && <ErrorAlert error={t.saveFailed} />}
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" variant="primary">
+            {type ? t.save : t.create}
           </Button>
-        )}
-      </div>
-    </form>
+          <Button variant="quiet" onClick={onCancel}>
+            {t.cancel}
+          </Button>
+          {type && (
+            <Button variant="quiet" className="ml-auto" onClick={() => void archive()}>
+              {t.archive}
+            </Button>
+          )}
+        </div>
+      </form>
+      {type && <CreatureIconSection campaignId={campaignId} type={type} saveDraft={saveDraft} />}
+    </div>
   )
 }
 

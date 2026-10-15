@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
@@ -8,8 +9,9 @@ using Microsoft.Extensions.Options;
 namespace OreanasOffice.Server.Images;
 
 // POST {Endpoint}/images/edits as multipart form: model, prompt, size WxH, quality,
-// output_format, output_compression, n = 1 and the guide as `image`
-// (.claude/skills/image-assets/references/foundry-api.md). Reads data[0].b64_json and
+// output_format, output_compression, n = 1, background when asked for, and the guide as
+// `image`; POST {Endpoint}/images/generations as JSON for text to image
+// (.claude/skills/image-assets/references/foundry-api.md). Both read data[0].b64_json and
 // `usage`. 429 → ImageRateLimitedException with the Retry-After wait; 400 →
 // ImageRejectedException. The API key goes only into the Authorization header.
 public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOptions> options) : IImageClient
@@ -33,9 +35,20 @@ public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOp
             { new StringContent($"{request.Width}x{request.Height}"), "size" },
             { new StringContent(request.Quality), "quality" },
             { new StringContent(request.OutputFormat), "output_format" },
-            { new StringContent(request.OutputCompression.ToString(CultureInfo.InvariantCulture)), "output_compression" },
             { new StringContent("1"), "n" },
         };
+        // Compression applies to JPEG and WebP only; a PNG request (a restyled portrait)
+        // leaves it out.
+        if (request.OutputFormat is not "png")
+        {
+            form.Add(new StringContent(request.OutputCompression.ToString(CultureInfo.InvariantCulture)), "output_compression");
+        }
+
+        if (request.Background is { } background)
+        {
+            form.Add(new StringContent(background), "background");
+        }
+
         // A refinement sends the picture to edit first, then the guide; several images go
         // as image[], one as image.
         if (request.Picture is { } picture)
@@ -48,7 +61,35 @@ public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOp
             AddImage(form, "image", request.GuidePng, "image/png", "guide.png");
         }
 
-        using var message = new HttpRequestMessage(HttpMethod.Post, $"{_options.Endpoint!.TrimEnd('/')}/images/edits") { Content = form };
+        return await SendAsync("images/edits", form, request.OutputFormat, cancellationToken);
+    }
+
+    // POST {Endpoint}/images/generations as JSON: model, prompt, size, quality, background,
+    // output_format, n = 1. Same error handling and parsing as EditAsync.
+    public async Task<ImageResult> GenerateAsync(ImageGenerateRequest request, CancellationToken cancellationToken)
+    {
+        if (!_options.Configured)
+        {
+            throw new InvalidOperationException("No image model is configured.");
+        }
+
+        var json = JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["model"] = _options.Deployment!,
+            ["prompt"] = request.Prompt,
+            ["size"] = $"{request.Width}x{request.Height}",
+            ["quality"] = request.Quality,
+            ["background"] = request.Background,
+            ["output_format"] = request.OutputFormat,
+            ["n"] = 1,
+        });
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        return await SendAsync("images/generations", content, request.OutputFormat, cancellationToken);
+    }
+
+    private async Task<ImageResult> SendAsync(string path, HttpContent content, string outputFormat, CancellationToken cancellationToken)
+    {
+        using var message = new HttpRequestMessage(HttpMethod.Post, $"{_options.Endpoint!.TrimEnd('/')}/{path}") { Content = content };
         message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
 
         using var response = await _http.SendAsync(message, cancellationToken);
@@ -69,7 +110,7 @@ public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOp
                 $"The image model answered {(int)response.StatusCode}: {ErrorMessage(body)}", null, response.StatusCode);
         }
 
-        return Parse(body, request.OutputFormat, RequestId(response));
+        return Parse(body, outputFormat, RequestId(response));
     }
 
     private static ImageResult Parse(string body, string requestedFormat, string? requestId)

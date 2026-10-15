@@ -56,6 +56,7 @@ export function previewBoard(
           size: token.size,
           colorIndex: 0,
           version: 0,
+          imageUrl: null,
         },
       ]
     : []

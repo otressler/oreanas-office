@@ -217,6 +217,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("IconAssetId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -243,6 +246,8 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IconAssetId");
 
                     b.HasIndex("UpdatedByUserId");
 
@@ -314,6 +319,11 @@ namespace OreanasOffice.Server.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Appearance")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<Guid>("CampaignId")
                         .HasColumnType("uniqueidentifier");
 
@@ -333,11 +343,16 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<Guid?>("TokenAssetId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CampaignId");
 
                     b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("TokenAssetId");
 
                     b.ToTable("Characters");
                 });
@@ -573,6 +588,9 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<Guid?>("RefinedFromAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SourceAssetId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("StartedAt")
