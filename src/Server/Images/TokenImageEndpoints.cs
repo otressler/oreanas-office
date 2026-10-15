@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
+using Microsoft.OpenApi;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
@@ -39,8 +40,21 @@ public static class TokenImageEndpoints
             .RequireAuthorization(Policies.CampaignMember);
         portraits.MapGet("/portraits", ListPortraits);
         portraits.MapPost("/portraits", GeneratePortrait);
+        // The accepted types are only described in the OpenAPI document, not set as Accepts
+        // metadata: routing would answer any other type with the /api fallback's 404,
+        // where the app needs UploadInvalid.
         portraits.MapPost("/portraits/upload", UploadPortrait)
-            .Accepts<byte[]>("image/jpeg", "image/png", "image/webp");
+            .AddOpenApiOperationTransformer((operation, _, _) =>
+            {
+                operation.RequestBody = new OpenApiRequestBody
+                {
+                    Required = true,
+                    Content = TokenPicture.UploadFormats.Keys.ToDictionary(
+                        type => type,
+                        _ => new OpenApiMediaType { Schema = new OpenApiSchema { Type = JsonSchemaType.String, Format = "byte" } }),
+                };
+                return Task.CompletedTask;
+            });
         portraits.MapPut("/portrait", PickPortrait);
 
         return app;

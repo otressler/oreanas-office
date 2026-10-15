@@ -134,7 +134,7 @@ public sealed class TokenPictureTests
 
         Assert.Null(TokenPicture.FromUpload([], Size, MaxPixels));
         Assert.Null(TokenPicture.FromUpload("GIF89a\x01\x00\x01\x00"u8.ToArray(), Size, MaxPixels));
-        Assert.Null(TokenPicture.FromUpload([.. "\x89PNG\r\n\x1a\n"u8, 1, 2, 3, 4, 5, 6, 7, 8], Size, MaxPixels));
+        Assert.Null(TokenPicture.FromUpload([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3, 4, 5, 6, 7, 8], Size, MaxPixels));
         // Cut off halfway.
         Assert.Null(TokenPicture.FromUpload(png[..(png.Length / 2)], Size, MaxPixels));
     }
