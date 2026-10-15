@@ -1,0 +1,84 @@
+using Microsoft.EntityFrameworkCore;
+using OreanasOffice.Server.Data;
+
+namespace OreanasOffice.Server.Images;
+
+// Shared rules for token icons and portraits (knowledge/features/token-icons.md): how a
+// version looks to the app, where its picture lies, and the owner's pick.
+public static class TokenImages
+{
+    public static TokenImage ToView(Asset asset) => new(
+        asset.Id,
+        asset.OwnerType,
+        asset.OwnerId,
+        asset.Origin,
+        asset.Status,
+        asset.Status == AssetStatus.Done ? MapBackgrounds.Url(asset.Id) : null,
+        asset.Status == AssetStatus.Failed ? asset.Failure : null,
+        asset.SourceAssetId,
+        asset.CreatedAt,
+        asset.FinishedAt);
+
+    // tokens/creature-type/{ownerId}/{assetId}.webp or tokens/character/{ownerId}/{assetId}.webp.
+    public static string BlobName(AssetOwnerType ownerType, Guid ownerId, Guid assetId) =>
+        $"tokens/{Folder(ownerType)}/{ownerId}/{assetId}.webp";
+
+    // The owner's versions: generated, uploaded and restyled.
+    public static IQueryable<Asset> VersionsOf(AppDbContext db, AssetOwnerType ownerType, Guid ownerId) =>
+        db.Assets.Where(a => a.Kind == AssetKind.TokenIcon && a.OwnerType == ownerType && a.OwnerId == ownerId);
+
+    // Newest first, with the pick and what the month has used.
+    public static async Task<TokenImagesResponse> ListAsync(
+        AppDbContext db,
+        AssetOwnerType ownerType,
+        Guid ownerId,
+        Guid? pickedAssetId,
+        ImageOptions options,
+        TimeProvider time,
+        CancellationToken cancellationToken)
+    {
+        var versions = await VersionsOf(db, ownerType, ownerId).AsNoTracking()
+            .OrderByDescending(a => a.CreatedAt)
+            .ThenBy(a => a.Id)
+            .ToListAsync(cancellationToken);
+        var budget = await MapBackgrounds.BudgetAsync(db, options, time, cancellationToken);
+        return new TokenImagesResponse(pickedAssetId, [.. versions.Select(ToView)], budget);
+    }
+
+    // Whether the owner has a queued or running job: one at a time (GenerationRunning).
+    public static Task<bool> JobRunningAsync(AppDbContext db, AssetOwnerType ownerType, Guid ownerId, CancellationToken cancellationToken) =>
+        VersionsOf(db, ownerType, ownerId)
+            .AnyAsync(a => a.Status == AssetStatus.Queued || a.Status == AssetStatus.Running, cancellationToken);
+
+    // A Done version of the owner, or null.
+    public static Task<Asset?> FinishedAsync(
+        AppDbContext db, AssetOwnerType ownerType, Guid ownerId, Guid assetId, CancellationToken cancellationToken) =>
+        VersionsOf(db, ownerType, ownerId).AsNoTracking()
+            .SingleOrDefaultAsync(a => a.Id == assetId && a.Status == AssetStatus.Done, cancellationToken);
+
+    // Sets CreatureType.IconAssetId or Character.TokenAssetId. Not part of the creature
+    // type's sync item: its Version and UpdatedAt stay as they are. False when the owner
+    // is gone.
+    public static async Task<bool> PickAsync(
+        AppDbContext db, AssetOwnerType ownerType, Guid ownerId, Guid? assetId, CancellationToken cancellationToken)
+    {
+        var updated = ownerType switch
+        {
+            AssetOwnerType.CreatureType => await db.CreatureTypes
+                .Where(t => t.Id == ownerId)
+                .ExecuteUpdateAsync(set => set.SetProperty(t => t.IconAssetId, assetId), cancellationToken),
+            AssetOwnerType.Character => await db.Characters
+                .Where(c => c.Id == ownerId)
+                .ExecuteUpdateAsync(set => set.SetProperty(c => c.TokenAssetId, assetId), cancellationToken),
+            _ => throw new ArgumentOutOfRangeException(nameof(ownerType), ownerType, "Only creature types and characters have token images."),
+        };
+        return updated > 0;
+    }
+
+    private static string Folder(AssetOwnerType ownerType) => ownerType switch
+    {
+        AssetOwnerType.CreatureType => "creature-type",
+        AssetOwnerType.Character => "character",
+        _ => throw new ArgumentOutOfRangeException(nameof(ownerType), ownerType, "Only creature types and characters have token images."),
+    };
+}

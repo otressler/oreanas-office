@@ -8,7 +8,8 @@ namespace OreanasOffice.Server.Images;
 
 // Runs background jobs one at a time (knowledge/implementation-plan.md, stage 7): renders
 // the guide, sends one request at most every MinRequestInterval, waits out 429s, stores the
-// image, records the cost and tells open editors (ImageEvents). Woken by ImageJobQueue when
+// image, records the cost and tells open editors (ImageEvents). Token icons and portraits
+// (stage 8) go through the same queue: RunTokenAsync. Woken by ImageJobQueue when
 // a job is added and once at startup, where Running jobs cut off by a restart go back to
 // Queued; it never polls the database (knowledge/decisions/hosting.md). A job cut off by
 // shutdown stays Running, so the next start finds it.
@@ -169,10 +170,15 @@ public sealed class ImageJobWorker(
             return;
         }
 
+        if (asset is { Kind: AssetKind.TokenIcon, OwnerType: AssetOwnerType.CreatureType or AssetOwnerType.Character })
+        {
+            await RunTokenAsync(db, client, asset, stoppingToken);
+            return;
+        }
+
         if (asset.Kind != AssetKind.MapBackground || asset.OwnerType != AssetOwnerType.BattleMap)
         {
-            // Stage 8 brings token icons; until then nothing else is queued.
-            await FailAsync(db, asset, AssetFailure.Error, null, "it isn't a map background");
+            await FailAsync(db, asset, AssetFailure.Error, null, "it is neither a map background nor a token image");
             return;
         }
 
@@ -275,6 +281,160 @@ public sealed class ImageJobWorker(
             await FinishAsync(db, asset, result);
             return;
         }
+    }
+
+    // A creature type's icon or a character's portrait (knowledge/features/token-icons.md):
+    // text to image from the owner's name and appearance as they are when the job runs, or
+    // for a restyle the uploaded version sent to the edits endpoint as the reference. Both
+    // ask for a transparent PNG; the server keeps a square WebP. Same request spacing,
+    // 429 waits, retries and failures as a background.
+    private async Task RunTokenAsync(AppDbContext db, IImageClient client, Asset asset, CancellationToken stoppingToken)
+    {
+        asset.Status = AssetStatus.Running;
+        asset.StartedAt = time.GetUtcNow();
+        asset.Attempts += 1;
+        await db.SaveChangesAsync(stoppingToken);
+        logger.LogInformation(
+            "Token image job {AssetId} for {OwnerType} {OwnerId} started, attempt {Attempt}",
+            asset.Id,
+            asset.OwnerType,
+            asset.OwnerId,
+            asset.Attempts);
+        await NotifyAsync(db, asset, null);
+
+        byte[]? reference = null;
+        if (asset.SourceAssetId is { } sourceId)
+        {
+            if (await LoadPictureAsync(db, sourceId, stoppingToken) is not { } source)
+            {
+                await FailAsync(db, asset, AssetFailure.Error, null, "the uploaded version to restyle is gone");
+                return;
+            }
+
+            reference = TokenPicture.ToPng(source.Content);
+        }
+
+        var pixels = _options.TokenRequestPixels;
+        var rateLimitedWaits = 0;
+        while (true)
+        {
+            await WaitForRequestSlotAsync(stoppingToken);
+
+            // The owner as it is now: the name or appearance may have changed while the job
+            // waited. An archived creature type still gets its icon.
+            var owner = await TokenOwnerAsync(db, asset, stoppingToken);
+            if (owner is not { } subject)
+            {
+                await FailAsync(db, asset, AssetFailure.Error, null, $"the {asset.OwnerType} is gone");
+                return;
+            }
+
+            var prompt = asset.OwnerType == AssetOwnerType.CreatureType
+                ? TokenPrompt.CreatureIcon(subject.Name, subject.Appearance, _options.TokenStyle)
+                : reference is null
+                    ? TokenPrompt.CharacterPortrait(subject.Name, subject.Appearance, _options.TokenStyle)
+                    : TokenPrompt.Restyle(subject.Name, subject.Appearance, _options.TokenStyle);
+            asset.Prompt = TokenPrompt.ForStorage(prompt);
+            await db.SaveChangesAsync(stoppingToken);
+
+            ImageResult result;
+            try
+            {
+                _lastRequestAt = time.GetUtcNow();
+                result = reference is null
+                    ? await client.GenerateAsync(
+                        new ImageGenerateRequest(prompt, pixels, pixels, _options.TokenQuality, "transparent", "png"), stoppingToken)
+                    : await client.EditAsync(
+                        new ImageEditRequest(
+                            prompt, reference, pixels, pixels, _options.TokenQuality, "png", _options.OutputCompression, Background: "transparent"),
+                        stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (ImageRateLimitedException ex) when (++rateLimitedWaits > MaxRateLimitedWaits)
+            {
+                await FailAsync(db, asset, AssetFailure.Error, null, $"the image model stayed busy after {MaxRateLimitedWaits} waits: {ex.Message}");
+                return;
+            }
+            catch (ImageRateLimitedException ex)
+            {
+                logger.LogWarning("Token image job {AssetId}: the image model is busy, retrying after {RetryAfter}", asset.Id, ex.RetryAfter);
+                await Task.Delay(ex.RetryAfter, time, stoppingToken);
+                continue;
+            }
+            catch (ImageRejectedException ex)
+            {
+                await FailAsync(db, asset, AssetFailure.Rejected, null, $"the model rejected the request: {ex.Message}");
+                return;
+            }
+            catch (Exception ex)
+            {
+                if (asset.Attempts >= _options.MaxAttempts)
+                {
+                    logger.LogWarning(ex, "Token image job {AssetId}: attempt {Attempt} failed", asset.Id, asset.Attempts);
+                    await FailAsync(db, asset, AssetFailure.Error, null, $"no image after {asset.Attempts} attempts");
+                    return;
+                }
+
+                logger.LogWarning(ex, "Token image job {AssetId}: attempt {Attempt} failed; trying again", asset.Id, asset.Attempts);
+                asset.Status = AssetStatus.Queued;
+                await db.SaveChangesAsync(CancellationToken.None);
+                await NotifyAsync(db, asset, null);
+                return;
+            }
+
+            await FinishTokenAsync(db, asset, result);
+            return;
+        }
+    }
+
+    private static async Task<(string Name, string Appearance)?> TokenOwnerAsync(
+        AppDbContext db, Asset asset, CancellationToken cancellationToken) =>
+        asset.OwnerType == AssetOwnerType.CreatureType
+            ? await db.CreatureTypes.AsNoTracking()
+                .Where(t => t.Id == asset.OwnerId)
+                .Select(t => new { t.Name, t.Appearance })
+                .SingleOrDefaultAsync(cancellationToken) is { } type ? (type.Name, type.Appearance) : null
+            : await db.Characters.AsNoTracking()
+                .Where(c => c.Id == asset.OwnerId)
+                .Select(c => new { c.Name, c.Appearance })
+                .SingleOrDefaultAsync(cancellationToken) is { } character ? (character.Name, character.Appearance) : null;
+
+    // Stores the square WebP and makes it the owner's pick: the newest finished version
+    // becomes the picked one (project owner, 2026-10-15).
+    private async Task FinishTokenAsync(AppDbContext db, Asset asset, ImageResult result)
+    {
+        // Throws for a picture that can't be read, which counts as a failed attempt.
+        var webp = TokenPicture.FromModel(result.Image, _options.TokenPixels);
+
+        // A paid image is kept even when shutdown begins now.
+        var cancellationToken = CancellationToken.None;
+        var blobName = TokenImages.BlobName(asset.OwnerType, asset.OwnerId, asset.Id);
+        await store.SaveAsync(blobName, webp, TokenPicture.ContentType, cancellationToken);
+
+        asset.BlobName = blobName;
+        asset.ContentType = TokenPicture.ContentType;
+        asset.CostUsd = MapBackgrounds.Cost(result.Usage, _options);
+        asset.Status = AssetStatus.Done;
+        asset.Failure = null;
+        asset.FinishedAt = time.GetUtcNow();
+        await db.SaveChangesAsync(cancellationToken);
+
+        var picked = await TokenImages.PickAsync(db, asset.OwnerType, asset.OwnerId, asset.Id, cancellationToken);
+        logger.LogInformation(
+            "Token image job {AssetId} for {OwnerType} {OwnerId} done: {CostUsd} USD, {ImageTokens} + {TextTokens} input and {OutputTokens} output tokens, request {RequestId}{Picked}",
+            asset.Id,
+            asset.OwnerType,
+            asset.OwnerId,
+            asset.CostUsd,
+            result.Usage.InputImageTokens,
+            result.Usage.InputTextTokens,
+            result.Usage.OutputTokens,
+            result.RequestId,
+            picked ? ", picked" : "");
+        await NotifyAsync(db, asset, null);
     }
 
     // The map may have changed since the job was queued: the version describes what is
@@ -381,7 +541,16 @@ public sealed class ImageJobWorker(
 
     private async Task FailAsync(AppDbContext db, Asset asset, AssetFailure failure, BattleMap? map, string reason)
     {
-        logger.LogWarning("Background job {AssetId} for map {MapId} failed ({Failure}): {Reason}", asset.Id, asset.OwnerId, failure, reason);
+        if (asset.Kind == AssetKind.TokenIcon)
+        {
+            logger.LogWarning(
+                "Token image job {AssetId} for {OwnerType} {OwnerId} failed ({Failure}): {Reason}", asset.Id, asset.OwnerType, asset.OwnerId, failure, reason);
+        }
+        else
+        {
+            logger.LogWarning("Background job {AssetId} for map {MapId} failed ({Failure}): {Reason}", asset.Id, asset.OwnerId, failure, reason);
+        }
+
         asset.Status = AssetStatus.Failed;
         asset.Failure = failure;
         asset.FinishedAt = time.GetUtcNow();
@@ -389,11 +558,18 @@ public sealed class ImageJobWorker(
         await NotifyAsync(db, asset, map);
     }
 
-    // Tells the map's open editors; a failure here never stops the worker.
+    // Tells the map's open editors, or the open gallery of a creature type's icons or a
+    // character's portraits; a failure here never stops the worker.
     private async Task NotifyAsync(AppDbContext db, Asset asset, BattleMap? map)
     {
         try
         {
+            if (asset.Kind == AssetKind.TokenIcon)
+            {
+                await events.TokenImageUpdatedAsync(TokenImages.ToView(asset));
+                return;
+            }
+
             var current = map ?? await db.BattleMaps.AsNoTracking().SingleOrDefaultAsync(m => m.Id == asset.OwnerId, CancellationToken.None);
             var (width, height, fingerprint) = current is null
                 ? (asset.GridWidth ?? 0, asset.GridHeight ?? 0, asset.LayoutHash ?? "")
