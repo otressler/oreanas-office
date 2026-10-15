@@ -45,4 +45,17 @@ Confirmed by the project owner on 2026-10-15, at the start of stage 8:
 - One style for the whole site: the same style block in every icon and portrait prompt, kept as a server setting. There is no style per campaign or per map.
 - When a new version finishes, it becomes the picked one; the earlier ones stay in the gallery to switch back to.
 
+# As built (stage 8)
+
+Built on `stage/8-token-icons`.
+
+- **Where.** The bestiary's edit form has an "Symbol" section, and its rows show the picked icon. The character form has the "Aussehen" field and, for the owner and `dm` members, a "Porträt" section; the characters panel shows each portrait. The board, the setup screen, the editor's preview and the encounter editor's canvas draw the picked image, cropped to a circle inside the ring. With an image, a creature's number ("G1") becomes a small badge on the token's lower-right edge.
+- **A creature type the server doesn't have yet** gets no gallery, only a note and "Jetzt synchronisieren". Generating first saves the form, syncs the type and sends its server version (`itemVersion`), because the server paints from its own copy.
+- **Saving before a portrait job.** A changed name, size or appearance of a character is saved before its portrait is generated. Restyling doesn't save the form.
+- **One job at a time per owner.** While an icon or portrait is queued or being painted, generating and restyling wait; uploading still works.
+- **A finished job is always picked**, also when someone picked another version by hand while it was running.
+- **Uploads.** The crop step sends the chosen square as a 1024 × 1024 JPEG, so a transparent PNG gets the board's dark background behind it. The server keeps every version, uploads included, as a 512 × 512 WebP.
+- **Archived creature types** keep their icons and can still switch versions; only generating is refused.
+- **First real batch** (2026-10-15, through the app against the Foundry deployment): icons for a goblin, an ogre and a giant spider, and a portrait of a half-elf ranger, high quality, about $0.05 each. They read as one set, with clean transparent backgrounds. A weapon held out to the side (the goblin's sabre, the ogre's club) can reach the frame's edge, so the circle cuts its tip.
+
 [^brief]: Original project brief
