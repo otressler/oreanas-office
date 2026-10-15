@@ -183,12 +183,15 @@ export class MockHub {
 
 interface ImageClient extends Client {
   mapId: string | null
+  /** The creature type or character whose icons or portraits it watches. */
+  tokenOwnerId: string | null
 }
 
 /**
  * A stand-in for the image hub (/hubs/images), with the same SignalR JSON protocol: the
  * editor joins a map's group with WatchMap while one of its background jobs is pending,
- * and the test tells it that a job moved on (backgroundUpdated).
+ * and the test tells it that a job moved on (backgroundUpdated). Icon and portrait
+ * galleries join with WatchTokenImages; the backend's finished jobs reach them by itself.
  */
 export class MockImageHub {
   readonly calls: HubCall[] = []
@@ -197,6 +200,7 @@ export class MockImageHub {
 
   constructor(backend: MockBackend) {
     this.backend = backend
+    backend.onTokenImageUpdated = (image) => this.tokenImageUpdated(image)
   }
 
   async attach(context: BrowserContext) {
@@ -220,6 +224,7 @@ export class MockImageHub {
         handshaken: false,
         encounterId: null,
         mapId: null,
+        tokenOwnerId: null,
       }
       this.clients.add(client)
       socket.onClose(() => this.clients.delete(client))
@@ -235,6 +240,22 @@ export class MockImageHub {
   /** Editors watching a map right now. */
   watching(mapId?: string): number {
     return [...this.clients].filter((c) => c.mapId && (!mapId || c.mapId === mapId)).length
+  }
+
+  /** Galleries watching a creature type's or character's images right now. */
+  watchingTokenImages(ownerId?: string): number {
+    return [...this.clients].filter(
+      (c) => c.tokenOwnerId && (!ownerId || c.tokenOwnerId === ownerId),
+    ).length
+  }
+
+  /** A version moved on: sent to every gallery watching its owner. */
+  tokenImageUpdated(image: S['TokenImage']) {
+    for (const client of this.clients) {
+      if (client.tokenOwnerId === image.ownerId) {
+        this.send(client, { type: 1, target: 'TokenImageUpdated', arguments: [image] })
+      }
+    }
   }
 
   /** Open connections, watching or not. */
@@ -262,9 +283,12 @@ export class MockImageHub {
     if (message.type !== 1 || !message.target) return
     const args = message.arguments ?? []
     this.calls.push({ context: client.context, method: message.target, args })
-    if (message.target !== 'WatchMap') throw new Error(`Unknown hub method ${message.target}`)
+    if (message.target !== 'WatchMap' && message.target !== 'WatchTokenImages') {
+      throw new Error(`Unknown hub method ${message.target}`)
+    }
     const signedIn = this.backend.userId(client.context) !== null
-    if (signedIn) client.mapId = String(args[1])
+    if (signedIn && message.target === 'WatchMap') client.mapId = String(args[1])
+    if (signedIn && message.target === 'WatchTokenImages') client.tokenOwnerId = String(args[2])
     const result = { error: signedIn ? null : 'notADm' }
     if (message.invocationId !== undefined) {
       this.send(client, { type: 3, invocationId: message.invocationId, result })

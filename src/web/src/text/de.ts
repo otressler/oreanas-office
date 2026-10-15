@@ -1352,7 +1352,7 @@ export const de = {
     /** A size and its footprint, e.g. "Groß (2 × 2 Felder)". */
     sizeOption: (size: string, cells: number) => `${size} (${cells} × ${cells} Felder)`,
     appearance: 'Aussehen',
-    appearanceHint: 'Kurze Beschreibung, aus der später das Symbol gemalt wird.',
+    appearanceHint: 'Kurze Beschreibung, aus der das Symbol gemalt wird.',
     notes: 'Notizen der Spielleitung',
     notesHint: 'Nur für die Spielleitung sichtbar.',
     create: 'Anlegen',
