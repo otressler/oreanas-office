@@ -255,6 +255,53 @@ export function syncMapBeforeGenerate(
   })
 }
 
+/**
+ * Pushes a creature type (and its campaign when made offline) before an icon job, since
+ * the server paints from its own copy of the name and appearance
+ * (knowledge/features/token-icons.md). Like syncMapBeforeGenerate: 'ready' with the type's
+ * server version, 'blocked' when a conflict or rejection must be resolved first (or the
+ * device doesn't hold the type), 'offline' without a connection.
+ */
+export function syncCreatureTypeBeforeGenerate(
+  db: OfflineDb,
+  creatureTypeId: string,
+): Promise<{ result: 'ready' | 'blocked' | 'offline'; version: number | null }> {
+  return withSyncLock(userIdOf(db), async () => {
+    const type = await db.creatureTypes.get(creatureTypeId)
+    if (!navigator.onLine) return { result: 'offline' as const, version: null }
+    if (!type) return { result: 'blocked' as const, version: null }
+
+    const campaign = await db.campaigns.get(type.campaignId)
+    const scope = {
+      campaignIds: new Set(campaign?.local ? [campaign.id] : []),
+      ids: {
+        creatureType: new Set([type.id]),
+        battleMap: new Set<string>(),
+        encounter: new Set<string>(),
+      },
+    }
+    useSyncStore.setState((s) => ({ running: s.running + 1 }))
+    try {
+      const planned = await planPush(db, scope)
+      if (planned.length > 0) noteCampaigns((await push(db, planned)).campaignsCreated)
+      noteSuccess()
+    } catch (error) {
+      noteFailure(error)
+      const result =
+        error instanceof SyncFailure && error.kind === 'offline' ? 'offline' : 'blocked'
+      return { result, version: null }
+    } finally {
+      useSyncStore.setState((s) => ({ running: s.running - 1 }))
+    }
+
+    const after = await db.creatureTypes.get(creatureTypeId)
+    const stuck = !after || after.sync.changed || after.sync.issue !== null
+    return stuck
+      ? { result: 'blocked' as const, version: null }
+      : { result: 'ready' as const, version: after.sync.baseVersion }
+  })
+}
+
 /** The current status, live. */
 export function useSyncStatus(): SyncStatus {
   const db = useSyncDb()

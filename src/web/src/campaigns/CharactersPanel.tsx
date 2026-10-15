@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import type { Character } from '../api/types'
+import { ringColor } from '../board/palette'
 import { Button, LoadError, Loading, Panel } from '../components/ui'
 import { de } from '../text/de'
+import { TokenPicture } from '../tokenImages/TokenPicture'
 import { CharacterForm } from './CharacterForm'
 import { useCharacters } from './queries'
 
@@ -57,6 +59,13 @@ export function CharactersPanel({ campaignId }: { campaignId: string }) {
 function CharacterRow({ character, onEdit }: { character: Character; onEdit: () => void }) {
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
+      <TokenPicture
+        url={character.portraitUrl}
+        label={character.name}
+        ring={ringColor({ kind: 'character', colorIndex: character.colorIndex })}
+        alt={de.characters.portraitAlt(character.name)}
+        className="h-11 w-11 text-base"
+      />
       <div className="flex min-w-0 flex-col">
         <span className="font-semibold text-parchment">{character.name}</span>
         <span className="text-sm text-dim">{de.characters.owner(character.ownerDisplayName)}</span>
