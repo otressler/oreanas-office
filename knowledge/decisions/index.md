@@ -13,6 +13,7 @@
 - [Offline prep and PWA](offline-prep-pwa.md) - Installable PWA; the DM preps offline and syncs on demand, live play needs the server
 - [Image budget](image-budget.md) - Up to $20 a month for all image generation, at high quality
 - [Image generation approach](image-generation-approach.md) - The grid is the source of truth; AI paints from a colour-coded guide image
+- [Image model](image-model.md) - gpt-image-2.5-sunburst on Microsoft Foundry, chosen over Flare for fewer artifacts in the guide's colours
 
 # Proposed
 

@@ -1,6 +1,6 @@
 namespace OreanasOffice.Server.Images;
 
-// The image model (Foundry, gpt-image-2.5-flare; .claude/skills/image-assets/references/
+// The image model (Foundry, gpt-image-2.5-sunburst, knowledge/decisions/image-model.md; .claude/skills/image-assets/references/
 // foundry-api.md). FoundryImageClient calls /images/edits; tests use a fake. One request
 // at a time: the worker spaces them (ImageOptions.MinRequestInterval).
 public interface IImageClient

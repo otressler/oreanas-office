@@ -34,7 +34,7 @@ Decided by the project owner on 2026-10-14:
 
 # Cost per image (T0, 2026-10-14)
 
-The model is billed by tokens. Published rates for `gpt-image-2.5-flare`: $8 per million image input tokens, $5 per million text input tokens, $30 per million output tokens. The T0 run on the sample maps at medium quality:
+The model is billed by tokens. Published rates for `gpt-image-2.5-flare` and `gpt-image-2.5-sunburst` (the same; the app uses Sunburst, [image model](/decisions/image-model.md)): $8 per million image input tokens, $5 per million text input tokens, $30 per million output tokens. The T0 run on the sample maps at medium quality:
 
 | Map | Image | Input tokens (image + text) | Output tokens | Cost |
 |-----|-------|------------------------------|---------------|------|

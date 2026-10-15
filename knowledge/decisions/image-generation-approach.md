@@ -33,7 +33,7 @@ Phase 0 of the [roadmap](/roadmap.md) tried the model on the four sample layouts
 
 # Phase 0 findings so far
 
-The project owner picked `gpt-image-2.5-flare` on Microsoft Foundry for the spike. First tests on 2026-10-10:
+The project owner picked `gpt-image-2.5-flare` on Microsoft Foundry for the spike; on 2026-10-15 the app switched to `gpt-image-2.5-sunburst` ([image model](/decisions/image-model.md)). First tests on 2026-10-10:
 
 - Both text-to-image (`/images/generations`) and image-to-image from a guide (`/images/edits`) work through the OpenAI-compatible v1 API.
 - **Sizes:** both edges divisible by 16, longest edge ≤ 3840, aspect ratio ≤ 3:1, at most 3840×2160 pixels. That makes exact grid-sized output possible.

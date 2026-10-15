@@ -1,11 +1,11 @@
 ---
 name: image-assets
-description: Generate image assets for Oreana's Office with the gpt-image-2.5-flare model on Microsoft Foundry. Covers battle map backgrounds painted from a grid layout (guide image to image), creature token icons with transparent backgrounds, character portraits, and textures or fallback tiles. Use this whenever the user wants to generate, regenerate, repaint or test any picture for the app, run the Phase 0 image-generation spike, try a prompt or style against the model, make icons for a bestiary, or asks how to call the Foundry image deployment, even if they only say "make a map for this fight", "draw the goblins" or "try that layout with the AI".
+description: Generate image assets for Oreana's Office with the gpt-image-2.5-sunburst model on Microsoft Foundry. Covers battle map backgrounds painted from a grid layout (guide image to image), creature token icons with transparent backgrounds, character portraits, and textures or fallback tiles. Use this whenever the user wants to generate, regenerate, repaint or test any picture for the app, run the Phase 0 image-generation spike, try a prompt or style against the model, make icons for a bestiary, or asks how to call the Foundry image deployment, even if they only say "make a map for this fight", "draw the goblins" or "try that layout with the AI".
 ---
 
 # Image assets
 
-The app's pictures come from one deployment: `gpt-image-2.5-flare` on Microsoft Foundry (OpenAI-compatible v1 API). This skill holds the scripts and prompt patterns that make its output fit the game: maps that line up with the grid, icons that work as tokens.
+The app's pictures come from one deployment: `gpt-image-2.5-sunburst` on Microsoft Foundry (OpenAI-compatible v1 API), set as `AZURE_IMAGE_DEPLOYMENT` in `.env` (`knowledge/decisions/image-model.md`; it replaced `gpt-image-2.5-flare` on 2026-10-15). This skill holds the scripts and prompt patterns that make its output fit the game: maps that line up with the grid, icons that work as tokens.
 
 Read the knowledge concepts first when the task touches design, because they are the spec: `knowledge/features/ai-map-generation.md`, `knowledge/features/token-icons.md`, `knowledge/decisions/image-generation-approach.md`, `knowledge/domain/asset.md`.
 
@@ -13,10 +13,10 @@ Read the knowledge concepts first when the task touches design, because they are
 
 Credentials live in `.env` at the project root (`AZURE_OPENAI_ENDPOINT`, `AZURE_API_KEY`, `AZURE_IMAGE_DEPLOYMENT`). The scripts read it themselves. Never print the key, paste it into files, prompts or knowledge concepts, or commit `.env`.
 
-The deployment allows **2 requests per minute**, and rejected requests count too. One image takes about 20–25 s, larger ones up to 90 s. So:
+The deployment allows **2 requests per minute**, and rejected requests count too. One image takes about 45–60 s at high quality, larger ones longer. So:
 
 - `scripts/generate_image.py` throttles across all invocations on this machine and retries 429s after the wait the server asks for. Run requests one after another, not in parallel. Parallel calls just queue on the throttle.
-- Before a batch, tell the user roughly how long it takes (each image ≈ 30 s of slot time, so 6 icons ≈ 3 min). For more than a few images, run the batch in the background.
+- Before a batch, tell the user roughly how long it takes (each image ≈ 60 s, so 6 icons ≈ 6 min). For more than a few images, run the batch in the background.
 - Draft with `--quality low` while the prompt is still changing, then do the final at `medium` or `high`.
 
 Size rules, checked locally by the script because a bad size still costs a slot: both edges divisible by 16, longest edge ≤ 3840, aspect ratio ≤ 3:1, between 655,360 and 8,294,400 pixels. Any size inside those limits works, so a map can be generated at exactly its grid's pixel size. See `references/foundry-api.md` for the raw API.

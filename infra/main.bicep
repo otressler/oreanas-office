@@ -64,7 +64,7 @@ param imagesEndpoint string = ''
 @secure()
 param imagesApiKey string = ''
 
-@description('The image deployment\'s name, for example gpt-image-2.5-flare.')
+@description('The image deployment\'s name, for example gpt-image-2.5-sunburst.')
 param imagesDeployment string = ''
 
 var suffix = uniqueString(resourceGroup().id)

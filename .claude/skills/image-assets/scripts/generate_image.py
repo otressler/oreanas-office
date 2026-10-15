@@ -54,7 +54,7 @@ def load_env():
     return (
         os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/"),
         os.environ["AZURE_API_KEY"],
-        os.environ.get("AZURE_IMAGE_DEPLOYMENT", "gpt-image-2.5-flare"),
+        os.environ.get("AZURE_IMAGE_DEPLOYMENT", "gpt-image-2.5-sunburst"),
     )
 
 
