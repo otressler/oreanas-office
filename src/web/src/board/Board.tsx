@@ -8,7 +8,8 @@
 // background picture the map layer draws the picture, highlight and grid instead
 // (background.ts); until then, or if it fails, the plain rendering. Pan and zoom
 // only change the stage transform and redraw; React re-renders only when the props or
-// the info box change. With `slide`, a token whose position changes glides to its new
+// the info box change. Token images (tokenPictures.ts) load once per URL; a token shows
+// its letter until its image is there. With `slide`, a token whose position changes glides to its new
 // cell in about 200 ms (knowledge/decisions/realtime-sync.md): only the token layer
 // redraws per animation frame, without a React render.
 import type Konva from 'konva'
@@ -31,6 +32,7 @@ import {
 } from './render'
 import { tokenMarks } from './palette'
 import { buildHighlight, buildScene } from './scene'
+import { useTokenPictures } from './tokenPictures'
 import { useElementSize } from './useElementSize'
 import {
   CELL,
@@ -384,6 +386,8 @@ export function Board({
   const tokens = board.tokens
   const stacks = useMemo(() => stackCounts(tokens, selectedTokenId), [tokens, selectedTokenId])
   const marks = useMemo(() => tokenMarks(tokens), [tokens])
+  // Each token image loads once; its arrival re-renders, which redraws the tokens.
+  const images = useTokenPictures(useMemo(() => tokens.map((token) => token.imageUrl), [tokens]))
   const ghostToken = useMemo(() => {
     const token = ghost && tokens.find((t) => t.id === ghost.tokenId)
     return token ? { ...token, x: ghost.x, y: ghost.y } : null
@@ -452,6 +456,7 @@ export function Board({
       arrows,
       stacks,
       marks,
+      images,
     })
   }
 

@@ -623,6 +623,8 @@ export interface TokenDrawOptions {
   stacks?: ReadonlyMap<string, number>
   /** What each token shows in its middle (tokenMarks); its letter by default. */
   marks?: ReadonlyMap<string, string>
+  /** Loaded token images by URL (BoardToken.imageUrl); a token without one shows its mark. */
+  images?: ReadonlyMap<string, CanvasImageSource>
 }
 
 /** Someone else's move preview: the token's target top-left cell. */
@@ -635,11 +637,59 @@ export interface MoveArrow {
 /** Below this radius in CSS pixels a token is drawn as a plain coloured dot. */
 const DOT_RADIUS_PX = 7
 
+/** The number of a numbered mark ("G12" → "12"), or null for a plain letter. */
+export function markNumber(mark: string): string | null {
+  return /\d+$/.exec(mark)?.[0] ?? null
+}
+
+/** The pixel size of an image, for drawing it centred and cropped to a square. */
+function imageSize(image: CanvasImageSource): { width: number; height: number } {
+  if (typeof HTMLImageElement !== 'undefined' && image instanceof HTMLImageElement) {
+    return { width: image.naturalWidth || image.width, height: image.naturalHeight || image.height }
+  }
+  const sized = image as { width?: number | SVGAnimatedLength; height?: number | SVGAnimatedLength }
+  const value = (v: number | SVGAnimatedLength | undefined) =>
+    typeof v === 'number' ? v : (v?.baseVal.value ?? 0)
+  return { width: value(sized.width), height: value(sized.height) }
+}
+
+/** The image cropped to a circle of radius `radius` around (cx, cy), covering it. */
+function drawCircleImage(
+  ctx: CanvasRenderingContext2D,
+  image: CanvasImageSource,
+  cx: number,
+  cy: number,
+  radius: number,
+) {
+  const { width, height } = imageSize(image)
+  if (!(width > 0 && height > 0)) return
+  const side = Math.min(width, height)
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+  ctx.clip()
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(
+    image,
+    (width - side) / 2,
+    (height - side) / 2,
+    side,
+    side,
+    cx - radius,
+    cy - radius,
+    radius * 2,
+    radius * 2,
+  )
+  ctx.restore()
+}
+
 function drawToken(
   ctx: CanvasRenderingContext2D,
   token: BoardToken,
   cssScale: number,
   mark = tokenLetter(token.label),
+  image?: CanvasImageSource,
 ) {
   const n = footprint(token.size)
   const cx = (token.x + n / 2) * CELL
@@ -665,11 +715,21 @@ function drawToken(
   if (dot) return
 
   const ringWidth = Math.max(r * 0.17, 2.5 * px)
+  // The image lies inside the ring, which is drawn over its edge.
+  if (image) drawCircleImage(ctx, image, cx, cy, r - ringWidth / 2)
+
   ctx.beginPath()
   ctx.arc(cx, cy, r - ringWidth / 2, 0, Math.PI * 2)
   ctx.strokeStyle = ring
   ctx.lineWidth = ringWidth
   ctx.stroke()
+
+  if (image) {
+    // Creatures sharing a letter stay apart by their number, now on the edge.
+    const number = markNumber(mark)
+    if (number) drawNumberBadge(ctx, cx + r * 0.74, cy + r * 0.74, number, ring, cssScale)
+    return
+  }
 
   // A numbered mark (S12) gets smaller type to stay inside the ring.
   const size = r * ([0.95, 0.95, 0.72, 0.56][mark.length] ?? 0.48)
@@ -678,6 +738,30 @@ function drawToken(
   ctx.textBaseline = 'middle'
   ctx.fillStyle = PARCHMENT
   ctx.fillText(mark, cx, cy + r * 0.05)
+}
+
+/** A numbered creature's number on its token's lower right edge: a dark disc in its ring colour. */
+function drawNumberBadge(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  number: string,
+  ring: string,
+  cssScale: number,
+) {
+  const radius = Math.max(CELL * 0.16, 8 / cssScale)
+  ctx.beginPath()
+  ctx.arc(x, y, radius, 0, Math.PI * 2)
+  ctx.fillStyle = TABLE_COLOR
+  ctx.fill()
+  ctx.strokeStyle = ring
+  ctx.lineWidth = Math.max(1.5 / cssScale, CELL * 0.025)
+  ctx.stroke()
+  ctx.font = `700 ${Math.round(radius * (number.length > 1 ? 1.05 : 1.3))}px ${FONT}`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = PARCHMENT
+  ctx.fillText(number, x, y + radius * 0.06)
 }
 
 /** A stack's count on its top token: a small parchment disc at the upper right. */
@@ -742,11 +826,12 @@ function drawGhost(
   token: BoardToken,
   cssScale: number,
   mark?: string,
+  image?: CanvasImageSource,
 ) {
   const n = footprint(token.size)
   ctx.save()
   ctx.globalAlpha = 0.6
-  drawToken(ctx, token, cssScale, mark)
+  drawToken(ctx, token, cssScale, mark, image)
   ctx.restore()
   const inset = 2 / cssScale
   ctx.setLineDash([7 / cssScale, 5 / cssScale])
@@ -834,9 +919,10 @@ function drawArrow(
 export function drawTokens(
   ctx: CanvasRenderingContext2D,
   tokens: readonly BoardToken[],
-  { selectedTokenId, cssScale, marker, ghost, arrows, stacks, marks }: TokenDrawOptions,
+  { selectedTokenId, cssScale, marker, ghost, arrows, stacks, marks, images }: TokenDrawOptions,
 ): void {
   ctx.save()
+  const imageOf = (token: BoardToken) => (token.imageUrl ? images?.get(token.imageUrl) : undefined)
   const badge = (token: BoardToken) => {
     const count = stacks?.get(token.id)
     if (count) drawStackBadge(ctx, token, count, cssScale)
@@ -845,7 +931,7 @@ export function drawTokens(
   for (const token of tokens) {
     if (token.id === selectedTokenId) selected = token
     else {
-      drawToken(ctx, token, cssScale, marks?.get(token.id))
+      drawToken(ctx, token, cssScale, marks?.get(token.id), imageOf(token))
       badge(token)
     }
   }
@@ -854,11 +940,11 @@ export function drawTokens(
     if (token) drawArrow(ctx, token, arrow, cssScale)
   }
   if (selected) {
-    drawToken(ctx, selected, cssScale, marks?.get(selected.id))
+    drawToken(ctx, selected, cssScale, marks?.get(selected.id), imageOf(selected))
     drawSelection(ctx, selected, cssScale)
     badge(selected)
   }
-  if (ghost) drawGhost(ctx, ghost, cssScale, marks?.get(ghost.id))
+  if (ghost) drawGhost(ctx, ghost, cssScale, marks?.get(ghost.id), imageOf(ghost))
   if (marker) {
     const inset = 1.5 / cssScale
     ctx.setLineDash([6 / cssScale, 4 / cssScale])
