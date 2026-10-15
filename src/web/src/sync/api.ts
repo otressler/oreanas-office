@@ -12,7 +12,7 @@ import type {
 } from '../api/types'
 
 /** Matches SyncProtocol.CurrentVersion on the server. */
-export const SYNC_VERSION = 1
+export const SYNC_VERSION = 2
 export const SYNC_VERSION_HEADER = 'X-Sync-Version'
 
 const headers = { [SYNC_VERSION_HEADER]: String(SYNC_VERSION) }

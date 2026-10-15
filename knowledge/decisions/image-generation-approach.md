@@ -61,10 +61,11 @@ All four stage 3 sample maps were generated at medium quality, the default the [
 - The guide's flat colours showed through: purple void and magenta entrances stayed visible in the crypt. The prompt now says no trace of the purple or magenta may remain, and the entrance legend asks for the path, doorway or stairs that leads away. Fixed in v2.
 - Void was painted as water or floor. The void legend now says nobody can stand there and it is never open water or walkable floor.
 - Void cells enclosed by the map (not connected to the edge through other void) are drawn as wall in the guide, like the rock between a dungeon's corridors.
+- Later, at the stage 7 gate, the project owner still saw artifacts in the signal colours. The prompt now says to ignore the input image's colours, which are only a code, and to take every colour from the scene, mood and lighting. It also names the signal colours that guide uses (every legend colour except grey, black, blue, brown, dark brown and dark green, which real materials have anyway) and forbids them even as a tint, glow, haze, light or stain.
 - The legend names each feature's kind next to its label (`door ("Tür")`), so German labels still tell the model what the object is.
 
 **Still open:** in the crypt, the large enclosed area between the corridors came out as a pool in v1, a room with a pool in v2, and a flooded cavern with broken pillars in v3, even when drawn as wall. The layout still decides the game, so tokens can't enter it, but it looks like a place to go. The scene text ("a flooded crypt") probably pushes the model there. A plain-stone wording for black areas, or the DM's own scene text, may fix it.
 
 **High quality fixed the crypt.** v4 used the v3 guide and prompt unchanged, at `high` instead of `medium`: the enclosed area came out as dark rock, and everything else still lines up. The model painted shallow water over most floors, which fits "flooded crypt"; the pool still stands out as deeper water. A faint purple haze stays in the void outside the map. It took 25 s. One sample doesn't show whether high is reliably better, only that it fixed the case medium failed three times.
 
-**File size:** the PNGs are 2–3.4 MB. Stage 7 should ask the model for WebP or JPEG output, so phones load a few hundred kilobytes rather than megabytes.
+**File size:** the PNGs are 2–3.4 MB. Stage 7 asks the model for JPEG output, so phones load a few hundred kilobytes rather than megabytes. WebP would be smaller, but the edits endpoint refuses it (only PNG and JPEG work there).

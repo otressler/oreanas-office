@@ -30,6 +30,8 @@
     <None Include="..\..\src\web\src\editor\validation.cases.json" Link="validation.cases.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- The OpenAPI document the frontend generates its types from; the hub contract test reads it. -->
     <None Include="..\..\src\web\src\api\openapi.json" Link="openapi.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Guides of the sample maps from the image-assets skill's render_guide.py; the C# port must match them. -->
+    <None Include="Images\Golden\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

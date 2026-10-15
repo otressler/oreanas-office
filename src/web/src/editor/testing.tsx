@@ -13,6 +13,8 @@ import { createEditorStore, EditorStoreContext, type EditorStore } from './store
 import type { CellPointer, EditorTool } from './tools'
 
 export const CAMPAIGN_ID = 'c1'
+/** The planned session seedOffline gives the test user. */
+export const SESSION_ID = 's1'
 
 /** The test user as the device's last user, with one campaign in the offline copy. */
 export async function seedOffline({
@@ -29,6 +31,16 @@ export async function seedOffline({
     savedAt: new Date().toISOString(),
     local: false,
     sync: null,
+  })
+  // A planned session the test user runs, so new encounters have somewhere to go.
+  await db.sessions.put({
+    id: SESSION_ID,
+    campaignId,
+    title: 'Die Seilbrücke',
+    date: '2026-10-17',
+    status: 'planned',
+    dmUserId: testUser.id,
+    dmDisplayName: testUser.displayName,
   })
   return db
 }

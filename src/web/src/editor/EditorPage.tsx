@@ -12,7 +12,6 @@ import {
   useRef,
   useState,
   type ComponentType,
-  type MutableRefObject,
   type ReactNode,
 } from 'react'
 import { Link, useParams } from 'react-router'
@@ -83,7 +82,11 @@ export function EditorPage() {
   // Raised when the sync handed the editor a newer server version: read the records again.
   const [reloads, setReloads] = useState(0)
   // Whether the open editor holds no edits yet; the editor below registers it.
-  const pristine = useRef(() => false)
+  const pristine = useRef<() => boolean>(() => false)
+  // The editor below tells whether it holds edits; the ref stays owned here.
+  const setPristine = useCallback((check: () => boolean) => {
+    pristine.current = check
+  }, [])
   useEffect(() => {
     let current = true
     void getMap(db, mapId).then((map) => {
@@ -138,7 +141,7 @@ export function EditorPage() {
           key={`${encounter.id}:${encounter.sync.baseVersion}:${record.sync.baseVersion}`}
           map={record}
           encounter={encounter}
-          pristine={pristine}
+          setPristine={setPristine}
         />
       </EditorTargetContext.Provider>
     )
@@ -148,7 +151,7 @@ export function EditorPage() {
       <MapEditor
         key={`${record.id}:${record.sync.baseVersion}`}
         record={record}
-        pristine={pristine}
+        setPristine={setPristine}
       />
     </EditorTargetContext.Provider>
   )
@@ -168,19 +171,17 @@ function Message({ campaignId, title, body }: { campaignId: string; title: strin
 
 function MapEditor({
   record,
-  pristine,
+  setPristine,
 }: {
   record: LocalMap
-  pristine: MutableRefObject<() => boolean>
+  setPristine: (check: () => boolean) => void
 }) {
   const { db } = useLocalUser()
   const [store] = useState(() => createEditorStore(editorMapOf(record), DEFAULT_TOOL_ID))
   useEffect(() => {
-    pristine.current = () => store.getState().revision === 0
-    return () => {
-      pristine.current = () => false
-    }
-  }, [pristine, store])
+    setPristine(() => store.getState().revision === 0)
+    return () => setPristine(() => false)
+  }, [setPristine, store])
   const status = useAutosave(store, db, record.id)
 
   return (
@@ -194,11 +195,11 @@ function MapEditor({
 function EncounterEditor({
   map,
   encounter,
-  pristine,
+  setPristine,
 }: {
   map: LocalMap
   encounter: LocalEncounter
-  pristine: MutableRefObject<() => boolean>
+  setPristine: (check: () => boolean) => void
 }) {
   const { db } = useLocalUser()
   // Active and ended encounters are the server's; they open on their own copy of the map.
@@ -216,15 +217,14 @@ function EncounterEditor({
       campaignId: map.campaignId,
       mapId: map.id,
       encounterId: encounter.id,
+      sessionId: encounter.sessionId,
       readOnly,
     }),
   )
   useEffect(() => {
-    pristine.current = () => store.getState().revision === 0
-    return () => {
-      pristine.current = () => false
-    }
-  }, [pristine, store])
+    setPristine(() => store.getState().revision === 0)
+    return () => setPristine(() => false)
+  }, [setPristine, store])
   const save = useCallback(
     async (doc: ReturnType<typeof encounterDocOf>) => {
       const saved = await saveEncounter(db, encounter.id, doc)

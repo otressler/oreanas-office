@@ -1,6 +1,6 @@
 // Creature types and encounters kept in the browser, next to the maps in editor/model.ts
 // (knowledge/decisions/offline-prep-pwa.md, "Items").
-import type { CreatureSize, EncounterMapCopy, EncounterStatus } from '../api/types'
+import type { CreatureSize, EncounterMapCopy, EncounterStatus, SessionStatus } from '../api/types'
 import type { SyncState } from './sync'
 
 export interface LocalCreatureType {
@@ -39,8 +39,8 @@ export interface LocalEncounter {
   status: EncounterStatus
   archivedAt: string | null
   tokens: LocalCreatureToken[]
-  /** Set by the server when the encounter starts. */
-  sessionId: string | null
+  /** The session the fight is planned for and runs in; changes only while draft or ready. */
+  sessionId: string
   mapCopy: EncounterMapCopy | null
   createdAt: string
   updatedAt: string
@@ -49,4 +49,20 @@ export interface LocalEncounter {
   recordVersion: number
 }
 
-export const LOCAL_ENCOUNTER_RECORD_VERSION = 1
+/** 2: every encounter belongs to a session (knowledge/features/session-planning.md). */
+export const LOCAL_ENCOUNTER_RECORD_VERSION = 2
+
+/**
+ * A session of a campaign as the last pull saw it. Sessions are created and changed online
+ * only; the device keeps them read-only, so fights can be planned into them offline
+ * (knowledge/decisions/offline-prep-pwa.md, "Campaigns offline").
+ */
+export interface LocalSession {
+  id: string
+  campaignId: string
+  title: string
+  date: string
+  status: SessionStatus
+  dmUserId: string
+  dmDisplayName: string
+}

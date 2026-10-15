@@ -11,23 +11,8 @@ import type { CharacterPlacement, ImportMapRequest } from '../api/types'
 import { campaignKeys } from '../campaigns/queries'
 
 export const encounterKeys = {
-  list: (campaignId: string) => ['campaign', campaignId, 'encounters'] as const,
   board: (campaignId: string, encounterId: string) =>
     ['campaign', campaignId, 'encounters', encounterId, 'board'] as const,
-}
-
-/** The campaign's encounters; `dm` members only. */
-export function useEncounters(campaignId: string, { enabled = true } = {}) {
-  return useQuery({
-    queryKey: encounterKeys.list(campaignId),
-    queryFn: () =>
-      unwrap(
-        api.GET('/api/campaigns/{campaignId}/encounters', {
-          params: { path: { campaignId } },
-        }),
-      ),
-    enabled,
-  })
 }
 
 /**
@@ -48,7 +33,7 @@ export function useBoard(campaignId: string, encounterId: string) {
 }
 
 /**
- * After an import, start or end: the campaign with its sessions and encounters,
+ * After an import, start or end: the campaign with its sessions and their fights,
  * and the landing page's active sessions.
  */
 function useInvalidateFights(campaignId: string) {
@@ -60,13 +45,14 @@ function useInvalidateFights(campaignId: string) {
     ])
 }
 
-export function useImportMap(campaignId: string) {
+/** A map file or sample map as a new ready fight in the session. */
+export function useImportMap(campaignId: string, sessionId: string) {
   const invalidate = useInvalidateFights(campaignId)
   return useMutation({
     mutationFn: (file: ImportMapRequest) =>
       unwrap(
-        api.POST('/api/campaigns/{campaignId}/encounters/import', {
-          params: { path: { campaignId } },
+        api.POST('/api/campaigns/{campaignId}/sessions/{sessionId}/encounters/import', {
+          params: { path: { campaignId, sessionId } },
           body: file,
         }),
       ),

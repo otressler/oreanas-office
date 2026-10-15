@@ -51,6 +51,8 @@ interface Session {
   status: S['SessionStatus']
   dmUserId: string
   createdByUserId: string
+  /** The fight that ending the session cut off; continuing brings it back. */
+  interruptedEncounterId: string | null
 }
 
 interface CreatureType {
@@ -86,7 +88,7 @@ interface TokenMove {
 interface Encounter {
   id: string
   campaignId: string
-  sessionId: string | null
+  sessionId: string
   name: string
   status: S['EncounterStatus']
   map: S['BoardMap']
@@ -122,6 +124,19 @@ export class MockBackend {
   syncStore: S['StoreMapResponse'][] = []
   /** The oldest sync version the server accepts (the real one: Sync:MinimumVersion). */
   syncMinimumVersion = 1
+  // ---- Map backgrounds (stage 7) ----------------------------------------------------------
+  /** Every background version, newest last. */
+  readonly backgrounds: S['MapBackground'][] = []
+  /** The picked background per map id. */
+  readonly pickedBackgrounds = new Map<string, string | null>()
+  imageBudget: S['ImageBudgetResponse'] = {
+    spentUsd: 0.42,
+    limitUsd: 20,
+    monthStart: new Date().toISOString().slice(0, 8) + '01T00:00:00Z',
+    available: true,
+  }
+  /** What GET /api/assets/{id} serves for every done version: a small PNG. */
+  imageBytes = readFileSync(new URL('../public/pwa-192x192.png', import.meta.url))
   googleEnabled = false
   private readonly signedIn = new Map<BrowserContext, string | null>()
 
@@ -196,21 +211,22 @@ export class MockBackend {
       status,
       dmUserId: dm.id,
       createdByUserId: dm.id,
+      interruptedEncounterId: null,
     }
     this.sessions.push(session)
     return session
   }
 
-  /** Imports a map file; with `start`, starts it in that session with characters placed. */
+  /** Imports a map file into the session; with `characters`, starts it with them placed. */
   addEncounter(
     campaign: Campaign,
     file: S['ImportMapRequest'],
-    start?: { session: Session; characters: S['CharacterPlacement'][] },
+    into: { session: Session; characters?: S['CharacterPlacement'][] },
   ): Encounter {
-    const result = this.importMap(campaign, file)
+    const result = this.importMap(campaign, into.session.id, file)
     if (!('id' in result)) throw new Error(`Import failed: ${JSON.stringify(result)}`)
-    if (start) {
-      const reply = this.startEncounter(campaign, start.session, result, start.characters)
+    if (into.characters) {
+      const reply = this.startEncounter(campaign, into.session, result, into.characters)
       if (reply[0] !== 200) throw new Error(`Start failed: ${JSON.stringify(reply)}`)
     }
     return result
@@ -237,13 +253,119 @@ export class MockBackend {
   private async handle(context: BrowserContext, route: Route) {
     const request = route.request()
     const url = new URL(request.url())
+    const asset = matchPath('/api/assets/:assetId', url.pathname)
+    if (asset) {
+      const done = this.backgrounds.find((b) => b.id === asset.assetId && b.status === 'done')
+      if (!this.userId(context) || !done) return route.fulfill({ status: 404 })
+      return route.fulfill({
+        status: 200,
+        contentType: 'image/png',
+        headers: { 'Cache-Control': 'private, max-age=31536000, immutable' },
+        body: this.imageBytes,
+      })
+    }
     const [status, body] =
-      this.dispatchSync(context, request, url) ?? this.dispatch(context, request, url)
+      this.dispatchSync(context, request, url) ??
+      this.dispatchImages(context, request, url) ??
+      this.dispatch(context, request, url)
     await route.fulfill(
       body === undefined
         ? { status }
         : { status, contentType: 'application/json', body: JSON.stringify(body) },
     )
+  }
+
+  // ---- Map backgrounds (stage 7) ----------------------------------------------------------
+  // Follows src/Server/Images/ImageEndpoints.cs: the maps are the synced ones, a job is
+  // queued after the map version check, and the test finishes it (finishBackground).
+
+  /** A queued or running job of the map is done: its picture is served from now on. */
+  finishBackground(id: string): S['MapBackground'] {
+    const background = this.backgrounds.find((b) => b.id === id)
+    if (!background) throw new Error(`No background ${id}`)
+    background.status = 'done'
+    background.url = `/api/assets/${id}`
+    background.finishedAt = new Date().toISOString()
+    this.imageBudget.spentUsd = Math.round((this.imageBudget.spentUsd + 0.05) * 100) / 100
+    return { ...background }
+  }
+
+  private backgroundOf(b: S['MapBackground'], map: S['SyncMapData']): S['MapBackground'] {
+    const outdated = b.gridWidth !== map.width || b.gridHeight !== map.height
+    return { ...b, outdated }
+  }
+
+  private dispatchImages(context: BrowserContext, request: Request, url: URL): Reply | null {
+    const params =
+      matchPath('/api/campaigns/:campaignId/maps/:mapId/backgrounds', url.pathname) ??
+      matchPath('/api/campaigns/:campaignId/maps/:mapId/background', url.pathname)
+    if (!params) return null
+    const me = this.users.find((u) => u.id === this.signedIn.get(context)) ?? null
+    if (!me) return [401]
+    const campaign = this.campaigns.find((c) => c.id === params.campaignId)
+    if (!campaign) return [404]
+    if (memberOf(campaign, me.id)?.role !== 'dm') return [403]
+    const item = this.syncItems.get(params.mapId!)
+    if (!item?.map || item.campaignId !== campaign.id) return [404]
+    const map = item.map
+    const method = request.method()
+    const body = (request.postDataJSON() ?? {}) as Record<string, unknown>
+    const own = this.backgrounds.filter((b) => b.mapId === item.id)
+
+    if (url.pathname.endsWith('/backgrounds') && method === 'GET') {
+      return [
+        200,
+        {
+          pickedAssetId: this.pickedBackgrounds.get(item.id) ?? null,
+          versions: own.toReversed().map((b) => this.backgroundOf(b, map)),
+          budget: this.imageBudget,
+        },
+      ]
+    }
+    if (url.pathname.endsWith('/backgrounds') && method === 'POST') {
+      if (body.mapVersion !== item.version) return error('mapChanged', undefined, 409)
+      if (own.some((b) => b.status === 'queued' || b.status === 'running')) {
+        return error('generationRunning', undefined, 409)
+      }
+      if (!this.imageBudget.available) return error('imagesUnavailable', undefined, 409)
+      if (this.imageBudget.spentUsd >= this.imageBudget.limitUsd) {
+        return error('imageBudgetExhausted', undefined, 409)
+      }
+      const background: S['MapBackground'] = {
+        id: randomUUID(),
+        mapId: item.id,
+        status: 'queued',
+        url: null,
+        gridWidth: map.width,
+        gridHeight: map.height,
+        x: 0,
+        y: 0,
+        width: map.width,
+        height: map.height,
+        outdated: false,
+        layoutChanged: false,
+        failure: null,
+        createdAt: new Date().toISOString(),
+        finishedAt: null,
+        refinedFromId: typeof body.refineAssetId === 'string' ? body.refineAssetId : null,
+        instruction: typeof body.instruction === 'string' ? body.instruction : null,
+      }
+      this.backgrounds.push(background)
+      return [202, background]
+    }
+    if (url.pathname.endsWith('/background') && method === 'PUT') {
+      const assetId = (body.assetId as string | null) ?? null
+      if (assetId !== null) {
+        const picked = own.find((b) => b.id === assetId && b.status === 'done')
+        if (!picked) return error('backgroundNotFound', undefined, 409)
+        if (this.backgroundOf(picked, map).outdated) {
+          return error('backgroundOutdated', undefined, 409)
+        }
+      }
+      this.pickedBackgrounds.set(item.id, assetId)
+      return [204]
+    }
+    return [404]
   }
 
   // ---- Sync and the map store (stage 6) ---------------------------------------------------
@@ -342,6 +464,16 @@ export class MockBackend {
             creatureTypes: list('creatureType'),
             battleMaps: list('battleMap'),
             encounters: list('encounter'),
+            sessions: this.sessions
+              .filter((s) => s.campaignId === campaign.id)
+              .map((s) => ({
+                id: s.id,
+                title: s.title,
+                date: s.date,
+                status: s.status,
+                dmUserId: s.dmUserId,
+                dmDisplayName: this.displayName(s.dmUserId),
+              })),
           },
         ]
       }
@@ -379,6 +511,20 @@ export class MockBackend {
     const campaign = this.campaigns.find((c) => c.id === item.campaignId)
     if (!campaign || memberOf(campaign, me.id)?.role !== 'dm') return rejected('notADm')
 
+    if (item.kind === 'encounter') {
+      // Only the session DM plans its fights, in a session that hasn't ended.
+      const session = this.sessions.find(
+        (s) => s.id === item.encounter?.sessionId && s.campaignId === campaign.id,
+      )
+      if (!session)
+        return result('rejected', { error: { code: 'sessionInvalid', field: 'sessionId' } })
+      if (session.dmUserId !== me.id) {
+        return result('rejected', { error: { code: 'notSessionDm', field: 'sessionId' } })
+      }
+      if (session.status === 'ended') {
+        return result('rejected', { error: { code: 'sessionEnded', field: 'sessionId' } })
+      }
+    }
     const stored = this.syncItems.get(item.id)
     const next = (version: number): S['SyncServerItem'] => ({
       id: item.id,
@@ -390,7 +536,7 @@ export class MockBackend {
       campaign: null,
       creatureType: trimName(item.creatureType),
       map: trimName(item.map),
-      encounter: item.encounter && { ...trimName(item.encounter)!, sessionId: null, mapCopy: null },
+      encounter: item.encounter && { ...trimName(item.encounter)!, mapCopy: null },
     })
     if (!stored) {
       if (item.baseVersion > 0) return rejected('itemNotFound')
@@ -618,28 +764,34 @@ export class MockBackend {
         status: 'planned',
         dmUserId,
         createdByUserId: me.id,
+        interruptedEncounterId: null,
       }
       this.sessions.push(session)
       return [201, this.sessionResponse(session, campaign, me.id)]
     }
-    if (path === `${base}/encounters` && method === 'GET') {
-      if (!isDm) return [403]
-      const order: S['EncounterStatus'][] = ['active', 'ready', 'draft', 'ended']
-      return [
-        200,
-        this.encounters
-          .filter((e) => e.campaignId === campaign.id)
-          .sort(
-            (a, b) =>
-              order.indexOf(a.status) - order.indexOf(b.status) ||
-              b.createdAt.localeCompare(a.createdAt),
-          )
-          .map((e) => this.encounterSummary(e)),
-      ]
+    if ((params = match(`${base}/sessions/:sessionId`))) {
+      const session = this.sessions.find(
+        (s) => s.id === params!.sessionId && s.campaignId === campaign.id,
+      )
+      if (!session) return [404]
+      if (method === 'GET') return [200, this.sessionResponse(session, campaign, me.id)]
+      if (method === 'PUT') {
+        if (session.dmUserId !== me.id) return [403]
+        const title = String(body.title ?? '').trim()
+        if (!title) return error('nameInvalid', 'title')
+        session.title = title
+        session.date = String(body.date)
+        return [200, this.sessionResponse(session, campaign, me.id)]
+      }
+      return [404]
     }
-    if (path === `${base}/encounters/import` && method === 'POST') {
-      if (!isDm) return [403]
-      const result = this.importMap(campaign, body as unknown as S['ImportMapRequest'])
+    if ((params = match(`${base}/sessions/:sessionId/encounters/import`)) && method === 'POST') {
+      const session = this.sessions.find(
+        (s) => s.id === params!.sessionId && s.campaignId === campaign.id,
+      )
+      if (!session || session.dmUserId !== me.id) return [403]
+      if (session.status === 'ended') return error('sessionEnded', undefined, 409)
+      const result = this.importMap(campaign, session.id, body as unknown as S['ImportMapRequest'])
       return 'id' in result ? [201, this.encounterSummary(result)] : result
     }
     if ((params = match(`${base}/encounters/:encounterId/board`)) && method === 'GET') {
@@ -665,7 +817,7 @@ export class MockBackend {
       if (!session) return [404]
       if (session.dmUserId !== me.id) return [403]
       const encounter = this.encounters.find(
-        (e) => e.id === params!.encounterId && e.campaignId === campaign.id,
+        (e) => e.id === params!.encounterId && e.sessionId === session.id,
       )
       if (!encounter) return [404]
       if (params.action === 'start') {
@@ -673,7 +825,6 @@ export class MockBackend {
         return this.startEncounter(campaign, session, encounter, characters)
       }
       if (params.action === 'end') {
-        if (encounter.sessionId !== session.id) return [404]
         if (encounter.status !== 'active' && encounter.status !== 'ended') {
           return error('encounterNotActive', undefined, 409)
         }
@@ -689,17 +840,23 @@ export class MockBackend {
       if (!session) return [404]
       if (!canManage(session, campaign, me.id)) return [403]
       if (params.action === 'activate' && method === 'POST') {
-        if (session.status === 'ended') return error('sessionEnded', undefined, 409)
         const other = this.sessions.find(
           (s) => s.campaignId === campaign.id && s.status === 'active' && s.id !== session.id,
         )
         if (other) return error('anotherSessionActive', undefined, 409)
+        // Continuing an ended session brings back the fight it cut off.
+        const interrupted = this.encounters.find((e) => e.id === session.interruptedEncounterId)
+        if (session.status === 'ended' && interrupted) interrupted.status = 'active'
+        session.interruptedEncounterId = null
         session.status = 'active'
       } else if (params.action === 'end' && method === 'POST') {
+        if (session.status !== 'ended') {
+          // Ending a session ends its fight and remembers it.
+          const fight = this.activeEncounter(session)
+          if (fight) fight.status = 'ended'
+          session.interruptedEncounterId = fight?.id ?? null
+        }
         session.status = 'ended'
-        // Ending a session ends its fight.
-        const fight = this.activeEncounter(session)
-        if (fight) fight.status = 'ended'
       } else if (params.action === 'dm' && method === 'PUT') {
         if (session.status === 'ended') return error('sessionEnded', undefined, 409)
         const userId = String(body.userId)
@@ -720,7 +877,11 @@ export class MockBackend {
    * The import file (knowledge/domain/battle-map.md): the main rules with the
    * server's error codes and fields, not every check.
    */
-  private importMap(campaign: Campaign, file: S['ImportMapRequest']): Encounter | Reply {
+  private importMap(
+    campaign: Campaign,
+    sessionId: string,
+    file: S['ImportMapRequest'],
+  ): Encounter | Reply {
     const name = String(file.name ?? '').trim()
     if (!name) return error('nameInvalid', 'name')
     for (const side of ['width', 'height'] as const) {
@@ -767,7 +928,7 @@ export class MockBackend {
     const encounter: Encounter = {
       id: randomUUID(),
       campaignId: campaign.id,
-      sessionId: null,
+      sessionId,
       name,
       status: 'ready',
       map: {
@@ -776,7 +937,7 @@ export class MockBackend {
         width,
         height,
         layout: { schemaVersion: 1, cells, features, entrances },
-        backgroundUrl: null,
+        background: null,
       },
       tokens: [],
       createdAt: new Date().toISOString(),
@@ -860,7 +1021,6 @@ export class MockBackend {
     // All or nothing, like the server's transaction.
     encounter.tokens = placed.tokens
     encounter.status = 'active'
-    encounter.sessionId = session.id
     return [200, this.encounterSummary(encounter)]
   }
 
@@ -908,6 +1068,7 @@ export class MockBackend {
       name: encounter.name,
       status: encounter.status,
       battleMapId: encounter.map.id,
+      battleMapName: encounter.map.name,
       width: encounter.map.width,
       height: encounter.map.height,
       creatureCount: encounter.tokens.filter((t) => t.kind === 'creature').length,
@@ -1132,14 +1293,44 @@ export class MockBackend {
     campaign: Campaign,
     userId: string,
   ): S['SessionResponse'] {
-    const { campaignId: _, ...rest } = session
+    const { campaignId: _, interruptedEncounterId, ...rest } = session
+    const interrupted = this.encounters.find((e) => e.id === interruptedEncounterId)
     return {
       ...rest,
       dmDisplayName: this.displayName(session.dmUserId),
       canManage: canManage(session, campaign, userId),
       isSessionDm: session.dmUserId === userId,
       activeEncounter: this.activeEncounterSummary(session),
+      interruptedEncounter: interrupted ? { id: interrupted.id, name: interrupted.name } : null,
+      encounters: memberOf(campaign, userId)?.role === 'dm' ? this.sessionEncounters(session) : [],
     }
+  }
+
+  /** The session's fights: imported ones and ones devices pushed, in the order they came. */
+  private sessionEncounters(session: Session): S['EncounterSummaryResponse'][] {
+    const imported = this.encounters
+      .filter((e) => e.sessionId === session.id)
+      .map((e) => this.encounterSummary(e))
+    const pushed = [...this.syncItems.values()]
+      .filter((item) => item.kind === 'encounter' && item.encounter?.sessionId === session.id)
+      .map((item): S['EncounterSummaryResponse'] => {
+        const map = this.syncItems.get(item.encounter!.battleMapId)?.map
+        return {
+          id: item.id,
+          name: item.encounter!.name,
+          status: item.encounter!.status,
+          battleMapId: item.encounter!.battleMapId,
+          battleMapName: map?.name ?? '',
+          width: map?.width ?? 0,
+          height: map?.height ?? 0,
+          creatureCount: item.encounter!.tokens.length,
+          sessionId: session.id,
+          createdAt: item.updatedAt,
+          version: item.version,
+          archivedAt: item.encounter!.archivedAt,
+        }
+      })
+    return [...imported, ...pushed]
   }
 }
 

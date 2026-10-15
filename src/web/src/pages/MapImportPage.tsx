@@ -6,6 +6,7 @@ import { Button, PageTitle, Panel } from '../components/ui'
 import { describeImportField } from '../encounters/fieldLabel'
 import { useImportMap } from '../encounters/queries'
 import { sampleMaps, type SampleMap } from '../samples'
+import { sessionPath } from '../sessions/paths'
 import { de } from '../text/de'
 
 const t = de.encounters.import
@@ -28,14 +29,14 @@ async function readMapFile(file: File): Promise<ImportMapRequest> {
 }
 
 /**
- * /kampagnen/:campaignId/karten/importieren — a `dm` member imports a map file or
- * picks a sample map (knowledge/domain/battle-map.md, "Import file"). The new
- * encounter is ready on the campaign page.
+ * /kampagnen/:campaignId/sitzungen/:sessionId/importieren — the session DM imports a map
+ * file or picks a sample map (knowledge/domain/battle-map.md, "Import file"). The new
+ * fight is ready on the session page.
  */
 export function MapImportPage() {
-  const { campaignId = '' } = useParams()
+  const { campaignId = '', sessionId = '' } = useParams()
   const navigate = useNavigate()
-  const importMap = useImportMap(campaignId)
+  const importMap = useImportMap(campaignId, sessionId)
   // What is being imported, for the busy note; and a problem found before sending.
   const [pending, setPending] = useState<string | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
@@ -56,7 +57,7 @@ export function MapImportPage() {
         return
       }
       await importMap.mutateAsync(file)
-      void navigate(`/kampagnen/${campaignId}`)
+      void navigate(sessionPath(campaignId, sessionId))
     } catch {
       // The server's answer is shown from importMap.error.
     } finally {
@@ -87,11 +88,11 @@ export function MapImportPage() {
   return (
     <div className="flex flex-col pb-8">
       <Link
-        to={`/kampagnen/${campaignId}`}
+        to={sessionPath(campaignId, sessionId)}
         className="pt-4 text-sm text-candle underline-offset-4 hover:underline"
       >
         <span aria-hidden="true">← </span>
-        {de.encounters.back}
+        {de.sessionPage.toSession}
       </Link>
       <PageTitle>{t.title}</PageTitle>
 

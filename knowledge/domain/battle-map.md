@@ -33,7 +33,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 
 # Background image
 
-- The DM generates backgrounds with [AI map generation](/features/ai-map-generation.md) and picks one version as `backgroundAssetId`.
+- The DM generates backgrounds with [AI map generation](/features/ai-map-generation.md) and picks one version as `backgroundAssetId`. Picking needs a connection and isn't part of the map's sync item, so it never conflicts with offline edits and doesn't raise the map's version.
 - **Changing the size makes the background outdated.** Every version made for another size is outdated: the board doesn't show it and uses the plain rendering instead, and the editor says a new image is needed. Nothing is generated automatically; the DM starts a new generation. Undoing the resize, back to the image's size, makes the image usable again.
 - Other layout changes, such as a moved wall, keep the image. The editor notes that the layout changed since the image was made, so the DM can decide to regenerate.
 - An encounter saves the picked background when it starts, together with its copy of the layout ([encounter](/domain/encounter.md)).
@@ -65,7 +65,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 
 # Import file
 
-Until the [map editor](/features/dm-map-editor.md) exists, a `dm` member of the campaign imports a map as a JSON file, or picks one of the sample maps. One import creates the battle map, an [encounter](/domain/encounter.md) with the same name in status `ready`, its creature [tokens](/domain/token.md), and any [creature types](/domain/creature-type.md) the campaign doesn't have yet.
+The session DM imports a map as a JSON file, or picks one of the sample maps, from the page of a planned or running session ([session planning](/features/session-planning.md)). One import creates the battle map, an [encounter](/domain/encounter.md) in that session with the same name in status `ready`, its creature [tokens](/domain/token.md), and any [creature types](/domain/creature-type.md) the campaign doesn't have yet.
 
 ```json
 {

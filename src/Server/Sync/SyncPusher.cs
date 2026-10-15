@@ -7,6 +7,7 @@ using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Rules;
+using OreanasOffice.Server.Sessions;
 
 namespace OreanasOffice.Server.Sync;
 
@@ -339,6 +340,11 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             return (Reject(item, new ApiError(ApiErrorCode.StatusInvalid, "status")), false);
         }
 
+        if (await CheckSessionAsync(item, data.SessionId, existing?.SessionId, cancellationToken) is { } sessionError)
+        {
+            return (sessionError, false);
+        }
+
         // Archived maps and types are accepted: archiving only stops offering them.
         var map = await db.BattleMaps.AsNoTracking()
             .Where(m => m.Id == data.BattleMapId && m.CampaignId == item.CampaignId)
@@ -376,11 +382,13 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
         {
             Id = item.Id,
             CampaignId = item.CampaignId,
+            SessionId = data.SessionId,
             BattleMapId = data.BattleMapId,
             Name = name,
             CreatedAt = now,
         }).Entity;
         encounter.Name = name;
+        encounter.SessionId = data.SessionId;
         encounter.BattleMapId = data.BattleMapId;
         encounter.Status = data.Status;
         encounter.ArchivedAt = data.ArchivedAt;
@@ -418,6 +426,31 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
 
         await db.SaveChangesAsync(cancellationToken);
         return (Done(item, existing is null), true);
+    }
+
+    // Only the session's DM plans its fights, and only in a session that hasn't ended. A
+    // fight moving to another session needs the DM of the old one too
+    // (knowledge/decisions/offline-prep-pwa.md, "Server checks"). Field is "sessionId".
+    private async Task<SyncItemResult?> CheckSessionAsync(
+        SyncPushItem item, Guid sessionId, Guid? previousSessionId, CancellationToken cancellationToken)
+    {
+        var session = await db.Sessions
+            .Where(s => s.Id == sessionId && s.CampaignId == item.CampaignId)
+            .Select(s => new { s.DmUserId, s.Status })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (session is null)
+        {
+            return Reject(item, new ApiError(ApiErrorCode.SessionInvalid, "sessionId"));
+        }
+
+        if (session.DmUserId != userId
+            || (previousSessionId is { } previous && previous != sessionId
+                && !await db.Sessions.AnyAsync(s => s.Id == previous && s.DmUserId == userId, cancellationToken)))
+        {
+            return Reject(item, new ApiError(ApiErrorCode.NotSessionDm, "sessionId"));
+        }
+
+        return session.Status == SessionStatus.Ended ? Reject(item, new ApiError(ApiErrorCode.SessionEnded, "sessionId")) : null;
     }
 
     // Tokens are malformed (TokenInvalid), or use a creature type outside the campaign

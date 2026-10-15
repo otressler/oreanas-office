@@ -57,6 +57,16 @@ param googleClientSecret string = ''
 @description('The site admin\'s Google address (Admin:Email). Becomes admin on its first verified Google sign-in.')
 param adminEmail string = ''
 
+@description('The Foundry image deployment\'s OpenAI v1 endpoint for map backgrounds. Empty turns generation off.')
+param imagesEndpoint string = ''
+
+@description('The Foundry image deployment\'s API key. Stored as a Container Apps secret.')
+@secure()
+param imagesApiKey string = ''
+
+@description('The image deployment\'s name, for example gpt-image-2.5-flare.')
+param imagesDeployment string = ''
+
 var suffix = uniqueString(resourceGroup().id)
 var appName = '${baseName}-office'
 var databaseName = 'OreanasOffice'
@@ -112,6 +122,9 @@ module app 'modules/app.bicep' = {
     googleClientId: googleClientId
     googleClientSecret: googleClientSecret
     adminEmail: adminEmail
+    imagesEndpoint: imagesEndpoint
+    imagesApiKey: imagesApiKey
+    imagesDeployment: imagesDeployment
   }
 }
 

@@ -23,8 +23,7 @@ erDiagram
     CAMPAIGN ||--o{ SESSION : "has"
     CAMPAIGN ||--o{ CREATURE_TYPE : "bestiary"
     CAMPAIGN ||--o{ BATTLE_MAP : "has"
-    CAMPAIGN ||--o{ ENCOUNTER : "prepares"
-    SESSION |o--o{ ENCOUNTER : "runs"
+    SESSION ||--o{ ENCOUNTER : "plans and runs"
     BATTLE_MAP ||--o{ ENCOUNTER : "used by"
     BATTLE_MAP |o--o{ BATTLE_MAP : "copied from"
     ENCOUNTER ||--o{ TOKEN : "places"
@@ -52,7 +51,7 @@ The brief proposed User, Character, Campaign, Session, Fight and Creature.[^brie
 
 | Original | Now | Why |
 |----------|-----|-----|
-| Fight | [Battle map](/domain/battle-map.md) + [Encounter](/domain/encounter.md) | A map is reusable; an encounter is one fight on it. DMs prepare encounters before game night, so an encounter belongs to the campaign and is linked to a session when it runs. |
+| Fight | [Battle map](/domain/battle-map.md) + [Encounter](/domain/encounter.md) | A map is reusable; an encounter is one fight on it. DMs plan a game night's fights ahead, so an encounter belongs to a session from the start ([session planning](/features/session-planning.md)). Until 2026-10-14 it belonged to the campaign and was linked to a session only when it ran. |
 | Creature | [Creature type](/domain/creature-type.md) + [Token](/domain/token.md) | "Goblin" (size, icon) is defined once; "Goblin 3 at (4,7)" is a token. Icons are generated per type, as the brief asks. |
 | — | [Token](/domain/token.md) also for characters | Characters and creatures stand on the board the same way, so moving and syncing works the same for both. |
 | — | [Campaign member](/domain/campaign-member.md) | Who belongs to a campaign, and in which role, is stored once instead of per session. |

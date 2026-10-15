@@ -45,7 +45,6 @@ They all follow the [overview](/overview.md) principle "show, don't enforce", an
 
 | Idea | What it does | Notes |
 |------|--------------|-------|
-| **Several fights per session** | The DM prepares several encounters for one session and switches between them with one tap. | A [session](/domain/session.md) already has one `activeEncounterId`. This adds a list of planned encounters per session, for example by setting `Encounter.sessionId` while preparing ([encounter](/domain/encounter.md)). |
 | **Undo for the DM** | The DM can undo any recent move, not only their own. | Uses the existing move history on the [token](/domain/token.md). |
 
 # For players

@@ -21,10 +21,10 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 # Contains
 
 - [Campaign members](/domain/campaign-member.md)
-- [Sessions](/domain/session.md)
+- [Sessions](/domain/session.md), each with its [encounters](/domain/encounter.md)
 - [Characters](/domain/character.md)
 - [Creature types](/domain/creature-type.md) (the campaign's bestiary)
-- [Battle maps](/domain/battle-map.md) and prepared [encounters](/domain/encounter.md)
+- [Battle maps](/domain/battle-map.md)
 
 # Offline
 

@@ -39,7 +39,7 @@ beforeEach(async () => {
     status: 'ready',
     archivedAt: null,
     tokens: [],
-    sessionId: null,
+    sessionId: 's1',
     mapCopy: null,
     createdAt: '2026-10-14T10:00:00Z',
     updatedAt: '2026-10-14T10:00:00Z',

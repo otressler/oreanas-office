@@ -5,6 +5,7 @@ using OreanasOffice.Server.Bestiary;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Characters;
 using OreanasOffice.Server.Encounters;
+using OreanasOffice.Server.Images;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Sessions;
 using OreanasOffice.Server.Table;
@@ -34,6 +35,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityUser
     public DbSet<Token> Tokens => Set<Token>();
 
     public DbSet<TokenMove> TokenMoves => Set<TokenMove>();
+
+    public DbSet<Asset> Assets => Set<Asset>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

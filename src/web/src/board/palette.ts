@@ -29,6 +29,9 @@ export const PATTERN_COLORS = {
   stepLight: 'rgba(236, 230, 216, 0.3)',
   stepShadow: 'rgba(8, 9, 12, 0.3)',
   grid: (alpha: number) => `rgba(12, 13, 16, ${alpha})`,
+  /** Over a background picture: a dark line with a light twin beside it. */
+  gridOnPicture: (alpha: number) => `rgba(10, 11, 14, ${Math.min(1, alpha * 1.2)})`,
+  gridOnPictureLight: (alpha: number) => `rgba(236, 230, 216, ${alpha * 0.45})`,
 }
 
 export const FEATURE_COLORS = {

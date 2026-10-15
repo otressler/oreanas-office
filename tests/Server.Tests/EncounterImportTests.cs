@@ -12,7 +12,7 @@ using static OreanasOffice.Server.Tests.CampaignTestApi;
 
 namespace OreanasOffice.Server.Tests;
 
-// POST /encounters/import and the DM's list (knowledge/domain/battle-map.md, "Import
+// POST /sessions/{id}/encounters/import (knowledge/domain/battle-map.md, "Import
 // file"). The rules themselves are in MapImportTests.
 [Collection("App")]
 public sealed class EncounterImportTests(AppFixture fixture)
@@ -28,18 +28,19 @@ public sealed class EncounterImportTests(AppFixture fixture)
     {
         var dm = await fixture.App.CreatePersonAsync("Oreana");
         var campaign = await dm.CreateCampaignAsync();
+        var session = await dm.CreateSessionAsync(campaign.Id);
         var file = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "SampleMaps", $"{sample}.json"));
         var expected = JsonSerializerRead<BoardStateResponse>(
             await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "BoardFixtures", $"{sample}.board.json")));
 
         var response = await dm.Client.PostAsync(
-            $"/api/campaigns/{campaign.Id}/encounters/import", new StringContent(file, Encoding.UTF8, "application/json"));
+            $"/api/campaigns/{campaign.Id}/sessions/{session.Id}/encounters/import", new StringContent(file, Encoding.UTF8, "application/json"));
 
         var summary = await response.ReadAsync<EncounterSummaryResponse>(HttpStatusCode.Created);
         var board = await (await dm.GetBoardAsync(campaign.Id, summary.Id)).ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
         var creatures = expected.Tokens.Where(t => t.Kind == TokenKind.Creature).ToList();
         Assert.Equal(
-            (expected.Name, EncounterStatus.Ready, expected.Map.Width, expected.Map.Height, creatures.Count, (Guid?)null),
+            (expected.Name, EncounterStatus.Ready, expected.Map.Width, expected.Map.Height, creatures.Count, session.Id),
             (summary.Name, summary.Status, summary.Width, summary.Height, summary.CreatureCount, summary.SessionId));
         Assert.Equal(expected.Map.Layout.SchemaVersion, board.Map.Layout.SchemaVersion);
         Assert.Equal(expected.Map.Layout.Cells, board.Map.Layout.Cells);
@@ -53,15 +54,16 @@ public sealed class EncounterImportTests(AppFixture fixture)
     {
         var dm = await fixture.App.CreatePersonAsync("Oreana");
         var campaign = await dm.CreateCampaignAsync();
+        var session = await dm.CreateSessionAsync(campaign.Id);
 
-        var response = await dm.Client.PostAsJsonAsync($"/api/campaigns/{campaign.Id}/encounters/import", TestMaps.Gorge(), Json);
+        var response = await dm.Client.PostAsJsonAsync($"/api/campaigns/{campaign.Id}/sessions/{session.Id}/encounters/import", TestMaps.Gorge(), Json);
 
         var summary = await response.ReadAsync<EncounterSummaryResponse>(HttpStatusCode.Created);
         Assert.Equal(
             $"/api/campaigns/{campaign.Id}/encounters/{summary.Id}/board", response.Headers.Location?.OriginalString);
         Assert.Equal(
             new EncounterSummaryResponse(
-                summary.Id, "Klamm", EncounterStatus.Ready, summary.BattleMapId, 8, 5, 3, null, summary.CreatedAt, 1, null),
+                summary.Id, "Klamm", EncounterStatus.Ready, summary.BattleMapId, "Klamm", 8, 5, 3, session.Id, summary.CreatedAt, 1, null),
             summary);
 
         await using var scope = fixture.App.Services.CreateAsyncScope();
@@ -86,10 +88,11 @@ public sealed class EncounterImportTests(AppFixture fixture)
     {
         var dm = await fixture.App.CreatePersonAsync("Oreana");
         var campaign = await dm.CreateCampaignAsync();
+        var session = await dm.CreateSessionAsync(campaign.Id);
         var map = TestMaps.Gorge();
         var broken = map with { Creatures = [.. map.Creatures!, new ImportCreature("Wolf", CreatureSize.Medium, 3, 0, null)] };
 
-        var response = await dm.Client.PostAsJsonAsync($"/api/campaigns/{campaign.Id}/encounters/import", broken, Json);
+        var response = await dm.Client.PostAsJsonAsync($"/api/campaigns/{campaign.Id}/sessions/{session.Id}/encounters/import", broken, Json);
 
         await response.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.PlacementInvalid, "creatures[3]");
         await using var scope = fixture.App.Services.CreateAsyncScope();
@@ -109,9 +112,10 @@ public sealed class EncounterImportTests(AppFixture fixture)
     {
         var dm = await fixture.App.CreatePersonAsync("Oreana");
         var campaign = await dm.CreateCampaignAsync();
+        var session = await dm.CreateSessionAsync(campaign.Id);
 
         var response = await dm.Client.PostAsync(
-            $"/api/campaigns/{campaign.Id}/encounters/import", new StringContent(file, Encoding.UTF8, "application/json"));
+            $"/api/campaigns/{campaign.Id}/sessions/{session.Id}/encounters/import", new StringContent(file, Encoding.UTF8, "application/json"));
 
         await response.AssertErrorAsync(HttpStatusCode.BadRequest, code, field);
     }
@@ -121,10 +125,11 @@ public sealed class EncounterImportTests(AppFixture fixture)
     {
         var dm = await fixture.App.CreatePersonAsync("Oreana");
         var campaign = await dm.CreateCampaignAsync();
+        var session = await dm.CreateSessionAsync(campaign.Id);
         const string file = """{"name":" Raum ","width":2,"height":1,"layout":{"cells":[{"x":0,"y":0,"terrain":"floor"},{"x":1,"y":0,"terrain":"void"}]}}""";
 
         var response = await dm.Client.PostAsync(
-            $"/api/campaigns/{campaign.Id}/encounters/import", new StringContent(file, Encoding.UTF8, "application/json"));
+            $"/api/campaigns/{campaign.Id}/sessions/{session.Id}/encounters/import", new StringContent(file, Encoding.UTF8, "application/json"));
 
         var summary = await response.ReadAsync<EncounterSummaryResponse>(HttpStatusCode.Created);
         var board = await (await dm.GetBoardAsync(campaign.Id, summary.Id)).ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
@@ -143,10 +148,11 @@ public sealed class EncounterImportTests(AppFixture fixture)
     {
         var dm = await fixture.App.CreatePersonAsync("Oreana");
         var campaign = await dm.CreateCampaignAsync();
-        var first = await dm.ImportMapAsync(campaign.Id);
+        var session = await dm.CreateSessionAsync(campaign.Id);
+        var first = await dm.ImportMapAsync(campaign.Id, session.Id);
         var map = TestMaps.Gorge();
 
-        var second = await dm.ImportMapAsync(campaign.Id, map with
+        var second = await dm.ImportMapAsync(campaign.Id, session.Id, map with
         {
             Name = "Zweite Klamm",
             Creatures = [new ImportCreature("gOBLIN", CreatureSize.Huge, 0, 0, null)],
@@ -168,12 +174,13 @@ public sealed class EncounterImportTests(AppFixture fixture)
     {
         var dm = await fixture.App.CreatePersonAsync("Oreana");
         var here = await dm.CreateCampaignAsync();
+        var hereSession = await dm.CreateSessionAsync(here.Id);
         var there = await dm.CreateCampaignAsync("Andere Runde");
-        await dm.ImportMapAsync(there.Id);
+        await dm.ImportMapAsync(there.Id, (await dm.CreateSessionAsync(there.Id)).Id);
         var map = TestMaps.Gorge();
 
         var response = await dm.Client.PostAsJsonAsync(
-            $"/api/campaigns/{here.Id}/encounters/import",
+            $"/api/campaigns/{here.Id}/sessions/{hereSession.Id}/encounters/import",
             map with { Creatures = [new ImportCreature("Goblin", null, 0, 0, null)] },
             Json);
 
@@ -187,13 +194,29 @@ public sealed class EncounterImportTests(AppFixture fixture)
     {
         var dm = await fixture.App.CreatePersonAsync("Oreana");
         var campaign = await dm.CreateCampaignAsync();
+        var session = await dm.CreateSessionAsync(campaign.Id);
 
-        var results = await Task.WhenAll(Enumerable.Range(0, 3).Select(_ => dm.ImportMapAsync(campaign.Id)));
+        var results = await Task.WhenAll(Enumerable.Range(0, 3).Select(_ => dm.ImportMapAsync(campaign.Id, session.Id)));
 
         Assert.All(results, r => Assert.Equal(EncounterStatus.Ready, r.Status));
         await using var scope = fixture.App.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         Assert.Equal(2, await db.CreatureTypes.CountAsync(t => t.CampaignId == campaign.Id));
+    }
+
+    // Fights are added only to planned and running sessions (knowledge/domain/session.md).
+    [Fact]
+    public async Task An_ended_session_takes_no_import()
+    {
+        var dm = await fixture.App.CreatePersonAsync("Oreana");
+        var campaign = await dm.CreateCampaignAsync();
+        var session = await dm.CreateSessionAsync(campaign.Id);
+        Assert.Equal(HttpStatusCode.OK, (await dm.Client.PostAsync($"/api/campaigns/{campaign.Id}/sessions/{session.Id}/end", null)).StatusCode);
+
+        var response = await dm.Client.PostAsJsonAsync(
+            $"/api/campaigns/{campaign.Id}/sessions/{session.Id}/encounters/import", TestMaps.Gorge(), Json);
+
+        await response.AssertErrorAsync(HttpStatusCode.Conflict, ApiErrorCode.SessionEnded);
     }
 
     private static T JsonSerializerRead<T>(string json) => System.Text.Json.JsonSerializer.Deserialize<T>(json, Json)!;

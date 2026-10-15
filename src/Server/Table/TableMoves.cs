@@ -113,7 +113,7 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
                 Token = t,
                 IsMember = db.CampaignMembers.Any(m => m.CampaignId == t.Encounter.CampaignId && m.UserId == userId),
                 t.Encounter.Status,
-                SessionDmUserId = (Guid?)t.Encounter.Session!.DmUserId,
+                SessionDmUserId = (Guid?)t.Encounter.Session.DmUserId,
                 OwnerUserId = (Guid?)t.Character!.OwnerUserId,
                 t.Encounter.MapCopy,
                 t.Encounter.BattleMap.Width,
@@ -232,7 +232,7 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
             .Select(e => new EncounterAccess(
                 db.CampaignMembers.Any(m => m.CampaignId == e.CampaignId && m.UserId == userId),
                 e.Status,
-                (Guid?)e.Session!.DmUserId));
+                (Guid?)e.Session.DmUserId));
 
     private static TokenMovedEvent Event(Token token, Guid userId, bool undo) =>
         new(token.EncounterId, token.Id, token.X, token.Y, token.Elevation, token.Version, userId, undo);

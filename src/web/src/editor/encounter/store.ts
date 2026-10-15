@@ -14,6 +14,8 @@ export interface EncounterMeta {
   campaignId: string
   mapId: string
   encounterId: string
+  /** The session the fight belongs to; it starts only while that session runs. */
+  sessionId: string
   /** Active and ended encounters (and ones whose map is gone) can't be edited. */
   readOnly: boolean
 }

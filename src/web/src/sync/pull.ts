@@ -45,7 +45,7 @@ async function versionsOf(campaignId: string): Promise<SyncVersionList> {
   } catch (error) {
     // Lost `dm` rights (or the campaign): the same as every item gone from the list.
     if (error instanceof ApiRequestError && (error.status === 403 || error.status === 404)) {
-      return { creatureTypes: [], battleMaps: [], encounters: [] }
+      return { creatureTypes: [], battleMaps: [], encounters: [], sessions: [] }
     }
     throw error
   }
@@ -57,6 +57,7 @@ export async function pullCampaign(
   { held = new Set<string>() }: PullOptions = {},
 ): Promise<void> {
   const listed = await versionsOf(campaignId)
+  await saveSessions(db, campaignId, listed.sessions)
   const wanted: string[] = []
   for (const kind of ITEM_KINDS) {
     wanted.push(...(await reconcile(db, kind, campaignId, listed[VERSION_LIST_KEY[kind]], held)))
@@ -68,6 +69,18 @@ export async function pullCampaign(
     }
   }
   await db.meta.put({ key: lastPullKey(campaignId), value: new Date().toISOString() })
+}
+
+/** Replaces the campaign's sessions with the server's list; they are never changed here. */
+async function saveSessions(
+  db: OfflineDb,
+  campaignId: string,
+  sessions: SyncVersionList['sessions'],
+): Promise<void> {
+  await db.transaction('rw', db.sessions, async () => {
+    await db.sessions.where('campaignId').equals(campaignId).delete()
+    await db.sessions.bulkPut(sessions.map((session) => ({ ...session, campaignId })))
+  })
 }
 
 /**

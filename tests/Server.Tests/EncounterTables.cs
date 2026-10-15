@@ -38,7 +38,7 @@ public static class EncounterTables
             session = await dm.ActivateSessionAsync(campaign.Id, session.Id);
         }
 
-        var encounter = await dm.ImportMapAsync(campaign.Id);
+        var encounter = await dm.ImportMapAsync(campaign.Id, session.Id);
         return new EncounterTable(dm, secondDm, player, campaign.Id, session, encounter);
     }
 

@@ -1,10 +1,12 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { BoardState } from '../../api/types'
 import type { BoardProps } from '../../board/Board'
 import { buildGrid, cellKey } from '../../board/geometry'
 import gorgeFixture from '../../board/fixtures/gorge-crossing.board.json'
+import { json, mockApi } from '../../test/api'
+import { backgroundsOf, renderInMapEditor, version } from '../background/testing'
 import type { EditorMap } from '../model'
 import { renderWithEditorStore } from '../testing'
 import { PreviewPane } from '.'
@@ -117,5 +119,38 @@ describe('PreviewPane', () => {
   it('renders without the editor store too', () => {
     render(<PreviewPane doc={gorge()} />)
     expect(screen.getByTestId('board')).toBeInTheDocument()
+  })
+})
+
+describe('PreviewPane in the editor', () => {
+  it('shows the map’s picked background while it fits the map', async () => {
+    const picked = version({ gridWidth: 20, gridHeight: 12, width: 20, height: 12 })
+    mockApi({
+      'GET /api/campaigns/:c/maps/:m/backgrounds': () =>
+        json(200, backgroundsOf([picked], { pickedAssetId: picked.id })),
+    })
+    await renderInMapEditor(<PreviewPane doc={gorge()} />, { doc: gorge() })
+    await waitFor(() =>
+      expect(board.props!.board.map.background).toEqual({
+        assetId: picked.id,
+        url: picked.url,
+        x: 0,
+        y: 0,
+        width: 20,
+        height: 12,
+      }),
+    )
+  })
+
+  it('leaves it out when it was made for another size', async () => {
+    const picked = version({ gridWidth: 10, gridHeight: 8 })
+    const calls = mockApi({
+      'GET /api/campaigns/:c/maps/:m/backgrounds': () =>
+        json(200, backgroundsOf([picked], { pickedAssetId: picked.id })),
+    })
+    await renderInMapEditor(<PreviewPane doc={gorge()} />, { doc: gorge() })
+    await waitFor(() => expect(calls).toHaveLength(1))
+    await act(async () => {})
+    expect(board.props!.board.map.background).toBeNull()
   })
 })

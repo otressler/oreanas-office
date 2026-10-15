@@ -4,7 +4,9 @@
 // screens build against.
 //
 // Drawing happens in two Konva layers, each one shape with plain canvas calls
-// (render.ts): the map (terrain, highlight, grid, labels) and the tokens. Pan and zoom
+// (render.ts): the map (terrain, highlight, grid, labels) and the tokens. With a loaded
+// background picture the map layer draws the picture, highlight and grid instead
+// (background.ts); until then, or if it fails, the plain rendering. Pan and zoom
 // only change the stage transform and redraw; React re-renders only when the props or
 // the info box change. With `slide`, a token whose position changes glides to its new
 // cell in about 200 ms (knowledge/decisions/realtime-sync.md): only the token layer
@@ -16,6 +18,7 @@ import type { BoardState, BoardToken } from '../api/types'
 import { de } from '../text/de'
 import { footprint, stackCounts, tokenAt, tokensAt, type GridPoint } from './geometry'
 import { GestureTracker, wheelZoomFactor, type Gesture, type PointerSample } from './gestures'
+import { drawPicture, mapLayers, useBackgroundImage } from './background'
 import { cellInfo, tokenInfo } from './info'
 import {
   drawGrid,
@@ -99,7 +102,7 @@ export function Board({
   instantTokenIds,
   className,
 }: BoardProps) {
-  const { width, height, layout, id: mapId } = board.map
+  const { width, height, layout, id: mapId, background } = board.map
   const surfaceRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const infoRef = useRef<HTMLDivElement>(null)
@@ -349,16 +352,33 @@ export function Board({
     return () => window.removeEventListener('keydown', onKey)
   }, [info])
 
+  const picture = useBackgroundImage(background?.url)
+  // Kept per picture and frame, so a new board state with the same picture doesn't redraw.
+  const bx = background?.x
+  const by = background?.y
+  const bw = background?.width
+  const bh = background?.height
+  const shownPicture = useMemo(
+    () =>
+      picture && bx !== undefined && by !== undefined && bw !== undefined && bh !== undefined
+        ? { image: picture, frame: { x: bx, y: by, width: bw, height: bh } }
+        : null,
+    [picture, bx, by, bw, bh],
+  )
   const drawMapShape = useCallback(
     (con: Konva.Context) => {
       const ctx = con._context
       const dpr = con.canvas.getPixelRatio()
-      drawMapAtZoom(ctx, scene)
-      if (highlightScene) drawHighlight(ctx, highlightScene, scene, ctx.getTransform().a / dpr)
-      drawGrid(ctx, scene, dpr)
-      drawLabels(ctx, scene, dpr)
+      const layers = mapLayers(shownPicture !== null)
+      if (layers.picture && shownPicture)
+        drawPicture(ctx, shownPicture.image, shownPicture.frame, scene.width, scene.height)
+      if (layers.plain) drawMapAtZoom(ctx, scene)
+      if (layers.highlight && highlightScene)
+        drawHighlight(ctx, highlightScene, scene, ctx.getTransform().a / dpr)
+      if (layers.grid) drawGrid(ctx, scene, dpr, { onPicture: layers.picture })
+      if (layers.labels) drawLabels(ctx, scene, dpr)
     },
-    [scene, highlightScene],
+    [scene, highlightScene, shownPicture],
   )
 
   const tokens = board.tokens
@@ -436,7 +456,11 @@ export function Board({
   }
 
   return (
-    <div className={className} data-testid="board">
+    <div
+      className={className}
+      data-testid="board"
+      data-background={shownPicture ? 'shown' : background ? 'plain' : undefined}
+    >
       <div
         className="relative h-full w-full overflow-hidden bg-table"
         role="region"

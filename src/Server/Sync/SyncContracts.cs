@@ -2,6 +2,7 @@ using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Rules;
+using OreanasOffice.Server.Sessions;
 
 namespace OreanasOffice.Server.Sync;
 
@@ -43,9 +44,15 @@ public record SyncMapData(
     DateTimeOffset? ArchivedAt,
     Guid? CopiedFromMapId);
 
-// Status: a device pushes only Draft or Ready.
+// Status: a device pushes only Draft or Ready. SessionId: the session the fight is planned
+// for; a different one moves it (knowledge/domain/session.md).
 public record SyncEncounterData(
-    string Name, Guid BattleMapId, EncounterStatus Status, DateTimeOffset? ArchivedAt, List<SyncCreatureToken> Tokens);
+    string Name,
+    Guid BattleMapId,
+    EncounterStatus Status,
+    DateTimeOffset? ArchivedAt,
+    List<SyncCreatureToken> Tokens,
+    Guid SessionId);
 
 // Elevation is not pushed: the server takes the highest elevation under the footprint.
 public record SyncCreatureToken(Guid Id, Guid CreatureTypeId, string Label, int X, int Y, CreatureSize Size);
@@ -57,7 +64,7 @@ public record SyncEncounterServerData(
     EncounterStatus Status,
     DateTimeOffset? ArchivedAt,
     List<SyncCreatureToken> Tokens,
-    Guid? SessionId,
+    Guid SessionId,
     EncounterMapCopy? MapCopy);
 
 // POST /api/sync/push. Items are handled in request order, each in its own transaction.
@@ -105,11 +112,18 @@ public record SyncServerItem(
     SyncMapData? Map,
     SyncEncounterServerData? Encounter);
 
-// GET versions: every item of the campaign, archived ones included.
+// GET versions: every item of the campaign, archived ones included, and the campaign's
+// sessions as they are now. Sessions aren't sync items: devices keep them read-only, so
+// fights can be planned into them offline, and replace them on every pull.
 public record SyncItemVersion(Guid Id, int Version);
 
 public record SyncVersionList(
-    List<SyncItemVersion> CreatureTypes, List<SyncItemVersion> BattleMaps, List<SyncItemVersion> Encounters);
+    List<SyncItemVersion> CreatureTypes,
+    List<SyncItemVersion> BattleMaps,
+    List<SyncItemVersion> Encounters,
+    List<SyncSession> Sessions);
+
+public record SyncSession(Guid Id, string Title, DateOnly Date, SessionStatus Status, Guid DmUserId, string DmDisplayName);
 
 // POST items: at most SyncProtocol.MaxFetchIds ids.
 public record SyncFetchRequest(List<Guid> Ids);

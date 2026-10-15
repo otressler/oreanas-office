@@ -1,0 +1,19 @@
+{
+  "guide": "tests/Server.Tests/Images/Golden/river-ford.png",
+  "size": "1728x576",
+  "cell_px": 48,
+  "grid": "36x12",
+  "legend": [
+    "grey = walkable ground (floor, path, earth, flagstones as fits the scene)",
+    "ochre = difficult terrain (rubble, undergrowth, mud, shallow scree)",
+    "blue = water",
+    "dark purple = outside the play area, where nobody can stand: scenery that fits (cliff drop, solid bedrock, darkness, dense forest), never open water or walkable floor",
+    "red at column 27-29, row 8-9 = wagon (\"Umgest\u00fcrzter Wagen\")",
+    "dark green at column 13, row 3 = tree (\"Weide\")",
+    "dark green at column 24, row 11 = tree (\"Weide\")",
+    "magenta = openings at the map edge, painted as the path, doorway or stairs that leads away: Stra\u00dfe West, Stra\u00dfe Ost"
+  ],
+  "scene": "a shallow ford where a road crosses a river below a low cliff, an overturned wagon on the far bank",
+  "vibe": "ambush, rushing water",
+  "lighting": "grey dawn mist"
+}

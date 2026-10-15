@@ -35,12 +35,27 @@ export function useCurrentUser(): Me {
  * Records a sign-in or sign-out and drops everything cached for the previous
  * user. The `me` query itself is updated in place so its observers re-render.
  */
+/** The service worker's runtime cache for images; keep in sync with vite.config.ts. */
+export const IMAGE_CACHE = 'oreana-images'
+
 export function useSetSignedIn() {
   const queryClient = useQueryClient()
   return (me: Me | null) => {
     rememberUser(me)
     queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== meQueryKey[0] })
+    // The service worker answers /api/assets/ from its cache without asking the server, so
+    // the next person on this device mustn't inherit the images it holds.
+    void clearImageCache()
     queryClient.setQueryData(meQueryKey, me)
+  }
+}
+
+/** Drops the service worker's image cache (vite.config.ts, `oreana-images`). */
+export async function clearImageCache(): Promise<void> {
+  try {
+    if (typeof caches !== 'undefined') await caches.delete(IMAGE_CACHE)
+  } catch {
+    // No Cache Storage here (an insecure context, a test): nothing to clear.
   }
 }
 

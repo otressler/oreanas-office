@@ -40,7 +40,7 @@ public sealed class BoardTests(AppFixture fixture)
         var ended = await (await table.SecondDm.GetBoardAsync(table.CampaignId, table.Encounter.Id))
             .ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
 
-        Assert.Equal((EncounterStatus.Ready, (Guid?)null, false), (ready.Status, ready.SessionId, ready.IsSessionDm));
+        Assert.Equal((EncounterStatus.Ready, table.Session.Id, false), (ready.Status, ready.SessionId, ready.IsSessionDm));
         Assert.Equal((EncounterStatus.Ended, table.Session.Id, false), (ended.Status, ended.SessionId, ended.IsSessionDm));
     }
 
@@ -96,8 +96,8 @@ public sealed class BoardTests(AppFixture fixture)
             (table.Encounter.Id, table.CampaignId, (Guid?)table.Session.Id, "Klamm", EncounterStatus.Active),
             (board.EncounterId, board.CampaignId, board.SessionId, board.Name, board.Status));
         Assert.Equal(
-            (table.Encounter.BattleMapId, "Klamm", 8, 5, (string?)null, 30),
-            (board.Map.Id, board.Map.Name, board.Map.Width, board.Map.Height, board.Map.BackgroundUrl, board.Map.Layout.Cells.Count));
+            (table.Encounter.BattleMapId, "Klamm", 8, 5, (BoardBackground?)null, 30),
+            (board.Map.Id, board.Map.Name, board.Map.Width, board.Map.Height, board.Map.Background, board.Map.Layout.Cells.Count));
         Assert.Equal(
             [
                 (TokenKind.Creature, null, "Goblin 1", 5, 1, 1m, CreatureSize.Small, null),

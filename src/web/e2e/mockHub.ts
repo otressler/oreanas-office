@@ -180,3 +180,98 @@ export class MockHub {
     client.socket.send(JSON.stringify(message) + RS)
   }
 }
+
+interface ImageClient extends Client {
+  mapId: string | null
+}
+
+/**
+ * A stand-in for the image hub (/hubs/images), with the same SignalR JSON protocol: the
+ * editor joins a map's group with WatchMap while one of its background jobs is pending,
+ * and the test tells it that a job moved on (backgroundUpdated).
+ */
+export class MockImageHub {
+  readonly calls: HubCall[] = []
+  private readonly clients = new Set<ImageClient>()
+  private readonly backend: MockBackend
+
+  constructor(backend: MockBackend) {
+    this.backend = backend
+  }
+
+  async attach(context: BrowserContext) {
+    await context.route('**/hubs/images/negotiate*', (route) => {
+      const id = randomUUID()
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          negotiateVersion: 1,
+          connectionId: id,
+          connectionToken: id,
+          availableTransports: [{ transport: 'WebSockets', transferFormats: ['Text', 'Binary'] }],
+        }),
+      })
+    })
+    await context.routeWebSocket(/\/hubs\/images(\?|$)/, (socket) => {
+      const client: ImageClient = {
+        context,
+        socket,
+        handshaken: false,
+        encounterId: null,
+        mapId: null,
+      }
+      this.clients.add(client)
+      socket.onClose(() => this.clients.delete(client))
+      socket.onMessage((data) => {
+        const text = typeof data === 'string' ? data : data.toString('utf8')
+        for (const record of text.split(RS)) {
+          if (record) this.receive(client, JSON.parse(record) as Message)
+        }
+      })
+    })
+  }
+
+  /** Editors watching a map right now. */
+  watching(mapId?: string): number {
+    return [...this.clients].filter((c) => c.mapId && (!mapId || c.mapId === mapId)).length
+  }
+
+  /** Open connections, watching or not. */
+  get open(): number {
+    return this.clients.size
+  }
+
+  /** A job moved on: sent to every editor watching its map, as the worker does. */
+  backgroundUpdated(background: S['MapBackground']) {
+    for (const client of this.clients) {
+      if (client.mapId === background.mapId) {
+        this.send(client, { type: 1, target: 'BackgroundUpdated', arguments: [background] })
+      }
+    }
+  }
+
+  private receive(client: ImageClient, message: Message) {
+    if (!client.handshaken) {
+      // {"protocol":"json","version":1}
+      client.handshaken = true
+      client.socket.send(`{}${RS}`)
+      return
+    }
+    if (message.type === 6) return this.send(client, { type: 6 })
+    if (message.type !== 1 || !message.target) return
+    const args = message.arguments ?? []
+    this.calls.push({ context: client.context, method: message.target, args })
+    if (message.target !== 'WatchMap') throw new Error(`Unknown hub method ${message.target}`)
+    const signedIn = this.backend.userId(client.context) !== null
+    if (signedIn) client.mapId = String(args[1])
+    const result = { error: signedIn ? null : 'notADm' }
+    if (message.invocationId !== undefined) {
+      this.send(client, { type: 3, invocationId: message.invocationId, result })
+    }
+  }
+
+  private send(client: Client, message: object) {
+    client.socket.send(JSON.stringify(message) + RS)
+  }
+}

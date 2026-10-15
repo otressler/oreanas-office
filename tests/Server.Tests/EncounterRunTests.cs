@@ -104,7 +104,7 @@ public sealed class EncounterRunTests(AppFixture fixture)
     public async Task A_session_runs_one_fight_at_a_time()
     {
         var table = await fixture.App.CreateEncounterTableAsync();
-        var second = await table.Dm.ImportMapAsync(table.CampaignId, TestMaps.Gorge() with { Name = "Zweite Klamm" });
+        var second = await table.Dm.ImportMapAsync(table.CampaignId, table.Session.Id, TestMaps.Gorge() with { Name = "Zweite Klamm" });
         await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, table.Encounter.Id);
 
         var whileFirstRuns = await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, second.Id);
@@ -123,7 +123,7 @@ public sealed class EncounterRunTests(AppFixture fixture)
         for (var round = 0; round < 5; round++)
         {
             var table = await fixture.App.CreateEncounterTableAsync();
-            var second = await table.Dm.ImportMapAsync(table.CampaignId, TestMaps.Gorge() with { Name = "Zweite Klamm" });
+            var second = await table.Dm.ImportMapAsync(table.CampaignId, table.Session.Id, TestMaps.Gorge() with { Name = "Zweite Klamm" });
 
             var responses = await Task.WhenAll(
                 table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, table.Encounter.Id),
@@ -143,7 +143,7 @@ public sealed class EncounterRunTests(AppFixture fixture)
     {
         var table = await fixture.App.CreateEncounterTableAsync();
         var otherCampaign = await table.Dm.CreateCampaignAsync("Andere Runde");
-        var elsewhere = await table.Dm.ImportMapAsync(otherCampaign.Id);
+        var elsewhere = await table.Dm.ImportMapAsync(otherCampaign.Id, (await table.Dm.CreateSessionAsync(otherCampaign.Id)).Id);
 
         var start = await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, elsewhere.Id);
         var end = await table.Dm.EndEncounterAsync(table.CampaignId, table.Session.Id, elsewhere.Id);
@@ -268,7 +268,7 @@ public sealed class EncounterRunTests(AppFixture fixture)
     public async Task Ending_the_session_ends_its_fight()
     {
         var table = await fixture.App.CreateEncounterTableAsync();
-        var second = await table.Dm.ImportMapAsync(table.CampaignId, TestMaps.Gorge() with { Name = "Zweite Klamm" });
+        var second = await table.Dm.ImportMapAsync(table.CampaignId, table.Session.Id, TestMaps.Gorge() with { Name = "Zweite Klamm" });
         await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, table.Encounter.Id);
 
         var response = await table.Dm.Client.PostAsync($"/api/campaigns/{table.CampaignId}/sessions/{table.Session.Id}/end", null);
@@ -285,28 +285,82 @@ public sealed class EncounterRunTests(AppFixture fixture)
         Assert.Null(campaigns.Single(c => c.Id == table.CampaignId).ActiveSession);
     }
 
-    // Active first, then ready, draft and ended, newest first within each.
+    // In the order they were added, whatever their status; `dm` members see them all.
     [Fact]
-    public async Task The_list_puts_the_running_fight_first()
+    public async Task The_session_lists_its_fights_in_the_order_they_were_added()
     {
         var table = await fixture.App.CreateEncounterTableAsync();
         var ended = table.Encounter;
-        var olderReady = await table.Dm.ImportMapAsync(table.CampaignId, TestMaps.Gorge() with { Name = "Älter", Creatures = [] });
-        var active = await table.Dm.ImportMapAsync(table.CampaignId, TestMaps.Gorge() with { Name = "Läuft" });
-        var newerReady = await table.Dm.ImportMapAsync(table.CampaignId, TestMaps.Gorge() with { Name = "Neuer" });
+        var empty = await table.Dm.ImportMapAsync(table.CampaignId, table.Session.Id, TestMaps.Gorge() with { Name = "Leer", Creatures = [] });
+        var active = await table.Dm.ImportMapAsync(table.CampaignId, table.Session.Id, TestMaps.Gorge() with { Name = "Läuft" });
         await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, ended.Id);
         await table.Dm.EndEncounterAsync(table.CampaignId, table.Session.Id, ended.Id);
         await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, active.Id);
 
         var list = await ListAsync(table);
 
-        Assert.Equal([active.Id, newerReady.Id, olderReady.Id, ended.Id], list.Select(e => e.Id));
-        Assert.Equal([3, 3, 0, 3], list.Select(e => e.CreatureCount));
+        Assert.Equal(
+            [(ended.Id, EncounterStatus.Ended, 3), (empty.Id, EncounterStatus.Ready, 0), (active.Id, EncounterStatus.Active, 3)],
+            list.Select(e => (e.Id, e.Status, e.CreatureCount)));
+        Assert.Equal(["Klamm", "Leer", "Läuft"], list.Select(e => e.BattleMapName));
+    }
+
+    // A fight starts only in its own session.
+    [Fact]
+    public async Task A_fight_of_another_session_does_not_start_here()
+    {
+        var table = await fixture.App.CreateEncounterTableAsync();
+        var later = await table.Dm.CreateSessionAsync(table.CampaignId, "Nächste Woche");
+        var planned = await table.Dm.ImportMapAsync(table.CampaignId, later.Id);
+
+        var response = await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, planned.Id);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    // Continuing an ended session brings back the fight that ending it cut off, with every
+    // token where it stood (knowledge/domain/session.md, "Continuing").
+    [Fact]
+    public async Task Continuing_the_session_brings_back_the_interrupted_fight()
+    {
+        var fight = await fixture.App.StartFightAsync();
+        var table = fight.Table;
+        var sessionPath = $"/api/campaigns/{table.CampaignId}/sessions/{table.Session.Id}";
+        var before = await (await table.Dm.GetBoardAsync(table.CampaignId, table.Encounter.Id)).ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
+
+        var ended = await (await table.Dm.Client.PostAsync($"{sessionPath}/end", null)).ReadAsync<SessionResponse>(HttpStatusCode.OK);
+        var continued = await table.Dm.ActivateSessionAsync(table.CampaignId, table.Session.Id);
+
+        Assert.Equal(new ActiveEncounterSummary(table.Encounter.Id, "Klamm"), ended.InterruptedEncounter);
+        Assert.Equal(
+            (SessionStatus.Active, new ActiveEncounterSummary(table.Encounter.Id, "Klamm"), (ActiveEncounterSummary?)null),
+            (continued.Status, continued.ActiveEncounter, continued.InterruptedEncounter));
+        Assert.Null(await EndedAtAsync(table.Encounter.Id));
+        var after = await (await table.Player.GetBoardAsync(table.CampaignId, table.Encounter.Id)).ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
+        Assert.Equal(EncounterStatus.Active, after.Status);
+        Assert.Equal(
+            before.Tokens.Select(t => (t.Id, t.X, t.Y, t.Version)),
+            after.Tokens.Select(t => (t.Id, t.X, t.Y, t.Version)));
+    }
+
+    // A fight the DM ended by hand stays ended.
+    [Fact]
+    public async Task Continuing_the_session_leaves_fights_ended_by_hand()
+    {
+        var table = await fixture.App.CreateEncounterTableAsync();
+        await table.Dm.StartEncounterAsync(table.CampaignId, table.Session.Id, table.Encounter.Id);
+        await table.Dm.EndEncounterAsync(table.CampaignId, table.Session.Id, table.Encounter.Id);
+        await table.Dm.Client.PostAsync($"/api/campaigns/{table.CampaignId}/sessions/{table.Session.Id}/end", null);
+
+        var continued = await table.Dm.ActivateSessionAsync(table.CampaignId, table.Session.Id);
+
+        Assert.Equal((SessionStatus.Active, (ActiveEncounterSummary?)null), (continued.Status, continued.ActiveEncounter));
+        Assert.Equal(EncounterStatus.Ended, (await ListAsync(table)).Single().Status);
     }
 
     private static async Task<List<EncounterSummaryResponse>> ListAsync(EncounterTable table) =>
-        await (await table.Dm.Client.GetAsync($"/api/campaigns/{table.CampaignId}/encounters"))
-            .ReadAsync<List<EncounterSummaryResponse>>(HttpStatusCode.OK);
+        (await (await table.Dm.Client.GetAsync($"/api/campaigns/{table.CampaignId}/sessions/{table.Session.Id}"))
+            .ReadAsync<SessionResponse>(HttpStatusCode.OK)).Encounters;
 
     private static async Task<List<SessionResponse>> ListSessionsAsync(EncounterTable table) =>
         await (await table.Player.Client.GetAsync($"/api/campaigns/{table.CampaignId}/sessions"))

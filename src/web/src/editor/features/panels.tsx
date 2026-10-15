@@ -98,6 +98,13 @@ export function FeatureToolPanel() {
 /** The entrance tool's options for the next entrance. */
 export function EntranceToolPanel() {
   const options = usePlacementOptions((s) => s.entrance)
+  // A click on an existing entrance selects it: it is edited and deleted here too, without
+  // switching to the select tool.
+  const selected = useEditor((s) =>
+    s.selection?.kind === 'entrance'
+      ? s.doc.layout.entrances.find((e) => e.id === s.selection!.id)
+      : undefined,
+  )
   return (
     <div className="flex flex-col gap-3">
       <Help>{t.entranceHelp}</Help>
@@ -120,6 +127,11 @@ export function EntranceToolPanel() {
         hint={t.entranceLabelHint}
         onChange={(e) => setEntranceOptions({ label: e.target.value })}
       />
+      {selected && (
+        <section aria-label={t.selectedEntrance} className="border-t border-line pt-3">
+          <EntranceProperties key={selected.id} entrance={selected} />
+        </section>
+      )}
     </div>
   )
 }

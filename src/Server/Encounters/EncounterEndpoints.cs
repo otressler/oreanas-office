@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Images;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Sessions;
@@ -14,9 +16,10 @@ using OreanasOffice.Server.Table;
 
 namespace OreanasOffice.Server.Encounters;
 
-// knowledge/domain/encounter.md and battle-map.md: `dm` members prepare encounters by
-// importing maps and see the prepared ones; only the session DM starts and ends them.
-// Every member sees the board of the active encounter.
+// knowledge/domain/encounter.md and battle-map.md: the session DM imports maps into
+// their session and starts and ends its encounters; `dm` members see the prepared ones
+// (in the session list, SessionEndpoints). Every member sees the board of the active
+// encounter.
 public static class EncounterEndpoints
 {
     // A new creature type can collide with one another import creates at the same
@@ -27,51 +30,41 @@ public static class EncounterEndpoints
     {
         var encounters = app.MapGroup("/api/campaigns/{campaignId:guid}/encounters").WithTags("Encounters");
 
-        encounters.MapGet("/", ListEncounters).RequireAuthorization(Policies.CampaignDm);
-        encounters.MapPost("/import", ImportMap).RequireAuthorization(Policies.CampaignDm);
         encounters.MapGet("/{encounterId:guid}/board", GetBoard).RequireAuthorization(Policies.CampaignMember);
 
-        var running = app.MapGroup("/api/campaigns/{campaignId:guid}/sessions/{sessionId:guid}/encounters/{encounterId:guid}")
+        var session = app.MapGroup("/api/campaigns/{campaignId:guid}/sessions/{sessionId:guid}/encounters")
             .WithTags("Encounters")
             .RequireAuthorization(Policies.SessionDm);
-        running.MapPost("/start", StartEncounter);
-        running.MapPost("/end", EndEncounter);
+        session.MapPost("/import", ImportMap);
+        session.MapPost("/{encounterId:guid}/start", StartEncounter);
+        session.MapPost("/{encounterId:guid}/end", EndEncounter);
 
         return app;
     }
 
-    // Every encounter of the campaign: active first, then ready, draft and ended, newest
-    // first within each.
-    private static async Task<Ok<List<EncounterSummaryResponse>>> ListEncounters(
-        Guid campaignId, AppDbContext db, CancellationToken cancellationToken)
-    {
-        var encounters = await Summaries(
-                db.Encounters
-                    .Where(e => e.CampaignId == campaignId)
-                    .OrderBy(e => e.Status == EncounterStatus.Active ? 0
-                        : e.Status == EncounterStatus.Ready ? 1
-                        : e.Status == EncounterStatus.Draft ? 2
-                        : 3)
-                    .ThenByDescending(e => e.CreatedAt))
-            .ToListAsync(cancellationToken);
-        return TypedResults.Ok(encounters);
-    }
-
-    // Creates the battle map, an encounter of the same name in status Ready, its
-    // creature tokens and any missing creature types, all or nothing. See MapFile.cs
-    // for the rules and their error codes.
-    private static async Task<Results<Created<EncounterSummaryResponse>, BadRequest<ApiError>>> ImportMap(
+    // Creates the battle map, an encounter of the same name in this session in status Ready,
+    // its creature tokens and any missing creature types, all or nothing. See MapFile.cs
+    // for the rules and their error codes. SessionEnded for an ended session: fights are
+    // added only to planned and running ones (knowledge/domain/session.md).
+    private static async Task<Results<Created<EncounterSummaryResponse>, BadRequest<ApiError>, Conflict<ApiError>>> ImportMap(
         Guid campaignId,
+        Guid sessionId,
         ImportMapRequest request,
         ClaimsPrincipal user,
         AppDbContext db,
         TimeProvider time,
         CancellationToken cancellationToken)
     {
+        // The SessionDm policy has checked that the session belongs to the campaign.
+        if (await db.Sessions.AnyAsync(s => s.Id == sessionId && s.Status == SessionStatus.Ended, cancellationToken))
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
+        }
+
         for (var attempt = 1; ; attempt++)
         {
             var campaignTypes = await db.CreatureTypes.Where(t => t.CampaignId == campaignId).ToListAsync(cancellationToken);
-            if (MapImport.Build(request, campaignId, campaignTypes, time.GetUtcNow(), user.GetUserId(), out var import) is { } error)
+            if (MapImport.Build(request, campaignId, sessionId, campaignTypes, time.GetUtcNow(), user.GetUserId(), out var import) is { } error)
             {
                 return TypedResults.BadRequest(error);
             }
@@ -108,8 +101,10 @@ public static class EncounterEndpoints
                 e.SessionId,
                 e.Name,
                 e.Status,
-                SessionDmUserId = (Guid?)e.Session!.DmUserId,
+                SessionDmUserId = (Guid?)e.Session.DmUserId,
                 e.MapCopy,
+                SavedBackgroundAssetId = e.BackgroundAssetId,
+                MapBackgroundAssetId = e.BattleMap.BackgroundAssetId,
                 Map = new BoardMap(e.BattleMap.Id, e.BattleMap.Name, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, null),
             })
             .SingleOrDefaultAsync(cancellationToken);
@@ -150,9 +145,21 @@ public static class EncounterEndpoints
 
         // The map as it was when the fight started, once it has; the battle map itself
         // may have been edited since.
+        // Likewise the background saved at the start; before that the map's picked one,
+        // while it fits the map's size (knowledge/domain/battle-map.md, "Background image").
         var map = encounter.MapCopy is { } copy
-            ? encounter.Map with { Width = copy.Width, Height = copy.Height, Layout = copy.Layout }
-            : encounter.Map;
+            ? encounter.Map with
+            {
+                Width = copy.Width,
+                Height = copy.Height,
+                Layout = copy.Layout,
+                Background = await MapBackgrounds.BoardAsync(db, encounter.SavedBackgroundAssetId, null, cancellationToken),
+            }
+            : encounter.Map with
+            {
+                Background = await MapBackgrounds.BoardAsync(
+                    db, encounter.MapBackgroundAssetId, (encounter.Map.Width, encounter.Map.Height), cancellationToken),
+            };
         var board = new BoardStateResponse(
             encounter.Id,
             campaignId,
@@ -180,8 +187,8 @@ public static class EncounterEndpoints
         return TypedResults.Ok(board);
     }
 
-    // Ready → active in this session, creating one character token per placement in the
-    // same transaction. 404 for an encounter of another campaign. Conflicts:
+    // Ready → active in its session, creating one character token per placement in the
+    // same transaction. 404 for an encounter of another session. Conflicts:
     // SessionNotActive, EncounterNotReady (draft, active or ended), AnotherEncounterActive.
     // Bad requests: CharacterInvalid (not in the campaign, or listed twice) and
     // PlacementInvalid (knowledge/domain/encounter.md, placement rule), with Field
@@ -196,8 +203,8 @@ public static class EncounterEndpoints
         CancellationToken cancellationToken)
     {
         var encounter = await db.Encounters
-            .Where(e => e.Id == encounterId && e.CampaignId == campaignId)
-            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout })
+            .Where(e => e.Id == encounterId && e.CampaignId == campaignId && e.SessionId == sessionId)
+            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, e.BattleMap.BackgroundAssetId })
             .SingleOrDefaultAsync(cancellationToken);
         if (encounter is null)
         {
@@ -252,6 +259,11 @@ public static class EncounterEndpoints
             creatureElevations[standing[i].Id] = standingElevation;
         }
 
+        // The fight keeps the map's picked background with its copy of the layout, when it
+        // can be shown on this size.
+        var background = await MapBackgrounds.UsableAsync(
+            db, encounter.BackgroundAssetId, (encounter.Width, encounter.Height), cancellationToken);
+
         var now = time.GetUtcNow();
         var tokens = new List<Token>();
         var seen = new HashSet<Guid>();
@@ -301,9 +313,9 @@ public static class EncounterEndpoints
                     .ExecuteUpdateAsync(
                         set => set
                             .SetProperty(e => e.Status, EncounterStatus.Active)
-                            .SetProperty(e => e.SessionId, sessionId)
                             .SetProperty(e => e.StartedAt, now)
                             .SetProperty(e => e.MapCopy, new EncounterMapCopy(encounter.Width, encounter.Height, encounter.Layout))
+                            .SetProperty(e => e.BackgroundAssetId, background == null ? null : background.Id)
                             .SetProperty(e => e.Version, e => e.Version + 1)
                             .SetProperty(e => e.UpdatedAt, now),
                         cancellationToken);
@@ -346,10 +358,9 @@ public static class EncounterEndpoints
         return TypedResults.Ok(await Summaries(db.Encounters.Where(e => e.Id == encounterId)).SingleAsync(cancellationToken));
     }
 
-    // Active → ended. Already ended: unchanged. 404 unless the encounter ran in this
-    // session; EncounterNotActive for one that hasn't started (a draft or ready
-    // encounter of the campaign, which belongs to no session yet). The devices at the
-    // table hear EncounterEnded once the fight has actually ended.
+    // Active → ended. Already ended: unchanged. 404 unless the encounter belongs to this
+    // session; EncounterNotActive for one that hasn't started. The devices at the table
+    // hear EncounterEnded once the fight has actually ended.
     private static async Task<Results<Ok<EncounterSummaryResponse>, NotFound, Conflict<ApiError>>> EndEncounter(
         Guid campaignId,
         Guid sessionId,
@@ -359,21 +370,21 @@ public static class EncounterEndpoints
         [FromServices] IHubContext<TableHub, ITableClient> table,
         CancellationToken cancellationToken)
     {
-        var encounter = await db.Encounters
-            .Where(e => e.Id == encounterId && e.CampaignId == campaignId)
-            .Select(e => new { e.Status, e.SessionId })
+        var status = await db.Encounters
+            .Where(e => e.Id == encounterId && e.CampaignId == campaignId && e.SessionId == sessionId)
+            .Select(e => (EncounterStatus?)e.Status)
             .SingleOrDefaultAsync(cancellationToken);
-        if (encounter is null || (encounter.SessionId is { } ranIn && ranIn != sessionId))
+        if (status is null)
         {
             return TypedResults.NotFound();
         }
 
-        if (encounter.SessionId is null)
+        if (status is EncounterStatus.Draft or EncounterStatus.Ready)
         {
             return TypedResults.Conflict(new ApiError(ApiErrorCode.EncounterNotActive));
         }
 
-        if (encounter.Status == EncounterStatus.Active
+        if (status == EncounterStatus.Active
             && await EndActiveAsync(db.Encounters.Where(e => e.Id == encounterId), time.GetUtcNow(), cancellationToken) > 0)
         {
             await table.Clients.Group(TableHub.GroupName(encounterId)).EncounterEnded(encounterId);
@@ -421,16 +432,21 @@ public static class EncounterEndpoints
     // Constructor projections can't be filtered or sorted afterwards, so callers
     // narrow and order the encounters first.
     private static IQueryable<EncounterSummaryResponse> Summaries(IQueryable<Encounter> encounters) =>
-        encounters.Select(e => new EncounterSummaryResponse(
+        encounters.Select(SummaryOf);
+
+    // Also used inside the session list's projection (SessionEndpoints).
+    public static readonly Expression<Func<Encounter, EncounterSummaryResponse>> SummaryOf =
+        e => new EncounterSummaryResponse(
             e.Id,
             e.Name,
             e.Status,
             e.BattleMapId,
+            e.BattleMap.Name,
             e.BattleMap.Width,
             e.BattleMap.Height,
             e.Tokens.Count(t => t.Kind == TokenKind.Creature),
             e.SessionId,
             e.CreatedAt,
             e.Version,
-            e.ArchivedAt));
+            e.ArchivedAt);
 }

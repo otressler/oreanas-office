@@ -5,7 +5,6 @@ import { MembersPanel } from '../campaigns/MembersPanel'
 import { useCampaign } from '../campaigns/queries'
 import { SessionsPanel } from '../campaigns/SessionsPanel'
 import { Badge, LoadError, Loading, PageTitle } from '../components/ui'
-import { EncountersPanel } from '../encounters/EncountersPanel'
 import { CampaignMapsLink } from '../maps/CampaignMapsLink'
 import { useKeepCampaignCopy } from '../maps/campaignCopy'
 import { SyncMark } from '../maps/SyncMark'
@@ -14,8 +13,8 @@ import { SyncStatusView } from '../sync'
 import { de } from '../text/de'
 
 /**
- * /kampagnen/:campaignId — sessions first, since that's what game night needs;
- * then the fights, which only `dm` members see.
+ * /kampagnen/:campaignId — the sessions with their fights first, since that's what game
+ * night needs (knowledge/features/session-planning.md); `dm` members also find the maps.
  */
 export function CampaignPage() {
   const { campaignId = '' } = useParams()
@@ -43,12 +42,7 @@ export function CampaignPage() {
         <Badge>{de.roles[campaign.data.myRole]}</Badge>
       </div>
       <SessionsPanel campaign={campaign.data} />
-      {campaign.data.myRole === 'dm' && (
-        <>
-          <CampaignMapsLink campaignId={campaign.data.id} />
-          <EncountersPanel campaign={campaign.data} />
-        </>
-      )}
+      {campaign.data.myRole === 'dm' && <CampaignMapsLink campaignId={campaign.data.id} />}
       <CharactersPanel campaignId={campaign.data.id} />
       <MembersPanel campaign={campaign.data} />
     </div>

@@ -248,11 +248,14 @@ export const de = {
         stages: [
           {
             number: 7,
-            title: 'Gemalte Hintergründe',
+            title: 'Gemalte Hintergründe und Sitzungsplanung',
             items: [
               'Ein Bildmodell malt aus der Karte einen Hintergrund, passend zum Raster.',
               'Mehrere Fassungen erzeugen, vergleichen und eine auswählen.',
+              'Eine Fassung mit eigenen Worten überarbeiten lassen, etwa „mehr Nebel in der Schlucht“.',
               'Ohne Bild bleibt die gezeichnete Karte: Der Kampf ist immer spielbar.',
+              'Einen Spielabend planen: Kämpfe vorbereiten und am Tisch der Reihe nach starten.',
+              'Eine beendete Sitzung fortsetzen, auch mitten im Kampf.',
             ],
           },
           {
@@ -313,10 +316,7 @@ export const de = {
         },
         {
           title: 'Die Sitzung leiten',
-          items: [
-            'Mehrere Kämpfe pro Sitzung, mit einem Tipp umschalten.',
-            'Rückgängig für die Spielleitung.',
-          ],
+          items: ['Rückgängig für die Spielleitung.'],
         },
         {
           title: 'Für Spielende',
@@ -411,8 +411,92 @@ export const de = {
     dmName: (name: string) => `Spielleitung: ${name}`,
     activate: 'Starten',
     end: 'Beenden',
+    /** Makes an ended session run again (knowledge/domain/session.md, "Continuing"). */
+    continue: 'Fortsetzen',
+    /** Under "Fortsetzen" when ending the session cut a fight off. */
+    continueResumes: (name: string) =>
+      `„${name}“ wurde mit der Sitzung unterbrochen und läuft dann weiter, alle Figuren stehen, wo sie waren.`,
     changeDm: 'Spielleitung wechseln',
     applyDm: 'Übernehmen',
+    // The campaign page's list.
+    runningTitle: 'Läuft gerade',
+    plannedTitle: 'Geplant',
+    /** The collapsed part with ended sessions, e.g. "Beendet (3)". */
+    endedTitle: (count: number) => `Beendet (${count})`,
+    fights: (count: number) => (count === 1 ? '1 Kampf' : `${count} Kämpfe`),
+    noFights: 'Noch keine Kämpfe geplant.',
+  },
+
+  /** /kampagnen/:id/sitzungen/:sessionId (knowledge/features/session-planning.md). */
+  sessionPage: {
+    back: 'Zur Kampagne',
+    /** Links back to the session page, e.g. from the import and the setup screen. */
+    toSession: 'Zur Sitzung',
+    notFoundTitle: 'Diese Sitzung gibt es hier nicht',
+    notFoundBody: 'Sie gehört zu einer anderen Kampagne, oder der Link stimmt nicht.',
+    editDetails: 'Titel und Datum ändern',
+    fightsTitle: 'Kämpfe',
+    empty:
+      'Noch keine Kämpfe. Füge einen hinzu: auf einer vorhandenen Karte, einer Kopie oder einer neuen.',
+    addFight: 'Kampf hinzufügen',
+    importMap: 'Karte importieren',
+    /** The collapsed part with archived fights, e.g. "Archiviert (1)". */
+    archived: (count: number) => `Archiviert (${count})`,
+    /** A fight made on this device and not on the server yet. */
+    localOnly: 'Nur auf diesem Gerät',
+    openEditor: 'Bearbeiten',
+    /** Accessible names of a row's buttons, which repeat for every fight. */
+    openEditorLabel: (name: string) => `${name} bearbeiten`,
+    moveLabel: (name: string) => `${name} verschieben`,
+    archiveLabel: (name: string) => `${name} archivieren`,
+    restoreLabel: (name: string) => `${name} zurückholen`,
+    move: 'Verschieben',
+    archive: 'Archivieren',
+    restore: 'Zurückholen',
+    misplaced: 'Eine Kreatur steht auf der geänderten Karte nicht mehr gültig.',
+    moveTitle: (name: string) => `„${name}“ verschieben`,
+    moveHelp:
+      'In welche Sitzung soll der Kampf? Angeboten werden die geplanten und laufenden, die du leitest.',
+    moveNoTarget:
+      'Du leitest keine andere geplante oder laufende Sitzung. Lege auf der Kampagnenseite eine an.',
+    moveTo: 'Hierhin',
+    /** After a move, archive or restore that the server didn't take. */
+    notSynced:
+      'Auf diesem Gerät gespeichert, aber noch nicht synchronisiert. Schau in den Synchronisierungsstatus.',
+    // Hints that explain missing buttons.
+    startWhenRunning: 'Bereite Kämpfe startest du hier, sobald die Sitzung läuft.',
+    endedHint:
+      'Diese Sitzung ist beendet. Setze sie fort, um weiterzuspielen oder Kämpfe hinzuzufügen.',
+    otherDm: (name: string) => `${name} leitet diese Sitzung und bereitet ihre Kämpfe vor.`,
+    playerHint:
+      'Die Spielleitung bereitet die Kämpfe vor. Sobald einer läuft, geht es hier hinein.',
+    playerEnded: 'Diese Sitzung ist beendet.',
+  },
+
+  /** "Kampf hinzufügen" on the session page (knowledge/features/session-planning.md). */
+  addFight: {
+    title: 'Kampf hinzufügen',
+    name: 'Name des Kampfs',
+    namePlaceholder: 'Leer lassen: wie die Karte',
+    choices: {
+      existing: 'Vorhandene Karte',
+      copy: 'Karte kopieren',
+      fresh: 'Neue Karte',
+    },
+    existingHelp:
+      'Der Kampf nutzt diese Karte. Änderungen an ihr gelten für alle Kämpfe darauf, die noch nicht gelaufen sind.',
+    copyHelp: 'Eine Kopie nur für diesen Kampf: Änderungen daran betreffen keine anderen Kämpfe.',
+    freshHelp:
+      'Eine leere Karte. Der Editor öffnet sich zum Zeichnen, der Kampf ist in seinem Menü „Begegnungen“.',
+    pick: 'Auswählen',
+    /** How many planned fights already use a map. */
+    usedBy: (count: number) =>
+      count === 1 ? 'In 1 geplanten Kampf' : `In ${count} geplanten Kämpfen`,
+    noMaps:
+      'Diese Kampagne hat auf diesem Gerät noch keine Karten. Lege eine neue an, oder synchronisiere, um die Karten vom Server zu holen.',
+    narrow:
+      'Kämpfe bereitest du im Karteneditor vor. Öffne die Sitzung dafür auf einem größeren Bildschirm.',
+    create: 'Anlegen und öffnen',
   },
 
   sessionStatus: {
@@ -430,16 +514,11 @@ export const de = {
   } satisfies Record<import('../api/types').EncounterStatus, string>,
 
   encounters: {
-    title: 'Kämpfe',
-    empty: 'Noch keine Kämpfe. Importiere eine Karte, um einen vorzubereiten.',
-    importMap: 'Karte importieren',
     /** Grid size in squares, then meters, e.g. "20 × 12 Felder (30 m × 18 m)". */
     gridSize: (width: number, height: number, widthMeters: string, heightMeters: string) =>
       `${width} × ${height} Felder (${widthMeters} × ${heightMeters})`,
     creatures: (count: number) => (count === 1 ? '1 Kreatur' : `${count} Kreaturen`),
     setUp: 'Aufstellen und starten',
-    needsSession:
-      'Bereite Kämpfe startet die Spielleitung der laufenden Sitzung. Läuft keine, starte zuerst eine Sitzung.',
     oneAtATime:
       'In der laufenden Sitzung läuft schon ein Kampf. Beende ihn, bevor du den nächsten startest.',
     toFight: 'Zum Kampf',
@@ -743,7 +822,9 @@ export const de = {
       'Ziehe ein Rechteck auf der Karte. Objekte dürfen über Abgrund und Wand liegen, aber nicht über anderen Objekten.',
     entranceKind: 'Art',
     entranceHelp:
-      'Ziehe am Kartenrand entlang. Übernommen werden nur Randfelder, auf denen eine Figur stehen kann und die noch zu keinem Ein- oder Ausgang gehören; rot markierte nicht. Ein Klick auf einen vorhandenen wählt ihn aus.',
+      'Ziehe am Kartenrand entlang. Übernommen werden nur Randfelder, auf denen eine Figur stehen kann und die noch zu keinem Ein- oder Ausgang gehören; rot markierte nicht. Ein Klick auf einen vorhandenen wählt ihn aus: Er erscheint dann unten zum Bearbeiten oder Löschen, Entf löscht ihn.',
+    /** The entrance tool's section for the selected entrance. */
+    selectedEntrance: 'Ausgewählter Ein- oder Ausgang',
     selectHelp:
       'Klick auf ein Objekt oder einen Ein- oder Ausgang, um es zu bearbeiten. Ziehen verschiebt ein Objekt. Entf löscht, Esc hebt die Auswahl auf.',
     /** Heading of the selected feature's properties. */
@@ -917,6 +998,87 @@ export const de = {
     gateWaking: 'Inzwischen Karten bearbeiten',
 
     /** The editor's side panel and header (src/editor/scene). */
+    /** The "Hintergrund" tool (src/editor/background): generate, follow, compare and pick. */
+    background: {
+      tool: 'Hintergrund',
+      help: 'Ein Bildmodell malt aus dem Layout und der Beschreibung ein Bild der Karte. Das Raster zeichnet die App darüber.',
+      offline:
+        'Hintergründe brauchen eine Verbindung: zum Erzeugen, für die Versionen und zum Auswählen.',
+      notSynced:
+        'Diese Karte ist noch nicht auf dem Server. Beim Erzeugen wird sie zuerst synchronisiert.',
+      loadFailed: 'Die Hintergründe ließen sich nicht laden.',
+      generate: 'Hintergrund erzeugen',
+      regenerate: 'Neu erzeugen',
+      running: 'Ein Hintergrund wird gerade erzeugt. Du kannst so lange weiterarbeiten.',
+      budgetExhausted:
+        'Das Bildbudget für diesen Monat ist aufgebraucht. Ab dem nächsten Monat lassen sich wieder Hintergründe erzeugen.',
+      unavailable:
+        'Auf dem Server ist gerade kein Bildmodell eingerichtet. Hintergründe lassen sich nicht erzeugen.',
+      /** The month's spending, e.g. "Diesen Monat: 0,42 $ von 20,00 $". */
+      spent: (spent: string, limit: string) => `Diesen Monat: ${spent} von ${limit}`,
+      /** The picked background was made for another size. */
+      pickedOutdated:
+        'Der gewählte Hintergrund passt nicht mehr zur Kartengröße. Für die neue Größe braucht es ein neues Bild; bis dahin zeigt das Brett die einfache Darstellung.',
+      syncing: 'Die Karte wird synchronisiert…',
+      syncOffline:
+        'Ohne Verbindung lässt sich die Karte nicht synchronisieren. Es wurde nichts erzeugt.',
+      syncBlocked:
+        'Die Karte ließ sich nicht synchronisieren. Kläre zuerst das Problem bei der Synchronisierung (oben „Sync“), dann versuch es noch einmal. Es wurde nichts erzeugt.',
+      queued: 'Der Auftrag ist angenommen. Das Bild ist in etwa einer halben Minute fertig.',
+      confirm: {
+        title: 'Hintergrund erzeugen?',
+        sync: 'Die Karte wird zuerst synchronisiert, denn der Server malt nach seiner Kopie.',
+        quality:
+          'Das Bildmodell malt den Hintergrund in hoher Qualität. Das dauert etwa eine halbe Minute; der Editor bleibt so lange benutzbar.',
+        cost: 'Jedes Bild kostet ein paar Cent vom monatlichen Bildbudget.',
+        ok: 'Erzeugen',
+      },
+      /** Refining a finished version with an instruction: a new version from it. */
+      refine: {
+        button: 'Überarbeiten',
+        title: 'Version überarbeiten?',
+        instruction: 'Was soll sich ändern?',
+        placeholder: 'z. B. Die Brücke soll doppelt so breit sein, mit dickeren Seilen.',
+        layoutHint:
+          'Das Modell ändert nur, was du hier schreibst, und hält sich an die Karte. Wo Wände, Wasser und Objekte liegen und wie groß sie sind, bestimmt die Karte: Soll die Brücke im Spiel breiter werden, ändere sie im Editor und erzeuge neu.',
+        result: 'Es entsteht eine neue Version; die alte bleibt.',
+        ok: 'Überarbeiten',
+        left: (count: number) => `noch ${count} Zeichen`,
+      },
+      /** A refinement's note in the gallery, with the DM's instruction. */
+      refinedFrom: (instruction: string) => `Überarbeitet: „${instruction}“`,
+      versions: 'Versionen',
+      empty: 'Für diese Karte gibt es noch keinen Hintergrund.',
+      /** The alt text of a version's picture. */
+      versionAlt: (time: string) => `Hintergrund vom ${time}`,
+      status: {
+        queued: 'In der Warteschlange',
+        running: 'Wird gemalt…',
+        done: 'Fertig',
+        failed: 'Fehlgeschlagen',
+      },
+      rejected:
+        'Das Bildmodell hat diese Szene abgelehnt. Versuch es mit anderen Texten unter „Beschreibung“.',
+      failed: 'Das hat nicht geklappt. Versuch es noch einmal.',
+      outdated: 'Veraltet',
+      outdatedHint: 'Für eine andere Kartengröße gemalt; lässt sich nicht mehr auswählen.',
+      layoutChanged:
+        'Das Layout hat sich seitdem geändert. Das Bild passt zur Größe, zeigt aber vielleicht nicht mehr alles richtig.',
+      picked: 'Ausgewählt',
+      pick: 'Auswählen',
+      pickNone: 'Ohne Hintergrund',
+      noneHint: 'Ohne Hintergrund zeigt das Brett die einfache Darstellung des Layouts.',
+      enlarge: 'Größer ansehen',
+      compare: {
+        title: 'Hintergründe vergleichen',
+        previous: 'Vorherige',
+        next: 'Nächste',
+        /** "2 von 5". */
+        position: (index: number, count: number) => `${index} von ${count}`,
+        grid: 'Mit dem Raster der Karte darüber, so wie das Brett es zeichnet.',
+        close: 'Schließen',
+      },
+    },
     scene: {
       /** The toolbar entry with the scene, vibe and lighting texts. */
       tool: 'Beschreibung',
@@ -963,7 +1125,9 @@ export const de = {
     dateInvalid: 'Bitte wähle ein Datum.',
     notADm: 'Diese Person gehört nicht zur Spielleitung der Kampagne.',
     anotherSessionActive: 'In dieser Kampagne läuft schon eine Sitzung. Beende sie zuerst.',
-    sessionEnded: 'Diese Sitzung ist schon beendet.',
+    sessionEnded: 'Diese Sitzung ist beendet. Setze sie zuerst fort.',
+    notSessionDm: 'Die Kämpfe einer Sitzung plant nur ihre Spielleitung.',
+    sessionInvalid: 'Diese Sitzung gibt es in der Kampagne nicht (mehr).',
     textTooLong: 'Ein Text in der Datei ist zu lang.',
     mapSizeInvalid: 'Eine Karte ist 1 bis 40 Felder breit und hoch.',
     layoutVersionUnsupported: 'Diese Kartendatei stammt aus einer neueren Version der App.',
@@ -998,6 +1162,16 @@ export const de = {
     creaturesMisplaced:
       'Eine Kreatur steht nicht gültig auf der Karte. Korrigiere die Aufstellung, bevor die Begegnung bereit ist oder startet.',
     mapNotInStore: 'Diese Karte wird im Kartenspeicher dieser Kampagne nicht angeboten.',
+    imagesUnavailable:
+      'Auf dem Server ist kein Bildmodell eingerichtet. Hintergründe können gerade nicht erzeugt werden.',
+    imageBudgetExhausted:
+      'Das Bildbudget für diesen Monat ist aufgebraucht. Ab dem nächsten Monat geht es wieder.',
+    generationRunning: 'Für diese Karte wird schon ein Hintergrund erzeugt.',
+    mapChanged:
+      'Die Karte hat sich auf dem Server geändert. Synchronisiere und bestätige den Auftrag noch einmal.',
+    backgroundNotFound: 'Diesen Hintergrund gibt es für diese Karte nicht.',
+    backgroundOutdated: 'Dieser Hintergrund wurde für eine andere Kartengröße erzeugt.',
+    instructionInvalid: 'Schreib in höchstens 500 Zeichen, was sich am Bild ändern soll.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */
@@ -1195,6 +1369,12 @@ export const de = {
     menuFlagged: 'Auf einer Begegnung steht eine Kreatur nicht mehr gültig.',
     listEmpty: 'Noch keine Begegnung auf dieser Karte.',
     newEncounter: 'Neue Begegnung',
+    /** "Neue Begegnung" asks which session the fight goes in. */
+    pickSession: 'Für welche Sitzung?',
+    noSession:
+      'Du leitest keine geplante oder laufende Sitzung. Lege auf der Kampagnenseite eine an; danach synchronisieren.',
+    /** The session a fight belongs to, e.g. "Sitzung: Die Seilbrücke". */
+    sessionOf: (title: string) => `Sitzung: ${title}`,
     archive: 'Archivieren',
     restore: 'Zurückholen',
     /** Accessible names of the list's archive and restore buttons. */
@@ -1247,7 +1427,8 @@ export const de = {
     start: 'Starten',
     startNeedsReady: 'Zum Starten muss die Begegnung bereit sein.',
     startOffline: 'Zum Starten brauchst du eine Verbindung zum Server.',
-    startNeedsSession: 'Zum Starten muss eine Sitzung laufen, in der du die Spielleitung bist.',
+    startNeedsSession:
+      'Zum Starten muss die Sitzung dieses Kampfs laufen, und du musst sie leiten.',
     startArchived: 'Eine archivierte Begegnung lässt sich nicht starten.',
     startMisplaced: 'Starten geht erst, wenn alle Kreaturen gültig stehen.',
     startBlocked:

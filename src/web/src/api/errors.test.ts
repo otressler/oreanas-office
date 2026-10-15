@@ -25,6 +25,8 @@ const ALL_CODES = {
   notADm: true,
   anotherSessionActive: true,
   sessionEnded: true,
+  notSessionDm: true,
+  sessionInvalid: true,
   textTooLong: true,
   mapSizeInvalid: true,
   layoutVersionUnsupported: true,
@@ -54,6 +56,13 @@ const ALL_CODES = {
   encounterArchived: true,
   creaturesMisplaced: true,
   mapNotInStore: true,
+  imagesUnavailable: true,
+  imageBudgetExhausted: true,
+  generationRunning: true,
+  mapChanged: true,
+  backgroundNotFound: true,
+  backgroundOutdated: true,
+  instructionInvalid: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

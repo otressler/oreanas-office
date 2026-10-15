@@ -1,6 +1,6 @@
 // Queries for campaigns and what hangs off them. Keys nest under the campaign,
 // so invalidating ['campaign', id] refreshes its members, characters and sessions.
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
 import { unwrap } from '../api/errors'
 import { saveCampaignCopies } from '../offline/campaigns'
@@ -12,6 +12,8 @@ export const campaignKeys = {
   detail: (campaignId: string) => ['campaign', campaignId] as const,
   characters: (campaignId: string) => ['campaign', campaignId, 'characters'] as const,
   sessions: (campaignId: string) => ['campaign', campaignId, 'sessions'] as const,
+  session: (campaignId: string, sessionId: string) =>
+    ['campaign', campaignId, 'sessions', sessionId] as const,
 }
 
 const path = (campaignId: string) => ({ params: { path: { campaignId } } })
@@ -56,4 +58,27 @@ export function useSessions(campaignId: string) {
     queryKey: campaignKeys.sessions(campaignId),
     queryFn: () => unwrap(api.GET('/api/campaigns/{campaignId}/sessions', path(campaignId))),
   })
+}
+
+/** One session with its fights (for `dm` members; players get only the running one). */
+export function useSession(campaignId: string, sessionId: string) {
+  return useQuery({
+    queryKey: campaignKeys.session(campaignId, sessionId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/campaigns/{campaignId}/sessions/{sessionId}', {
+          params: { path: { campaignId, sessionId } },
+        }),
+      ),
+  })
+}
+
+/** After any change to a session: the campaign with its sessions, and the landing page. */
+export function useInvalidateSessions(campaignId: string) {
+  const queryClient = useQueryClient()
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: campaignKeys.detail(campaignId) }),
+      queryClient.invalidateQueries({ queryKey: campaignKeys.list }),
+    ])
 }

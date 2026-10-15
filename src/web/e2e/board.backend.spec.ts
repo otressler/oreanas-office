@@ -53,14 +53,16 @@ test('the DM starts a fight on the gorge crossing and a player lands on it', asy
   await sessions.getByRole('button', { name: text.newSession }).click()
   await sessions.getByLabel(text.sessionTitle).fill('Sitzung 1 – Die Hängebrücke')
   await sessions.getByRole('button', { name: text.create }).click()
-  await sessions.getByRole('button', { name: text.activate }).click()
-  await expect(sessions).toContainText(text.activeStatus)
+  // The session's page holds its fights (knowledge/features/session-planning.md).
+  await sessions.getByRole('link', { name: 'Sitzung 1 – Die Hängebrücke' }).click()
+  await oreana.getByRole('button', { name: text.activate }).click()
+  await expect(oreana.getByText(text.activeStatus, { exact: true }).first()).toBeVisible()
 
   await panel(oreana, 'Kämpfe').getByRole('link', { name: 'Karte importieren' }).click()
   await oreana.getByRole('button', { name: /Schluchtübergang/ }).click()
   const encounters = panel(oreana, 'Kämpfe')
   await expect(encounters).toContainText('4 Kreaturen')
-  await encounters.getByRole('link', { name: 'Aufstellen und starten' }).click()
+  await encounters.getByRole('button', { name: 'Aufstellen und starten' }).click()
 
   // Ilse takes part; she goes to the forest path.
   await oreana.getByRole('checkbox', { name: 'Ilse kämpft mit' }).check()
@@ -94,7 +96,8 @@ test('the DM starts a fight on the gorge crossing and a player lands on it', asy
   // Oreana ends the fight; after a reload Mira sees it isn't running any more.
   await oreana.getByRole('button', { name: 'Kampf beenden' }).click()
   await oreana.getByRole('button', { name: 'Ja, beenden' }).click()
-  await expect(oreana).toHaveURL(/\/kampagnen\/[^/]+$/)
+  // Back on the session page (knowledge/features/session-planning.md).
+  await expect(oreana).toHaveURL(/\/kampagnen\/[^/]+\/sitzungen\/[^/]+$/)
   await mira.reload()
   await expect(mira.getByText('Dieser Kampf läuft gerade nicht')).toBeVisible()
 })

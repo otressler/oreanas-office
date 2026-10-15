@@ -110,7 +110,7 @@ describe('EncounterPage', () => {
     expect(hub.connections).toHaveLength(0)
   })
 
-  it('lets the session DM end the fight after confirming, then goes to the campaign', async () => {
+  it('lets the session DM end the fight after confirming, then goes to the session', async () => {
     const calls = mockApi({
       'GET /api/auth/me': json(200, testUser),
       'GET /api/campaigns/:id/encounters/:eid/board': () =>
@@ -126,7 +126,9 @@ describe('EncounterPage', () => {
     await user.click(screen.getByRole('button', { name: de.encounters.endConfirm }))
 
     await vi.waitFor(() =>
-      expect(router.state.location.pathname).toBe(`/kampagnen/${ids.campaign}`),
+      expect(router.state.location.pathname).toBe(
+        `/kampagnen/${ids.campaign}/sitzungen/${ids.session}`,
+      ),
     )
     expect(calls.find((c) => c.method === 'POST')?.path).toBe(
       `/api/campaigns/${ids.campaign}/sessions/${ids.session}/encounters/${ids.encounter}/end`,

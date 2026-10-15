@@ -6,6 +6,8 @@ const text = {
   encountersTitle: 'Kämpfe',
   sessionsTitle: 'Sitzungen',
   importMap: 'Karte importieren',
+  continueSession: 'Fortsetzen',
+  endSession: 'Beenden',
   ready: 'Bereit',
   ended: 'Vorbei',
   setUp: 'Aufstellen und starten',
@@ -58,20 +60,21 @@ test('the DM imports a sample map, places a character and starts the fight', asy
   page,
   context,
 }) => {
-  const { oreana, campaign, ilse } = table()
+  const { oreana, campaign, ilse, session } = table()
   backend.signIn(context, oreana)
 
   await page.goto(`/kampagnen/${campaign.id}`)
+  await panel(page, text.sessionsTitle).getByRole('link', { name: session.title }).click()
   await panel(page, text.encountersTitle).getByRole('link', { name: text.importMap }).click()
   await page.getByRole('button', { name: /Schluchtübergang/ }).click()
 
-  // Back on the campaign page, ready to start.
-  await expect(page).toHaveURL(`/kampagnen/${campaign.id}`)
+  // Back on the session page, ready to start.
+  await expect(page).toHaveURL(`/kampagnen/${campaign.id}/sitzungen/${session.id}`)
   const encounters = panel(page, text.encountersTitle)
   await expect(encounters).toContainText('Schluchtübergang')
   await expect(encounters).toContainText(text.ready)
-  await expect(encounters).toContainText('20 × 12 Felder (30 m × 18 m) · 4 Kreaturen')
-  await encounters.getByRole('link', { name: text.setUp }).click()
+  await expect(encounters).toContainText('Karte: Schluchtübergang · 4 Kreaturen')
+  await encounters.getByRole('button', { name: text.setUp }).click()
 
   await expect(page.getByTestId('board')).toBeVisible()
   await page.getByRole('checkbox', { name: text.takesPart('Ilse') }).check()
@@ -89,10 +92,10 @@ test('the DM imports a sample map, places a character and starts the fight', asy
 })
 
 test('a broken map file shows a German error and where it is', async ({ page, context }) => {
-  const { oreana, campaign } = table()
+  const { oreana, campaign, session } = table()
   backend.signIn(context, oreana)
 
-  await page.goto(`/kampagnen/${campaign.id}/karten/importieren`)
+  await page.goto(`/kampagnen/${campaign.id}/sitzungen/${session.id}/importieren`)
   const file = {
     name: 'Kaputt',
     width: 3,
@@ -132,25 +135,42 @@ test('the DM ends the fight; afterwards players see it isn’t running', async (
   page,
   context,
 }) => {
-  const { oreana, mira, campaign, encounter } = runningFight()
+  const { oreana, mira, campaign, encounter, session } = runningFight()
   backend.signIn(context, oreana)
 
   await page.goto(`/kampagnen/${campaign.id}`)
   const sessions = panel(page, text.sessionsTitle)
   await expect(sessions).toContainText(text.running)
   await sessions.getByRole('link', { name: text.toFight }).click()
-  // The fight page loads lazily; the campaign page has its own end button meanwhile.
   await expect(page.getByTestId('board')).toBeVisible()
 
   await page.getByRole('button', { name: text.end }).click()
   await page.getByRole('button', { name: text.endConfirm }).click()
 
-  await expect(page).toHaveURL(`/kampagnen/${campaign.id}`)
+  // Back on the session page, with the fight over.
+  await expect(page).toHaveURL(`/kampagnen/${campaign.id}/sitzungen/${session.id}`)
   await expect(panel(page, text.encountersTitle)).toContainText(text.ended)
-  await expect(sessions).not.toContainText(text.running)
+  await expect(page.getByRole('link', { name: text.toFight })).toHaveCount(0)
   expect(encounter.status).toBe('ended')
 
   backend.signIn(context, mira)
   await page.goto(`/kampagnen/${campaign.id}/kampf/${encounter.id}`)
   await expect(page.getByRole('heading', { name: text.notRunning })).toBeVisible()
+})
+
+// knowledge/domain/session.md, "Continuing": the group didn't get through it in one evening.
+test('continuing an ended session brings back the fight it cut off', async ({ page, context }) => {
+  const { oreana, campaign, encounter, session } = runningFight()
+  backend.signIn(context, oreana)
+
+  await page.goto(`/kampagnen/${campaign.id}/sitzungen/${session.id}`)
+  await page.getByRole('button', { name: text.endSession, exact: true }).click()
+  await expect(page.getByText(/Schluchtübergang.*läuft dann weiter/)).toBeVisible()
+  expect(encounter.status).toBe('ended')
+
+  await page.getByRole('button', { name: text.continueSession }).click()
+
+  await expect(page.getByRole('link', { name: text.toFight })).toBeVisible()
+  expect(encounter.status).toBe('active')
+  expect(session.status).toBe('active')
 })

@@ -128,6 +128,7 @@ export function recordPushItem(kind: ItemKind, record: ItemRecord): SyncPushItem
           status: r.status,
           archivedAt: r.archivedAt,
           tokens: pushTokens(r),
+          sessionId: r.sessionId,
         },
       }
     }

@@ -28,6 +28,11 @@ public class GameSession
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    // The fight that was running when the session ended; continuing the session brings it
+    // back (knowledge/domain/session.md, "Continuing"). No foreign key, like
+    // Encounter.BackgroundAssetId: sessions and encounters already point at each other.
+    public Guid? InterruptedEncounterId { get; set; }
+
     public Campaign Campaign { get; set; } = null!;
 
     public AppUser Dm { get; set; } = null!;

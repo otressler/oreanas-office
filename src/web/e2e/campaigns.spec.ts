@@ -82,12 +82,15 @@ test('creates a session and makes it active', async ({ page }) => {
 
   await expect(sessions.getByText('Sitzung 1 – Die Hängebrücke')).toBeVisible()
   await expect(sessions).toContainText('Geplant')
-  await sessions.getByRole('button', { name: text.activate }).click()
-  await expect(sessions).toContainText(text.activeStatus)
-  await expect(sessions.getByRole('button', { name: text.activate })).toHaveCount(0)
+  // Starting happens on the session's page (knowledge/features/session-planning.md).
+  await sessions.getByRole('link', { name: 'Sitzung 1 – Die Hängebrücke' }).click()
+  await page.getByRole('button', { name: text.activate }).click()
+  await expect(page.getByText(text.activeStatus, { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: text.activate })).toHaveCount(0)
   expect(backend.sessions[0]).toMatchObject({ status: 'active', dmUserId: backend.users[0]!.id })
 
   // The landing page shows the running session.
+  await page.getByRole('link', { name: 'Zur Kampagne' }).click()
   await page.getByRole('link', { name: 'Alle Kampagnen' }).click()
   const card = page.getByRole('link', { name: /Die Rabenküste/ })
   await expect(card).toContainText(text.activeSessionLabel)

@@ -37,7 +37,7 @@ Accepted by the project owner on 2026-10-13, including campaigns created offline
 - The browser keeps a copy of the user's campaigns from the last time online, so maps can be built for them offline. Members and roles are shown from that copy and can't be changed offline.
 - Only creating a campaign works offline. Renaming it and every other campaign change need a connection, so campaigns don't need versions or the conflict dialog.
 - A campaign created offline has the creator as its only member, as a `dm` member and its default DM. It has no join code until it syncs, because the server makes the code unique; inviting, showing and replacing the code are hidden until then.
-- Characters and sessions are created online only: characters belong to players who can't join yet, and sessions run on the server.
+- Characters and sessions are created online only: characters belong to players who can't join yet, and sessions run on the server. The pull brings the campaign's sessions to the device read-only, so fights can be planned into an existing session offline ([session planning](/features/session-planning.md)).
 - Sync pushes a new campaign before its maps, encounters and creature types. A new campaign can't conflict, since its ID is new.
 - Comes with sync in stage 6 of the [implementation plan](/implementation-plan.md). Stage 5 only keeps the copy of the user's existing campaigns.
 
@@ -54,11 +54,11 @@ A conflict always concerns one whole item.
 | [Campaign](/domain/campaign.md) | ID and name | Creating only | Join code, members, everything else |
 | [Creature type](/domain/creature-type.md) | Name, size, appearance, DM notes, `archivedAt` | Yes | Icon (stage 8) |
 | [Battle map](/domain/battle-map.md) | Name, size, layout, scene, vibe, lighting, `archivedAt`, `copiedFromMapId` | Yes | Store copies and imports, which the server creates |
-| [Encounter](/domain/encounter.md) | Name, map, status, `archivedAt`, and its creature [tokens](/domain/token.md) | Only while `draft` or `ready` | Starting, ending, the layout copy, live tokens |
+| [Encounter](/domain/encounter.md) | Name, session, map, status, `archivedAt`, and its creature [tokens](/domain/token.md) | Only while `draft` or `ready` | Starting, ending, the layout copy, live tokens |
 
 - The creature tokens of a draft or ready encounter are part of the encounter. They have no move history yet, so the server replaces the encounter's token set on each push; token IDs stay the same.
 - Active and ended encounters belong to the server. Devices pull them and show them read-only, but never push them.
-- Not synced, online only: characters, sessions, members, campaign changes other than creating, live tokens and moves, and images.
+- Not pushed, online only: characters, sessions (pulled read-only), members, campaign changes other than creating, live tokens and moves, and images.
 
 ## Versions and IDs
 
@@ -84,7 +84,7 @@ One request carries every changed item, in the order campaigns, creature types, 
 ## Pull
 
 1. The device fetches the user's campaigns and roles, which refreshes its offline copy of the campaign list.
-2. For each campaign where the user is a `dm` member, the server lists the ID and version of every creature type, map and encounter, archived ones included.
+2. For each campaign where the user is a `dm` member, the server lists the ID and version of every creature type, map and encounter, archived ones included, and returns the campaign's sessions (ID, title, date, DM and status) as they are now. Sessions have no version and are replaced on every pull.
 3. The device fetches the items whose version differs, and the ones it doesn't have. Items that vanished from the list, for example after losing `dm` rights, are dropped if they are synced and kept with a warning if they have local changes.
 
 Players pull only the campaign list, so DM notes and prepared encounters never reach their devices. A pulled item never overwrites unsynced local changes; that case becomes a conflict at the next push. A "changed since" cursor was considered and dropped: it can miss rows from late transactions and can't see lost access, and the full list is only a few KB.
@@ -109,6 +109,7 @@ A rejected item stays on the device, marked "Nicht synchronisiert" with the reas
 - **Archived references:** a new encounter that uses a map or creature type archived meanwhile is accepted. Archiving only stops offering it for picking.
 - **Campaigns created offline:** the server creates the campaign with its client ID, makes the join code and adds the creator as `dm` member and default DM. Its items follow in the same push.
 - **Store and import** run on the server; a pull follows immediately, so the copy shows up in the editor.
+- **Session changed meanwhile:** a pushed encounter whose session ended, or whose DM is now someone else, is rejected with the reason. The DM can move it to another session they run, or take the server version.
 - **Before starting:** the session DM's device pushes its changes to that encounter first. A conflict must be resolved before the setup screen opens.
 - **Backgrounds and icons** (stages 7 and 8) are picked through the same path: saved locally, then synced at once, so they never overwrite unsynced edits.
 - **Two tabs:** one sync at a time per browser (Web Locks API).
@@ -121,9 +122,9 @@ The "Sync" button, before starting an encounter, when leaving the editor, when t
 
 ## Server checks
 
-- The user is a `dm` member of the item's campaign at the moment of the push. Being the session DM isn't needed for prep.
+- The user is a `dm` member of the item's campaign at the moment of the push. For an encounter, the user must also be the DM of its session, and of the old session too when it moves; the session must be planned or active (changed on 2026-10-14, [session planning](/features/session-planning.md)). Maps and creature types need only the `dm` role.
 - An existing ID must belong to the campaign the push names, and a new item's ID must not exist anywhere.
-- References stay inside the campaign: an encounter's map and its tokens' creature types belong to the same campaign.
+- References stay inside the campaign: an encounter's session, its map and its tokens' creature types belong to the same campaign.
 
 # As built (stage 5)
 

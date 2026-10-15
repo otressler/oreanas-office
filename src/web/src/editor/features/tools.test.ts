@@ -99,6 +99,35 @@ describe('select tool', () => {
     expect(store.getState().doc.layout.features[0]).toMatchObject({ x: 3, y: 3 })
   })
 
+  it('the entrance tool deletes a clicked entrance with Delete and lets go of it with Escape', () => {
+    const store = editorStoreFor(
+      mapWith(
+        [feature('f1', 2, 2)],
+        [floor(0, 1), floor(0, 2)],
+        [
+          { id: 'e1', kind: 'exit', label: '', cells: [[0, 1]] },
+          { id: 'e2', kind: 'entrance', label: '', cells: [[0, 2]] },
+        ],
+      ),
+    )
+    expect(key(entranceTool, store, 'Delete')).toBe(false)
+
+    drag(entranceTool, store, [[0, 1]])
+    expect(store.getState().selection).toEqual({ kind: 'entrance', id: 'e1' })
+    expect(key(entranceTool, store, 'Delete')).toBe(true)
+    expect(store.getState().doc.layout.entrances.map((e) => e.id)).toEqual(['e2'])
+
+    drag(entranceTool, store, [[0, 2]])
+    expect(key(entranceTool, store, 'Escape')).toBe(true)
+    expect(store.getState().selection).toBeNull()
+    expect(key(entranceTool, store, 'Escape')).toBe(false)
+
+    // A selected feature isn't the entrance tool's to delete.
+    store.getState().select({ kind: 'feature', id: 'f1' })
+    expect(key(entranceTool, store, 'Delete')).toBe(false)
+    expect(store.getState().doc.layout.features).toHaveLength(1)
+  })
+
   it('deletes the selection with Delete or Backspace, and clears it with Escape', () => {
     const store = editorStoreFor(
       mapWith(

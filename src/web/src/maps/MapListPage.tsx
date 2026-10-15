@@ -29,6 +29,7 @@ import { checkLayout } from '../editor/validation'
 import { SyncStatusView, useOnline } from '../sync'
 import { MapStoreDialog } from './MapStoreDialog'
 import { MapFileError, parseMapFile } from './mapFile'
+import { copyName, parseSize } from './fields'
 import { keepStorage } from './storage'
 import { SyncMark } from './SyncMark'
 
@@ -178,14 +179,6 @@ export function MapListPage() {
   )
 }
 
-/** "<Name> (Kopie)", shortened so it stays within the name limit. */
-function copyName(name: string): string {
-  const full = t.copyName(name)
-  if (full.length <= limits.mapName) return full
-  const room = limits.mapName - (full.length - name.length)
-  return t.copyName(name.slice(0, room).trimEnd())
-}
-
 function BackLink({ campaignId }: { campaignId: string }) {
   return (
     <Link
@@ -248,13 +241,6 @@ function ActionButton({
       {children}
     </Button>
   )
-}
-
-/** A whole number of cells within the grid limit, or null. */
-function parseSize(value: string): number | null {
-  if (!/^\d+$/.test(value.trim())) return null
-  const n = Number(value)
-  return n >= MIN_MAP_SIZE && n <= limits.mapSize ? n : null
 }
 
 function NewMapForm({ campaignId }: { campaignId: string }) {

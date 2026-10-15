@@ -351,6 +351,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<DateTimeOffset?>("ArchivedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("BackgroundAssetId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("BattleMapId")
                         .HasColumnType("uniqueidentifier");
 
@@ -372,7 +375,7 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
-                    b.Property<Guid?>("SessionId")
+                    b.Property<Guid>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("StartedAt")
@@ -394,6 +397,8 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BackgroundAssetId");
 
                     b.HasIndex("BattleMapId");
 
@@ -474,6 +479,125 @@ namespace OreanasOffice.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Images.Asset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BlobName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("CostUsd")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("decimal(10,6)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Failure")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("FrameHeight")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FrameWidth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FrameX")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FrameY")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("GridHeight")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("GridWidth")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Instruction")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("LayoutHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("OwnerType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Prompt")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Quality")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid?>("RefinedFromAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("FinishedAt");
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.HasIndex("OwnerType", "OwnerId", "CreatedAt");
+
+                    b.ToTable("Assets");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Maps.BattleMap", b =>
                 {
                     b.Property<Guid>("Id")
@@ -482,6 +606,9 @@ namespace OreanasOffice.Server.Data.Migrations
 
                     b.Property<DateTimeOffset?>("ArchivedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("BackgroundAssetId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CampaignId")
                         .HasColumnType("uniqueidentifier");
@@ -535,6 +662,8 @@ namespace OreanasOffice.Server.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BackgroundAssetId");
+
                     b.HasIndex("UpdatedByUserId");
 
                     b.HasIndex("CampaignId", "CopiedFromMapId");
@@ -561,6 +690,9 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasColumnType("date");
 
                     b.Property<Guid>("DmUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("InterruptedEncounterId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
@@ -762,7 +894,8 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasOne("OreanasOffice.Server.Sessions.GameSession", "Session")
                         .WithMany("Encounters")
                         .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
                         .WithMany()
@@ -799,6 +932,22 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("CreatureType");
 
                     b.Navigation("Encounter");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Images.Asset", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Campaigns.Campaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Campaign");
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Maps.BattleMap", b =>

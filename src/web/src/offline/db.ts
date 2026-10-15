@@ -1,11 +1,12 @@
 // The browser's offline store (knowledge/decisions/offline-prep-pwa.md): one IndexedDB
 // database per user, so a second account in the same browser sees nothing of the
 // first. Version 1 (stage 5) kept battle maps and a copy of the user's campaigns;
-// version 2 (stage 6) adds creature types, encounters and `meta`, and the sync fields.
+// version 2 (stage 6) adds creature types, encounters and `meta`, and the sync fields;
+// version 3 (stage 7) adds the campaigns' sessions, and every encounter belongs to one.
 import { Dexie, type EntityTable } from 'dexie'
 import type { CampaignRole } from '../api/types'
 import type { LocalMap } from '../editor/model'
-import type { LocalCreatureType, LocalEncounter } from './model'
+import type { LocalCreatureType, LocalEncounter, LocalSession } from './model'
 import type { SyncState } from './sync'
 
 /** A campaign as last seen online. Members and roles can't change offline. */
@@ -32,6 +33,7 @@ export class OfflineDb extends Dexie {
   campaigns!: EntityTable<CampaignCopy, 'id'>
   creatureTypes!: EntityTable<LocalCreatureType, 'id'>
   encounters!: EntityTable<LocalEncounter, 'id'>
+  sessions!: EntityTable<LocalSession, 'id'>
   meta!: EntityTable<MetaRecord, 'key'>
 
   constructor(userId: string) {
@@ -63,6 +65,20 @@ export class OfflineDb extends Dexie {
             copy.local = false
             copy.sync = null
           })
+      })
+    this.version(3)
+      .stores({
+        maps: 'id, campaignId',
+        campaigns: 'id',
+        creatureTypes: 'id, campaignId',
+        encounters: 'id, campaignId, battleMapId, sessionId',
+        sessions: 'id, campaignId',
+        meta: 'key',
+      })
+      .upgrade(async (tx) => {
+        // The server dropped every fight that had no session, so the device does too; the
+        // next pull brings the new ones.
+        await tx.table('encounters').clear()
       })
   }
 }

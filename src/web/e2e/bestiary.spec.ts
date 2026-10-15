@@ -14,7 +14,9 @@ test.skip(({ isMobile }) => isMobile, 'The editor is for laptops')
 test.beforeEach(async ({ context }) => {
   const backend = new MockBackend()
   const jennie = backend.addUser({ displayName: 'Jennie', email: 'jennie@example.org' })
-  backend.addCampaign(CAMPAIGN, jennie)
+  const campaign = backend.addCampaign(CAMPAIGN, jennie)
+  // Fights belong to a session; the editor offers the planned ones Jennie runs.
+  backend.addSession(campaign, jennie, 'planned')
   backend.signIn(context, jennie)
   await backend.attach(context)
 })

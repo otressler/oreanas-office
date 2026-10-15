@@ -6,13 +6,15 @@ import { json, mockApi, renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
 
 const t = de.encounters.import
-const importPath = `/kampagnen/${ids.campaign}/karten/importieren`
+const sessionPage = `/kampagnen/${ids.campaign}/sitzungen/${ids.session}`
+const importPath = `${sessionPage}/importieren`
 
 function api(importReply: () => Response) {
   return mockApi({
     'GET /api/auth/me': json(200, testUser),
-    'POST /api/campaigns/:id/encounters/import': importReply,
+    'POST /api/campaigns/:id/sessions/:sessionId/encounters/import': importReply,
     'GET /api/campaigns/:id': () => json(404),
+    'GET /api/campaigns/:id/sessions/:sessionId': () => json(404),
   })
 }
 
@@ -21,15 +23,15 @@ function mapFile(content: string, name = 'karte.json') {
 }
 
 describe('MapImportPage', () => {
-  it('imports a sample map and goes back to the campaign', async () => {
+  it('imports a sample map into the session and goes back to it', async () => {
     const calls = api(() => json(201, encounter({ name: 'Schluchtübergang' })))
     const { router } = renderApp(importPath)
     const user = userEvent.setup()
 
     await user.click(await screen.findByRole('button', { name: /Schluchtübergang/ }))
 
-    await screen.findByText(de.requestErrors.notFound)
-    expect(router.state.location.pathname).toBe(`/kampagnen/${ids.campaign}`)
+    await screen.findByRole('heading', { name: de.sessionPage.notFoundTitle })
+    expect(router.state.location.pathname).toBe(sessionPage)
     const sent = calls.find((c) => c.method === 'POST')?.body as { name: string; width: number }
     expect(sent).toMatchObject({ name: 'Schluchtübergang', width: 20, height: 12 })
   })

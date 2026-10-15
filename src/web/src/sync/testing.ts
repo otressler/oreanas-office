@@ -10,6 +10,7 @@ import type {
   SyncPushRequest,
   SyncItemResult,
   SyncServerItem,
+  SyncVersionList,
 } from '../api/types'
 import { emptyMap, LOCAL_MAP_RECORD_VERSION, type LocalMap } from '../editor/model'
 import type { OfflineDb } from '../offline/db'
@@ -23,6 +24,7 @@ import { newSyncState, pulledSyncState } from '../offline/sync'
 import { json, testUser } from '../test/api'
 
 export const CAMPAIGN = 'c0000000-0000-0000-0000-000000000001'
+export const SESSION = '50000000-0000-0000-0000-000000000001'
 const TIME = '2026-10-14T10:00:00.000Z'
 
 export interface Call {
@@ -37,6 +39,17 @@ export class FakeServer {
   readonly items = new Map<string, SyncServerItem>()
   campaigns: CampaignSummary[] = []
   store: StoreMap[] = []
+  /** The sessions of CAMPAIGN the version list names; other campaigns have none. */
+  sessions: SyncVersionList['sessions'] = [
+    {
+      id: SESSION,
+      title: 'Sitzung 1',
+      date: '2026-10-17',
+      status: 'planned',
+      dmUserId: testUser.id,
+      dmDisplayName: testUser.displayName,
+    },
+  ]
   /** Answers for these ids are rejections. */
   readonly rejections = new Map<string, Partial<SyncItemResult> & { error: ApiErrorBody }>()
   /** Every /api/sync request gets this status (426, 401, 500). */
@@ -93,7 +106,6 @@ export class FakeServer {
       encounter: item.encounter && {
         ...item.encounter,
         name: item.encounter.name.trim(),
-        sessionId: null,
         mapCopy: null,
       },
     }
@@ -181,6 +193,7 @@ export class FakeServer {
           creatureTypes: list('creatureType'),
           battleMaps: list('battleMap'),
           encounters: list('encounter'),
+          sessions: campaignId === CAMPAIGN ? this.sessions : [],
         })
       }
       const ids = new Set((call.body as { ids: string[] }).ids)
@@ -306,7 +319,7 @@ export async function seedEncounter(
     status: 'draft',
     archivedAt: null,
     tokens: [],
-    sessionId: null,
+    sessionId: SESSION,
     mapCopy: null,
     createdAt: TIME,
     updatedAt: TIME,
