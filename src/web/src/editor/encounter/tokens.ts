@@ -206,8 +206,15 @@ export function setArchived(doc: EncounterDoc, archivedAt: string | null): Encou
 
 // --- Drawing --------------------------------------------------------------------------
 
-/** A token as the board renderer draws it: creatures share one red ring. */
-export function toBoardToken(token: LocalCreatureToken, grid: MapGrid): BoardToken {
+/**
+ * A token as the board renderer draws it: creatures share one red ring. `imageUrl` is the
+ * creature type's picked icon, when the editor is online and knows it.
+ */
+export function toBoardToken(
+  token: LocalCreatureToken,
+  grid: MapGrid,
+  imageUrl: string | null = null,
+): BoardToken {
   return {
     id: token.id,
     kind: 'creature',
@@ -221,6 +228,6 @@ export function toBoardToken(token: LocalCreatureToken, grid: MapGrid): BoardTok
     size: token.size,
     colorIndex: null,
     version: 0,
-    imageUrl: null,
+    imageUrl,
   }
 }

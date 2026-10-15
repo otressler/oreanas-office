@@ -134,22 +134,23 @@ export function useTokenImages(campaignId: string, owner: TokenImageOwner, enabl
 
 /**
  * The picked icon of every creature type of the campaign, by type id, while online; an
- * empty map offline, while loading, or when the server doesn't know the campaign yet.
+ * empty map offline, while loading, without a campaign (null), or when the server doesn't
+ * know the campaign yet.
  */
-export function useCreatureIcons(campaignId: string): ReadonlyMap<string, CreatureTypeIcon> {
+export function useCreatureIcons(campaignId: string | null): ReadonlyMap<string, CreatureTypeIcon> {
   const online = useOnline()
   const query = useQuery({
-    queryKey: creatureIconsKey(campaignId),
+    queryKey: creatureIconsKey(campaignId ?? ''),
     queryFn: () =>
       unwrap(
         api.GET('/api/campaigns/{campaignId}/creature-types/icons', {
-          params: { path: { campaignId } },
+          params: { path: { campaignId: campaignId ?? '' } },
         }),
       ),
-    enabled: online,
+    enabled: online && campaignId !== null,
     select: iconsByType,
   })
-  return (online && query.data) || NO_ICONS
+  return (online && campaignId !== null && query.data) || NO_ICONS
 }
 
 const NO_ICONS: ReadonlyMap<string, CreatureTypeIcon> = new Map()

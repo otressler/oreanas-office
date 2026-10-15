@@ -1,9 +1,10 @@
 // Encounter mode as a page: the route, the header, the toolbar, undo and the autosave.
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { offlineDb } from '../../offline/db'
-import { mockApi, renderApp, testUser } from '../../test/api'
+import { json, mockApi, renderApp, testUser } from '../../test/api'
+import { forgetTokenPictures } from '../../board/tokenPictures'
 import { de } from '../../text/de'
 import { mapWith, roomCells } from '../features/fixtures'
 import { CAMPAIGN_ID, seedMap, seedOffline } from '../testing'
@@ -136,6 +137,41 @@ describe('encounter mode', () => {
     expect(toolNames()).toEqual([t.title])
     expect(screen.queryByRole('button', { name: de.editor.undo })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: de.editor.canvasLabel('Klamm') })).toBeInTheDocument()
+  })
+
+  it('loads the creature type’s picked icon for its tokens while online', async () => {
+    const images: { src: string }[] = []
+    vi.stubGlobal(
+      'Image',
+      class {
+        src = ''
+        decoding = ''
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        constructor() {
+          images.push(this)
+        }
+      },
+    )
+    forgetTokenPictures()
+    mockApi({
+      'GET /api/campaigns/:campaignId/creature-types/icons': json(200, [
+        { creatureTypeId: 'goblin', assetId: 'icon', url: '/api/assets/icon' },
+      ]),
+    })
+    const { map, encounter, db } = await seed()
+    await db.encounters.put({
+      ...encounter,
+      tokens: [
+        { ...goblin, id: 'a', label: 'Goblin 1', x: 1, y: 1 },
+        { ...goblin, id: 'b', label: 'Goblin 2', x: 2, y: 1 },
+      ],
+    })
+    renderApp(encounterEditorPath(CAMPAIGN_ID, map.id, encounter.id))
+    expect(await screen.findByLabelText(t.encounterName)).toBeInTheDocument()
+    // Both goblins share the one icon, loaded once.
+    await waitFor(() => expect(images.map((image) => image.src)).toEqual(['/api/assets/icon']))
+    forgetTokenPictures()
   })
 
   it('writes the last change when the page is left before the autosave fires', async () => {
