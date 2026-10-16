@@ -103,7 +103,7 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 33 | When does the phone vibrate? | Stage 9 | Once when the server has taken a move or an undo, twice when it rejects a move, only on the mover's device; a switch on the profile page, per device. iPhones and iPads can't vibrate from a web app at all |
 | 34 | Can the DM make a new creature type while spawning? ([creature spawn](/features/creature-spawn.md)) | Stage 10 | Yes, with only a name and a size; the icon and the rest follow in the bestiary |
 | 35 | May spawned creatures stand on other tokens? | Stage 10 | Yes, as a move's target may; the editor's rule without overlap stays for preparing |
-| 36 | How are creatures numbered under fog? ([fog of war](/features/fog-of-war.md), "Creature numbers") | Stage 10 | The project owner decided that numbers mustn't reveal unseen creatures. Proposal: a creature gets its number the first time players see it and keeps it for good; unseen creatures have no number, on the DM's device and in the editor too; renamed creatures take none |
+| 36 | How are creatures numbered under fog? ([fog of war](/features/fog-of-war.md), "Creature numbers") | Stage 10 | **Answered** on 2026-10-16: numbers mustn't reveal unseen creatures, and the proposal was confirmed: a creature gets its number the first time players see it and keeps it for good; unseen creatures have no number, on the DM's device and in the editor too; renamed creatures take none |
 
 # T0 — Image spike (parallel track)
 

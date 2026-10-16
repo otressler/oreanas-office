@@ -67,7 +67,7 @@ The setup screen shows the fog to the DM. Characters may be placed on hidden cel
 
 **Creature numbers**
 
-A label's number must not tell players how many creatures they haven't seen yet: if "Goblin 3" appears first, they know of two more. So in an encounter with fog, numbers follow what players have seen, not what the DM placed (decision 7, question 36):
+A label's number must not tell players how many creatures they haven't seen yet: if "Goblin 3" appears first, they know of two more. So in an encounter with fog, numbers follow what players have seen, not what the DM placed (decision 7):
 
 - **Numbered at first sight.** A creature gets its number the first time it becomes visible to players: the next number after the highest one of its type that players have seen in this encounter. The first goblin to appear is "Goblin 1", whichever of the prepared goblins it is.
 - **Kept for good.** A creature keeps its number when it is hidden again, moves into fog or is [removed](/features/removing-tokens.md), and shows with the same number when it comes back, so players recognise it. Numbers aren't reused.
@@ -130,7 +130,7 @@ The project owner confirmed all six on 2026-10-16.
 4. **Players moving into fog**: **Decided:** not allowed. Not chosen: allowed, and the move reveals nothing; the DM decides whether to reveal.
 5. **Monster spawn** ("three more goblins come through the door"), placing creatures that weren't prepared: **Decided:** stays in the [backlog](/backlog.md). Prepared ambushes are covered by hidden creatures. **Changed** later on 2026-10-16: the project owner moved it into stage 10 as [creature spawn](/features/creature-spawn.md), which can place creatures hidden.
 6. **Schedule**: **Decided:** fog of war, hidden creatures included, is stage 10, together with the [spectator view](/features/spectator-view.md) ([implementation plan](/implementation-plan.md)).
-7. **Numbers of unseen creatures**: the concept first accepted that a revealed "Goblin 3" tells players two more goblins may exist. **Changed** on 2026-10-16: the project owner decided that with fog on, numbers count only creatures players can see, and unseen ones give no hint of how many there are. How (numbered at first sight, kept for good, no number for unseen creatures on the DM's device either) is a proposal, question 36 in the [implementation plan](/implementation-plan.md).
+7. **Numbers of unseen creatures**: the concept first accepted that a revealed "Goblin 3" tells players two more goblins may exist. **Changed** on 2026-10-16: the project owner decided that with fog on, numbers count only creatures players can see, and unseen ones give no hint of how many there are. **Decided** the same day (question 36 in the [implementation plan](/implementation-plan.md)): numbered at first sight and kept for good; unseen creatures have no number on the DM's device either. Not chosen: a separate mark only the DM sees while a creature is unseen, since it would give one creature two names at the table.
 
 # Manual gate (proposal)
 
