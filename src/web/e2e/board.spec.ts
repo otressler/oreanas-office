@@ -52,15 +52,17 @@ test('the gorge crossing shows terrain, the bridge and tokens, and taps tell ele
   await shot(page, 'gorge-fit')
 
   // The menhir: a blocking feature on ground at 0 m.
+  // Stage 9: the fight page shows taps in the token card, a cell's as "Feld".
   await tapCell(page, 3, 2)
-  const info = page.getByRole('status')
+  const info = page.getByRole('region', { name: 'Feld' })
   await expect(info).toContainText('Menhir')
   await expect(info).toContainText('Höhe 0 m')
 
   // The ogre is Large and covers 2×2 from (16, 5): its lower right cell finds it too.
   await tapCell(page, 17, 6)
-  await expect(info).toContainText('Oger 1')
-  await expect(info).toContainText('Groß')
+  const card = page.getByRole('region', { name: 'Figurenkarte' })
+  await expect(card).toContainText('Oger 1')
+  await expect(card).toContainText('Groß')
   await shot(page, 'gorge-tap-ogre')
 })
 
@@ -73,7 +75,7 @@ test('the crypt shows elevation in German number format', async ({ page }) => {
 
   // The altar dais at 1.5 m, beside the altar.
   await tapCell(page, 11, 11)
-  await expect(page.getByRole('status')).toContainText('Höhe 1,5 m')
+  await expect(page.getByRole('region', { name: 'Feld' })).toContainText('Höhe 1,5 m')
 })
 
 test('zooming in keeps the board on screen and "Ganze Karte" fits it again', async ({ page }) => {

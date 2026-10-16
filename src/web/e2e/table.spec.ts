@@ -138,9 +138,12 @@ test('with reduced motion a move by someone else jumps', async ({ page }) => {
   const draws = await countTokenDraws(page)
 
   hub.move(setup.dm.id, setup.token('Goblin 1').id, 13, 4)
+  // Counted before the tap: opening the token card redraws the board a few times too.
+  await page.waitForTimeout(400)
+  const afterMove = await draws()
   await tapCell(page, 13, 4)
   await expect(tokenCard(page)).toContainText('Goblin 1')
-  expect(await draws()).toBeLessThanOrEqual(3)
+  expect(afterMove).toBeLessThanOrEqual(3)
 })
 
 test('the indicator shows a lost connection and moving is off until it is back', async ({
