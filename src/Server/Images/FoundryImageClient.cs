@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Azure.Core;
 using Microsoft.Extensions.Options;
 
 namespace OreanasOffice.Server.Images;
@@ -13,10 +14,14 @@ namespace OreanasOffice.Server.Images;
 // `image`; POST {Endpoint}/images/generations as JSON for text to image
 // (.claude/skills/image-assets/references/foundry-api.md). Both read data[0].b64_json and
 // `usage`. 429 → ImageRateLimitedException with the Retry-After wait; 400 →
-// ImageRejectedException. The API key goes only into the Authorization header.
-public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOptions> options) : IImageClient
+// ImageRejectedException. The Authorization header carries the API key when one is set,
+// else a Microsoft Entra token from the credential (the managed identity in production).
+public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOptions> options, TokenCredential credential) : IImageClient
 {
     public static readonly TimeSpan DefaultRetryAfter = TimeSpan.FromSeconds(30);
+
+    // Foundry's token audience; the identity needs the Cognitive Services OpenAI User role.
+    private static readonly TokenRequestContext TokenRequest = new(["https://cognitiveservices.azure.com/.default"]);
 
     private readonly HttpClient _http = http;
     private readonly ImageOptions _options = options.Value;
@@ -90,7 +95,7 @@ public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOp
     private async Task<ImageResult> SendAsync(string path, HttpContent content, string outputFormat, CancellationToken cancellationToken)
     {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"{_options.Endpoint!.TrimEnd('/')}/{path}") { Content = content };
-        message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
+        message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await BearerAsync(cancellationToken));
 
         using var response = await _http.SendAsync(message, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -112,6 +117,13 @@ public sealed partial class FoundryImageClient(HttpClient http, IOptions<ImageOp
 
         return Parse(body, outputFormat, RequestId(response));
     }
+
+    // The managed identity caches its token until shortly before it expires; locally,
+    // DefaultAzureCredential asks `az login` for each request, which the rate limit allows.
+    private async Task<string> BearerAsync(CancellationToken cancellationToken) =>
+        string.IsNullOrWhiteSpace(_options.ApiKey)
+            ? (await credential.GetTokenAsync(TokenRequest, cancellationToken)).Token
+            : _options.ApiKey;
 
     private static ImageResult Parse(string body, string requestedFormat, string? requestId)
     {

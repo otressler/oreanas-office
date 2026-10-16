@@ -60,10 +60,6 @@ param adminEmail string = ''
 @description('The Foundry image deployment\'s OpenAI v1 endpoint for map backgrounds. Empty turns generation off.')
 param imagesEndpoint string = ''
 
-@description('The Foundry image deployment\'s API key. Stored as a Container Apps secret.')
-@secure()
-param imagesApiKey string = ''
-
 @description('The image deployment\'s name, for example gpt-image-2.5-sunburst.')
 param imagesDeployment string = ''
 
@@ -123,7 +119,6 @@ module app 'modules/app.bicep' = {
     googleClientSecret: googleClientSecret
     adminEmail: adminEmail
     imagesEndpoint: imagesEndpoint
-    imagesApiKey: imagesApiKey
     imagesDeployment: imagesDeployment
   }
 }

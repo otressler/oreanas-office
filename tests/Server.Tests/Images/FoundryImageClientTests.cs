@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Azure.Core;
 using Microsoft.Extensions.Options;
 using OreanasOffice.Server.Images;
 
@@ -203,13 +204,54 @@ public sealed class FoundryImageClientTests
         Assert.DoesNotContain("background", Assert.Single(handler.Requests).Fields.Keys);
     }
 
-    private static FoundryImageClient Client(Handler handler, string endpoint = "https://foundry.test/openai/v1") =>
+    [Fact]
+    public async Task Without_an_api_key_it_sends_an_entra_token_for_foundry()
+    {
+        var handler = new Handler(_ => Json(HttpStatusCode.OK, $$"""{ "data": [{ "b64_json": "{{Convert.ToBase64String(Picture)}}" }] }"""));
+        var credential = new FakeCredential("entra-token");
+
+        await Client(handler, apiKey: null, credential: credential).EditAsync(Request, CancellationToken.None);
+
+        Assert.Equal("Bearer entra-token", Assert.Single(handler.Requests).Authorization);
+        Assert.Equal(["https://cognitiveservices.azure.com/.default"], Assert.Single(credential.Scopes));
+    }
+
+    [Fact]
+    public async Task With_an_api_key_it_asks_no_credential()
+    {
+        var handler = new Handler(_ => Json(HttpStatusCode.OK, $$"""{ "data": [{ "b64_json": "{{Convert.ToBase64String(Picture)}}" }] }"""));
+        var credential = new FakeCredential("entra-token");
+
+        await Client(handler, credential: credential).EditAsync(Request, CancellationToken.None);
+
+        Assert.Empty(credential.Scopes);
+    }
+
+    private static FoundryImageClient Client(
+        Handler handler,
+        string endpoint = "https://foundry.test/openai/v1",
+        string? apiKey = "secret-key",
+        TokenCredential? credential = null) =>
         new(new HttpClient(handler), Options.Create(new ImageOptions
         {
             Endpoint = endpoint,
-            ApiKey = "secret-key",
+            ApiKey = apiKey,
             Deployment = "gpt-image-test",
-        }));
+        }), credential ?? new FakeCredential("unused"));
+
+    private sealed class FakeCredential(string token) : TokenCredential
+    {
+        public List<string[]> Scopes { get; } = [];
+
+        public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
+        {
+            Scopes.Add(requestContext.Scopes);
+            return new AccessToken(token, DateTimeOffset.UtcNow.AddHours(1));
+        }
+
+        public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
+            ValueTask.FromResult(GetToken(requestContext, cancellationToken));
+    }
 
     private static HttpResponseMessage Json(HttpStatusCode status, string body, params (string Name, string Value)[] headers)
     {
