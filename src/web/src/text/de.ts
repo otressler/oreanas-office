@@ -647,10 +647,29 @@ export const de = {
   },
 
   /** Pings and arrows on the board (stage 9, lane: board renderer). */
-  pings: {},
+  pings: {
+    /** Shown at the bottom of the board the first time on a device, until closed or used. */
+    hint: 'Doppeltippen: zeigen · Doppeltippen und ziehen: Pfeil',
+    closeHint: 'Hinweis schließen',
+    /** The person's own name on their pings when the board doesn't list them. */
+    me: 'Ich',
+    /** A marker at the screen's edge for a ping out of view; tapping it pans there. */
+    marker: (name: string) => `Zur Markierung von ${name}`,
+    /** Read out by screen readers as pings arrive. */
+    announceCell: (name: string) => `${name} zeigt auf ein Feld`,
+    announceToken: (name: string, label: string) => `${name} zeigt auf ${label}`,
+    announceArrow: (name: string) => `${name} zeigt einen Weg`,
+  },
 
   /** "Meine Figur" and the "Vibrieren" switch (stage 9, lane: board renderer). */
-  playerExtras: {},
+  playerExtras: {
+    myCharacter: 'Meine Figur',
+    /** The button is off: none of the person's characters is on the board. */
+    notOnBoard: 'Deine Figur ist nicht in diesem Kampf',
+    vibrateTitle: 'Vibrieren',
+    vibrate: 'Kurz vibrieren, wenn ein Zug angekommen ist',
+    vibrateHint: 'Gilt nur für dieses Gerät.',
+  },
 
   /** The map editor's frame (src/editor). */
   editor: {

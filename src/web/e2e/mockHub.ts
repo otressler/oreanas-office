@@ -156,6 +156,11 @@ export class MockHub {
       case 'ClearPreview':
       case 'MarkActive':
         break
+      // Pings and arrows (stage 9, board lane): relayed to the others, never saved.
+      case 'Ping':
+      case 'DrawArrow':
+        result = this.relayPing(client, userId, message.target, args[0] as Record<string, unknown>)
+        break
       default:
         throw new Error(`Unknown hub method ${message.target}`)
     }
@@ -166,6 +171,33 @@ export class MockHub {
         ? { type: 3, invocationId: message.invocationId }
         : { type: 3, invocationId: message.invocationId, result },
     )
+  }
+
+  /**
+   * Ping and DrawArrow: to every other device joined to the encounter as Pinged or
+   * ArrowDrawn, in the sender's colour from the mock board's people (white without one).
+   */
+  private relayPing(
+    sender: Client,
+    userId: string | null,
+    method: 'Ping' | 'DrawArrow',
+    request: Record<string, unknown>,
+  ): S['HubResult'] {
+    const encounterId = String(request.encounterId)
+    if (!userId || sender.encounterId !== encounterId) return { error: 'encounterNotActive' }
+    const encounter = this.backend.encounters.find((e) => e.id === encounterId)
+    const people = encounter
+      ? (this.backend['boardResponse'](encounter, userId) as S['BoardStateResponse']).people
+      : []
+    const color = people.find((p) => p.userId === userId)?.pingColor ?? '#ffffff'
+    const event = { ...request, userId, color }
+    const target = method === 'Ping' ? 'Pinged' : 'ArrowDrawn'
+    for (const client of this.clients) {
+      if (client !== sender && client.encounterId === encounterId) {
+        this.send(client, { type: 1, target, arguments: [event] })
+      }
+    }
+    return { error: null }
   }
 
   private broadcast(move: S['TokenMovedEvent']) {
