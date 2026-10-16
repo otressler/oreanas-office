@@ -19,5 +19,6 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 # Notes
 
 - Leaving a campaign and removing members aren't supported yet.
+- Any member can turn a device into a session's spectator screen; people outside the campaign watch through a session spectator entry instead of a membership ([session](/domain/session.md), [spectator view](/features/spectator-view.md), stage 10). Later (stage 9): each `dm` member has their own status list ([statuses](/features/statuses.md)).
 - The campaign's default DM always has `role: dm`.
 - Who runs a specific night is stored on the [session](/domain/session.md) (`dmUserId`), so a `dm` member can hand over to another `dm` member for one session.

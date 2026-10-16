@@ -19,10 +19,12 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `appearance` | text, nullable | Short visual description that feeds the portrait prompt, as on a [creature type](/domain/creature-type.md) |
 | `tokenAssetId` | → [Asset](/domain/asset.md), nullable | The picked portrait version: generated, uploaded or restyled from an upload ([token icons](/features/token-icons.md)) |
 
+Later (stage 9): a status list, the list of statuses its player picks from ([statuses](/features/statuses.md), [status](/domain/status.md)).
+
 # Permissions
 
 A player creates and edits their own characters. Every `dm` member of the campaign can edit any character in it ([campaign member](/domain/campaign-member.md)). Whoever can edit a character can also upload, generate and pick its portrait; generating counts against the site-wide [image budget](/decisions/image-budget.md).
 
 # Notes
 
-Deliberately thin: only what the board needs. Speed is out until the [distance rules](/backlog.md) come back (project owner, 2026-10-14). Full character sheets are a possible [campaign manager](/roadmap.md) feature, not part of the battle map app.
+Deliberately thin: only what the board needs. Speed is out until the [distance rules](/backlog.md) come back (project owner, 2026-10-14). Full character sheets are part of the campaign management focus area in the [backlog](/backlog.md).

@@ -16,7 +16,7 @@ The project owner chose on 2026-10-10 to keep the app's spec (domain, features, 
 
 - Claude sessions read the relevant concepts before implementing; the project `CLAUDE.md` says so.
 - Decisions change here first, with an entry in the [update log](/log.md).
-- When the app grows into a campaign manager, new topics get new folders ([roadmap](/roadmap.md)).
+- When the app grows into a campaign suite, new topics get new folders ([roadmap](/roadmap.md)).
 
 # Not decided
 

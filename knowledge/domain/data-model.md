@@ -24,6 +24,8 @@ erDiagram
     CAMPAIGN ||--o{ CREATURE_TYPE : "bestiary"
     CAMPAIGN ||--o{ BATTLE_MAP : "has"
     SESSION ||--o{ ENCOUNTER : "plans and runs"
+    SESSION ||--o{ SESSION_SPECTATOR : "watched by"
+    USER ||--o{ SESSION_SPECTATOR : "watches"
     BATTLE_MAP ||--o{ ENCOUNTER : "used by"
     BATTLE_MAP |o--o{ BATTLE_MAP : "copied from"
     ENCOUNTER ||--o{ TOKEN : "places"
@@ -32,11 +34,16 @@ erDiagram
     BATTLE_MAP |o--o{ ASSET : "backgrounds"
     ENCOUNTER }o--o| ASSET : "background at start"
     CREATURE_TYPE |o--o| ASSET : "icon"
+    TOKEN ||--o{ TOKEN_STATUS : "carries"
+    STATUS ||--o{ TOKEN_STATUS : "set as"
+    STATUS ||--o{ STATUS_LIST_ENTRY : "listed in"
+    CHARACTER |o--o{ STATUS_LIST_ENTRY : "status list"
+    CAMPAIGN_MEMBER |o--o{ STATUS_LIST_ENTRY : "DM status list"
 ```
 
 # Entities
 
-[User](/domain/user.md), [Registration invite](/domain/registration-invite.md), [Campaign](/domain/campaign.md), [Campaign member](/domain/campaign-member.md), [Character](/domain/character.md), [Session](/domain/session.md), [Encounter](/domain/encounter.md), [Battle map](/domain/battle-map.md), [Creature type](/domain/creature-type.md), [Token](/domain/token.md), [Asset](/domain/asset.md).
+[User](/domain/user.md), [Registration invite](/domain/registration-invite.md), [Campaign](/domain/campaign.md), [Campaign member](/domain/campaign-member.md), [Character](/domain/character.md), [Session](/domain/session.md), [Encounter](/domain/encounter.md), [Battle map](/domain/battle-map.md), [Creature type](/domain/creature-type.md), [Token](/domain/token.md), [Asset](/domain/asset.md), [Status](/domain/status.md) (stage 9, not built yet).
 
 # "Only one active" rules
 

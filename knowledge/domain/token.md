@@ -20,7 +20,8 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T07:50:00Z }
 | `label` | string | e.g. "Goblin 3". Numbered automatically per creature type within the encounter: the next number after the highest one, so a removed "Goblin 2" isn't reused. The DM can rename any label |
 | `x`, `y` | int, cells | Top-left cell of the footprint |
 | `elevation` | decimal, meters | Defaults to the cell's elevation. Changeable for flying or climbing |
-| `hidden` | bool | Later: visible only to the DM until revealed |
+| `hidden` | bool | Later: visible only to the session DM until revealed ([fog of war](/features/fog-of-war.md)) |
+| `removedAt`, `removedByUserId` | timestamp, → [User](/domain/user.md); nullable | Later (stage 9): set when the session DM takes the token off the board. It disappears from every board but is kept, and can be brought back ([removing tokens](/features/removing-tokens.md)) |
 
 The image comes from the linked character or creature type: always its currently picked version, also in a running fight. A changed image shows the next time a board loads ([token icons](/features/token-icons.md)). On the board, a character's token has a ring in a fixed colour picked by the order characters were added to the campaign; creatures share one red ring. Until images arrive, a token shows the first letter of its label. Creatures that share a letter show it with a number instead (S1, S2, S3), counted in the natural order of their labels, so "Goblin 1" and "Goblin 2" become G1 and G2. Characters keep the plain letter; their ring colours tell them apart. Each player sees their own characters drawn on top of any other token.
 
@@ -38,4 +39,4 @@ Every move is recorded as `{ tokenId, from, to, byUserId, at, version }`, positi
 
 # Later
 
-HP, conditions and the hidden flag are phase 4 ([roadmap](/roadmap.md)).
+Statuses and removing tokens come in stage 9 ([statuses](/features/statuses.md), [status](/domain/status.md), [removing tokens](/features/removing-tokens.md)), the hidden flag in stage 10 ([fog of war](/features/fog-of-war.md)). HP is in the [backlog](/backlog.md).

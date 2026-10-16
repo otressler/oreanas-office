@@ -33,10 +33,11 @@ Each player uses their own device, sees the current board and moves their charac
 
 # Nice to have (phase 4)
 
-- Ruler between any two points, for ranged attacks.
-- Area templates: cone, sphere, line, cube.
-- Ping: tap and hold to flash a spot for everyone.
-- Hidden tokens the DM reveals later.
+- Ruler between any two points, for ranged attacks, and area templates (cone, sphere, line, cube): moved to the [backlog](/backlog.md) on 2026-10-16.
+- The session DM takes tokens off the board, stage 9 ([removing tokens](/features/removing-tokens.md)).
+- Pings and arrows, stage 9 ([pings and arrows](/features/pings-and-arrows.md)).
+- A card with portrait, name and statuses on a tap, replacing the info box, stage 9 ([token card](/features/token-card.md), [statuses](/features/statuses.md)).
+- Hidden tokens and map areas the DM reveals later, stage 10 ([fog of war](/features/fog-of-war.md)).
 
 # Not included
 

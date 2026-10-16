@@ -275,19 +275,23 @@ export const de = {
         stages: [
           {
             number: 9,
-            title: 'Messen',
+            title: 'Zeigen, Figurenkarte und Zustände',
             items: [
-              'Ein Lineal zwischen zwei Punkten, in Metern.',
-              'Flächen für Zauber: Kegel, Kugel, Linie und Würfel.',
+              'Doppeltippen lässt ein Feld oder eine Figur auf allen Bildschirmen aufleuchten, Doppeltippen und Ziehen zeichnet einen Pfeil.',
+              'Ein Tipp auf eine Figur zeigt eine Karte mit Bild, Name und Zuständen, bei einem Stapel alle Figuren darin.',
+              'Zustände wie Liegend oder Vergiftet an Figuren, mit eigenen Symbolen.',
+              'Eigene Zustände anlegen und ihr Symbol im gleichen Stil malen lassen.',
+              'Die Spielleitung nimmt besiegte Figuren vom Feld und kann sie zurückholen.',
             ],
           },
           {
             number: 10,
-            title: 'Spielleitung am Tisch',
+            title: 'Nebel und Zuschaueransicht',
             items: [
-              'Ping: Lange drücken lässt die Stelle auf allen Bildschirmen aufleuchten.',
-              'Verborgene Figuren, die nur die Spielleitung sieht, bis sie sie aufdeckt.',
-              'Trefferpunkte und Zustände.',
+              'Die Spielleitung verdeckt Teile der Karte und deckt sie im Kampf nach und nach auf.',
+              'Verborgene Kreaturen, die nur die Spielleitung sieht, bis sie sie aufdeckt.',
+              'Ein Tablet in der Tischmitte zeigt die Karte für alle und folgt den Kämpfen von selbst.',
+              'Beitreten per QR-Code, zum Mitspielen oder Zuschauen.',
             ],
           },
         ],
@@ -300,18 +304,18 @@ export const de = {
         {
           title: 'Gemeinsamer Tisch',
           items: [
-            'Ein Gerät in der Tischmitte zeigt die Karte für alle.',
-            'Beitreten per QR-Code.',
             'Sehen, wer gerade dabei ist.',
+            'Alle Charaktere vom Bildschirm in der Tischmitte aus ziehen.',
           ],
         },
         {
           title: 'Mehr auf dem Spielfeld',
           items: [
             'Laufwege und Reichweite beim Ziehen.',
-            'Freihand zeichnen, Statusringe an Figuren und auf Feldern.',
-            'Teile der Karte nach und nach aufdecken.',
-            'Kreaturen mitten im Kampf auftauchen lassen und Figuren vom Feld nehmen.',
+            'Ein Lineal in Metern und Flächen für Zauber: Kegel, Kugel, Linie und Würfel.',
+            'Freihand zeichnen, Zustände auf Feldern.',
+            'Trefferpunkte.',
+            'Kreaturen mitten im Kampf auftauchen lassen.',
           ],
         },
         {
@@ -327,11 +331,20 @@ export const de = {
           ],
         },
         {
+          title: 'Spielen aus der Ferne',
+          items: [
+            'Würfeln für alle sichtbar, die Spielleitung auch verdeckt.',
+            'Die Spielleitung schickt Bilder an alle oder an einzelne Spielende.',
+          ],
+        },
+        {
           title: 'Kampagnenverwaltung',
           items: [
-            'NPCs, Orte und Fraktionen.',
-            'Sitzungsnotizen.',
-            'Mehr zu den Charakteren als nur ihre Figur.',
+            'Charakterbögen, die mehr können als nur eine Figur.',
+            'Eigene und gemeinsame Notizen.',
+            'Gegenstände und das Inventar jedes Charakters.',
+            'Ein Wissensarchiv mit NPCs, Orten, Fraktionen und Aufträgen, das die Spielleitung nach und nach freigibt.',
+            'Rückblicke auf jede Sitzung.',
           ],
         },
       ],
