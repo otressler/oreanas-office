@@ -9,19 +9,24 @@ import { de } from '../text/de'
 
 const t = de.tokenImages
 
-/** What is confirmed: a creature icon, a portrait, or an upload painted in the token style. */
-export type TokenJob = 'icon' | 'portrait' | 'restyle'
+/**
+ * What is confirmed: a creature icon, a portrait, an upload painted in the token style, or
+ * a custom status's icon (stage 9).
+ */
+export type TokenJob = 'icon' | 'portrait' | 'restyle' | 'statusIcon'
 
 const titles: Record<TokenJob, string> = {
   icon: t.confirm.iconTitle,
   portrait: t.confirm.portraitTitle,
   restyle: t.confirm.restyleTitle,
+  statusIcon: de.statuses.icon.confirmTitle,
 }
 
 const sources: Record<TokenJob, string> = {
   icon: t.confirm.iconFrom,
   portrait: t.confirm.portraitFrom,
   restyle: t.confirm.restyleFrom,
+  statusIcon: de.statuses.icon.confirmFrom,
 }
 
 export function ConfirmDialog({

@@ -1,13 +1,17 @@
-// Phone controls for moving tokens (knowledge/features/playable-map.md, "Phone
-// controls"): tap a token to select it, tap a cell to see it there as a preview, tap
-// the preview again to confirm. While a token is selected, every other tap picks a
-// target, even on another token. Tokens may stack: a tap selects the person's topmost
-// token there, and tapping the selected token again takes their next one in the stack,
-// then lets go after the last. Pure functions; the fight page keeps the state and
-// sends the confirmed move. Who may move what follows knowledge/domain/token.md, where
-// a token may stand follows knowledge/decisions/realtime-sync.md: the whole footprint
-// inside the map on walkable cells (a bridge counts), overlapping tokens allowed.
-// No distance, path or reach (dropped from the proof of concept).
+// Phone controls for moving tokens and the token card (knowledge/features/playable-map.md,
+// "Phone controls"; knowledge/features/token-card.md, "Taps on the board"). One sentence
+// for a single tap: a tap on a token opens its card, and if the person may move the
+// token, the same tap selects it. Then a tap on a cell shows the token there as a
+// preview, and tapping the preview again confirms. While a token is selected, every other
+// tap picks a target, even on another token. Tokens may stack: a tap selects the person's
+// own topmost token there, and tapping the selected token again lets it go (the card's
+// rows pick another token of the stack). A tap on an empty cell closes an open card, or
+// with none open shows the cell's terrain and elevation in its place. Pure functions; the
+// fight page keeps the state and sends the confirmed move. Who may move what follows
+// knowledge/domain/token.md, where a token may stand follows
+// knowledge/decisions/realtime-sync.md: the whole footprint inside the map on walkable
+// cells (a bridge counts), overlapping tokens allowed. No distance, path or reach
+// (dropped from the proof of concept).
 import type { BoardState, BoardToken, CreatureSize } from '../api/types'
 import {
   footprint,
@@ -24,6 +28,13 @@ export type Controls =
   | { mode: 'preview'; tokenId: string; target: GridPoint }
 
 export const IDLE: Controls = { mode: 'idle' }
+
+/**
+ * What the token card shows (knowledge/features/token-card.md): a token, with the cell
+ * that was tapped (a stack lists every token there), or a cell's terrain and elevation.
+ */
+export type Card =
+  { kind: 'token'; tokenId: string; cell: GridPoint } | { kind: 'cell'; cell: GridPoint }
 
 /** A confirmed move: the token's new top-left cell. */
 export interface MoveIntent {
@@ -44,12 +55,14 @@ export interface TapContext {
   canMove: (token: BoardToken) => boolean
   /** Moving is on: the table is connected and the fight running. */
   enabled: boolean
+  /** What the card shows before the tap; nothing when it is closed. */
+  card?: Card | null
 }
 
 export interface TapResult {
   controls: Controls
-  /** The controls had nothing to do with the tap: the board shows its info box. */
-  info?: boolean
+  /** What the card shows after the tap; null closes it. */
+  card: Card | null
   /** A short hint to show: the target doesn't fit, or moving is off right now. */
   hint?: 'invalidTarget' | 'movingOff'
   /** The person confirmed the preview. */
@@ -101,14 +114,14 @@ export function chooseTarget(grid: MapGrid, size: CreatureSize, cell: GridPoint)
 }
 
 /** Whether the cell lies under the token's footprint with its top-left corner at `at`. */
-function covers(size: CreatureSize, at: GridPoint, cell: GridPoint): boolean {
+export function covers(size: CreatureSize, at: GridPoint, cell: GridPoint): boolean {
   const n = footprint(size)
   return cell.x >= at.x && cell.y >= at.y && cell.x < at.x + n && cell.y < at.y + n
 }
 
 /**
  * The controls as they apply now: back to idle when moving is off or the selected
- * token is gone (the fight reloaded without it).
+ * token is gone (the fight reloaded without it, or it was taken off the board).
  */
 export function currentControls(
   controls: Controls,
@@ -122,22 +135,19 @@ export function currentControls(
 
 /** What a tap on the board does. */
 export function tapBoard(controls: Controls, tap: Tap, context: TapContext): TapResult {
-  const { tokens, grid, canMove, enabled } = context
+  const { tokens, grid, canMove, enabled, card = null } = context
   const current = currentControls(controls, tokens, enabled)
-  // The person's tokens on the tapped cell, top first as drawn without a selection: in a
-  // stack, theirs may lie under a creature or someone else's character.
-  const movable = tokensAt(tokens, tap.cell).filter(canMove)
-
-  if (!enabled) {
-    return movable.length > 0
-      ? { controls: IDLE, info: true, hint: 'movingOff' }
-      : { controls: IDLE, info: true }
-  }
 
   if (current.mode === 'idle') {
-    return movable[0]
-      ? { controls: { mode: 'selected', tokenId: movable[0].id } }
-      : { controls: current, info: true }
+    if (!tap.token) return { controls: current, card: cellCard(card, tap.cell) }
+    // The person's tokens on the tapped cell, top first as drawn without a selection: in
+    // a stack, theirs may lie under a creature or someone else's character. The card
+    // opens on the token the tap acts on: their own topmost, else the one on top.
+    const own = tokensAt(tokens, tap.cell).find(canMove)
+    const shown: Card = { kind: 'token', tokenId: (own ?? tap.token).id, cell: tap.cell }
+    if (!own) return { controls: current, card: shown }
+    if (!enabled) return { controls: current, card: shown, hint: 'movingOff' }
+    return { controls: { mode: 'selected', tokenId: own.id }, card: shown }
   }
 
   const selected = tokens.find((token) => token.id === current.tokenId)!
@@ -145,21 +155,48 @@ export function tapBoard(controls: Controls, tap: Tap, context: TapContext): Tap
   if (current.mode === 'preview' && covers(selected.size, current.target, tap.cell)) {
     return {
       controls: IDLE,
+      card,
       confirm: { tokenId: selected.id, x: current.target.x, y: current.target.y },
     }
   }
-  // The selected token again: the person's next token in the stack, or let go.
+  // The selected token again: let go. Its card stays.
   if (covers(selected.size, selected, tap.cell)) {
-    const next = movable[movable.findIndex((token) => token.id === selected.id) + 1]
-    return { controls: next ? { mode: 'selected', tokenId: next.id } : IDLE }
+    return { controls: IDLE, card: { kind: 'token', tokenId: selected.id, cell: tap.cell } }
   }
 
   // Any other cell is a target, also one with another token on it: tokens may overlap,
   // and the session DM, who may move every token, must be able to stack them too. To
-  // take another token, let go of this one first.
+  // take another token, let go of this one first, or pick it in the card's stack.
   const target = chooseTarget(grid, selected.size, tap.cell)
-  if (!target) return { controls: current, hint: 'invalidTarget' }
-  return { controls: { mode: 'preview', tokenId: selected.id, target } }
+  if (!target) return { controls: current, card, hint: 'invalidTarget' }
+  return { controls: { mode: 'preview', tokenId: selected.id, target }, card }
+}
+
+/**
+ * A tap on an empty cell with nothing selected: an open token card closes; otherwise the
+ * cell's terrain shows, and a second tap on the same cell closes it again.
+ */
+function cellCard(card: Card | null, cell: GridPoint): Card | null {
+  if (card?.kind === 'token') return null
+  if (card?.kind === 'cell' && card.cell.x === cell.x && card.cell.y === cell.y) return null
+  return { kind: 'cell', cell: { x: cell.x, y: cell.y } }
+}
+
+/**
+ * A row of the card's stack picked: a token the person may move becomes the selected one,
+ * as if tapped on the board (a preview of another token goes); any other token only shows
+ * its details in the card, and the selection stays.
+ */
+export function pickRow(
+  controls: Controls,
+  token: BoardToken,
+  cell: GridPoint,
+  context: Pick<TapContext, 'canMove' | 'enabled'>,
+): { controls: Controls; card: Card } {
+  const card: Card = { kind: 'token', tokenId: token.id, cell }
+  if (!context.enabled || !context.canMove(token)) return { controls, card }
+  if (controls.mode !== 'idle' && controls.tokenId === token.id) return { controls, card }
+  return { controls: { mode: 'selected', tokenId: token.id }, card }
 }
 
 /** The "Hierhin" button: confirms the preview. */

@@ -1608,10 +1608,130 @@ export const de = {
       stunned: 'Betäubt',
       unconscious: 'Bewusstlos',
     } as Record<string, string>,
+    /** A status's level, e.g. "Stufe 2". */
+    level: (level: number) => `Stufe ${level}`,
+    /** A status with its level, e.g. "Erschöpfung 2". */
+    withLevel: (name: string, level: number) => `${name} ${level}`,
+    /** Who put a status on, e.g. "von Eli". */
+    appliedBy: (name: string) => `von ${name}`,
+    /** Someone who isn't (any more) in the campaign. */
+    someone: 'jemandem',
+    /** The status picker on the token card (knowledge/features/statuses.md, "What the picker shows"). */
+    picker: {
+      title: (label: string) => `Zustand für ${label}`,
+      dmList: 'Deine Zustandsliste (Spielleitung)',
+      characterList: (name: string) => `Zustandsliste von ${name}`,
+      noLists:
+        'Du hast keinen Charakter in diesem Kampf und damit keine Zustandsliste. Die Spielleitung kann Zustände setzen.',
+      emptyList: 'In dieser Zustandsliste steht nichts.',
+      loadFailed: 'Die Zustandslisten ließen sich nicht laden.',
+      /** A status the token already has, next to its name. */
+      set: 'gesetzt',
+      /** Accessible name of a status button: adds it, or takes it off when it is set. */
+      add: (name: string) => `${name} setzen`,
+      remove: (name: string) => `${name} entfernen`,
+      help: 'Tippe auf einen Zustand, um ihn zu setzen. Ein gesetzter Zustand geht mit einem zweiten Tippen wieder weg, wenn du ihn gesetzt hast.',
+      done: 'Fertig',
+    },
+    /** The status list editor on a character and for the DM (knowledge/features/statuses.md, "Status lists"). */
+    list: {
+      title: 'Zustandsliste',
+      dmTitle: 'Meine Zustandsliste (Spielleitung)',
+      help: 'Aus dieser Liste wählt man im Kampf die Zustände für die Figur aus.',
+      dmHelp:
+        'Aus dieser Liste wählst du im Kampf als Spielleitung Zustände aus, vor den Listen der Charaktere. Sie gehört dir, in dieser Kampagne.',
+      /** The toggle on a character's row, e.g. "Zustandsliste von Brom". */
+      show: (name: string) => `Zustandsliste von ${name}`,
+      showDm: 'Zustandsliste zeigen',
+      hide: 'Zuklappen',
+      offline: 'Zustandslisten brauchen eine Verbindung: zum Ansehen und zum Ändern.',
+      loadFailed: 'Die Zustandsliste ließ sich nicht laden.',
+      empty: 'Die Liste ist leer.',
+      readOnly: 'Ändern können sie die Person, der der Charakter gehört, und die Spielleitung.',
+      moveUp: (name: string) => `${name} nach oben`,
+      moveDown: (name: string) => `${name} nach unten`,
+      remove: (name: string) => `${name} aus der Liste nehmen`,
+      addLabel: 'Zustand in die Liste',
+      add: 'Hinzufügen',
+      allListed: 'Alle Zustände der Kampagne stehen schon in der Liste.',
+      custom: 'eigener',
+      levels: 'mit Stufen',
+      /** Shows a custom status's icon gallery, e.g. "Symbol von Verhext". */
+      icon: (name: string) => `Symbol von ${name}`,
+    },
+    /** "Eigener Zustand": a custom status, added to the list it is made in. */
+    custom: {
+      open: 'Eigener Zustand',
+      title: 'Eigener Zustand',
+      name: 'Name',
+      iconDescription: 'Was das Symbol zeigen soll',
+      iconHint: 'Kurz, etwa „ein lila Auge in einer Hand“. Daraus wird das Symbol gemalt.',
+      hasLevels: 'hat Stufen (1 bis 6)',
+      create: 'Anlegen',
+      created: (name: string) =>
+        `„${name}“ steht jetzt in der Liste. Das Symbol lässt sich unten erzeugen.`,
+    },
+    /** A custom status's icon gallery (knowledge/features/token-icons.md, the same style). */
+    icon: {
+      title: 'Symbol',
+      help: 'Das Symbol wird im selben Stil wie die anderen Zustände gemalt. Ohne Symbol zeigt der Zustand seinen Anfangsbuchstaben.',
+      generate: 'Symbol erzeugen',
+      regenerate: 'Neues Symbol erzeugen',
+      confirmTitle: 'Symbol erzeugen?',
+      confirmFrom:
+        'Das Bildmodell malt das Symbol aus dem Namen und der Beschreibung des Zustands.',
+    },
   },
 
   /** The token card, removing tokens and their lists (stage 9, lane: card and status lists). */
-  tokenCard: {},
+  tokenCard: {
+    /** The card's accessible name. */
+    label: 'Figurenkarte',
+    /** The card's accessible name when it shows a cell. */
+    cellLabel: 'Feld',
+    fold: 'Karte einklappen',
+    unfold: 'Karte aufklappen',
+    close: 'Karte schließen',
+    /** Under a character's label, e.g. "Charakter von Eli". */
+    characterOf: (name: string) => `Charakter von ${name}`,
+    /** Under a creature's label; the board state doesn't carry the creature type's name. */
+    creature: 'Kreatur',
+    /** The picture's alt text, e.g. "Bild: Goblin 3". */
+    pictureAlt: (label: string) => `Bild: ${label}`,
+    statuses: 'Zustände',
+    noStatuses: 'Keine Zustände.',
+    addStatus: 'Status hinzufügen',
+    show: 'Zeigen',
+    remove: 'Vom Feld nehmen',
+    /** On a stack row, e.g. "Goblin 3 vom Feld nehmen". */
+    removeRow: (label: string) => `${label} vom Feld nehmen`,
+    /** The options of a status the person may change. */
+    statusRemove: 'Entfernen',
+    levelDown: (name: string) => `${name}: Stufe senken`,
+    levelUp: (name: string) => `${name}: Stufe erhöhen`,
+    /** A stack: how many tokens share the tapped cell. */
+    stack: (count: number) => `${count} Figuren auf diesem Feld`,
+    /** A stack row's accessible name: "Goblin 3 auswählen" or "Goblin 3 ansehen". */
+    selectRow: (label: string) => `${label} auswählen`,
+    viewRow: (label: string) => `${label} ansehen`,
+    /** Next to the selected token's row. */
+    selectedMark: 'ausgewählt',
+    needsConnection: 'Dafür braucht es eine Verbindung zum Tisch.',
+    statusFailed: 'Der Zustand ist nicht angekommen. Versuch es bitte noch einmal.',
+    removeFailed: 'Das Wegnehmen ist nicht angekommen. Versuch es bitte noch einmal.',
+    restoreFailed: 'Das Zurückholen ist nicht angekommen. Versuch es bitte noch einmal.',
+    /** The undo bar after removing (knowledge/features/removing-tokens.md). */
+    removed: (label: string) => `${label} vom Feld genommen`,
+    undo: 'Rückgängig',
+    /** The DM's list of removed tokens, in the fight's top bar. */
+    removedList: 'Vom Feld genommen',
+    removedListCount: (count: number) => `Vom Feld genommen (${count})`,
+    restore: 'Zurückholen',
+    /** A removed token's accessible restore name, e.g. "Goblin 3 zurückholen". */
+    restoreRow: (label: string) => `${label} zurückholen`,
+    /** When a token was taken off, e.g. "um 20:15". */
+    removedAt: (time: string) => `um ${time}`,
+  },
 
   /** Failures without an error code. */
   requestErrors: {

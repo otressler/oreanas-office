@@ -72,6 +72,7 @@ const cell = (x: number, y: number) => screen.getByRole('button', { name: `Feld 
 const tokenText = (label: string) =>
   within(screen.getByRole('list', { name: 'Figuren' })).getByText(new RegExp(`^Figur ${label} `))
 const indicator = () => screen.getByTestId('connection-indicator')
+const card = () => screen.getByRole('region', { name: de.tokenCard.label })
 
 /** Until the table has joined the encounter. */
 async function connected() {
@@ -299,12 +300,13 @@ describe('EncounterPage', () => {
     expect(hub.calls('MoveToken')).toHaveLength(0)
   })
 
-  it('shows info for tokens the person can’t move, and takes their cell as a target', async () => {
+  it('shows the card of tokens the person can’t move, and takes their cell as a target', async () => {
     const { user } = openFight()
     await connected()
 
     await user.click(cell(3, 0)) // the goblin
-    expect(screen.getByText('Info Goblin 1')).toBeInTheDocument()
+    expect(within(card()).getByRole('heading', { name: 'Goblin 1' })).toBeInTheDocument()
+    expect(screen.queryByText(/^Info/)).not.toBeInTheDocument()
     expect(screen.queryByText(/^Ausgewählt/)).not.toBeInTheDocument()
 
     await user.click(cell(0, 0))

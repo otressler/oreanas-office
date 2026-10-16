@@ -8,7 +8,9 @@ import {
   confirmPreview,
   currentControls,
   ownTokensOnTop,
+  pickRow,
   tapBoard,
+  type Card,
   type Controls,
   type TapContext,
 } from './controls'
@@ -142,24 +144,62 @@ describe('chooseTarget', () => {
 })
 
 describe('tapBoard', () => {
-  it('selects a token the person may move, and shows info for anything else', () => {
+  const heroCard: Card = { kind: 'token', tokenId: 'hero', cell: { x: 0, y: 0 } }
+
+  it('opens the card and selects a token the person may move', () => {
     expect(tapBoard(IDLE, at(0, 0, hero), context())).toEqual({
       controls: { mode: 'selected', tokenId: 'hero' },
+      card: heroCard,
     })
-    expect(tapBoard(IDLE, at(1, 0, friend), context())).toEqual({ controls: IDLE, info: true })
-    expect(tapBoard(IDLE, at(2, 1), context())).toEqual({ controls: IDLE, info: true })
   })
 
-  it('previews on a cell, moves the preview, and confirms on a second tap', () => {
-    const selected: Controls = { mode: 'selected', tokenId: 'hero' }
-    const preview = tapBoard(selected, at(2, 1), context()).controls
-    expect(preview).toEqual({ mode: 'preview', tokenId: 'hero', target: { x: 2, y: 1 } })
+  it('only opens the card of a token the person may not move', () => {
+    expect(tapBoard(IDLE, at(1, 0, friend), context())).toEqual({
+      controls: IDLE,
+      card: { kind: 'token', tokenId: 'friend', cell: { x: 1, y: 0 } },
+    })
+    // The session DM moves the goblin: card and selection.
+    const dm = context({ canMove: () => true })
+    expect(tapBoard(IDLE, at(4, 0, goblin), dm).controls).toEqual({
+      mode: 'selected',
+      tokenId: 'goblin',
+    })
+  })
 
-    const moved = tapBoard(preview, at(3, 1), context()).controls
+  it('shows an empty cell’s terrain, closes it on the same cell, and closes a token card', () => {
+    const cellCard: Card = { kind: 'cell', cell: { x: 2, y: 1 } }
+    expect(tapBoard(IDLE, at(2, 1), context())).toEqual({ controls: IDLE, card: cellCard })
+    expect(tapBoard(IDLE, at(2, 1), context({ card: cellCard }))).toEqual({
+      controls: IDLE,
+      card: null,
+    })
+    expect(tapBoard(IDLE, at(2, 2), context({ card: cellCard })).card).toEqual({
+      kind: 'cell',
+      cell: { x: 2, y: 2 },
+    })
+    // A creature's card: the next tap on a cell just closes it.
+    const goblinCard: Card = { kind: 'token', tokenId: 'goblin', cell: { x: 4, y: 0 } }
+    expect(tapBoard(IDLE, at(2, 1), context({ card: goblinCard }))).toEqual({
+      controls: IDLE,
+      card: null,
+    })
+  })
+
+  it('previews on a cell, moves the preview, and confirms on a second tap, keeping the card', () => {
+    const selected: Controls = { mode: 'selected', tokenId: 'hero' }
+    const ctx = context({ card: heroCard })
+    const preview = tapBoard(selected, at(2, 1), ctx)
+    expect(preview).toEqual({
+      controls: { mode: 'preview', tokenId: 'hero', target: { x: 2, y: 1 } },
+      card: heroCard,
+    })
+
+    const moved = tapBoard(preview.controls, at(3, 1), ctx).controls
     expect(moved).toEqual({ mode: 'preview', tokenId: 'hero', target: { x: 3, y: 1 } })
 
-    expect(tapBoard(moved, at(3, 1), context())).toEqual({
+    expect(tapBoard(moved, at(3, 1), ctx)).toEqual({
       controls: IDLE,
+      card: heroCard,
       confirm: { tokenId: 'hero', x: 3, y: 1 },
     })
     expect(confirmPreview(moved)).toEqual({ tokenId: 'hero', x: 3, y: 1 })
@@ -173,9 +213,12 @@ describe('tapBoard', () => {
     expect(tapBoard(preview, at(1, 3), dm).confirm).toEqual({ tokenId: 'ogre', x: 1, y: 2 })
   })
 
-  it('deselects on the selected token, and targets another token it may move too', () => {
+  it('lets go on the selected token, and targets another token it may move too', () => {
     const selected: Controls = { mode: 'selected', tokenId: 'hero' }
-    expect(tapBoard(selected, at(0, 0, hero), context()).controls).toEqual(IDLE)
+    expect(tapBoard(selected, at(0, 0, hero), context())).toEqual({
+      controls: IDLE,
+      card: heroCard,
+    })
     // The session DM may move every token, and still stacks them.
     expect(tapBoard(selected, at(2, 2, sidekick), context()).controls).toEqual({
       mode: 'preview',
@@ -184,31 +227,32 @@ describe('tapBoard', () => {
     })
   })
 
-  it('in a stack, selects the person’s topmost token and cycles through theirs on each tap', () => {
+  it('in a stack, selects the person’s topmost token and lets go on the next tap', () => {
     // Drawn bottom to top: hero, twin, a friend's character and a goblin, all on 0,0.
     const twin = token('twin')
-    const stack = [
-      hero,
-      twin,
-      token('friend', { ownerUserId: 'other' }),
-      token('goblin', { kind: 'creature', ownerUserId: null }),
-    ]
+    const goblinOnTop = token('goblin', { kind: 'creature', ownerUserId: null })
+    const stack = [hero, twin, token('friend', { ownerUserId: 'other' }), goblinOnTop]
     const ctx = context({ tokens: stack })
-    const tapStack = (controls: Controls) => tapBoard(controls, at(0, 0, stack[3]), ctx).controls
 
-    const first = tapStack(IDLE)
-    expect(first).toEqual({ mode: 'selected', tokenId: 'twin' })
-    const second = tapStack(first)
-    expect(second).toEqual({ mode: 'selected', tokenId: 'hero' })
-    expect(tapStack(second)).toEqual(IDLE)
+    const first = tapBoard(IDLE, at(0, 0, goblinOnTop), ctx)
+    expect(first).toEqual({
+      controls: { mode: 'selected', tokenId: 'twin' },
+      card: { kind: 'token', tokenId: 'twin', cell: { x: 0, y: 0 } },
+    })
+    // The selected token is drawn on top now, so the board reports it.
+    const twinSelected = stack.find((t) => t.id === 'twin')!
+    expect(tapBoard(first.controls, at(0, 0, twinSelected), ctx).controls).toEqual(IDLE)
 
-    // From a preview, too: the preview goes with the old selection.
+    // From a preview, too: the preview goes with the selection.
     const preview: Controls = { mode: 'preview', tokenId: 'twin', target: { x: 2, y: 1 } }
-    expect(tapStack(preview)).toEqual({ mode: 'selected', tokenId: 'hero' })
+    expect(tapBoard(preview, at(0, 0, twinSelected), ctx).controls).toEqual(IDLE)
 
-    // A stack without any of the person's tokens shows info.
+    // A stack without any of the person's tokens opens the top token's card.
     const theirs = context({ tokens: stack.slice(2) })
-    expect(tapBoard(IDLE, at(0, 0, stack[3]), theirs)).toEqual({ controls: IDLE, info: true })
+    expect(tapBoard(IDLE, at(0, 0, goblinOnTop), theirs)).toEqual({
+      controls: IDLE,
+      card: { kind: 'token', tokenId: 'goblin', cell: { x: 0, y: 0 } },
+    })
   })
 
   it('takes a cell with someone else’s token on it as the target', () => {
@@ -222,23 +266,53 @@ describe('tapBoard', () => {
 
   it('stays selected with a hint on a cell the token can’t stand on', () => {
     const preview: Controls = { mode: 'preview', tokenId: 'hero', target: { x: 2, y: 1 } }
-    expect(tapBoard(preview, at(3, 0), context())).toEqual({
+    expect(tapBoard(preview, at(3, 0), context({ card: heroCard }))).toEqual({
       controls: preview,
+      card: heroCard,
       hint: 'invalidTarget',
     })
   })
 
-  it('does nothing but info while moving is off', () => {
+  it('opens cards but selects nothing while moving is off', () => {
     const off = context({ enabled: false })
     expect(tapBoard(IDLE, at(0, 0, hero), off)).toEqual({
       controls: IDLE,
-      info: true,
+      card: heroCard,
       hint: 'movingOff',
     })
     expect(tapBoard({ mode: 'selected', tokenId: 'hero' }, at(2, 1), off)).toEqual({
       controls: IDLE,
-      info: true,
+      card: { kind: 'cell', cell: { x: 2, y: 1 } },
     })
+  })
+})
+
+describe('pickRow', () => {
+  const cell = { x: 0, y: 0 }
+  const ctx = { canMove: context().canMove, enabled: true }
+
+  it('selects a row the person may move, replacing another selection or preview', () => {
+    expect(pickRow(IDLE, hero, cell, ctx)).toEqual({
+      controls: { mode: 'selected', tokenId: 'hero' },
+      card: { kind: 'token', tokenId: 'hero', cell },
+    })
+    const preview: Controls = { mode: 'preview', tokenId: 'sidekick', target: { x: 1, y: 1 } }
+    expect(pickRow(preview, hero, cell, ctx).controls).toEqual({
+      mode: 'selected',
+      tokenId: 'hero',
+    })
+    // The selected token's own row keeps its preview.
+    const own: Controls = { mode: 'preview', tokenId: 'hero', target: { x: 1, y: 1 } }
+    expect(pickRow(own, hero, cell, ctx).controls).toBe(own)
+  })
+
+  it('only shows the details of a row the person may not move', () => {
+    const selected: Controls = { mode: 'selected', tokenId: 'hero' }
+    expect(pickRow(selected, goblin, cell, ctx)).toEqual({
+      controls: selected,
+      card: { kind: 'token', tokenId: 'goblin', cell },
+    })
+    expect(pickRow(IDLE, hero, cell, { ...ctx, enabled: false }).controls).toBe(IDLE)
   })
 })
 
