@@ -115,7 +115,7 @@ The project owner confirmed all six on 2026-10-16.
 2. **Areas on the map or the encounter**: rooms are part of the map's shape, so areas could live on the [battle map](/domain/battle-map.md) and be reused. **Decided:** on the encounter, as the backlog proposed; a map is rarely fought on twice. Moving them later only means copying them.
 3. **Characters in fog**: **Decided:** always visible to everyone. Not chosen: visible only to their owner and the DM, for a party that splits up.
 4. **Players moving into fog**: **Decided:** not allowed. Not chosen: allowed, and the move reveals nothing; the DM decides whether to reveal.
-5. **Monster spawn** ("three more goblins come through the door"), placing creatures that weren't prepared: **Decided:** stays in the [backlog](/backlog.md). Prepared ambushes are covered by hidden creatures.
+5. **Monster spawn** ("three more goblins come through the door"), placing creatures that weren't prepared: **Decided:** stays in the [backlog](/backlog.md). Prepared ambushes are covered by hidden creatures. **Changed** later on 2026-10-16: the project owner moved it into stage 10 as [creature spawn](/features/creature-spawn.md), which can place creatures hidden.
 6. **Schedule**: **Decided:** fog of war, hidden creatures included, is stage 10, together with the [spectator view](/features/spectator-view.md) ([implementation plan](/implementation-plan.md)).
 
 # Manual gate (proposal)

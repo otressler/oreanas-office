@@ -42,4 +42,5 @@ Exactly one of `characterId` and the member pair is set. A status appears at mos
 | `statusId` | → Status definition | |
 | `level` | int, nullable | 1–6, only for statuses with levels |
 | `appliedByUserId` | → [User](/domain/user.md) | Shown on the [token card](/features/token-card.md); decides who may remove it |
+| `fromSharedScreen` | bool | Later (stage 10): put on from a shared screen in local mode, which then may remove it; the card names "Tisch" ([shared table](/features/shared-table.md)) |
 | `appliedAt` | timestamp | |

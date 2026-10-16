@@ -13,20 +13,12 @@ The project owner picked these ideas. The first sections extend the battle map; 
 
 They all follow the [overview](/overview.md) principle "show, don't enforce", and they have to work for in-person, remote and mixed groups ([play setting](/decisions/play-setting.md)).
 
-# Shared table
-
-| Idea | What it does | Notes |
-|------|--------------|-------|
-| **Who's here** | Small avatars show who is connected to the encounter right now. | Comes from the live connections ([realtime sync](/decisions/realtime-sync.md)), not stored. Helps the DM notice a remote player who dropped out. |
-| **Local mode** | A play mode, next to the default **bring-your-own-device mode** where each player moves their own characters on their own device. In local mode, everything the players do happens on one shared device: the shared screen moves every player character, whoever owns it. The DM uses their own device for the creatures and everything hidden (hidden tokens, unrevealed map areas, DM undo). | Runs on the normal server with live sync between the two devices, so it fits the [offline prep](/decisions/offline-prep-pwa.md) proposal. Players don't need their own phones or accounts. Builds on the [spectator view](/features/spectator-view.md) (stage 10), which already puts a shared screen in the middle of the table but only shows the board. Extends the permission rule on the [token](/domain/token.md). The DM picks the mode per [session](/domain/session.md). |
-
 # On the board
 
 | Idea | What it does | Notes |
 |------|--------------|-------|
 | **Free draw** | Anyone draws temporary lines and arrows in their colour to plan or explain a move. They fade after a few seconds. | Broadcast like pings, not saved. |
 | **Terrain statuses** | Statuses can also mark cells or areas of the map (🔥 burning, 🕸️ webbed, 🌫️ darkness, 🧊 ice…), shown as a tinted overlay with the icon. They come from the status lists of [statuses](/features/statuses.md) (stage 9), where each status would be marked for tokens, terrain or both. Players and the DM can set them. | No rules attached: the app doesn't make the area difficult terrain or deal damage. Stored on the encounter, not on the reusable [battle map](/domain/battle-map.md). |
-| **Monster spawn** | The DM places new creatures during play ("three more goblins come through the door"). | Revealing prepared hidden creatures is part of [fog of war](/features/fog-of-war.md) (stage 10); this is for creatures that weren't prepared. Spawning reuses the editor's placement and auto-numbering ([DM map editor](/features/dm-map-editor.md)). |
 | **Distance rules** | The distance preview (path and length in meters while choosing a target) and the reach highlight of the cells within a token's speed. | Designed in the [movement rules](/rules/movement-distance.md) and the [playable map](/features/playable-map.md), then taken out of the proof of concept at the start of stage 4 as too complicated for now. Corners, elevation and flying are still open there. Brings back the speed field on [characters](/domain/character.md) and [creature types](/domain/creature-type.md), removed on 2026-10-14. |
 | **Hit points** | The DM tracks a creature's hit points, shown to the DM only or as a rough bar to everyone. | Was half of "HP and conditions" in phase 4; conditions became [statuses](/features/statuses.md) in stage 9, and the project owner's new stages on 2026-10-16 don't name HP (question 13 in the [implementation plan](/implementation-plan.md)). |
 | **Measuring tools** | A ruler between any two points, for ranged attacks, and area templates (cone, sphere, line, cube) sized in meters. | Were stage 9 of the [implementation plan](/implementation-plan.md), moved here by the project owner on 2026-10-16. Proposed: shared with everyone like pings and not saved (question 12); they would reuse the relay of [pings and arrows](/features/pings-and-arrows.md). |
@@ -42,14 +34,6 @@ They all follow the [overview](/overview.md) principle "show, don't enforce", an
 | Idea | What it does | Notes |
 |------|--------------|-------|
 | **Undo for the DM** | The DM can undo any recent move, not only their own. | Uses the existing move history on the [token](/domain/token.md). |
-
-# For players
-
-| Idea | What it does | Notes |
-|------|--------------|-------|
-| **Character colour and portrait** | Each player picks a colour for their token ring, pings and drawings, and a portrait. | Adds a `color` to the [character](/domain/character.md). Portraits already exist ([token icons](/features/token-icons.md)). |
-| **Show my token** | A button that centres the view on the player's own character. | |
-| **Haptic feedback** | A short vibration when a move is confirmed, so the player knows the tap counted. | Only where the device supports it. |
 
 # App-wide
 
@@ -73,7 +57,7 @@ The project owner set the direction on 2026-10-16: the app starts with fights bu
 | **Chat and whispers** *(suggested)* | A text chat for the session, and private messages to the DM ("I pick his pocket") or between players. | Saved with the session, so it can feed recaps. The DM doesn't read players' whispers to each other. |
 | **Voice call link** *(suggested)* | The session holds a link to the group's own call (Discord, Teams, Signal), joined with one tap. | The app doesn't do voice or video itself ([play setting](/decisions/play-setting.md)). |
 
-Related ideas elsewhere: **Who's here** under "Shared table", and [pings and arrows](/features/pings-and-arrows.md) in stage 9.
+Related ideas elsewhere: who's here in the [shared table](/features/shared-table.md) (stage 10), and [pings and arrows](/features/pings-and-arrows.md) in stage 9.
 
 **Decided for this area** (project owner, 2026-10-16):
 

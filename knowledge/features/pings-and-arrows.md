@@ -42,7 +42,7 @@ With a mouse, a double click works the same way, and a double click held and dra
 
 # Rules
 
-- Everyone in the encounter may ping and draw arrows: players, the session DM and other `dm` members. Spectators can't ([spectator view](/features/spectator-view.md)).
+- Everyone in the encounter may ping and draw arrows: players, the session DM and other `dm` members. Spectators can't ([spectator view](/features/spectator-view.md)), except a shared screen in local mode, which pings in white as "Tisch" ([shared table](/features/shared-table.md)).
 - **Not saved.** Pings and arrows are sent to the others over the hub and live only on the devices. A device that joins later doesn't see the ones already shown. Nothing is written to the database, so they don't wake or keep anything ([hosting](/decisions/hosting.md)).
 - **Rate limit**: at most three pings or arrows per person in two seconds. The server drops the rest without an error.
 - Off while disconnected, like moving.

@@ -38,6 +38,9 @@ Each player uses their own device, sees the current board and moves their charac
 - Pings and arrows, stage 9 ([pings and arrows](/features/pings-and-arrows.md)).
 - A card with portrait, name and statuses on a tap, replacing the info box, stage 9 ([token card](/features/token-card.md), [statuses](/features/statuses.md)).
 - Hidden tokens and map areas the DM reveals later, stage 10 ([fog of war](/features/fog-of-war.md)).
+- "Meine Figur" and a vibration on a confirmed move, stage 9 ([player extras](/features/player-extras.md)).
+- The session DM adds unprepared creatures mid-fight, stage 10 ([creature spawn](/features/creature-spawn.md)).
+- Who's here and local mode, stage 10 ([shared table](/features/shared-table.md)).
 
 # Not included
 
