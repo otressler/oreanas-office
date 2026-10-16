@@ -43,7 +43,7 @@ Every status list can hold the conditions of the 2024 rules.[^roll20-conditions]
 | `stunned` | Betäubt | Stars circling over a dazed head |
 | `unconscious` | Bewusstlos | Closed eyes with a "Z" drifting up |
 
-The German names follow the German edition of the rules as far as known and are checked before T1; the keys are fixed. The motifs are a first proposal for the prompts.
+The German names follow the German edition of the rules, as the project owner confirmed on 2026-10-16; the keys are fixed. The motifs are a first proposal for the prompts.
 
 # Icons
 

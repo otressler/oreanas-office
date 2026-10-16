@@ -28,7 +28,7 @@ A player zoomed into one corner of a big map, or one who just opened the app, fi
 
 A short vibration tells the player that a move counted, without looking at the screen.
 
-- **When** (question 33): one short vibration (about 30 ms) when the server has taken a move the device sent, not on the tap itself. The move is shown at once either way ([realtime sync](/decisions/realtime-sync.md)); the vibration means "saved". A move the server rejects, where the token goes back, gives two short pulses. Undo vibrates like a move.
+- **When** (question 33, confirmed by the project owner on 2026-10-16): one short vibration (about 30 ms) when the server has taken a move the device sent, not on the tap itself. The move is shown at once either way ([realtime sync](/decisions/realtime-sync.md)); the vibration means "saved". A move the server rejects, where the token goes back, gives two short pulses. Undo vibrates like a move.
 - **Only the mover's device.** Other people's moves, pings and statuses don't vibrate.
 - **Where it works**: through the browser's Vibration API,[^mdn-vibrate] on Android phones in Chrome, Edge, Firefox and Samsung Internet. **iPhones and iPads don't support it**, in any browser, also when the app is installed, so they get nothing. Without support the feature is silent and shows nothing.
 - **Off switch**: "Vibrieren" on the profile page, on by default, remembered on this device rather than the account, since it depends on the phone. The board has no menu to put it in. The phone's own silent mode may also mute it, depending on the phone.

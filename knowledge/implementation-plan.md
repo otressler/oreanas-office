@@ -100,7 +100,7 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 30 | Do players' own phones still move their characters in local mode? | Stage 10 | Yes, so mixed groups keep working; local mode only adds the shared screen |
 | 31 | What else may the shared screen do in local mode? | Stage 10 | Token card, pings and arrows in white as "Tisch", statuses like a player who owns every character, undo of the last shared-screen move; no creatures, removing, fog or starting fights |
 | 32 | "Meine Figur" with several characters in the fight ([player extras](/features/player-extras.md)) | Stage 9 | Each tap goes to the next character, in campaign order; it centres and pulses but never selects |
-| 33 | When does the phone vibrate? | Stage 9 | Once when the server has taken a move or an undo, twice when it rejects a move, only on the mover's device; a switch on the profile page, per device. iPhones and iPads can't vibrate from a web app at all |
+| 33 | When does the phone vibrate? | Stage 9 | **Answered** on 2026-10-16: once when the server has taken a move or an undo, twice when it rejects a move, only on the mover's device; a switch on the profile page, per device. iPhones and iPads can't vibrate from a web app at all |
 | 34 | Can the DM make a new creature type while spawning? ([creature spawn](/features/creature-spawn.md)) | Stage 10 | Yes, with only a name and a size; the icon and the rest follow in the bestiary |
 | 35 | May spawned creatures stand on other tokens? | Stage 10 | Yes, as a move's target may; the editor's rule without overlap stays for preparing |
 | 36 | How are creatures numbered under fog? ([fog of war](/features/fog-of-war.md), "Creature numbers") | Stage 10 | **Answered** on 2026-10-16: numbers mustn't reveal unseen creatures, and the proposal was confirmed: a creature gets its number the first time players see it and keeps it for good; unseen creatures have no number, on the DM's device and in the editor too; renamed creatures take none |
@@ -408,7 +408,7 @@ Completes roadmap phase 3. Reuses the stage 7 queue, so it is smaller.
 
 Needs only the `image-assets` skill and no app code, like T0.
 
-- Check the German names of the 15 conditions, then generate one icon per condition with the skill's "Status icon" template: the token style block word for word, one bold symbol, transparent background ([statuses](/features/statuses.md)).
+- The German names of the 15 conditions are confirmed (2026-10-16). Generate one icon per condition with the skill's "Status icon" template: the token style block word for word, one bold symbol, transparent background ([statuses](/features/statuses.md)).
 - One generation at a time because of the rate limit. Look at the first two before the rest, so a style problem is fixed early.
 - A review sheet shows every icon at 20, 32 and 64 pixels on the board's dark background.
 - Expected cost: about $0.05 per icon at high quality, so under $2 with a few retries ([image budget](/decisions/image-budget.md)).
