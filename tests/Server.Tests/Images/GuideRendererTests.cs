@@ -5,6 +5,7 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // The guide renderer is a port of render_guide.py; the golden files are that script's
 // output for the sample maps. Pure code: no database, no Docker.
+[Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class GuideRendererTests
 {
     private static readonly (byte, byte, byte) Void = (90, 40, 110);

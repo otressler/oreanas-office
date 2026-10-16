@@ -6,8 +6,8 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // The board shows each token's picked portrait or icon as it is now, also in a running
 // fight (knowledge/features/token-icons.md, requirement 9).
-[Collection("App")]
-public sealed class TokenBoardTests(AppFixture fixture)
+[Collection("Images")]
+public sealed class TokenBoardTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Tokens_carry_the_picked_portrait_or_icon()

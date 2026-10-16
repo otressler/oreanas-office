@@ -2,16 +2,19 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
+using OreanasOffice.Server.Images;
 
 namespace OreanasOffice.Server.Tests;
 
-// `configuration` adds settings such as a Google client or Admin:Email.
+// `configuration` adds settings such as a Google client or Admin:Email. Without
+// `runsImageJobs` the app has no image job worker (AppFixture.CreateApp says why).
 public sealed class AppFactory(
     string databaseConnectionString,
     string storageConnectionString,
     string webRoot,
     IReadOnlyDictionary<string, string?>? configuration = null,
-    string environment = AppFactory.TestingEnvironment)
+    string environment = AppFactory.TestingEnvironment,
+    bool runsImageJobs = false)
     : WebApplicationFactory<Program>
 {
     public const string TestingEnvironment = "Testing";
@@ -39,6 +42,10 @@ public sealed class AppFactory(
             services.AddTestAuth();
             services.AddFakeGoogleAnswers();
             services.AddFakeImageClient();
+            if (!runsImageJobs)
+            {
+                services.Remove(services.Single(d => d.ImplementationType == typeof(ImageJobWorker)));
+            }
         });
     }
 }

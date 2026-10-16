@@ -8,8 +8,7 @@ using OreanasOffice.Server.Health;
 
 namespace OreanasOffice.Server.Tests;
 
-[Collection("App")]
-public sealed class HealthTests(AppFixture fixture)
+public sealed class HealthTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     // Nothing listens on port 1, so connecting fails at once.
     private const string UnreachableDatabase =
@@ -48,6 +47,7 @@ public sealed class HealthTests(AppFixture fixture)
     }
 
     [Fact]
+    [Trait(TestCategory.Name, TestCategory.Slow)]
     public async Task Returns_error_when_the_database_refuses_the_app()
     {
         // The database is awake but the login fails, as when grant-app-access.sql

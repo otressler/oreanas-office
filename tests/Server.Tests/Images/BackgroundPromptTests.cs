@@ -6,6 +6,7 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // The prompt template from .claude/skills/image-assets/references/prompts.md. Pure code:
 // no database, no Docker.
+[Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class BackgroundPromptTests
 {
     private const string Colours =

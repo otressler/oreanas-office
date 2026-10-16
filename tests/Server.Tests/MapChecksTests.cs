@@ -6,6 +6,7 @@ namespace OreanasOffice.Server.Tests;
 // The server's layout checks against the cases the editor's Vitest test runs too
 // (src/web/src/editor/validation.cases.json, linked into this project). Each case lists
 // the problem codes the checks must report, in any order, each as often as listed.
+[Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class MapChecksTests
 {
     private static readonly JsonSerializerOptions CamelCase = new(JsonSerializerDefaults.Web);

@@ -10,8 +10,7 @@ using OreanasOffice.Server.Data;
 
 namespace OreanasOffice.Server.Tests;
 
-[Collection("App")]
-public sealed class AdminTests(AppFixture fixture)
+public sealed class AdminTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private AppFactory App => fixture.App;
 

@@ -8,8 +8,7 @@ using OreanasOffice.Server.Data;
 
 namespace OreanasOffice.Server.Tests;
 
-[Collection("App")]
-public sealed class AuthTests(AppFixture fixture)
+public sealed class AuthTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private AppFactory App => fixture.App;
 

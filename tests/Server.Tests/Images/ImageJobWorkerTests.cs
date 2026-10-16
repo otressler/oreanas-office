@@ -11,8 +11,8 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // The job queue against the fake image model (knowledge/implementation-plan.md, stage 7):
 // one job at a time, retries, failures, 429 waits and restarts.
-[Collection("App")]
-public sealed class ImageJobWorkerTests(AppFixture fixture)
+[Collection("Images")]
+public sealed class ImageJobWorkerTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     // FakeImageClient.DefaultUsage at the default rates: 1536 × $8 + 385 × $5 + 1372 × $30 per million.
     private const decimal DefaultCost = 0.055373m;
@@ -230,7 +230,7 @@ public sealed class ImageJobWorkerTests(AppFixture fixture)
         fixture.App.ResetFakeImages();
         Guid campaignId, mapId, assetId;
         Person dm;
-        await using (var first = fixture.CreateApp())
+        await using (var first = fixture.CreateApp(runsImageJobs: true))
         {
             var held = first.Services.GetRequiredService<FakeImageClient>();
             held.Gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -244,7 +244,7 @@ public sealed class ImageJobWorkerTests(AppFixture fixture)
         Assert.Equal(AssetStatus.Running, (await fixture.App.AssetAsync(assetId)).Status);
 
         var fake = new FakeImageClient { Gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously) };
-        await using var second = fixture.CreateApp().WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        await using var second = fixture.CreateApp(runsImageJobs: true).WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<FakeImageClient>();
             services.AddSingleton(fake);

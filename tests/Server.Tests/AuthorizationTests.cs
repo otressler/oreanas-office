@@ -2,8 +2,7 @@ using System.Net;
 
 namespace OreanasOffice.Server.Tests;
 
-[Collection("App")]
-public sealed class AuthorizationTests(AppFixture fixture)
+public sealed class AuthorizationTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Campaign_routes_need_a_signed_in_user()

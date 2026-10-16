@@ -9,8 +9,7 @@ namespace OreanasOffice.Server.Tests;
 
 // GET /encounters/{id}/board: `dm` members see every encounter, everyone else only the
 // running one (knowledge/domain/encounter.md, "Who does what").
-[Collection("App")]
-public sealed class BoardTests(AppFixture fixture)
+public sealed class BoardTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Players_see_the_board_only_while_the_fight_runs()

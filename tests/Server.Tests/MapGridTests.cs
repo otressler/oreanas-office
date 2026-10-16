@@ -10,6 +10,7 @@ namespace OreanasOffice.Server.Tests;
 //   0   . . ~ #      .  floor (0 m)   ~  void, a bridge (2 m) covers (2,0)–(2,1)
 //   1   . . ~ W      #  wall          W  water (1 m)
 //   2   . P . W      P  a blocking pillar over floor
+[Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class MapGridTests
 {
     private static readonly MapGrid Grid = new(4, 3, new MapLayout(

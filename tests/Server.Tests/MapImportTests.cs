@@ -8,6 +8,7 @@ namespace OreanasOffice.Server.Tests;
 
 // The import file's rules (MapFile.cs, knowledge/domain/battle-map.md "Import file"),
 // checked without a database. EncounterImportTests covers the endpoint.
+[Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class MapImportTests
 {
     private static readonly Guid CampaignId = Guid.NewGuid();

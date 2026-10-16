@@ -13,8 +13,7 @@ namespace OreanasOffice.Server.Tests;
 // creatures that no longer fit the map don't start, and a fight keeps the map and the
 // sizes it began with (knowledge/domain/encounter.md, "Starting" and `layout`). Only the
 // session DM changes a session's fights (knowledge/domain/session.md).
-[Collection("App")]
-public sealed class EncounterSyncTests(AppFixture fixture)
+public sealed class EncounterSyncTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     // The gorge map with a wall on the small goblin's cell (5, 1).
     private static MapLayout WithWallAtGoblin(MapLayout layout) => layout with

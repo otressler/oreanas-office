@@ -4,6 +4,7 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // The token templates of .claude/skills/image-assets/references/prompts.md with the site's
 // style block (knowledge/features/token-icons.md, requirement 6).
+[Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class TokenPromptTests
 {
     private static readonly string Style = new ImageOptions().TokenStyle;

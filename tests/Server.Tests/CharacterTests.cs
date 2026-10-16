@@ -11,8 +11,7 @@ using static OreanasOffice.Server.Tests.CampaignTestApi;
 
 namespace OreanasOffice.Server.Tests;
 
-[Collection("App")]
-public sealed class CharacterTests(AppFixture fixture)
+public sealed class CharacterTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task A_player_creates_a_character_they_own()

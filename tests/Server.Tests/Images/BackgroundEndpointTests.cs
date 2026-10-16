@@ -10,8 +10,8 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // The background endpoints' rules and errors (knowledge/features/ai-map-generation.md,
 // knowledge/domain/battle-map.md "Background image", knowledge/decisions/image-budget.md).
-[Collection("App")]
-public sealed class BackgroundEndpointTests(AppFixture fixture)
+[Collection("Images")]
+public sealed class BackgroundEndpointTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Generating_queues_a_version_with_the_maps_size_frame_and_layout()

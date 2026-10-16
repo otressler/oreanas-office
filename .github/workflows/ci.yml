@@ -11,7 +11,9 @@ env:
   IMAGE: ghcr.io/otressler/oreanas-office
 
 jobs:
-  test:
+  # The backend and the web app are checked in parallel jobs, so lint and type errors show
+  # up within a minute instead of after the backend tests.
+  backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -20,39 +22,49 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      # Integration tests start SQL Server and Azurite with Testcontainers;
+      # Docker is preinstalled on GitHub's Ubuntu runners.
+      - name: Backend tests
+        run: dotnet test
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/web
+    steps:
+      - uses: actions/checkout@v7
+
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
           cache-dependency-path: src/web/package-lock.json
 
-      # Integration tests start SQL Server and Azurite with Testcontainers;
-      # Docker is preinstalled on GitHub's Ubuntu runners.
-      - name: Backend tests
-        run: dotnet test
-
       - name: Install web dependencies
-        working-directory: src/web
         run: npm ci
 
+      # Cheapest checks first.
       - name: Lint
-        working-directory: src/web
         run: npm run lint
 
+      # The build below runs tsc -b again, which reuses this check's build info.
+      - name: Type-check
+        run: npx tsc -b
+
       - name: Unit tests
-        working-directory: src/web
         run: npm test
 
       - name: Build web app
-        working-directory: src/web
         run: npm run build
 
       - name: Install Playwright browser
-        working-directory: src/web
         run: npx playwright install --with-deps chromium
 
       - name: End-to-end tests
-        working-directory: src/web
+        # Serves the build from the step above instead of building again.
+        env:
+          E2E_PREBUILT: '1'
         run: npm run test:e2e
 
       - name: Upload Playwright report
@@ -65,7 +77,7 @@ jobs:
           retention-days: 7
 
   deploy:
-    needs: test
+    needs: [backend, web]
     # Off until the owner has provisioned Azure and set the repository variable DEPLOY_ENABLED=true.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest

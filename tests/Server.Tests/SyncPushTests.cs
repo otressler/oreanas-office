@@ -15,8 +15,7 @@ namespace OreanasOffice.Server.Tests;
 
 // POST /api/sync/push (knowledge/decisions/offline-prep-pwa.md, "Sync protocol"): one
 // answer per item, in its own transaction.
-[Collection("App")]
-public sealed class SyncPushTests(AppFixture fixture)
+public sealed class SyncPushTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private async Task<(Person Dm, Guid CampaignId)> DmWithCampaignAsync(string name = "Oreana")
     {

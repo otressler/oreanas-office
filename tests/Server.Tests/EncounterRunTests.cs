@@ -14,8 +14,7 @@ namespace OreanasOffice.Server.Tests;
 
 // Starting and ending encounters (knowledge/domain/encounter.md, "Lifecycle" and
 // "Starting"), and the DM's list of them.
-[Collection("App")]
-public sealed class EncounterRunTests(AppFixture fixture)
+public sealed class EncounterRunTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Starting_places_the_characters_and_makes_the_encounter_active()

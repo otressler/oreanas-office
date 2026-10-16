@@ -9,8 +9,7 @@ using static OreanasOffice.Server.Tests.CampaignTestApi;
 
 namespace OreanasOffice.Server.Tests;
 
-[Collection("App")]
-public sealed class SessionTests(AppFixture fixture)
+public sealed class SessionTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private static readonly DateOnly Saturday = new(2026, 10, 17);
 

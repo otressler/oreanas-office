@@ -12,8 +12,8 @@ namespace OreanasOffice.Server.Tests.Images;
 // Character portraits: generated from the appearance, uploaded, restyled and picked by the
 // character's owner or a `dm` member (knowledge/features/token-icons.md, requirements 2–4,
 // knowledge/domain/character.md "Permissions").
-[Collection("App")]
-public sealed class PortraitEndpointTests(AppFixture fixture)
+[Collection("Images")]
+public sealed class PortraitEndpointTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task The_owner_and_dm_members_may_and_other_players_may_not()

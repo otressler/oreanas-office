@@ -14,8 +14,7 @@ namespace OreanasOffice.Server.Tests;
 // The live table hub with several devices (knowledge/decisions/realtime-sync.md,
 // domain/token.md): permissions, the target check, save before broadcast, undo, and
 // the end of a fight. The fight is TestMaps.Gorge, see EncounterTables.StartFightAsync.
-[Collection("App")]
-public sealed class TableHubTests(AppFixture fixture)
+public sealed class TableHubTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private AppFactory App => fixture.App;
 

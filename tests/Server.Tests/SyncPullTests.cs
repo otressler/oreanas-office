@@ -11,8 +11,7 @@ namespace OreanasOffice.Server.Tests;
 
 // The pull side of the sync protocol (the version list and the fetch) and the version
 // gate in front of all of /api/sync.
-[Collection("App")]
-public sealed class SyncPullTests(AppFixture fixture)
+public sealed class SyncPullTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private async Task<(Person Dm, Guid CampaignId)> DmWithCampaignAsync(string name = "Oreana")
     {

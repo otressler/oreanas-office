@@ -14,8 +14,7 @@ namespace OreanasOffice.Server.Tests;
 
 // POST /sessions/{id}/encounters/import (knowledge/domain/battle-map.md, "Import
 // file"). The rules themselves are in MapImportTests.
-[Collection("App")]
-public sealed class EncounterImportTests(AppFixture fixture)
+public sealed class EncounterImportTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     // Every sample map the frontend offers imports as it is, and its board matches the
     // frontend's fixture for it: the same layout and creature tokens.

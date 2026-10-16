@@ -5,8 +5,7 @@ using OreanasOffice.Server.Hosting;
 
 namespace OreanasOffice.Server.Tests;
 
-[Collection("App")]
-public sealed class DataProtectionTests(AppFixture fixture)
+public sealed class DataProtectionTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Keys_are_stored_in_blob_storage_and_survive_a_restart()

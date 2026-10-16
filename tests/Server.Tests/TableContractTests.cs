@@ -6,6 +6,7 @@ namespace OreanasOffice.Server.Tests;
 // The hub contract the frontend codes against (src/web/src/table/hub.ts) comes from
 // openapi.json. Its method lists must be the hub's interfaces, so a renamed method
 // can't reach the frontend unnoticed.
+[Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class TableContractTests
 {
     [Fact]

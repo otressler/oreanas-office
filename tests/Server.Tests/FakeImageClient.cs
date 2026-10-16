@@ -10,8 +10,8 @@ namespace OreanasOffice.Server.Tests;
 // it answers with the guide itself as a PNG and fixed token use; a text-to-image request
 // gets TokenPng. Tests queue other answers with Enqueue (both kinds of request share the
 // queue), or hold requests with Gate, and read what was sent from Requests or
-// GenerateRequests. The app
-// is shared by the "App" collection, whose tests run one after another; call Reset first.
+// GenerateRequests. The app is shared; the "Images" collection runs these tests one after
+// another. Call Reset first.
 public sealed class FakeImageClient : IImageClient
 {
     public static readonly ImageUsage DefaultUsage = new(InputImageTokens: 1536, InputTextTokens: 385, OutputTokens: 1372);

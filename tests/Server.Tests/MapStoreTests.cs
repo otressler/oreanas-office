@@ -9,8 +9,7 @@ namespace OreanasOffice.Server.Tests;
 
 // The map store (knowledge/domain/battle-map.md, "Map list, archive and store"). Other
 // tests fill the same database with maps, so these look only for the maps they made.
-[Collection("App")]
-public sealed class MapStoreTests(AppFixture fixture)
+public sealed class MapStoreTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private sealed record Campaigns(Person Gruft, Guid GruftId, Person Wald, Guid WaldId);
 

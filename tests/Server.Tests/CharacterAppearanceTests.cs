@@ -8,8 +8,7 @@ using static OreanasOffice.Server.Tests.CampaignTestApi;
 namespace OreanasOffice.Server.Tests;
 
 // A character's appearance feeds its portrait prompt (knowledge/domain/character.md).
-[Collection("App")]
-public sealed class CharacterAppearanceTests(AppFixture fixture)
+public sealed class CharacterAppearanceTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task The_appearance_is_saved_trimmed()

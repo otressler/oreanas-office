@@ -2,8 +2,7 @@ using System.Net;
 
 namespace OreanasOffice.Server.Tests;
 
-[Collection("App")]
-public sealed class StaticFileTests(AppFixture fixture)
+public sealed class StaticFileTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Theory]
     [InlineData("/")]

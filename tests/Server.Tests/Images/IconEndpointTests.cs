@@ -9,8 +9,8 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // Creature type icons: `dm` members only, one job per type, the type's sync version, the
 // monthly limit, picking (knowledge/features/token-icons.md, requirements 1, 5 and 7).
-[Collection("App")]
-public sealed class IconEndpointTests(AppFixture fixture)
+[Collection("Images")]
+public sealed class IconEndpointTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Generating_queues_a_version_for_the_type()

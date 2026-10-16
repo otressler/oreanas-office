@@ -10,8 +10,7 @@ namespace OreanasOffice.Server.Tests;
 
 // Who may reach the encounter routes (knowledge/domain/encounter.md, session.md):
 // the session DM prepares and runs its fights, `dm` members see them, members see the board.
-[Collection("App")]
-public sealed class EncounterAccessTests(AppFixture fixture)
+public sealed class EncounterAccessTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Encounter_routes_refuse_non_members()

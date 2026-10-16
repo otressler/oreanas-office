@@ -11,8 +11,8 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // Token icon and portrait jobs against the fake image model: text to image, restyles,
 // retries, failures, the automatic pick and the hub events (knowledge/features/token-icons.md).
-[Collection("App")]
-public sealed class TokenImageWorkerTests(AppFixture fixture)
+[Collection("Images")]
+public sealed class TokenImageWorkerTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     // FakeImageClient.DefaultUsage at the default rates.
     private const decimal DefaultCost = 0.055373m;
@@ -261,7 +261,7 @@ public sealed class TokenImageWorkerTests(AppFixture fixture)
         fixture.App.ResetFakeTokens();
         Guid assetId;
         TokenTable table;
-        await using (var first = fixture.CreateApp())
+        await using (var first = fixture.CreateApp(runsImageJobs: true))
         {
             var held = first.Services.GetRequiredService<FakeImageClient>();
             held.Gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -280,7 +280,7 @@ public sealed class TokenImageWorkerTests(AppFixture fixture)
             Gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
             TokenPng = TestPictures.TransparentPng(),
         };
-        await using var second = fixture.CreateApp().WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        await using var second = fixture.CreateApp(runsImageJobs: true).WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<FakeImageClient>();
             services.AddSingleton(fake);

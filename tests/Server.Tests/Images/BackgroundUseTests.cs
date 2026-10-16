@@ -11,8 +11,8 @@ namespace OreanasOffice.Server.Tests.Images;
 // Where a finished background shows up: the image itself for members of a campaign that
 // uses it (knowledge/decisions/persistence.md), the board (knowledge/domain/encounter.md)
 // and copies from the store (knowledge/domain/battle-map.md, "What a copy takes").
-[Collection("App")]
-public sealed class BackgroundUseTests(AppFixture fixture)
+[Collection("Images")]
+public sealed class BackgroundUseTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Members_of_the_campaign_load_the_image_and_others_dont()

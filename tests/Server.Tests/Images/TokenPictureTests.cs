@@ -6,6 +6,7 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // Uploads and model pictures become square WebPs with alpha, the right way up and without
 // the photo's metadata (knowledge/features/token-icons.md, requirement 3).
+[Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class TokenPictureTests
 {
     private const int Size = 512;

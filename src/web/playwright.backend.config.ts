@@ -1,13 +1,14 @@
 import { defineConfig } from '@playwright/test'
-import base from './playwright.config.ts'
+import base, { checkoutPort, reuseServer } from './playwright.config.ts'
 
 // `npm run test:e2e:backend`: the *.backend.spec.ts specs against the real
 // backend. Starts SQL Server and Azurite (Docker Compose), runs the backend in
 // the E2E environment with its own database (that environment adds
 // POST /api/testing/invites), and serves the build with `vite preview`, whose
 // proxy forwards /api to that backend. Docker must be running.
-const BACKEND_URL = 'http://localhost:5081'
-const PREVIEW_PORT = 4180
+// Ports and server reuse work as in playwright.config.ts: one pair per checkout.
+const BACKEND_URL = `http://localhost:${checkoutPort(42000)}`
+const PREVIEW_PORT = checkoutPort(43000)
 
 export default defineConfig({
   ...base,
@@ -20,7 +21,7 @@ export default defineConfig({
         'docker compose -f ../../docker-compose.yml up -d sql azurite && dotnet run --project ../Server --no-launch-profile',
       // /api/health answers 200 only once the database is migrated.
       url: `${BACKEND_URL}/api/health`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: reuseServer,
       timeout: 300_000,
       env: {
         ASPNETCORE_ENVIRONMENT: 'E2E',
@@ -33,7 +34,7 @@ export default defineConfig({
     {
       command: `npm run build && npx vite preview --port ${PREVIEW_PORT} --strictPort`,
       url: `http://localhost:${PREVIEW_PORT}`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: reuseServer,
       timeout: 300_000,
       env: { BACKEND_URL },
     },

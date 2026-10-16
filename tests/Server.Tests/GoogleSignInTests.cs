@@ -14,8 +14,7 @@ namespace OreanasOffice.Server.Tests;
 
 // The decisions after Google answers, run through GoogleSignIn against the real
 // database, and the parts of the HTTP flow that work without Google.
-[Collection("App")]
-public sealed class GoogleSignInTests(AppFixture fixture) : IAsyncLifetime
+public sealed class GoogleSignInTests(AppFixture fixture) : IClassFixture<AppFixture>, IAsyncLifetime
 {
     private readonly string _adminEmail = TestAccounts.NewEmail();
     private AsyncServiceScope _scope;

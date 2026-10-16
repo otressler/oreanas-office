@@ -9,8 +9,7 @@ using static OreanasOffice.Server.Tests.CampaignTestApi;
 
 namespace OreanasOffice.Server.Tests;
 
-[Collection("App")]
-public sealed class CampaignTests(AppFixture fixture)
+public sealed class CampaignTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Creating_a_campaign_makes_the_creator_its_default_dm()

@@ -7,6 +7,7 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // The Foundry /images/edits call (.claude/skills/image-assets/references/foundry-api.md)
 // against a fake handler: no network.
+[Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class FoundryImageClientTests
 {
     private static readonly byte[] Guide = [1, 2, 3, 4];

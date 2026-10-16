@@ -7,8 +7,7 @@ namespace OreanasOffice.Server.Tests;
 
 // /api/auth/google/complete with Google's answer faked (FakeGoogle): signs in,
 // registers or links, and redirects to the right frontend page.
-[Collection("App")]
-public sealed class GoogleCompleteTests(AppFixture fixture)
+public sealed class GoogleCompleteTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private static readonly WebApplicationFactoryClientOptions NoRedirects = new() { AllowAutoRedirect = false };
 

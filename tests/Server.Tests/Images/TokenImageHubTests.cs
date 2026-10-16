@@ -5,8 +5,8 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // Who may watch a creature type's icons or a character's portraits on the image hub
 // (ImageHub.WatchTokenImages).
-[Collection("App")]
-public sealed class TokenImageHubTests(AppFixture fixture)
+[Collection("Images")]
+public sealed class TokenImageHubTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task Creature_type_icons_are_watched_by_dm_members_only()

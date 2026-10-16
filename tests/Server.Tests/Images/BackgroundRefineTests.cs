@@ -8,8 +8,8 @@ namespace OreanasOffice.Server.Tests.Images;
 
 // Refining a finished version with an instruction (knowledge/features/ai-map-generation.md,
 // "Refining"): a new version from the picture and the guide.
-[Collection("App")]
-public sealed class BackgroundRefineTests(AppFixture fixture)
+[Collection("Images")]
+public sealed class BackgroundRefineTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     [Fact]
     public async Task A_refinement_sends_the_picture_then_the_guide_and_becomes_a_new_version()

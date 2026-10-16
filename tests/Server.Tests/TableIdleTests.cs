@@ -4,8 +4,8 @@ namespace OreanasOffice.Server.Tests;
 
 // knowledge/decisions/realtime-sync.md, "Background tabs": the server drops connections
 // idle for TableOptions.IdleTimeout. An app of its own with a 2-second timeout.
-[Collection("App")]
-public sealed class TableIdleTests(AppFixture fixture)
+[Trait(TestCategory.Name, TestCategory.Slow)]
+public sealed class TableIdleTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private static readonly Dictionary<string, string?> ShortTimeout = new()
     {
