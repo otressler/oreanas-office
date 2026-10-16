@@ -9,6 +9,10 @@
 //   move=<label>:<x>,<y>   puts that token on another cell first, e.g. to stack tokens; repeatable
 //   handlers=1             passes onCellTap/onTokenTap and logs the taps
 //   header=1               puts the board under a 56 px bar, as on the app's pages
+//   statuses=1             puts 0–5 sample statuses (letters, one with a level) on the tokens
+//   inset=<px>             covers the board's bottom like the docked token card
+// Double tap pings and double tap and drag draws an arrow (as "Mira"); the first
+// character is Mira's, for "Meine Figur".
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../../index.css'

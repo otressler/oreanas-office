@@ -1,9 +1,30 @@
 // The board lab page; see main.tsx for the query parameters.
-import { useMemo, useState } from 'react'
-import type { BoardState } from '../../api/types'
-import { Board } from '../Board'
+import { useMemo, useRef, useState } from 'react'
+import type { BoardState, StatusDefinition } from '../../api/types'
+import { MyCharacterButton } from '../../table/MyCharacterButton'
+import { usePings } from '../../table/usePings'
+import { Board, type BoardHandle } from '../Board'
 import { freeCells } from '../../encounters/placement'
 import { buildGrid } from '../geometry'
+
+const LAB_USER = 'lab-user'
+
+/** Sample statuses for `statuses=1`: icon-less, so their letters show. */
+const SAMPLE_STATUSES: StatusDefinition[] = [
+  ['prone', 'Liegend', false],
+  ['poisoned', 'Vergiftet', false],
+  ['exhaustion', 'Erschöpfung', true],
+  ['frightened', 'Verängstigt', false],
+  [null, 'Verhext', false],
+].map(([key, name, hasLevels], i) => ({
+  id: `lab-status-${i}`,
+  libraryKey: key as string | null,
+  name: name as string,
+  hasLevels: hasLevels as boolean,
+  iconUrl: null,
+  iconDescription: null,
+  characterId: null,
+}))
 
 const fixtures = import.meta.glob<{ default: unknown }>('../fixtures/*.board.json', {
   eager: true,
@@ -25,11 +46,34 @@ export function Lab() {
         return [label, { x: Number(x), y: Number(y) }] as const
       }),
     )
+    const withStatuses = params.get('statuses') === '1'
+    // The first character is the lab user's, for "Meine Figur".
+    const mine = loaded.tokens.find((token) => token.kind === 'character')?.id
     return {
       ...loaded,
-      tokens: loaded.tokens.map((token) => ({ ...token, ...moves.get(token.label) })),
+      statuses: withStatuses ? SAMPLE_STATUSES : loaded.statuses,
+      people: [{ userId: LAB_USER, displayName: 'Mira', pingColor: '#4da3ff' }],
+      tokens: loaded.tokens.map((token, i) => {
+        const own = token.id === mine
+        return {
+          ...token,
+          ...moves.get(token.label),
+          ownerUserId: own ? LAB_USER : token.ownerUserId,
+          statuses: withStatuses
+            ? SAMPLE_STATUSES.slice(0, i % 6).map((s) => ({
+                statusId: s.id,
+                level: s.hasLevels ? 2 : null,
+                appliedByUserId: LAB_USER,
+                appliedAt: '2026-10-16T10:00:00Z',
+              }))
+            : token.statuses,
+        }
+      }),
     }
   }, [])
+  const pings = usePings(board, LAB_USER)
+  const handle = useRef<BoardHandle>(null)
+  const inset = Number(params.get('inset') ?? 0)
   const selected = board.tokens.find((token) => token.label === params.get('select'))?.id
   const highlight = useMemo(
     () =>
@@ -70,7 +114,25 @@ export function Lab() {
         highlight={highlight}
         arrows={arrows}
         {...handlers}
+        slide
+        onDoubleTap={(target) => pings.ping(target)}
+        onArrow={(from, to, done) => pings.arrow(from, to, done)}
+        pings={pings.shown}
+        inset={inset ? { bottom: inset } : undefined}
+        handleRef={handle}
       />
+      <MyCharacterButton
+        tokens={board.tokens}
+        removedTokens={[]}
+        userId={LAB_USER}
+        board={handle}
+      />
+      {inset > 0 && (
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 border-t border-line bg-panel/80"
+          style={{ height: inset }}
+        />
+      )}
       {log && (
         <p data-testid="tap-log" className="absolute top-2 left-2 rounded bg-panel px-2 text-sm">
           {log}
