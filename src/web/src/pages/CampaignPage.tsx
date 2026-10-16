@@ -4,6 +4,7 @@ import { CharactersPanel } from '../campaigns/CharactersPanel'
 import { MembersPanel } from '../campaigns/MembersPanel'
 import { useCampaign } from '../campaigns/queries'
 import { SessionsPanel } from '../campaigns/SessionsPanel'
+import { DmStatusListPanel } from '../statuses/DmStatusListPanel'
 import { Badge, LoadError, Loading, PageTitle } from '../components/ui'
 import { CampaignMapsLink } from '../maps/CampaignMapsLink'
 import { useKeepCampaignCopy } from '../maps/campaignCopy'
@@ -44,6 +45,7 @@ export function CampaignPage() {
       <SessionsPanel campaign={campaign.data} />
       {campaign.data.myRole === 'dm' && <CampaignMapsLink campaignId={campaign.data.id} />}
       <CharactersPanel campaignId={campaign.data.id} />
+      {campaign.data.myRole === 'dm' && <DmStatusListPanel campaignId={campaign.data.id} />}
       <MembersPanel campaign={campaign.data} />
     </div>
   )

@@ -1,5 +1,6 @@
-// Icons of creature types and portraits of characters from the server
-// (knowledge/features/token-icons.md): one TanStack query per owner, the calls that change
+// Icons of creature types, portraits of characters and (stage 9) icons of custom statuses
+// from the server (knowledge/features/token-icons.md, knowledge/features/statuses.md
+// "Custom statuses"): one TanStack query per owner, the calls that change
 // them, the campaign's icon list for the bestiary, and the pure rules on top. Everything
 // here needs a connection; callers ask only while online.
 import { useQuery } from '@tanstack/react-query'
@@ -14,8 +15,9 @@ import type {
 } from '../api/types'
 import { campaignKeys } from '../campaigns/queries'
 import { useOnline } from '../editor/encounter/useOnline'
+import { statusKeys } from '../statuses/queries'
 
-/** Whose icon or portrait: a creature type's or a character's. */
+/** Whose icon or portrait: a creature type's, a character's or a custom status's. */
 export interface TokenImageOwner {
   type: TokenImageOwnerType
   id: string
@@ -26,70 +28,110 @@ export const tokenImagesKey = (campaignId: string, owner: TokenImageOwner) =>
 
 export const creatureIconsKey = (campaignId: string) => ['creature-icons', campaignId] as const
 
-/** What else shows the owner's picked image and must be asked for again after a pick. */
+/**
+ * What else shows the owner's picked image and must be asked for again after a pick: the
+ * character list, the bestiary's icons, or (custom statuses, stage 9) the status lists.
+ */
 export function pickedImageKeys(campaignId: string, owner: TokenImageOwner) {
-  return owner.type === 'character'
-    ? [campaignKeys.characters(campaignId)]
-    : [creatureIconsKey(campaignId)]
+  switch (owner.type) {
+    case 'character':
+      return [campaignKeys.characters(campaignId)]
+    case 'creatureType':
+      return [creatureIconsKey(campaignId)]
+    case 'status':
+      return [statusKeys.campaign(campaignId)]
+  }
 }
 
 export function fetchTokenImages(campaignId: string, owner: TokenImageOwner): Promise<TokenImages> {
-  return owner.type === 'character'
-    ? unwrap(
+  switch (owner.type) {
+    case 'character':
+      return unwrap(
         api.GET('/api/campaigns/{campaignId}/characters/{characterId}/portraits', {
           params: { path: { campaignId, characterId: owner.id } },
         }),
       )
-    : unwrap(
+    case 'creatureType':
+      return unwrap(
         api.GET('/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icons', {
           params: { path: { campaignId, creatureTypeId: owner.id } },
         }),
       )
+    case 'status':
+      return unwrap(
+        api.GET('/api/campaigns/{campaignId}/statuses/{statusId}/icons', {
+          params: { path: { campaignId, statusId: owner.id } },
+        }),
+      )
+  }
 }
 
 /**
  * Queues a job, only after a person confirmed it. Creature types send the version they
  * were synced at (`itemVersion`); characters may name an uploaded version to restyle.
+ * Custom statuses send nothing.
  */
 export function generateTokenImage(
   campaignId: string,
   owner: TokenImageOwner,
   body: GenerateTokenImageRequest,
 ): Promise<TokenImage> {
-  return owner.type === 'character'
-    ? unwrap(
+  switch (owner.type) {
+    case 'character':
+      return unwrap(
         api.POST('/api/campaigns/{campaignId}/characters/{characterId}/portraits', {
           params: { path: { campaignId, characterId: owner.id } },
           body,
         }),
       )
-    : unwrap(
+    case 'creatureType':
+      return unwrap(
         api.POST('/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icons', {
           params: { path: { campaignId, creatureTypeId: owner.id } },
           body,
         }),
       )
+    case 'status':
+      return unwrap(
+        api.POST('/api/campaigns/{campaignId}/statuses/{statusId}/icons', {
+          params: { path: { campaignId, statusId: owner.id } },
+          body,
+        }),
+      )
+  }
 }
 
-/** Picks a done version, or (null) none: the token shows its letter. */
+/** Picks a done version, or (null) none: the token (or status) shows its letter. */
 export async function pickTokenImage(
   campaignId: string,
   owner: TokenImageOwner,
   assetId: string | null,
 ): Promise<void> {
-  await (owner.type === 'character'
-    ? unwrap(
+  switch (owner.type) {
+    case 'character':
+      await unwrap(
         api.PUT('/api/campaigns/{campaignId}/characters/{characterId}/portrait', {
           params: { path: { campaignId, characterId: owner.id } },
           body: { assetId },
         }),
       )
-    : unwrap(
+      return
+    case 'creatureType':
+      await unwrap(
         api.PUT('/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icon', {
           params: { path: { campaignId, creatureTypeId: owner.id } },
           body: { assetId },
         }),
-      ))
+      )
+      return
+    case 'status':
+      await unwrap(
+        api.PUT('/api/campaigns/{campaignId}/statuses/{statusId}/icon', {
+          params: { path: { campaignId, statusId: owner.id } },
+          body: { assetId },
+        }),
+      )
+  }
 }
 
 /**

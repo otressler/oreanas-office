@@ -1,5 +1,6 @@
-// The gallery of a creature type's icons or a character's portraits
-// (knowledge/features/token-icons.md): the picked image in the token's ring, the versions
+// The gallery of a creature type's icons, a character's portraits or a custom status's
+// icons (knowledge/features/token-icons.md, statuses.md): the picked image in the token's
+// ring, the versions
 // with their state, picking one or none, generating after a confirm, and for characters
 // uploading through the crop step and restyling an upload. It follows running jobs over
 // the image hub only while one is queued or running. Everything needs a connection;
@@ -39,6 +40,13 @@ const Help = ({ children }: { children: ReactNode }) => (
   <p className="text-sm text-dim">{children}</p>
 )
 
+/** The job each owner's generate button starts. */
+const JOBS: Record<TokenImageOwner['type'], TokenJob> = {
+  character: 'portrait',
+  creatureType: 'icon',
+  status: 'statusIcon',
+}
+
 /** What a job needs from the owner's form first: the request, or why nothing was sent. */
 export type Prepared = { body: GenerateTokenImageRequest } | { error: string }
 
@@ -59,6 +67,8 @@ export interface TokenImageGalleryProps {
   prepare: (progress: (text: string) => void) => Promise<Prepared>
   /** Characters: upload through the crop step, and restyle uploaded versions. */
   uploads?: boolean
+  /** What "Ohne Bild" means for this owner; the token's letter by default. */
+  noneHint?: string
 }
 
 export function TokenImageGallery(props: TokenImageGalleryProps) {
@@ -80,6 +90,7 @@ function OnlineGallery({
   generateHint = null,
   prepare,
   uploads = false,
+  noneHint = t.noneHint,
 }: TokenImageGalleryProps) {
   const queryClient = useQueryClient()
   const query = useTokenImages(campaignId, owner, true)
@@ -169,7 +180,7 @@ function OnlineGallery({
   const loading = query.isPending
   const canStart = !busy && !pending && !loading && !query.isError
   const canGenerate = canStart && !block && !generateHint
-  const job: TokenJob = owner.type === 'character' ? 'portrait' : 'icon'
+  const job: TokenJob = JOBS[owner.type]
 
   return (
     <div className="flex flex-col gap-3">
@@ -276,7 +287,7 @@ function OnlineGallery({
               <Button busy={pick.isPending} onClick={() => pick.mutate(null)}>
                 {t.pickNone}
               </Button>
-              <Help>{t.noneHint}</Help>
+              <Help>{noneHint}</Help>
             </div>
           )}
           <p className="text-xs text-dim tabular-nums">

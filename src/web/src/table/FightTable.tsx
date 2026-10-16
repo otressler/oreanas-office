@@ -2,15 +2,23 @@
 // knowledge/decisions/realtime-sync.md): the board with select, preview and confirm,
 // optimistic moves with rollback, undo, the connection indicator, and arrows where
 // others are about to move tokens. Stage 9: pings and arrows from double taps, whose
-// first tap is taken back; haptic feedback on the mover's device; "Meine Figur".
+// first tap is taken back; haptic feedback on the mover's device; "Meine Figur"; the
+// token card with statuses (knowledge/features/token-card.md, statuses.md); and taking
+// tokens off the board with undo and a list to bring them back (removing-tokens.md).
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import type { ApiErrorCode, BoardState, BoardToken, UndoableMove } from '../api/types'
+import type { ApiErrorCode, BoardState, BoardToken, StatusResult, UndoableMove } from '../api/types'
 import { useCurrentUser } from '../auth/auth'
 import { Board, type BoardHandle } from '../board/Board'
 import { buildGrid, placementElevation, type GridPoint } from '../board/geometry'
+import { buildScene } from '../board/scene'
 import { Button } from '../components/ui'
 import { FightScreen } from '../encounters/FightScreen'
+import { useWideScreen } from '../lib/useWideScreen'
+import { canRemoveStatus } from '../statuses/rules'
+import { StatusPicker } from '../statuses/StatusPicker'
 import { de } from '../text/de'
+import { showCard } from '../tokenCard/card'
+import { TokenCard } from '../tokenCard/TokenCard'
 import { ConnectionIndicator } from './ConnectionIndicator'
 import { vibrate } from './haptics'
 import { MyCharacterButton } from './MyCharacterButton'
@@ -21,12 +29,15 @@ import {
   confirmPreview,
   currentControls,
   ownTokensOnTop,
+  pickRow,
   tapBoard,
+  type Card,
   type Controls,
   type MoveIntent,
 } from './controls'
 import { mergeKnown, withPending, type PendingMoves } from './merge'
 import { moveArrows } from './previews'
+import { RemovedTokensMenu, UndoRemoveBar, type JustRemoved } from './RemovedTokens'
 import { isUndoVisible, undoCandidate } from './undo'
 import { useTable } from './useTable'
 
@@ -47,11 +58,16 @@ interface Notice {
 /** Errors after which the board itself has changed: the fight ended or the token is gone. */
 const RELOAD_ON: readonly ApiErrorCode[] = ['encounterNotActive', 'tokenNotFound']
 
+/** Gap between the board's edge and the card's panel on wide screens. */
+const PANEL_GAP = 12
+
 /**
  * The running fight's board with the live table (knowledge/features/playable-map.md):
  * tap a token, tap a cell to preview, tap again to confirm; the move shows at once and
  * goes back if the server says no. Moves by others slide in; "Rückgängig" puts back the
- * person's own last move. Moving is off unless the table is connected.
+ * person's own last move. Moving is off unless the table is connected. A tap on a token
+ * opens its card; the card's buttons put statuses on, ping the token and, for the session
+ * DM, take it off the board.
  */
 export function FightTable({
   campaignId,
@@ -69,15 +85,25 @@ export function FightTable({
   const table = useTable(campaignId, board.encounterId, running, pings.events)
   const boardHandle = useRef<BoardHandle>(null)
   const connected = table.status === 'connected'
+  const wide = useWideScreen()
   const grid = useMemo(() => buildGrid(board.map), [board.map])
+  const scene = useMemo(() => buildScene(board.map), [board.map])
 
   const [pending, setPending] = useState<PendingMoves>(() => new Map())
   // Which send owns a token's pending move, so an older answer doesn't clear a newer one.
   const sends = useRef(new Map<string, number>())
   const [controls, setControls] = useState<Controls>(IDLE)
   const [notice, setNotice] = useState<Notice | null>(null)
+  const [card, setCard] = useState<Card | null>(null)
+  // Folded stays for the next token, as long as the page is open.
+  const [folded, setFolded] = useState(false)
+  const [cardSize, setCardSize] = useState<{ width: number; height: number } | null>(null)
+  const [picking, setPicking] = useState<string | null>(null)
+  const [justRemoved, setJustRemoved] = useState<JustRemoved | null>(null)
   // The page as it was before the last tap, for taking it back on a double tap.
-  const beforeTap = useRef<{ controls: Controls; notice: Notice | null } | null>(null)
+  const beforeTap = useRef<{ controls: Controls; notice: Notice | null; card: Card | null } | null>(
+    null,
+  )
 
   // The device's own undo; a reload that brings a new `undoableMove` takes over again.
   const [ownUndo, setOwnUndo] = useState<UndoableMove | null | undefined>(undefined)
@@ -103,6 +129,27 @@ export function FightTable({
     [table.previews, shown.tokens],
   )
 
+  const canMove = useCallback(
+    (token: BoardToken) => canMoveToken(token, board, me.id),
+    [board, me.id],
+  )
+  // A selected token always has its card; a removed token's card closes by itself.
+  const shownCard = showCard(
+    card ?? (selected ? { kind: 'token', tokenId: selected.id, cell: selected } : null),
+    shown.tokens,
+    scene,
+    canMove,
+  )
+  const cardTokenId = shownCard?.kind === 'token' ? shownCard.token.id : null
+  const pickerToken = picking ? shown.tokens.find((token) => token.id === picking) : undefined
+  const covered = shownCard ? cardSize : null
+  const inset = covered
+    ? wide
+      ? { right: covered.width + PANEL_GAP }
+      : { bottom: covered.height }
+    : undefined
+  const bottomOverlay = covered && !wide ? covered.height : 0
+
   // While this device is at the confirm step, the others see an arrow to the target.
   // A confirmed move clears it on the server; letting go or losing the connection here.
   const previewing = current.mode === 'preview' ? current : null
@@ -127,11 +174,6 @@ export function FightTable({
       preview(null)
     }
   }, [previewToken, previewX, previewY, preview])
-
-  const canMove = useCallback(
-    (token: BoardToken) => canMoveToken(token, board, me.id),
-    [board, me.id],
-  )
 
   const fail = (code: ApiErrorCode | null, fallback: string) => {
     setNotice({ kind: 'error', text: code ? de.errors[code] : fallback })
@@ -185,13 +227,20 @@ export function FightTable({
   }
 
   function tap(cell: GridPoint, token?: BoardToken): boolean {
-    beforeTap.current = { controls, notice }
+    beforeTap.current = { controls, notice, card }
     const result = tapBoard(
       current,
       { cell, token },
-      { tokens: shown.tokens, grid, canMove, enabled: running && connected },
+      {
+        tokens: shown.tokens,
+        grid,
+        canMove,
+        enabled: running && connected,
+        card: shownCard && card,
+      },
     )
     setControls(result.controls)
+    setCard(result.card)
     const hint =
       result.hint === 'invalidTarget'
         ? t.invalidTarget
@@ -200,16 +249,19 @@ export function FightTable({
           : null
     setNotice(hint ? { kind: 'hint', text: hint } : null)
     if (result.confirm) void send(result.confirm)
-    return !result.info
+    // The card shows tokens and cells: the board never needs its own info box here.
+    return true
   }
 
-  // The second touch of a double tap: the page goes back to how it was before the first.
+  // The second touch of a double tap: the page goes back to how it was before the first,
+  // the card the first tap opened included.
   function takeBackTap() {
     const before = beforeTap.current
     beforeTap.current = null
     if (!before) return
     setControls(before.controls)
     setNotice(before.notice)
+    setCard(before.card)
   }
 
   function confirm() {
@@ -224,23 +276,91 @@ export function FightTable({
     setNotice(null)
   }, [])
 
-  // Escape lets go of the selected token.
-  const selecting = current.mode !== 'idle'
+  const closeCard = useCallback(() => {
+    setCard(null)
+    setControls(IDLE)
+    setNotice(null)
+  }, [])
+
+  // Escape closes the card and lets go of the selected token; a dialog over the page
+  // (the status picker) closes first.
+  const open = shownCard !== null || current.mode !== 'idle'
   useEffect(() => {
-    if (!selecting) return
+    if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') cancel()
+      if (e.key !== 'Escape' || document.querySelector('[aria-modal="true"]')) return
+      closeCard()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selecting, cancel])
+  }, [open, closeCard])
+
+  /** A status call's outcome: null when it went through (and is on the board), else why not. */
+  async function statusCall(call: () => Promise<StatusResult>): Promise<string | null> {
+    try {
+      const result = await call()
+      if (result.change) {
+        table.applyStatuses(result.change)
+        return null
+      }
+      if (result.error && RELOAD_ON.includes(result.error)) table.reload()
+      return result.error ? de.errors[result.error] : de.tokenCard.statusFailed
+    } catch {
+      return connected ? de.tokenCard.statusFailed : de.tokenCard.needsConnection
+    }
+  }
+
+  async function statusFromCard(call: () => Promise<StatusResult>) {
+    setNotice(null)
+    const error = await statusCall(call)
+    if (error) setNotice({ kind: 'error', text: error })
+  }
+
+  async function removeToken(token: BoardToken) {
+    setNotice(null)
+    try {
+      const result = await table.removeToken(token.id)
+      if (result.error) fail(result.error, de.tokenCard.removeFailed)
+      else setJustRemoved({ tokenId: token.id, label: token.label, at: Date.now() })
+    } catch {
+      fail(null, de.tokenCard.removeFailed)
+    }
+  }
+
+  async function restoreToken(tokenId: string) {
+    setNotice(null)
+    setJustRemoved((current) => (current?.tokenId === tokenId ? null : current))
+    try {
+      const result = await table.restoreToken(tokenId)
+      if (result.error) fail(result.error, de.tokenCard.restoreFailed)
+    } catch {
+      fail(null, de.tokenCard.restoreFailed)
+    }
+  }
+
+  const hideJustRemoved = useCallback(() => setJustRemoved(null), [])
+
+  const dmActions = board.isSessionDm && running && (
+    <RemovedTokensMenu
+      tokens={board.removedTokens}
+      connected={connected}
+      onRestore={(token) => void restoreToken(token.id)}
+    />
+  )
 
   return (
     <FightScreen
       campaignId={campaignId}
       title={board.name}
       status={table.status && <ConnectionIndicator status={table.status} />}
-      actions={actions}
+      actions={
+        (dmActions || actions) && (
+          <>
+            {dmActions}
+            {actions}
+          </>
+        )
+      }
     >
       <div className="relative flex min-h-0 flex-1 flex-col">
         <Board
@@ -262,47 +382,88 @@ export function FightTable({
             if (request) table.drawArrow(request)
           }}
           pings={pings.shown}
+          inset={inset}
+          keepInView={selected?.id ?? cardTokenId}
           handleRef={boardHandle}
         />
 
-        {(selected || notice) && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-center gap-2 p-3">
-            {selected && (
-              <div
-                role="group"
-                aria-label={selected.label}
-                className="pointer-events-auto flex max-w-md flex-wrap items-center gap-2 rounded-xl border border-line bg-panel/95 px-3 py-2 shadow-lg shadow-black/40"
-              >
-                <p aria-live="polite" className="min-w-0 flex-1 basis-48 text-sm text-parchment">
-                  {current.mode === 'preview'
-                    ? t.confirmHint(selected.label)
-                    : t.pickTarget(selected.label)}
-                </p>
-                <div className="ml-auto flex items-center gap-2">
-                  {current.mode === 'preview' && (
-                    <Button variant="primary" onClick={confirm}>
-                      {t.confirm}
-                    </Button>
-                  )}
-                  <Button variant="quiet" onClick={cancel}>
-                    {t.cancel}
-                  </Button>
-                </div>
-              </div>
-            )}
-            {notice && (
-              <p
-                role={notice.kind === 'error' ? 'alert' : 'status'}
-                className={`pointer-events-auto max-w-md rounded-lg border px-3 py-2 text-sm shadow-lg shadow-black/40 ${
-                  notice.kind === 'error'
-                    ? 'border-red-400/50 bg-red-950/90 text-red-100'
-                    : 'border-candle/40 bg-panel/95 text-parchment'
-                }`}
-              >
-                {notice.text}
-              </p>
-            )}
+        {notice && (
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-center gap-2 p-3"
+            style={wide && covered ? { paddingRight: covered.width + PANEL_GAP * 2 } : undefined}
+          >
+            <p
+              role={notice.kind === 'error' ? 'alert' : 'status'}
+              className={`pointer-events-auto max-w-md rounded-lg border px-3 py-2 text-sm shadow-lg shadow-black/40 ${
+                notice.kind === 'error'
+                  ? 'border-red-400/50 bg-red-950/90 text-red-100'
+                  : 'border-candle/40 bg-panel/95 text-parchment'
+              }`}
+            >
+              {notice.text}
+            </p>
           </div>
+        )}
+
+        {shownCard && (
+          <TokenCard
+            shown={shownCard}
+            board={board}
+            userId={me.id}
+            controls={current}
+            selected={selected}
+            wide={wide}
+            folded={folded}
+            onFoldedChange={setFolded}
+            onClose={closeCard}
+            onConfirm={confirm}
+            onCancel={cancel}
+            live={{ running, connected }}
+            canMove={canMove}
+            onPickRow={(token) => {
+              const picked = pickRow(current, token, shownCard.cell, {
+                canMove,
+                enabled: running && connected,
+              })
+              setControls(picked.controls)
+              setCard(picked.card)
+              setNotice(null)
+            }}
+            onAddStatus={(token) => setPicking(token.id)}
+            onShow={(token) =>
+              table.ping(pings.ping({ cell: { x: token.x, y: token.y }, tokenId: token.id }))
+            }
+            onRemoveToken={(token) => void removeToken(token)}
+            onRemoveStatus={(token, statusId) =>
+              void statusFromCard(() => table.removeStatus({ tokenId: token.id, statusId }))
+            }
+            onSetLevel={(token, statusId, level) =>
+              void statusFromCard(() =>
+                table.setStatusLevel({ tokenId: token.id, statusId, level }),
+              )
+            }
+            onSize={setCardSize}
+          />
+        )}
+
+        {pickerToken && running && (
+          <StatusPicker
+            campaignId={campaignId}
+            encounterId={board.encounterId}
+            label={pickerToken.label}
+            statuses={pickerToken.statuses}
+            canRemove={(status) => canRemoveStatus(status, board, me.id)}
+            connected={connected}
+            onAdd={(statusId) =>
+              statusCall(() =>
+                table.addStatus({ tokenId: pickerToken.id, statusId, level: null }),
+              )
+            }
+            onRemove={(statusId) =>
+              statusCall(() => table.removeStatus({ tokenId: pickerToken.id, statusId }))
+            }
+            onClose={() => setPicking(null)}
+          />
         )}
 
         {running && (
@@ -317,11 +478,23 @@ export function FightTable({
         {showUndo && (
           <Button
             onClick={() => void undo()}
-            className="absolute bottom-3 left-3 z-20 bg-panel/90 shadow-lg shadow-black/40"
+            style={{ bottom: bottomOverlay + 12 }}
+            className="absolute left-3 z-20 bg-panel/90 shadow-lg shadow-black/40"
           >
             <UndoIcon />
             {t.undo}
           </Button>
+        )}
+
+        {justRemoved && board.isSessionDm && running && (
+          <UndoRemoveBar
+            removed={justRemoved}
+            // Above the move's "Rückgängig", which sits in the bottom-left corner.
+            bottom={bottomOverlay + (showUndo ? 56 : 0)}
+            connected={connected}
+            onUndo={() => void restoreToken(justRemoved.tokenId)}
+            onTimeout={hideJustRemoved}
+          />
         )}
       </div>
     </FightScreen>
