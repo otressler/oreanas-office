@@ -49,26 +49,63 @@ export const DOUBLE_TAP_SLOP = 30
 const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)
 const midpoint = (a: Point, b: Point) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 })
 
+export interface GestureTrackerOptions {
+  /** Report double taps and arrows (the board); without it every tap is a plain tap. */
+  doubleTap?: boolean
+}
+
+/** The second touch of a double tap: where the first tap was, and whether it drags. */
+interface SecondTouch {
+  from: Point
+  dragging: boolean
+}
+
 export class GestureTracker {
   private readonly pointers = new Map<number, Point>()
   private start: (Point & { time: number; kind: PointerKind }) | null = null
   /** Past the tap slop or pinched: whatever happens now, it isn't a tap. */
   private moved = false
+  private readonly doubleTaps: boolean
+  /** The last plain tap and when it was released, while a second touch may still follow. */
+  private lastTap: { point: Point; time: number } | null = null
+  /** The second touch of a double tap is down. */
+  private second: SecondTouch | null = null
+
+  constructor(options: GestureTrackerOptions = {}) {
+    this.doubleTaps = options.doubleTap ?? false
+  }
 
   /** Whether any pointer is down. */
   get active(): boolean {
     return this.pointers.size > 0
   }
 
-  down(p: PointerSample): void {
+  /**
+   * A pointer went down. Returns 'takeBack' when it is the second touch of a double tap,
+   * and the end of an arrow when a second finger joins one: the arrow is called off and
+   * the fingers pinch.
+   */
+  down(p: PointerSample): Gesture | null {
     if (this.pointers.size === 0) {
       this.start = { x: p.x, y: p.y, time: p.time, kind: p.kind }
       this.moved = false
-    } else {
-      // A second finger: this gesture is a pinch from now on, never a tap.
-      this.moved = true
+      this.pointers.set(p.id, { x: p.x, y: p.y })
+      const last = this.lastTap
+      this.lastTap = null
+      if (
+        last &&
+        p.time - last.time <= DOUBLE_TAP_MS &&
+        distance(last.point, p) <= DOUBLE_TAP_SLOP
+      ) {
+        this.second = { from: last.point, dragging: false }
+        return { type: 'takeBack' }
+      }
+      return null
     }
+    // A second finger: this gesture is a pinch from now on, never a tap.
+    this.moved = true
     this.pointers.set(p.id, { x: p.x, y: p.y })
+    return this.endSecond()
   }
 
   move(p: PointerSample): Gesture | null {
@@ -99,8 +136,18 @@ export class GestureTracker {
     }
 
     this.pointers.set(p.id, now)
+    const start = this.start!
+    const second = this.second
+    if (second) {
+      // The second touch of a double tap draws an arrow; it never pans.
+      if (!second.dragging) {
+        if (distance(start, now) <= TAP_SLOP[start.kind]) return null
+        second.dragging = true
+        this.moved = true
+      }
+      return { type: 'arrow', from: second.from, to: now, done: false }
+    }
     if (!this.moved) {
-      const start = this.start!
       if (distance(start, now) <= TAP_SLOP[start.kind]) return null
       // Past the slop: pan by everything since the press, so the map stays under the finger.
       this.moved = true
@@ -113,18 +160,42 @@ export class GestureTracker {
     if (!this.pointers.delete(p.id)) return null
     if (this.pointers.size > 0) return null
     const start = this.start
+    const second = this.second
     this.start = null
-    if (!start || this.moved) return null
+    this.second = null
+    if (!start) return null
+    if (second?.dragging) {
+      return { type: 'arrow', from: second.from, to: { x: p.x, y: p.y }, done: true }
+    }
+    if (this.moved) return null
     if (distance(start, p) > TAP_SLOP[start.kind]) return null
+    // Held too long: no tap, and after a first tap no double tap either (it was taken back).
     if (p.time - start.time > TAP_MAX_MS) return null
-    return { type: 'tap', point: { x: start.x, y: start.y } }
+    if (second) return { type: 'doubleTap', point: second.from }
+    const point = { x: start.x, y: start.y }
+    if (this.doubleTaps) this.lastTap = { point, time: p.time }
+    return { type: 'tap', point }
   }
 
-  /** The browser took the pointer away (a system gesture, a call): no tap from this press. */
-  cancel(id: number): void {
-    if (!this.pointers.delete(id)) return
+  /**
+   * The browser took the pointer away (a system gesture, a call): no tap from this press.
+   * An arrow being drawn is called off: it ends where it started, which draws nothing.
+   */
+  cancel(id: number): Gesture | null {
+    if (!this.pointers.delete(id)) return null
     this.moved = true
+    this.lastTap = null
+    const ended = this.endSecond()
     if (this.pointers.size === 0) this.start = null
+    return ended
+  }
+
+  /** Lets go of a double tap's second touch; an arrow being drawn ends where it started. */
+  private endSecond(): Gesture | null {
+    const second = this.second
+    this.second = null
+    if (!second?.dragging) return null
+    return { type: 'arrow', from: second.from, to: second.from, done: true }
   }
 }
 

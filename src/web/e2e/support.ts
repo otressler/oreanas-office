@@ -88,10 +88,27 @@ export async function cellCentre(
   }
 }
 
-/** Taps (clicks) a cell of the board. */
+/** When each page last tapped, so two taps in a row stay two taps. */
+const lastTaps = new WeakMap<Page, number>()
+
+/**
+ * Taps (clicks) a cell of the board. Taps come at least 350 ms apart: two quicker ones
+ * on the same spot are a double tap, which pings (DOUBLE_TAP_MS in src/board/gestures.ts).
+ */
 export async function tapCell(page: Page, x: number, y: number) {
+  const wait = (lastTaps.get(page) ?? 0) + 350 - Date.now()
+  if (wait > 0) await page.waitForTimeout(wait)
   const point = await cellCentre(page, x, y)
   await page.mouse.click(point.x, point.y)
+  lastTaps.set(page, Date.now())
+}
+
+/** A double tap on a cell: two clicks within the double-tap time. */
+export async function doubleTapCell(page: Page, x: number, y: number) {
+  const point = await cellCentre(page, x, y)
+  await page.mouse.click(point.x, point.y)
+  await page.mouse.click(point.x, point.y)
+  lastTaps.set(page, Date.now())
 }
 
 type HealthState = 'ok' | 'waking'

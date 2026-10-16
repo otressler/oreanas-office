@@ -2,6 +2,7 @@
 // (no Konva node per cell). World-space passes draw in world units (CELL per cell);
 // the grid and labels draw in device pixels so lines stay one pixel wide and crisp.
 import type { BoardToken } from '../api/types'
+import { badgeLayout, drawBadges, type StatusLook } from './badges'
 import { footprint } from './geometry'
 import {
   CANDLE_STRONG,
@@ -625,6 +626,10 @@ export interface TokenDrawOptions {
   marks?: ReadonlyMap<string, string>
   /** Loaded token images by URL (BoardToken.imageUrl); a token without one shows its mark. */
   images?: ReadonlyMap<string, CanvasImageSource>
+  /** Status definitions and icons for the badges on tokens (badges.ts); none without. */
+  statuses?: StatusLook
+  /** Tokens fading in or out, with their opacity (0–1); the rest are opaque. */
+  alpha?: ReadonlyMap<string, number>
 }
 
 /** Someone else's move preview: the token's target top-left cell. */
@@ -764,6 +769,27 @@ function drawNumberBadge(
   ctx.fillText(number, x, y + radius * 0.06)
 }
 
+/** The stack badge's radius in world units. */
+const stackBadgeRadius = (cssScale: number) => Math.max(CELL * 0.16, 8 / cssScale)
+
+/** A token's status badges along its upper edge, clear of a stack badge (badges.ts). */
+function drawStatusBadges(
+  ctx: CanvasRenderingContext2D,
+  token: BoardToken,
+  look: StatusLook,
+  stacked: boolean,
+  cssScale: number,
+) {
+  if (!token.statuses?.length) return
+  const n = footprint(token.size)
+  const r = n * CELL * 0.42
+  if (r * cssScale < DOT_RADIUS_PX) return
+  const cx = (token.x + n / 2) * CELL
+  const cy = (token.y + n / 2) * CELL
+  const limit = stacked ? cx + r * 0.74 - stackBadgeRadius(cssScale) : undefined
+  drawBadges(ctx, badgeLayout(token.statuses, cx, cy, r, cssScale, limit), look, cssScale)
+}
+
 /** A stack's count on its top token: a small parchment disc at the upper right. */
 function drawStackBadge(
   ctx: CanvasRenderingContext2D,
@@ -774,7 +800,7 @@ function drawStackBadge(
   const n = footprint(token.size)
   const r = n * CELL * 0.42
   if (r * cssScale < DOT_RADIUS_PX) return
-  const radius = Math.max(CELL * 0.16, 8 / cssScale)
+  const radius = stackBadgeRadius(cssScale)
   const x = (token.x + n / 2) * CELL + r * 0.74
   const y = (token.y + n / 2) * CELL - r * 0.74
   ctx.beginPath()
@@ -919,30 +945,55 @@ function drawArrow(
 export function drawTokens(
   ctx: CanvasRenderingContext2D,
   tokens: readonly BoardToken[],
-  { selectedTokenId, cssScale, marker, ghost, arrows, stacks, marks, images }: TokenDrawOptions,
+  {
+    selectedTokenId,
+    cssScale,
+    marker,
+    ghost,
+    arrows,
+    stacks,
+    marks,
+    images,
+    statuses,
+    alpha,
+  }: TokenDrawOptions,
 ): void {
   ctx.save()
   const imageOf = (token: BoardToken) => (token.imageUrl ? images?.get(token.imageUrl) : undefined)
   const badge = (token: BoardToken) => {
     const count = stacks?.get(token.id)
     if (count) drawStackBadge(ctx, token, count, cssScale)
+    if (statuses) drawStatusBadges(ctx, token, statuses, !!count, cssScale)
+  }
+  const faded = (token: BoardToken, draw: () => void) => {
+    const opacity = alpha?.get(token.id)
+    if (opacity === undefined) return draw()
+    if (opacity <= 0) return
+    ctx.save()
+    ctx.globalAlpha = opacity
+    draw()
+    ctx.restore()
   }
   let selected: BoardToken | undefined
   for (const token of tokens) {
     if (token.id === selectedTokenId) selected = token
-    else {
-      drawToken(ctx, token, cssScale, marks?.get(token.id), imageOf(token))
-      badge(token)
-    }
+    else
+      faded(token, () => {
+        drawToken(ctx, token, cssScale, marks?.get(token.id), imageOf(token))
+        badge(token)
+      })
   }
   for (const arrow of arrows ?? []) {
     const token = tokens.find((candidate) => candidate.id === arrow.tokenId)
     if (token) drawArrow(ctx, token, arrow, cssScale)
   }
   if (selected) {
-    drawToken(ctx, selected, cssScale, marks?.get(selected.id), imageOf(selected))
-    drawSelection(ctx, selected, cssScale)
-    badge(selected)
+    const token = selected
+    faded(token, () => {
+      drawToken(ctx, token, cssScale, marks?.get(token.id), imageOf(token))
+      drawSelection(ctx, token, cssScale)
+      badge(token)
+    })
   }
   if (ghost) drawGhost(ctx, ghost, cssScale, marks?.get(ghost.id), imageOf(ghost))
   if (marker) {
