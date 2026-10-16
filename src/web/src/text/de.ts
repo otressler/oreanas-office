@@ -659,6 +659,8 @@ export const de = {
     announceCell: (name: string) => `${name} zeigt auf ein Feld`,
     announceToken: (name: string, label: string) => `${name} zeigt auf ${label}`,
     announceArrow: (name: string) => `${name} zeigt einen Weg`,
+    /** A double tap while the table isn't connected: pings are off, like moving. */
+    offline: 'Ohne Verbindung zum Tisch lässt sich nichts zeigen.',
   },
 
   /** "Meine Figur" and the "Vibrieren" switch (stage 9, lane: board renderer). */

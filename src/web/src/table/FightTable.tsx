@@ -10,6 +10,8 @@ import type { ApiErrorCode, BoardState, BoardToken, StatusResult, UndoableMove }
 import { useCurrentUser } from '../auth/auth'
 import { Board, type BoardHandle } from '../board/Board'
 import { buildGrid, placementElevation, type GridPoint } from '../board/geometry'
+import { DOUBLE_TAP_MS } from '../board/gestures'
+import type { PingTarget } from '../board/pings'
 import { buildScene } from '../board/scene'
 import { Button } from '../components/ui'
 import { FightScreen } from '../encounters/FightScreen'
@@ -104,6 +106,13 @@ export function FightTable({
   const beforeTap = useRef<{ controls: Controls; notice: Notice | null; card: Card | null } | null>(
     null,
   )
+  // A move confirmed by tapping its preview waits DOUBLE_TAP_MS before it is sent, so the
+  // first tap of a double tap never moves the token (knowledge/features/token-card.md).
+  // It already shows at its target meanwhile.
+  const heldConfirm = useRef<{ intent: MoveIntent; timer: ReturnType<typeof setTimeout> } | null>(
+    null,
+  )
+  useEffect(() => () => clearTimeout(heldConfirm.current?.timer), [])
 
   // The device's own undo; a reload that brings a new `undoableMove` takes over again.
   const [ownUndo, setOwnUndo] = useState<UndoableMove | null | undefined>(undefined)
@@ -171,7 +180,8 @@ export function FightTable({
     }
     if (previewShown.current) {
       previewShown.current = false
-      preview(null)
+      // A held confirm keeps the others' preview until its move, which clears it on the server.
+      if (!heldConfirm.current) preview(null)
     }
   }, [previewToken, previewX, previewY, preview])
 
@@ -180,13 +190,40 @@ export function FightTable({
     if (code && RELOAD_ON.includes(code)) table.reload()
   }
 
+  /** Draws the token at the move's target until the server answers. */
+  function showPending(token: BoardToken, intent: MoveIntent) {
+    const elevation = placementElevation(grid, token.size, intent.x, intent.y)
+    setPending((moves) => new Map(moves).set(token.id, { x: intent.x, y: intent.y, elevation }))
+  }
+
+  function dropPending(tokenId: string) {
+    setPending((moves) => {
+      if (!moves.has(tokenId)) return moves
+      const next = new Map(moves)
+      next.delete(tokenId)
+      return next
+    })
+  }
+
+  /** Shows the move at once and sends it after DOUBLE_TAP_MS, unless a double tap takes it back. */
+  function holdConfirm(intent: MoveIntent) {
+    const token = shown.tokens.find((candidate) => candidate.id === intent.tokenId)
+    if (!token) return
+    clearTimeout(heldConfirm.current?.timer)
+    showPending(token, intent)
+    const timer = setTimeout(() => {
+      heldConfirm.current = null
+      void send(intent)
+    }, DOUBLE_TAP_MS)
+    heldConfirm.current = { intent, timer }
+  }
+
   async function send(intent: MoveIntent) {
     const token = shown.tokens.find((candidate) => candidate.id === intent.tokenId)
     if (!token) return
-    const elevation = placementElevation(grid, token.size, intent.x, intent.y)
     const id = (sends.current.get(token.id) ?? 0) + 1
     sends.current.set(token.id, id)
-    setPending((moves) => new Map(moves).set(token.id, { x: intent.x, y: intent.y, elevation }))
+    showPending(token, intent)
     try {
       const result = await table.move(intent)
       if (result.move) {
@@ -202,13 +239,7 @@ export function FightTable({
       fail(null, t.moveFailed)
     } finally {
       // The token stays where the newest known version puts it: the move's, or back.
-      if (sends.current.get(token.id) === id) {
-        setPending((moves) => {
-          const next = new Map(moves)
-          next.delete(token.id)
-          return next
-        })
-      }
+      if (sends.current.get(token.id) === id) dropPending(token.id)
     }
   }
 
@@ -248,7 +279,7 @@ export function FightTable({
           ? t.movingOff
           : null
     setNotice(hint ? { kind: 'hint', text: hint } : null)
-    if (result.confirm) void send(result.confirm)
+    if (result.confirm) holdConfirm(result.confirm)
     // The card shows tokens and cells: the board never needs its own info box here.
     return true
   }
@@ -256,6 +287,12 @@ export function FightTable({
   // The second touch of a double tap: the page goes back to how it was before the first,
   // the card the first tap opened included.
   function takeBackTap() {
+    const held = heldConfirm.current
+    if (held) {
+      clearTimeout(held.timer)
+      heldConfirm.current = null
+      dropPending(held.intent.tokenId)
+    }
     const before = beforeTap.current
     beforeTap.current = null
     if (!before) return
@@ -340,6 +377,24 @@ export function FightTable({
 
   const hideJustRemoved = useCallback(() => setJustRemoved(null), [])
 
+  // Pings and arrows need the table, like moving; offline a double tap only says so.
+  function pingTarget(target: PingTarget) {
+    if (!connected) {
+      setNotice({ kind: 'hint', text: de.pings.offline })
+      return
+    }
+    table.ping(pings.ping(target))
+  }
+
+  function drawArrow(from: PingTarget, to: GridPoint, done: boolean) {
+    if (!connected) {
+      if (done) setNotice({ kind: 'hint', text: de.pings.offline })
+      return
+    }
+    const request = pings.arrow(from, to, done)
+    if (request) table.drawArrow(request)
+  }
+
   const dmActions = board.isSessionDm && running && (
     <RemovedTokensMenu
       tokens={board.removedTokens}
@@ -376,11 +431,8 @@ export function FightTable({
           instantTokenIds={instant}
           className="min-h-0 flex-1"
           onTapTakenBack={takeBackTap}
-          onDoubleTap={(target) => table.ping(pings.ping(target))}
-          onArrow={(from, to, done) => {
-            const request = pings.arrow(from, to, done)
-            if (request) table.drawArrow(request)
-          }}
+          onDoubleTap={pingTarget}
+          onArrow={drawArrow}
           pings={pings.shown}
           inset={inset}
           keepInView={selected?.id ?? cardTokenId}
@@ -430,9 +482,7 @@ export function FightTable({
               setNotice(null)
             }}
             onAddStatus={(token) => setPicking(token.id)}
-            onShow={(token) =>
-              table.ping(pings.ping({ cell: { x: token.x, y: token.y }, tokenId: token.id }))
-            }
+            onShow={(token) => pingTarget({ cell: { x: token.x, y: token.y }, tokenId: token.id })}
             onRemoveToken={(token) => void removeToken(token)}
             onRemoveStatus={(token, statusId) =>
               void statusFromCard(() => table.removeStatus({ tokenId: token.id, statusId }))
@@ -470,6 +520,8 @@ export function FightTable({
             removedTokens={board.removedTokens}
             userId={me.id}
             board={boardHandle}
+            // Above "Ganze Karte", which the board lifts above the docked card.
+            style={{ bottom: bottomOverlay + 64 }}
           />
         )}
 

@@ -4,7 +4,7 @@
 // (colorIndex). Characters not on the board are skipped; with none, the button is off and
 // says why. Not shown to someone without a character in the fight. It only moves the view,
 // so it works without a connection too.
-import { useRef, useState, type RefObject } from 'react'
+import { useRef, useState, type CSSProperties, type RefObject } from 'react'
 import type { BoardToken } from '../api/types'
 import type { BoardHandle } from '../board/Board'
 import { de } from '../text/de'
@@ -17,6 +17,8 @@ export interface MyCharacterButtonProps {
   userId: string
   board: RefObject<BoardHandle | null>
   className?: string
+  /** E.g. a `bottom` that keeps it above the page's docked card. */
+  style?: CSSProperties
 }
 
 const t = de.playerExtras
@@ -45,6 +47,7 @@ export function MyCharacterButton({
   userId,
   board,
   className = 'absolute right-3 bottom-16 z-20',
+  style,
 }: MyCharacterButtonProps) {
   const own = ownCharacters(tokens, userId)
   // Players don't get the removed tokens: one seen on the board here keeps the button, off.
@@ -62,6 +65,7 @@ export function MyCharacterButton({
     <button
       type="button"
       disabled={off}
+      style={style}
       onClick={() => {
         const next = nextCharacter(own, last.current)
         if (!next) return

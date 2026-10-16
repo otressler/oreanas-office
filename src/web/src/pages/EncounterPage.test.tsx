@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BoardState, BoardToken, MoveResult, TokenMovedEvent } from '../api/types'
 import { encounter, ids, smallBoard } from '../encounters/testing'
+import { fakeBoard } from '../table/fakeBoard'
 import { deferred, FakeHub, fakeTable, refused } from '../table/testing'
 import { json, mockApi, renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
@@ -167,7 +168,12 @@ describe('EncounterPage', () => {
     expect(screen.getByText('Vorschau Held auf 2,1')).toBeInTheDocument()
     await user.click(cell(2, 1))
 
-    expect(hub.calls('MoveToken')).toEqual([[{ tokenId: hero.id, x: 2, y: 1 }]])
+    // It shows at once and is sent once a double tap can't take it back any more.
+    expect(tokenText('Held')).toHaveTextContent('auf 2,1')
+    expect(hub.calls('MoveToken')).toEqual([])
+    await waitFor(() =>
+      expect(hub.calls('MoveToken')).toEqual([[{ tokenId: hero.id, x: 2, y: 1 }]]),
+    )
     expect(tokenText('Held')).toHaveTextContent('auf 2,1')
     // The own move jumps; it doesn't slide in.
     expect(tokenText('Held')).toHaveAttribute('data-instant', 'true')
@@ -177,6 +183,23 @@ describe('EncounterPage', () => {
     expect(tokenText('Held')).toHaveTextContent('auf 2,1')
     expect(tokenText('Held')).not.toHaveAttribute('data-instant')
     expect(screen.getByRole('button', { name: de.table.undo })).toBeInTheDocument()
+  })
+
+  it('never moves the token when the tap on the preview was the first of a double tap', async () => {
+    const { user } = openFight()
+    await connected()
+
+    await user.click(cell(0, 0))
+    await user.click(cell(1, 1))
+    await user.click(cell(1, 1))
+    expect(tokenText('Held')).toHaveTextContent('auf 1,1')
+    act(() => fakeBoard.doubleTap({ x: 1, y: 1 }))
+
+    expect(tokenText('Held')).toHaveTextContent('auf 0,0')
+    expect(screen.getByText('Vorschau Held auf 1,1')).toBeInTheDocument()
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    expect(hub.calls('MoveToken')).toEqual([])
+    expect(hub.calls('Ping')).toHaveLength(1)
   })
 
   it('confirms with the "Hierhin" button and cancels with "Abbrechen" or Escape', async () => {
@@ -217,13 +240,14 @@ describe('EncounterPage', () => {
     ])
     expect(hub.calls('ClearPreview')).toHaveLength(1)
 
-    // Confirming sends the move first, which clears the preview on the server.
+    // Confirming keeps the preview until the move, which clears it on the server.
     await user.click(cell(0, 0))
     await user.click(cell(1, 0))
     await waitFor(() => expect(hub.calls('PreviewMove')).toHaveLength(3))
     await user.click(cell(1, 0))
+    await waitFor(() => expect(hub.calls('MoveToken')).toHaveLength(1))
     const order = hub.invocations.map((call) => call.method).filter((m) => m !== 'MarkActive')
-    expect(order.slice(-3)).toEqual(['PreviewMove', 'MoveToken', 'ClearPreview'])
+    expect(order.slice(-2)).toEqual(['PreviewMove', 'MoveToken'])
 
     // A preview confirmed at once never reaches the others.
     await user.click(cell(1, 0))
@@ -273,6 +297,7 @@ describe('EncounterPage', () => {
     await user.click(cell(0, 0))
     await user.click(cell(1, 0))
     await user.click(cell(1, 0))
+    await waitFor(() => expect(hub.calls('MoveToken')).toHaveLength(1))
     act(() => hub.latest.emit('TokenMoved', moved({ x: 2, y: 0, version: 1, byUserId: 'dm2' })))
     await act(async () => answer.resolve(refused('targetInvalid')))
 
