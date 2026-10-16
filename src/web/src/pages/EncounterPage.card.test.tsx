@@ -277,9 +277,7 @@ describe('the token card', () => {
 
     await user.click(cell(3, 0))
     await user.click(within(card()).getByRole('button', { name: de.tokenCard.show }))
-    expect(hub.calls('Ping')).toEqual([
-      [{ encounterId: ids.encounter, cell: null, tokenId: 't1' }],
-    ])
+    expect(hub.calls('Ping')).toEqual([[{ encounterId: ids.encounter, cell: null, tokenId: 't1' }]])
   })
 
   it('switches its buttons off without a connection', async () => {
@@ -397,7 +395,9 @@ describe('statuses on the card', () => {
     ).toBeInTheDocument()
     expect(calls.filter((c) => c.path.endsWith('/status-picker'))).toHaveLength(1)
 
-    await user.click(within(dialog).getByRole('button', { name: de.statuses.picker.add('Liegend') }))
+    await user.click(
+      within(dialog).getByRole('button', { name: de.statuses.picker.add('Liegend') }),
+    )
     expect(hub.calls('AddStatus')).toEqual([[{ tokenId: 't1', statusId: prone.id, level: null }]])
     const set = within(dialog).getByRole('button', { name: de.statuses.picker.remove('Liegend') })
     expect(set).toHaveAttribute('aria-pressed', 'true')
@@ -425,10 +425,10 @@ describe('statuses on the card', () => {
     await user.click(cell(3, 0))
     await user.click(within(card()).getByRole('button', { name: de.tokenCard.addStatus }))
     const dialog = await screen.findByRole('dialog')
-    await user.click(within(dialog).getByRole('button', { name: de.statuses.picker.add('Liegend') }))
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
-      de.errors.statusAlreadySet,
+    await user.click(
+      within(dialog).getByRole('button', { name: de.statuses.picker.add('Liegend') }),
     )
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(de.errors.statusAlreadySet)
   })
 
   it('offers no statuses on another player’s character, but the session DM may', async () => {

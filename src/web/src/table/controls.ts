@@ -34,8 +34,7 @@ export const IDLE: Controls = { mode: 'idle' }
  * that was tapped (a stack lists every token there), or a cell's terrain and elevation.
  */
 export type Card =
-  | { kind: 'token'; tokenId: string; cell: GridPoint }
-  | { kind: 'cell'; cell: GridPoint }
+  { kind: 'token'; tokenId: string; cell: GridPoint } | { kind: 'cell'; cell: GridPoint }
 
 /** A confirmed move: the token's new top-left cell. */
 export interface MoveIntent {

@@ -34,6 +34,8 @@ function fight() {
 }
 
 const indicator = (page: Page) => page.getByTestId('connection-indicator')
+/** The token card (stage 9), which replaced the board's info box on the fight page. */
+const tokenCard = (page: Page) => page.getByRole('region', { name: 'Figurenkarte' })
 
 async function openFight(page: Page, setup: ReturnType<typeof fight>) {
   backend.signIn(page.context(), setup.player)
@@ -126,7 +128,7 @@ test('a move by someone else slides in', async ({ page }) => {
   await expect.poll(draws).toBeGreaterThanOrEqual(5)
 
   await tapCell(page, 13, 4)
-  await expect(page.getByRole('status')).toContainText('Goblin 1')
+  await expect(tokenCard(page)).toContainText('Goblin 1')
 })
 
 test('with reduced motion a move by someone else jumps', async ({ page }) => {
@@ -137,7 +139,7 @@ test('with reduced motion a move by someone else jumps', async ({ page }) => {
 
   hub.move(setup.dm.id, setup.token('Goblin 1').id, 13, 4)
   await tapCell(page, 13, 4)
-  await expect(page.getByRole('status')).toContainText('Goblin 1')
+  await expect(tokenCard(page)).toContainText('Goblin 1')
   expect(await draws()).toBeLessThanOrEqual(3)
 })
 
@@ -194,5 +196,5 @@ test('a reconnect during a cold start shows the waking screen, then the board', 
   health.set('ok')
   await expect(indicator(page)).toHaveAttribute('data-status', 'connected', { timeout: 15_000 })
   await tapCell(page, 13, 4)
-  await expect(page.getByRole('status')).toContainText('Goblin 1')
+  await expect(tokenCard(page)).toContainText('Goblin 1')
 })

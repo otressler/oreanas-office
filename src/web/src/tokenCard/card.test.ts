@@ -35,7 +35,12 @@ describe('showCard', () => {
     const ogre = { ...goblin, id: 'ogre', x: 0, y: 0 }
     const friend = token('friend', { ownerUserId: 'other' })
     const tokens = [hero, ogre, friend]
-    const shown = showCard({ kind: 'token', tokenId: 'ogre', cell: { x: 0, y: 0 } }, tokens, scene, canMove)
+    const shown = showCard(
+      { kind: 'token', tokenId: 'ogre', cell: { x: 0, y: 0 } },
+      tokens,
+      scene,
+      canMove,
+    )
     expect(shown?.kind).toBe('token')
     if (shown?.kind !== 'token') return
     expect(shown.token.id).toBe('ogre')

@@ -11,7 +11,14 @@ import type { BoardState, BoardToken, BoardTokenStatus } from '../api/types'
 import { ringColor } from '../board/palette'
 import { Button } from '../components/ui'
 import { statusName } from '../statuses/names'
-import { canAddStatus, canRemoveStatus, findDefinition, MAX_LEVEL, MIN_LEVEL, personName } from '../statuses/rules'
+import {
+  canAddStatus,
+  canRemoveStatus,
+  findDefinition,
+  MAX_LEVEL,
+  MIN_LEVEL,
+  personName,
+} from '../statuses/rules'
 import { StatusIcon } from '../statuses/StatusIcon'
 import type { Controls } from '../table/controls'
 import { de } from '../text/de'

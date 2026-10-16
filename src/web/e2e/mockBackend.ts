@@ -83,7 +83,67 @@ interface Token {
   y: number
   elevation: number
   version: number
+  /** Stage 9: the statuses on the token, in the order they were put on. */
+  statuses?: S['BoardTokenStatus'][]
+  /** Stage 9: set while the token is off the board (knowledge/features/removing-tokens.md). */
+  removedAt?: string | null
 }
+
+/**
+ * A status definition as the server keeps it (src/Server/Statuses/StatusDefinition.cs):
+ * the 15 library conditions under their fixed ids, and custom statuses of a campaign.
+ */
+interface StoredStatus {
+  id: string
+  libraryKey: string | null
+  campaignId: string | null
+  name: string
+  hasLevels: boolean
+  iconDescription: string | null
+  characterId: string | null
+}
+
+/** The 15 conditions with the server's fixed ids (StatusLibrary.Conditions). */
+const LIBRARY_STATUSES: StoredStatus[] = [
+  ['blinded', 'Blind'],
+  ['charmed', 'Bezaubert'],
+  ['deafened', 'Taub'],
+  ['exhaustion', 'Erschöpfung'],
+  ['frightened', 'Verängstigt'],
+  ['grappled', 'Gepackt'],
+  ['incapacitated', 'Kampfunfähig'],
+  ['invisible', 'Unsichtbar'],
+  ['paralyzed', 'Gelähmt'],
+  ['petrified', 'Versteinert'],
+  ['poisoned', 'Vergiftet'],
+  ['prone', 'Liegend'],
+  ['restrained', 'Festgesetzt'],
+  ['stunned', 'Betäubt'],
+  ['unconscious', 'Bewusstlos'],
+].map(([key, name], i) => ({
+  id: `5a7d0000-0000-4000-8000-${(i + 1).toString(16).padStart(12, '0')}`,
+  libraryKey: key!,
+  campaignId: null,
+  name: name!,
+  hasLevels: key === 'exhaustion',
+  iconDescription: null,
+  characterId: null,
+}))
+
+/** The default ring colours (src/board/palette.ts CHARACTER_RINGS), for ping colours. */
+const CHARACTER_RINGS = [
+  '#4da3ff',
+  '#4cc76a',
+  '#f28c38',
+  '#b07cf0',
+  '#2fc4c0',
+  '#f064a8',
+  '#e3e05a',
+  '#e8e4dc',
+]
+/** The session DM's ping colour, and everyone else's without a character in the fight. */
+const DM_PING_COLOR = '#f0c46e'
+const NO_CHARACTER_PING_COLOR = '#ffffff'
 
 /** One move in the history (knowledge/domain/token.md, "Move history"). */
 interface TokenMove {
@@ -157,6 +217,11 @@ export class MockBackend {
   tokenImageDelayMs = 400
   /** Called when a version moves on; MockImageHub sends it to the watching devices. */
   onTokenImageUpdated: ((image: S['TokenImage']) => void) | null = null
+  // ---- Statuses (stage 9) -------------------------------------------------------------------
+  /** The library conditions and every campaign's custom statuses. */
+  readonly statusDefinitions: StoredStatus[] = LIBRARY_STATUSES.map((s) => ({ ...s }))
+  /** Status lists by owner key (statusListKey), each its statuses' ids in order. */
+  readonly statusLists = new Map<string, string[]>()
   googleEnabled = false
   private readonly signedIn = new Map<BrowserContext, string | null>()
 
@@ -423,7 +488,7 @@ export class MockBackend {
   }
 
   private newTokenImage(
-    ownerType: 'creatureType' | 'character',
+    ownerType: 'creatureType' | 'character' | 'status',
     ownerId: string,
     origin: S['AssetOrigin'],
     sourceAssetId: string | null,
@@ -462,7 +527,11 @@ export class MockBackend {
       upload ??
       matchPath('/api/campaigns/:campaignId/characters/:ownerId/portraits', url.pathname) ??
       matchPath('/api/campaigns/:campaignId/characters/:ownerId/portrait', url.pathname)
-    const params = list ?? icon ?? portrait
+    // Stage 9: a custom status's icons (src/Server/Statuses/StatusEndpoints.cs).
+    const statusIcon =
+      matchPath('/api/campaigns/:campaignId/statuses/:ownerId/icons', url.pathname) ??
+      matchPath('/api/campaigns/:campaignId/statuses/:ownerId/icon', url.pathname)
+    const params = list ?? icon ?? portrait ?? statusIcon
     if (!params) return null
     const me = this.users.find((u) => u.id === this.signedIn.get(context)) ?? null
     if (!me) return [401]
@@ -488,11 +557,20 @@ export class MockBackend {
       return [200, icons]
     }
 
-    const ownerType = icon ? 'creatureType' : 'character'
+    const ownerType = icon ? 'creatureType' : statusIcon ? 'status' : 'character'
     const ownerId = params.ownerId!
     let character: Character | undefined
     let typeVersion: number | null = null
-    if (ownerType === 'creatureType') {
+    if (ownerType === 'status') {
+      // Library statuses have static icons: 404. Who may edit the character the status was
+      // made for, or any `dm` member for a DM's status.
+      const status = this.statusDefinitions.find(
+        (s) => s.id === ownerId && s.campaignId === campaign.id,
+      )
+      if (!status) return [404]
+      const madeFor = this.characters.find((c) => c.id === status.characterId)
+      if (role !== 'dm' && madeFor?.ownerUserId !== me.id) return [403]
+    } else if (ownerType === 'creatureType') {
       if (role !== 'dm') return [403]
       const item = this.syncItems.get(ownerId)
       const imported = this.creatureTypes.find((t) => t.id === ownerId)
@@ -903,6 +981,8 @@ export class MockBackend {
     if (!role) return [403]
     const isDm = role === 'dm'
     const base = `/api/campaigns/${campaign.id}`
+    const statusReply = this.dispatchStatuses(campaign, me.id, isDm, method, path, body)
+    if (statusReply) return statusReply
 
     if (path === base && method === 'GET') return [200, this.campaignResponse(campaign, me.id)]
     if (path === `${base}/join-code` && method === 'POST') {
@@ -1296,7 +1376,17 @@ export class MockBackend {
 
   private boardResponse(encounter: Encounter, userId: string): S['BoardStateResponse'] {
     const session = this.sessions.find((s) => s.id === encounter.sessionId)
-    const campaignCharacters = this.characters.filter((c) => c.campaignId === encounter.campaignId)
+    const isSessionDm = encounter.status === 'active' && session?.dmUserId === userId
+    const onBoard = encounter.tokens.filter((t) => !t.removedAt)
+    // Removed tokens, newest first, for the session DM only.
+    const removed = isSessionDm
+      ? encounter.tokens
+          .filter((t) => t.removedAt)
+          .sort((a, b) => b.removedAt!.localeCompare(a.removedAt!))
+      : []
+    const used = new Set(
+      [...onBoard, ...removed].flatMap((t) => (t.statuses ?? []).map((s) => s.statusId)),
+    )
     return {
       encounterId: encounter.id,
       campaignId: encounter.campaignId,
@@ -1304,25 +1394,377 @@ export class MockBackend {
       name: encounter.name,
       status: encounter.status,
       map: encounter.map,
-      tokens: encounter.tokens.map((token) => {
-        const character = campaignCharacters.find((c) => c.id === token.characterId)
-        return {
-          ...token,
-          ...this.tokenStats(token),
-          ownerUserId: character?.ownerUserId ?? null,
-          // Ring colours follow the order characters joined the campaign.
-          colorIndex: character ? campaignCharacters.indexOf(character) : null,
-          imageUrl: this.pickedTokenImageUrl(token.characterId ?? token.creatureTypeId),
-          color: character?.color ?? null,
-          statuses: [],
-        }
-      }),
-      isSessionDm: encounter.status === 'active' && session?.dmUserId === userId,
+      tokens: onBoard.map((token) => this.boardToken(encounter, token)),
+      isSessionDm,
       undoableMove: this.undoableMove(encounter, userId),
-      // Stage 9 contract: removed tokens, statuses and people come with the lanes.
-      removedTokens: [],
-      statuses: [],
-      people: [],
+      removedTokens: removed.map((token) => this.boardToken(encounter, token)),
+      statuses: this.statusDefinitions.filter((s) => used.has(s.id)).map((s) => this.statusView(s)),
+      people: this.boardPeople(encounter),
+    }
+  }
+
+  /** A token as the board shows it: size, owner, ring, picture and statuses. */
+  private boardToken(encounter: Encounter, token: Token): S['BoardToken'] {
+    const campaignCharacters = this.characters.filter((c) => c.campaignId === encounter.campaignId)
+    const character = campaignCharacters.find((c) => c.id === token.characterId)
+    const { statuses, removedAt, ...rest } = token
+    return {
+      ...rest,
+      ...this.tokenStats(token),
+      ownerUserId: character?.ownerUserId ?? null,
+      // Ring colours follow the order characters joined the campaign.
+      colorIndex: character ? campaignCharacters.indexOf(character) : null,
+      imageUrl: this.pickedTokenImageUrl(token.characterId ?? token.creatureTypeId),
+      color: character?.color ?? null,
+      statuses: [...(statuses ?? [])],
+      ...(removedAt ? { removedAt } : {}),
+    }
+  }
+
+  /**
+   * Every campaign member with their ping colour (knowledge/features/pings-and-arrows.md,
+   * "Colours"): the session DM gold, a player their first character's ring, else white.
+   */
+  private boardPeople(encounter: Encounter): S['BoardPerson'][] {
+    const campaign = this.campaigns.find((c) => c.id === encounter.campaignId)!
+    const session = this.sessions.find((s) => s.id === encounter.sessionId)
+    const campaignCharacters = this.characters.filter((c) => c.campaignId === campaign.id)
+    const inFight = new Set(encounter.tokens.map((t) => t.characterId))
+    return campaign.members.map((member) => {
+      const first = campaignCharacters.find(
+        (c) => c.ownerUserId === member.userId && inFight.has(c.id),
+      )
+      const pingColor =
+        session?.dmUserId === member.userId
+          ? DM_PING_COLOR
+          : first
+            ? (first.color ??
+              CHARACTER_RINGS[campaignCharacters.indexOf(first) % CHARACTER_RINGS.length]!)
+            : NO_CHARACTER_PING_COLOR
+      return { userId: member.userId, displayName: this.displayName(member.userId), pingColor }
+    })
+  }
+
+  // ---- Statuses and status lists (stage 9) ---------------------------------------------------
+  // Follows src/Server/Statuses/StatusEndpoints.cs and knowledge/features/statuses.md. A list
+  // read for the first time is made with all 15 conditions.
+
+  /** A status as the app gets it: library icons are static files, custom ones the picked version. */
+  private statusView(status: StoredStatus): S['StatusDefinitionView'] {
+    return {
+      id: status.id,
+      libraryKey: status.libraryKey,
+      name: status.name,
+      hasLevels: status.hasLevels,
+      iconUrl: status.libraryKey
+        ? `/statuses/${status.libraryKey}.webp`
+        : this.pickedTokenImageUrl(status.id),
+      iconDescription: status.iconDescription,
+      characterId: status.characterId,
+    }
+  }
+
+  private statusListKey(campaignId: string, owner: { characterId: string } | { userId: string }) {
+    return 'characterId' in owner
+      ? `character:${owner.characterId}`
+      : `dm:${campaignId}:${owner.userId}`
+  }
+
+  /** The list's status ids, made with the 15 conditions on first use. */
+  private statusList(key: string): string[] {
+    let list = this.statusLists.get(key)
+    if (!list) {
+      list = LIBRARY_STATUSES.map((s) => s.id)
+      this.statusLists.set(key, list)
+    }
+    return list
+  }
+
+  /** A library status or a custom status of the campaign. */
+  private campaignStatus(campaignId: string, statusId: string): StoredStatus | undefined {
+    return this.statusDefinitions.find(
+      (s) => s.id === statusId && (s.campaignId === null || s.campaignId === campaignId),
+    )
+  }
+
+  private statusViews(ids: readonly string[]): S['StatusDefinitionView'][] {
+    return ids.flatMap((id) => {
+      const status = this.statusDefinitions.find((s) => s.id === id)
+      return status ? [this.statusView(status)] : []
+    })
+  }
+
+  /** Every status the campaign can put in a list: the 15 conditions, then its own by name. */
+  private campaignStatuses(campaignId: string): StoredStatus[] {
+    const own = this.statusDefinitions
+      .filter((s) => s.campaignId === campaignId)
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'))
+    return [...this.statusDefinitions.filter((s) => s.libraryKey), ...own]
+  }
+
+  private dispatchStatuses(
+    campaign: Campaign,
+    userId: string,
+    isDm: boolean,
+    method: string,
+    path: string,
+    body: Record<string, unknown>,
+  ): Reply | null {
+    const base = `/api/campaigns/${campaign.id}`
+    let params: Record<string, string> | null
+
+    /** PUT a whole list: library or campaign statuses, each once. */
+    const setList = (key: string, characterId: string | null, canEdit: boolean): Reply => {
+      const ids = Array.isArray(body.statusIds) ? (body.statusIds as unknown[]).map(String) : []
+      for (const [i, id] of ids.entries()) {
+        if (!this.campaignStatus(campaign.id, id) || ids.indexOf(id) !== i) {
+          return error('statusNotFound', `statusIds[${i}]`)
+        }
+      }
+      this.statusLists.set(key, ids)
+      return [200, { id: key, characterId, statuses: this.statusViews(ids), canEdit }]
+    }
+
+    if (path === `${base}/statuses` && method === 'GET') {
+      return [200, this.campaignStatuses(campaign.id).map((s) => this.statusView(s))]
+    }
+    if (path === `${base}/statuses` && method === 'POST') {
+      const characterId = typeof body.characterId === 'string' ? body.characterId : null
+      let key: string
+      if (characterId) {
+        const character = this.characters.find(
+          (c) => c.id === characterId && c.campaignId === campaign.id,
+        )
+        if (!character) return [404]
+        if (!isDm && character.ownerUserId !== userId) return [403]
+        key = this.statusListKey(campaign.id, { characterId })
+      } else {
+        if (!isDm) return [403]
+        key = this.statusListKey(campaign.id, { userId })
+      }
+      const name = String(body.name ?? '').trim()
+      if (!name || name.length > 40) return error('nameInvalid', 'name')
+      const description = String(body.iconDescription ?? '').trim()
+      if (description.length > 300) return error('textTooLong', 'iconDescription')
+      const status: StoredStatus = {
+        id: randomUUID(),
+        libraryKey: null,
+        campaignId: campaign.id,
+        name,
+        hasLevels: body.hasLevels === true,
+        iconDescription: description || null,
+        characterId,
+      }
+      this.statusDefinitions.push(status)
+      this.statusList(key).push(status.id)
+      return [201, this.statusView(status)]
+    }
+    if ((params = matchPath(`${base}/characters/:characterId/status-list`, path))) {
+      const character = this.characters.find(
+        (c) => c.id === params!.characterId && c.campaignId === campaign.id,
+      )
+      if (!character) return [404]
+      const canEdit = isDm || character.ownerUserId === userId
+      const key = this.statusListKey(campaign.id, { characterId: character.id })
+      if (method === 'GET') {
+        const ids = this.statusList(key)
+        return [
+          200,
+          { id: key, characterId: character.id, statuses: this.statusViews(ids), canEdit },
+        ]
+      }
+      if (method === 'PUT') return canEdit ? setList(key, character.id, canEdit) : [403]
+    }
+    if (path === `${base}/dm-status-list`) {
+      if (!isDm) return [403]
+      const key = this.statusListKey(campaign.id, { userId })
+      if (method === 'GET') {
+        return [
+          200,
+          {
+            id: key,
+            characterId: null,
+            statuses: this.statusViews(this.statusList(key)),
+            canEdit: true,
+          },
+        ]
+      }
+      if (method === 'PUT') return setList(key, null, true)
+    }
+    if (
+      (params = matchPath(`${base}/encounters/:encounterId/status-picker`, path)) &&
+      method === 'GET'
+    ) {
+      const encounter = this.encounters.find(
+        (e) => e.id === params!.encounterId && e.campaignId === campaign.id,
+      )
+      if (!encounter || encounter.status !== 'active') return [404]
+      const session = this.sessions.find((s) => s.id === encounter.sessionId)
+      const sessionDm = session?.dmUserId === userId
+      const characters = this.characters
+        .filter((c) => encounter.tokens.some((t) => t.characterId === c.id && !t.removedAt))
+        .filter((c) => sessionDm || c.ownerUserId === userId)
+        .sort((a, b) => a.name.localeCompare(b.name, 'de'))
+      const lists: S['StatusPickerList'][] = characters.map((c) => ({
+        kind: 'character',
+        characterId: c.id,
+        characterName: c.name,
+        statuses: this.statusViews(
+          this.statusList(this.statusListKey(campaign.id, { characterId: c.id })),
+        ),
+      }))
+      if (sessionDm) {
+        lists.unshift({
+          kind: 'dm',
+          characterId: null,
+          characterName: null,
+          statuses: this.statusViews(this.statusList(this.statusListKey(campaign.id, { userId }))),
+        })
+      }
+      return [200, { lists }]
+    }
+    return null
+  }
+
+  /** Seeding: a status already on a token, put on by `userId`. */
+  putStatus(token: Token, libraryKey: string, userId: string, level: number | null = null) {
+    const status = this.statusDefinitions.find((s) => s.libraryKey === libraryKey)!
+    token.statuses = [
+      ...(token.statuses ?? []),
+      { statusId: status.id, level, appliedByUserId: userId, appliedAt: new Date().toISOString() },
+    ]
+  }
+
+  // ---- Statuses and removing tokens at the table (stage 9; e2e/mockHub.ts broadcasts) -------
+
+  /** The token's encounter, after the hub's common checks; an error code otherwise. */
+  private tableToken(
+    userId: string | null,
+    tokenId: string,
+  ):
+    | { error: ErrorCode }
+    | {
+        error: null
+        encounter: Encounter
+        token: Token
+        campaign: Campaign
+        isSessionDm: boolean
+      } {
+    const encounter = this.encounters.find((e) => e.tokens.some((t) => t.id === tokenId))
+    const campaign = encounter && this.campaigns.find((c) => c.id === encounter.campaignId)
+    if (!encounter || !campaign || !userId || !memberOf(campaign, userId)) {
+      return { error: 'tokenNotFound' }
+    }
+    if (encounter.status !== 'active') return { error: 'encounterNotActive' }
+    const token = encounter.tokens.find((t) => t.id === tokenId)!
+    const isSessionDm = this.sessions.find((s) => s.id === encounter.sessionId)?.dmUserId === userId
+    return { error: null, encounter, token, campaign, isSessionDm }
+  }
+
+  private statusesChanged(encounter: Encounter, token: Token): S['StatusResult'] {
+    const statuses = [...(token.statuses ?? [])]
+    return {
+      error: null,
+      change: {
+        encounterId: encounter.id,
+        tokenId: token.id,
+        statuses,
+        definitions: this.statusViews(statuses.map((s) => s.statusId)),
+      },
+    }
+  }
+
+  /** AddStatus: the session DM on any token, others on their own characters and creatures. */
+  addStatus(userId: string | null, request: S['AddStatusRequest']): S['StatusResult'] {
+    const found = this.tableToken(userId, request.tokenId)
+    if (found.error !== null) return { error: found.error, change: null }
+    const { encounter, token, campaign, isSessionDm } = found
+    if (token.removedAt) return { error: 'tokenNotFound', change: null }
+    const owner = this.characters.find((c) => c.id === token.characterId)?.ownerUserId
+    if (!isSessionDm && token.kind === 'character' && owner !== userId) {
+      return { error: 'notYourToken', change: null }
+    }
+    const status = this.campaignStatus(campaign.id, request.statusId)
+    if (!status) return { error: 'statusNotFound', change: null }
+    if ((token.statuses ?? []).some((s) => s.statusId === status.id)) {
+      return { error: 'statusAlreadySet', change: null }
+    }
+    const level = request.level ?? null
+    if (status.hasLevels ? level !== null && (level < 1 || level > 6) : level !== null) {
+      return { error: 'levelInvalid', change: null }
+    }
+    token.statuses = [
+      ...(token.statuses ?? []),
+      {
+        statusId: status.id,
+        level: status.hasLevels ? (level ?? 1) : null,
+        appliedByUserId: userId!,
+        appliedAt: new Date().toISOString(),
+      },
+    ]
+    return this.statusesChanged(encounter, token)
+  }
+
+  /** RemoveStatus and SetStatusLevel: the session DM any, others the ones they put on. */
+  changeStatus(
+    userId: string | null,
+    request: S['RemoveStatusRequest'] & { level?: number },
+  ): S['StatusResult'] {
+    const found = this.tableToken(userId, request.tokenId)
+    if (found.error !== null) return { error: found.error, change: null }
+    const { encounter, token, isSessionDm } = found
+    const set = (token.statuses ?? []).find((s) => s.statusId === request.statusId)
+    if (!set) return { error: 'statusNotFound', change: null }
+    if (!isSessionDm && set.appliedByUserId !== userId) {
+      return { error: 'notYourStatus', change: null }
+    }
+    if (request.level === undefined) {
+      token.statuses = token.statuses!.filter((s) => s !== set)
+    } else {
+      const status = this.statusDefinitions.find((s) => s.id === set.statusId)!
+      if (!status.hasLevels || request.level < 1 || request.level > 6) {
+        return { error: 'levelInvalid', change: null }
+      }
+      set.level = request.level
+    }
+    return this.statusesChanged(encounter, token)
+  }
+
+  /** RemoveToken: the session DM only; the token keeps its history and statuses. */
+  removeToken(
+    userId: string | null,
+    tokenId: string,
+  ): { result: S['HubResult']; event?: S['TokenRemovedEvent'] } {
+    const found = this.tableToken(userId, tokenId)
+    if (found.error !== null) return { result: { error: found.error } }
+    const { encounter, token, isSessionDm } = found
+    if (token.removedAt) return { result: { error: 'tokenNotFound' } }
+    if (!isSessionDm) return { result: { error: 'notSessionDm' } }
+    token.removedAt = new Date().toISOString()
+    return {
+      result: { error: null },
+      event: { encounterId: encounter.id, tokenId, byUserId: userId!, removedAt: token.removedAt },
+    }
+  }
+
+  /** RestoreToken: back on the cell it left. */
+  restoreToken(
+    userId: string | null,
+    tokenId: string,
+  ): { result: S['HubResult']; event?: S['TokenRestoredEvent'] } {
+    const found = this.tableToken(userId, tokenId)
+    if (found.error !== null) return { result: { error: found.error } }
+    const { encounter, token, isSessionDm } = found
+    if (!token.removedAt) return { result: { error: 'tokenNotFound' } }
+    if (!isSessionDm) return { result: { error: 'notSessionDm' } }
+    token.removedAt = null
+    return {
+      result: { error: null },
+      event: {
+        encounterId: encounter.id,
+        token: this.boardToken(encounter, token),
+        definitions: this.statusViews((token.statuses ?? []).map((s) => s.statusId)),
+      },
     }
   }
 
@@ -1351,6 +1793,7 @@ export class MockBackend {
     }
     if (encounter.status !== 'active') return refused('encounterNotActive')
     const token = encounter.tokens.find((t) => t.id === request.tokenId)!
+    if (token.removedAt) return refused('tokenNotFound')
     const isSessionDm = this.sessions.find((s) => s.id === encounter.sessionId)?.dmUserId === userId
     const owner = this.characters.find((c) => c.id === token.characterId)?.ownerUserId
     if (!isSessionDm && !(token.kind === 'character' && owner === userId)) {

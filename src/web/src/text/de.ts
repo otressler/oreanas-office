@@ -1649,7 +1649,8 @@ export const de = {
       iconHint: 'Kurz, etwa „ein lila Auge in einer Hand“. Daraus wird das Symbol gemalt.',
       hasLevels: 'hat Stufen (1 bis 6)',
       create: 'Anlegen',
-      created: (name: string) => `„${name}“ steht jetzt in der Liste. Das Symbol lässt sich unten erzeugen.`,
+      created: (name: string) =>
+        `„${name}“ steht jetzt in der Liste. Das Symbol lässt sich unten erzeugen.`,
     },
     /** A custom status's icon gallery (knowledge/features/token-icons.md, the same style). */
     icon: {
@@ -1658,7 +1659,8 @@ export const de = {
       generate: 'Symbol erzeugen',
       regenerate: 'Neues Symbol erzeugen',
       confirmTitle: 'Symbol erzeugen?',
-      confirmFrom: 'Das Bildmodell malt das Symbol aus dem Namen und der Beschreibung des Zustands.',
+      confirmFrom:
+        'Das Bildmodell malt das Symbol aus dem Namen und der Beschreibung des Zustands.',
     },
   },
 
@@ -1705,7 +1707,6 @@ export const de = {
     /** The DM's list of removed tokens, in the fight's top bar. */
     removedList: 'Vom Feld genommen',
     removedListCount: (count: number) => `Vom Feld genommen (${count})`,
-    removedEmpty: 'Bisher ist keine Figur vom Feld genommen.',
     restore: 'Zurückholen',
     /** A removed token's accessible restore name, e.g. "Goblin 3 zurückholen". */
     restoreRow: (label: string) => `${label} zurückholen`,

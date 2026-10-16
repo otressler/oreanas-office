@@ -455,9 +455,7 @@ export function FightTable({
             canRemove={(status) => canRemoveStatus(status, board, me.id)}
             connected={connected}
             onAdd={(statusId) =>
-              statusCall(() =>
-                table.addStatus({ tokenId: pickerToken.id, statusId, level: null }),
-              )
+              statusCall(() => table.addStatus({ tokenId: pickerToken.id, statusId, level: null }))
             }
             onRemove={(statusId) =>
               statusCall(() => table.removeStatus({ tokenId: pickerToken.id, statusId }))

@@ -125,10 +125,11 @@ describe('StatusListEditor', () => {
     // The choice offers what isn't in the list, the removed one included.
     const select = await screen.findByRole('combobox', { name: t.addLabel })
     await vi.waitFor(() =>
-      expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual([
-        'Blind',
-        'Vergiftet',
-      ]),
+      expect(
+        within(select)
+          .getAllByRole('option')
+          .map((o) => o.textContent),
+      ).toEqual(['Blind', 'Vergiftet']),
     )
     await user.selectOptions(select, 's-poisoned')
     await user.click(screen.getByRole('button', { name: t.add }))

@@ -3,7 +3,13 @@
 // everyone else puts them on their own characters and on creatures, and removes (or
 // changes the level of) the ones they put on. The server checks the same rules; the app
 // only hides what isn't allowed.
-import type { BoardPerson, BoardState, BoardToken, BoardTokenStatus, StatusDefinition } from '../api/types'
+import type {
+  BoardPerson,
+  BoardState,
+  BoardToken,
+  BoardTokenStatus,
+  StatusDefinition,
+} from '../api/types'
 
 /** Levels go from 1 to 6 (Exhaustion, and custom statuses with levels). */
 export const MIN_LEVEL = 1

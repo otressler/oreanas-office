@@ -156,6 +156,14 @@ export class MockHub {
       case 'ClearPreview':
       case 'MarkActive':
         break
+      // ---- Statuses and removing tokens (stage 9, card and status lists lane) ----
+      case 'AddStatus':
+      case 'RemoveStatus':
+      case 'SetStatusLevel':
+      case 'RemoveToken':
+      case 'RestoreToken':
+        result = this.statusOrRemoval(userId, message.target, args)
+        break
       default:
         throw new Error(`Unknown hub method ${message.target}`)
     }
@@ -172,6 +180,51 @@ export class MockHub {
     for (const client of this.clients) {
       if (client.encounterId === move.encounterId) {
         this.send(client, { type: 1, target: 'TokenMoved', arguments: [move] })
+      }
+    }
+  }
+
+  // ---- Statuses and removing tokens (stage 9, card and status lists lane) ----------------
+  // Checked and saved by MockBackend, then sent to every device joined to the encounter,
+  // the caller included, as the real hub does.
+
+  private statusOrRemoval(userId: string | null, method: string, args: unknown[]): unknown {
+    switch (method) {
+      case 'AddStatus':
+      case 'RemoveStatus':
+      case 'SetStatusLevel': {
+        const request = args[0] as S['SetStatusLevelRequest']
+        const result =
+          method === 'AddStatus'
+            ? this.backend.addStatus(userId, args[0] as S['AddStatusRequest'])
+            : this.backend.changeStatus(
+                userId,
+                method === 'RemoveStatus'
+                  ? { tokenId: request.tokenId, statusId: request.statusId }
+                  : request,
+              )
+        if (result.change)
+          this.sendToEncounter(result.change.encounterId, 'TokenStatusesChanged', result.change)
+        return result
+      }
+      case 'RemoveToken': {
+        const { result, event } = this.backend.removeToken(userId, String(args[0]))
+        if (event) this.sendToEncounter(event.encounterId, 'TokenRemoved', event)
+        return result
+      }
+      default: {
+        const { result, event } = this.backend.restoreToken(userId, String(args[0]))
+        if (event) this.sendToEncounter(event.encounterId, 'TokenRestored', event)
+        return result
+      }
+    }
+  }
+
+  /** A server message to every device joined to the encounter. */
+  private sendToEncounter(encounterId: string, target: string, event: unknown) {
+    for (const client of this.clients) {
+      if (client.encounterId === encounterId) {
+        this.send(client, { type: 1, target, arguments: [event] })
       }
     }
   }
