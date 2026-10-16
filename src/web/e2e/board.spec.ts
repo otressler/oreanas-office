@@ -3,6 +3,7 @@
 // land in test-results/board/ for a person to look at; nothing compares pixels.
 import { expect, test, type Page } from '@playwright/test'
 import { MockBackend, sampleMap } from './mockBackend.ts'
+import { MockHub } from './mockHub.ts'
 import { cellCentre, tapCell } from './support.ts'
 
 let backend: MockBackend
@@ -10,6 +11,7 @@ let backend: MockBackend
 test.beforeEach(async ({ context }) => {
   backend = new MockBackend()
   await backend.attach(context)
+  await new MockHub(backend).attach(context)
 })
 
 /** A running fight on a sample map, seen by a player with characters on the board. */

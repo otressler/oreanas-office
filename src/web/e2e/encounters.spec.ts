@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { MockBackend, sampleMap } from './mockBackend.ts'
+import { MockHub } from './mockHub.ts'
 
 // Text the specs look for; mirrors src/text/de.ts.
 const text = {
@@ -29,6 +30,7 @@ let backend: MockBackend
 test.beforeEach(async ({ context }) => {
   backend = new MockBackend()
   await backend.attach(context)
+  await new MockHub(backend).attach(context)
 })
 
 function panel(page: Page, title: string) {

@@ -37,7 +37,7 @@ test('opens the roadmap while the server sleeps', async ({ page, context }) => {
 
   await expect(shellHeader(page)).toBeVisible()
   await expect(page.getByRole('heading', { level: 1, name: 'Fahrplan' })).toBeVisible()
-  await expect(page.getByRole('article', { name: 'Messen' })).toBeVisible()
+  await expect(page.getByRole('article', { name: 'Grundgerüst' })).toBeVisible()
   await expect(page.getByText(text.wakingTitle)).toHaveCount(0)
 })
 
