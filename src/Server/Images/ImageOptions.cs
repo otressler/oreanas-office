@@ -1,9 +1,9 @@
 namespace OreanasOffice.Server.Images;
 
-// The "Images" configuration section. Endpoint, ApiKey and Deployment name the Foundry
-// deployment (knowledge/decisions/image-generation-approach.md); without them the server
-// runs, and generating answers ImagesUnavailable. Locally they come from the AZURE_* values
-// in .env (scripts/dev.ps1); in production from Container Apps secrets.
+// The "Images" configuration section. Endpoint and Deployment name the Foundry deployment
+// (knowledge/decisions/image-generation-approach.md); without them the server runs, and
+// generating answers ImagesUnavailable. Locally they come from the AZURE_* values in .env
+// (scripts/dev.ps1); in production from the container app's settings.
 public sealed class ImageOptions
 {
     public const string Section = "Images";
@@ -11,13 +11,14 @@ public sealed class ImageOptions
     // https://<resource>.services.ai.azure.com/openai/v1, the OpenAI-compatible v1 API.
     public string? Endpoint { get; set; }
 
+    // Optional. Without a key the server signs in with Microsoft Entra ID: the container
+    // app's managed identity in production, `az login` locally (knowledge/decisions/hosting.md).
     public string? ApiKey { get; set; }
 
     // The deployment name, sent as `model`.
     public string? Deployment { get; set; }
 
-    public bool Configured =>
-        !string.IsNullOrWhiteSpace(Endpoint) && !string.IsNullOrWhiteSpace(ApiKey) && !string.IsNullOrWhiteSpace(Deployment);
+    public bool Configured => !string.IsNullOrWhiteSpace(Endpoint) && !string.IsNullOrWhiteSpace(Deployment);
 
     // knowledge/decisions/image-budget.md: high quality by default, JPEG so phones load a
     // few hundred kilobytes rather than a 2–3 MB PNG. The edits endpoint refuses WebP.

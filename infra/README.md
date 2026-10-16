@@ -25,6 +25,7 @@ Planned use: two 12-hour sessions plus about 10 hours of prep a month, so about 
 | Log Analytics workspace | `log-oreanas` | PerGB2018, 30 days retention, daily cap 0.1 GB | **$0**. The first 5 GB a month per billing account are free, and the cap allows at most about 3 GB. Beyond 5 GB: $2.99/GB. 31 days of retention are included | [pricing](https://azure.microsoft.com/pricing/details/monitor/) |
 | Budgets | `budget-10`, `budget-30` | Monthly, on the resource group, email at 100 % actual and 100 % forecast | $0 | |
 | Role assignment | | Storage Blob Data Contributor for the app's identity on the storage account | $0 | |
+| *Outside this resource group:* role assignment | | Cognitive Services OpenAI User for the app's identity on the Foundry resource, assigned by hand (step 5). The images themselves are billed per token on the Foundry deployment | $0 for the role | |
 | Custom domain and managed certificate | `oreanas-office.otressler.de`, `cert-oreanas-office` | Host name on the app, free DigiCert certificate in the environment, renewed by Azure, validated by CNAME | $0. Custom domains and managed certificates are free in Container Apps; the domain is already registered at INWX | [custom domains](https://learn.microsoft.com/azure/container-apps/custom-domains-managed-certificates) |
 | *Outside Azure:* GitHub Container Registry | `ghcr.io/otressler/oreanas-office` | Private or public package | $0. GitHub says Container registry storage and bandwidth are currently free | [GitHub Packages billing](https://docs.github.com/billing/concepts/product-billing/github-packages) |
 | **Total** | | | **about $0–1 a month** | |
@@ -74,8 +75,7 @@ $env:GOOGLE_CLIENT_ID          = '<Google OAuth client id>'                  # G
 $env:GOOGLE_CLIENT_SECRET      = '<Google OAuth client secret>'
 $env:ADMIN_EMAIL               = '<your Google address>'                     # becomes site admin on its first Google sign-in
 $env:AZURE_OPENAI_ENDPOINT     = 'https://<resource>.services.ai.azure.com/openai/v1'   # the Foundry image deployment, as in .env
-$env:AZURE_API_KEY             = '<Foundry key>'                             # stored as the Container Apps secret images-api-key
-$env:AZURE_IMAGE_DEPLOYMENT    = '<image deployment name>'
+$env:AZURE_IMAGE_DEPLOYMENT    = '<image deployment name>'                   # no key: the app signs in with its identity (step 5)
 $env:SQL_CLIENT_IP             = (Invoke-RestMethod https://api.ipify.org)   # lets you run step 5 from this machine
 $env:GHCR_USERNAME             = 'otressler'                                 # private package only
 $env:GHCR_TOKEN                = '<classic PAT with read:packages>'          # private package only
@@ -92,7 +92,7 @@ Keep the outputs. You need `appUrl`, `sqlServerFqdn` and `appName` next. To see 
 az deployment group show --resource-group rg-ot-oreanasoffice-prod-001 --name main --query properties.outputs
 ```
 
-### 5. Give the app access to the database
+### 5. Give the app access to the database and the image model
 
 Do this before the real app is first deployed (step 7). The app applies its migrations on startup and can't reach the database before this.
 
@@ -103,6 +103,17 @@ sqlcmd -S "<sqlServerFqdn>" -d OreanasOffice --authentication-method ActiveDirec
 The last query should list `db_datareader`, `db_datawriter` and `db_ddladmin`. Alternative: open the database in the Azure portal → Query editor, sign in with Microsoft Entra, and paste the script.
 
 The first connection may take up to a minute while the paused database resumes. If you don't need the firewall rule for your IP any more, run step 4 again without `SQL_CLIENT_IP`.
+
+The app calls the Foundry image deployment with its managed identity, not an API key. The Foundry resource lives outside this resource group (`ot-mf-privateai` in `rg-ot-mpn-ai`), so the template doesn't assign the role; do it once by hand:
+
+```powershell
+$principal = az containerapp show --name oreanas-office --resource-group rg-ot-oreanasoffice-prod-001 --query identity.principalId --output tsv
+$foundry   = az cognitiveservices account show --name ot-mf-privateai --resource-group rg-ot-mpn-ai --query id --output tsv
+az role assignment create --assignee-object-id $principal --assignee-principal-type ServicePrincipal `
+    --role "Cognitive Services OpenAI User" --scope $foundry
+```
+
+The role can take a few minutes to apply. Until then, generating a background fails with 401 or 403 from the image model.
 
 ### 6. Let GitHub Actions deploy (OIDC, no stored Azure secret)
 
@@ -222,7 +233,7 @@ In the portal: the database's Overview shows "Free monthly vCore amount" and its
 - **Don't run `deploy.ps1` while CI deploys.** The script reads the live image when it starts. If CI switches to a new image during the run, the script puts the older one back (this happened on 2026-10-11). Wait until the CI run on `main` has finished, or re-run its `deploy` job afterwards.
 - **Custom domain and manual deployments.** `main.bicepparam` binds the certificate only when `CUSTOM_DOMAIN_CERTIFICATE_EXISTS` is `true`, which `deploy.ps1` sets. A manual `az deployment group create` without it unbinds the certificate, and the custom domain stops serving HTTPS until the next `deploy.ps1` run.
 - **Recreating the environment** gives it a new default host name and verification ID, and deletes the certificate. Update the CNAME and TXT records (step 8) before deploying again.
-- **Recreating the container app** gives it a new identity. Re-run `grant-app-access.sql` (after `DROP USER [oreanas-office];`) and the role assignment in step 6.
+- **Recreating the container app** gives it a new identity. Re-run `grant-app-access.sql` (after `DROP USER [oreanas-office];`), the Foundry role assignment in step 5 and the role assignment in step 6.
 - **Budget start date** defaults to the first of the month you deploy in. If a later re-deploy is rejected because the start date changed, pass the original one: `az deployment group create --name main --resource-group rg-ot-oreanasoffice-prod-001 --parameters infra/main.bicepparam --parameters budgetStartDate=2026-10-01` (with `CONTAINER_IMAGE` set to the live image).
 - **Storage without shared keys.** The portal's storage browser needs Microsoft Entra sign-in and a data role for you (for example Storage Blob Data Reader). You don't need it for normal use.
 - **Log cap.** If logs ever reach 0.1 GB in a day, ingestion stops until the next day. That's deliberate; raise `logDailyQuotaGb` if you need more while debugging.
@@ -239,5 +250,7 @@ In the portal: the database's Overview shows "Free monthly vCore amount" and its
 | `Authentication__Google__ClientId` | The Google OAuth client id. Its redirect URIs must include `https://oreanas-office.otressler.de/api/auth/google/callback` |
 | `Authentication__Google__ClientSecret` | Reference to the Container Apps secret `google-client-secret` |
 | `Admin__Email` | The site admin's Google address ([auth](../knowledge/decisions/auth.md)) |
+| `Images__Endpoint` | The Foundry deployment's OpenAI v1 endpoint, `https://<resource>.services.ai.azure.com/openai/v1` |
+| `Images__Deployment` | The image deployment's name, sent as `model` |
 
-`ConnectionStrings__Storage` and `AZURE_CLIENT_ID` are deliberately not set. The app uses `DefaultAzureCredential` with the system-assigned identity.
+`ConnectionStrings__Storage`, `Images__ApiKey` and `AZURE_CLIENT_ID` are deliberately not set. The app uses `DefaultAzureCredential` with the system-assigned identity for SQL, Blob Storage and Foundry.

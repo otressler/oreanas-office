@@ -25,9 +25,9 @@ param googleClientSecret = readEnvironmentVariable('GOOGLE_CLIENT_SECRET', '')
 param adminEmail = readEnvironmentVariable('ADMIN_EMAIL', '')
 
 // The Foundry image deployment for map backgrounds (knowledge/decisions/image-generation-approach.md),
-// the same one local development uses. infra/deploy.ps1 requires all three.
+// the same one local development uses. infra/deploy.ps1 requires both. No API key: the app signs
+// in with its managed identity.
 param imagesEndpoint = readEnvironmentVariable('AZURE_OPENAI_ENDPOINT', '')
-param imagesApiKey = readEnvironmentVariable('AZURE_API_KEY', '')
 param imagesDeployment = readEnvironmentVariable('AZURE_IMAGE_DEPLOYMENT', '')
 
 // Private ghcr.io package: user name + PAT with read:packages. Leave both unset if the package is public.

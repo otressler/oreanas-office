@@ -77,7 +77,7 @@ Image generation on Microsoft Foundry is paid per image and isn't part of hostin
 - One resource group in one region close to the players.
 - A Container Apps environment on the Consumption plan only. Don't add dedicated workload profiles, because they bill even when idle.
 - Keep logs small. Log Analytics charges per GB ingested, so log warnings and errors, not every request.
-- Secrets (Foundry key, Google client secret, database connection) are Container Apps secrets, never committed. Use a managed identity for Blob and SQL where the stack supports it.
+- Secrets (Google client secret, database connection) are Container Apps secrets, never committed. Use a managed identity for Blob, SQL and Foundry where the stack supports it.
 - Deploy from the local machine or GitHub Actions: build the image, push it to GitHub Container Registry, update the container app.
 - Backups: Azure SQL point-in-time restore is included in the free offer. Turn on soft delete for Blob Storage.
 - Set an **Azure budget alert at $30**, and a second one at $10 as an early warning.
@@ -89,7 +89,7 @@ The templates are in `infra/`, with the owner's step-by-step guide in `infra/REA
 - **Region:** Germany West Central (Frankfurt), the closest to the players, for the resource group, database, storage and logs. The Container Apps environment and the app run in **West Europe** (Amsterdam), because Container Apps had no capacity in Frankfurt during the first deployment on 2026-10-11 (`AKSCapacityHeavyUsage`). The project owner chose this over retrying or moving everything. The cost is a few milliseconds per database query and cents of data transfer between the regions. The parameter `appLocation` in `infra/main.bicepparam` sets the app's region.
 - **Database size:** the free serverless database is capped at 1 vCore (0.5 minimum), so a busy session can't use up the free allowance twice as fast.
 - **Placeholder image:** the first deployment runs a public ASP.NET sample image on port 8080 until CI pushes the real one. Re-deploying the template with `infra/deploy.ps1` keeps whichever image is live.
-- **Sign-in to Azure services:** the app uses its system-assigned managed identity for SQL (Entra-only, no passwords) and Blob Storage (shared keys turned off).
+- **Sign-in to Azure services:** the app uses its system-assigned managed identity for SQL (Entra-only, no passwords), Blob Storage (shared keys turned off) and the Foundry image deployment (role Cognitive Services OpenAI User on `ot-mf-privateai`, assigned by hand because that resource lives in another resource group; no API key in production since 2026-10-16). Local development still uses the key from `.env`; without one, the server falls back to `az login`.
 - **CI deployments:** GitHub Actions signs in with OIDC (no stored Azure secret) and may change only the container app and its Container Apps environment. Deployment is switched on with the repository variable `DEPLOY_ENABLED`.
 - **Custom domain:** the app answers at `https://oreanas-office.otressler.de`, a CNAME at INWX to the app's Azure host name, with a free managed certificate from Container Apps. The project owner chose the subdomain on 2026-10-11. It's the production address for Google sign-in from stage 2 on. `infra/deploy.ps1` deploys twice the first time: once to add the host name and request the certificate, once to bind it.
 - **Health probes:** Container Apps keeps its default TCP probes. `/api/health` returns 503 while the database resumes, so it must never be a probe.

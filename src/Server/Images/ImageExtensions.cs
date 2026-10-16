@@ -1,3 +1,5 @@
+using Azure.Core;
+using Azure.Identity;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OreanasOffice.Server.Hosting;
 
@@ -14,6 +16,9 @@ public static class ImageExtensions
         builder.Services.Configure<ImageOptions>(builder.Configuration.GetSection(ImageOptions.Section));
         builder.Services.AddSingleton<ImageJobQueue>();
         builder.Services.AddSingleton<ImageEvents>();
+        // One credential for the app's lifetime, so its token cache survives between requests.
+        // Creating it makes no network calls.
+        builder.Services.TryAddSingleton<TokenCredential>(_ => new DefaultAzureCredential());
         builder.Services.AddHttpClient<IImageClient, FoundryImageClient>(http => http.Timeout = TimeSpan.FromMinutes(3));
         builder.Services.TryAddSingleton<IAssetStore, BlobAssetStore>();
         if (!BuildTime.IsGeneratingOpenApiDocument)

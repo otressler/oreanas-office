@@ -11,7 +11,6 @@
 #   $env:GOOGLE_CLIENT_SECRET      = '<Google OAuth client secret>'
 #   $env:ADMIN_EMAIL               = '<the site admin Google address>'
 #   $env:AZURE_OPENAI_ENDPOINT     = 'https://<resource>.services.ai.azure.com/openai/v1'
-#   $env:AZURE_API_KEY             = '<Foundry key>'
 #   $env:AZURE_IMAGE_DEPLOYMENT    = '<image deployment name>'
 #   $env:GHCR_USERNAME             = '<github user>'        # optional, private package only
 #   $env:GHCR_TOKEN                = '<PAT with read:packages>'   # optional, private package only
@@ -75,7 +74,7 @@ else {
 }
 $env:SQL_CLIENT_IP = (Invoke-RestMethod https://api.ipify.org)
 
-foreach ($name in 'SQL_ENTRA_ADMIN_LOGIN', 'SQL_ENTRA_ADMIN_OBJECT_ID', 'BUDGET_CONTACT_EMAIL', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'ADMIN_EMAIL', 'AZURE_OPENAI_ENDPOINT', 'AZURE_API_KEY', 'AZURE_IMAGE_DEPLOYMENT') {
+foreach ($name in 'SQL_ENTRA_ADMIN_LOGIN', 'SQL_ENTRA_ADMIN_OBJECT_ID', 'BUDGET_CONTACT_EMAIL', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'ADMIN_EMAIL', 'AZURE_OPENAI_ENDPOINT', 'AZURE_IMAGE_DEPLOYMENT') {
     if (-not [Environment]::GetEnvironmentVariable($name)) { throw "Set $name in .env.prod or `$env:$name (see infra/README.md)." }
 }
 
