@@ -34,6 +34,10 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T21:55:33Z }
 - Only the session DM can start and end encounters, move creature tokens and other players' characters, and see hidden tokens.
 - Everyone else in the campaign is a player for this session, including the default DM and other `dm` members. The campaign role doesn't grant any action at the table.
 
+# Spectators (stage 10)
+
+People who aren't members of the campaign can watch one session on a spectator screen after joining it with its QR code, link or the campaign's join code ([spectator view](/features/spectator-view.md)). Each such join is a **session spectator** entry: `sessionId`, `userId`, `joinedAt`. It allows only watching that session's running fight, as players see it, also after the session is continued, and nothing else in the campaign. Members need no entry.
+
 # Continuing
 
 An ended session can be made `active` again when the group didn't get through it in one evening ([session planning](/features/session-planning.md)). The rule of one active session per campaign applies. If `interruptedEncounterId` is set, that encounter becomes `active` again in the same step, with its tokens where they stood, and the field is cleared. Encounters the DM ended by hand stay ended. The date doesn't change.

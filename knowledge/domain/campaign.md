@@ -32,4 +32,4 @@ A campaign can be created offline; it then has no join code and only its creator
 
 # Later
 
-When the app grows into a campaign manager, lore (NPCs, places, factions) and session notes will hang off the campaign ([roadmap](/roadmap.md)).
+The campaign management focus area in the [backlog](/backlog.md) hangs notes, items, inventories, a knowledge base and session recaps off the campaign.

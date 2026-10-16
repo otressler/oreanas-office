@@ -55,6 +55,17 @@ Transparent background. No text, no border, no ring.
 
 With an uploaded reference picture, add `--image <file>` and start the prompt with "Turn the person in this picture into a portrait token in the following style".
 
+## Status icon (condition or custom status)
+
+```
+Status icon for a tabletop battle map: <status name>, shown as <motif, e.g. "a figure lying flat on the ground">.
+One bold symbol, centred in the square frame, with a little space around it, readable at 20 pixels.
+<STYLE BLOCK>
+Transparent background. No text, no letters, no numbers, no border, no ring, no badge shape.
+```
+
+Use the token style block word for word, so statuses sit with creature icons and portraits as one set. Use `--background transparent --size 1024x1024`. The app draws each icon on a small dark disc on the token's edge, so a symbol needs a clear silhouette and a light or saturated colour against dark grey. Check every result at 20 px before generating the next. The 15 conditions and their motifs are in `knowledge/features/statuses.md`.
+
 ## Texture or fallback tile
 
 ```

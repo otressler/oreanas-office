@@ -20,6 +20,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T21:55:33Z }
 | `layout` | JSON document, nullable | A copy of the battle map's layout, saved when the encounter starts. The live fight and the ended encounter use this copy, so later edits to the map never change them |
 | `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The map's picked background, saved together with `layout` when the encounter starts. Picking another version on the map later doesn't change a running or ended fight. Empty when the map had no usable background |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the encounter |
+| `fog`, `fogVersion` | JSON document, nullable; int | Later: hidden cells and named areas ([fog of war](/features/fog-of-war.md)) |
 
 # Contains
 

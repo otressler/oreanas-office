@@ -29,10 +29,11 @@ The next stage starts only after the gate passes. Gate findings are fixed inside
 | 6 | 2 | Bestiary, encounter prep and sync | The DM preps a whole encounter offline, syncs it and runs it |
 | 7 | 3 | AI backgrounds and session planning | The editor generates backgrounds, the DM picks one, and the board shows it; the DM plans a session's fights and runs them from the session page |
 | 8 | 3 | Token icons and portraits | Creatures get generated icons, characters get portraits |
-| 9 | 4 | Measuring tools | Ruler and area templates |
-| 10 | 4 | DM control at the table | Pings, hidden tokens, and HP and conditions |
+| T1 | 4 | Condition icon library (before stage 9) | The 15 condition icons read as one set at token size |
+| 9 | 4 | Pings, token card, statuses and removing tokens | Everyone points at cells and tokens, taps a token for its card, and puts statuses on tokens; the DM takes tokens off the board |
+| 10 | 4 | Fog of war and spectator view | The DM reveals map and creatures by hand, and a screen in the middle follows the fights by itself |
 
-Phase 1 of the roadmap is done after stage 4, phase 2 after stage 6, phase 3 after stage 8 and phase 4 after stage 10.
+Phase 1 of the roadmap is done after stage 4, phase 2 after stage 6, phase 3 after stage 8 and phase 4 after stage 10. The project owner reordered phase 4 on 2026-10-16: pings, the token card, statuses and removing tokens first, then fog of war and the spectator view. The measuring tools, which were stage 9, moved to the [backlog](/backlog.md).
 
 # Working method
 
@@ -78,14 +79,22 @@ These are open or only proposed in the knowledge base. Each has a default that t
 | 9 | [Offline prep and PWA](/decisions/offline-prep-pwa.md) is only proposed | Stage 5 | **Answered:** accepted, including campaigns created offline (question 15). The stage 6 sync protocol is still approved separately |
 | 10 | Largest grid size | Stage 5 | **Answered:** 40×40. A map wider than 3:1 gets padding painted as dead terrain or darkness ([image generation approach](/decisions/image-generation-approach.md)) |
 | 11 | [Image budget](/decisions/image-budget.md) | Stage 7 | **Answered:** $20 a month for all image generation, no limit per map, high quality by default |
-| 12 | Are ruler and area templates shared with everyone, or only on the measuring device? | Stage 9 | Shared, like pings, and not saved |
-| 13 | What "HP and conditions" means, and how it relates to status rings in the [backlog](/backlog.md) | Stage 10 | Designed with the project owner at the start of stage 10 |
+| 12 | Are ruler and area templates shared with everyone, or only on the measuring device? | Backlog | Shared, like pings, and not saved. The measuring tools moved to the [backlog](/backlog.md) on 2026-10-16 |
+| 13 | What "HP and conditions" means, and how it relates to status rings in the [backlog](/backlog.md) | Stage 9 | **Answered** on 2026-10-16: conditions are [statuses](/features/statuses.md) in stage 9; hit points moved to the [backlog](/backlog.md) |
 | 14 | How do images reach the browser: public blob container, short-lived signed links, or through the app? ([persistence](/decisions/persistence.md)) | Stage 7 | **Answered:** through the app at `/api/assets/{id}`, for members of a campaign that uses the image, cached for good by the browser and the service worker |
 | 15 | Can campaigns be created offline? | Stage 6 | **Answered:** yes, only creating; no join code, members, characters or sessions until it syncs ([offline prep](/decisions/offline-prep-pwa.md)). Built with sync in stage 6 |
 | 16 | Does a copy from the map store take the chosen background image? ([battle map](/domain/battle-map.md)) | Stage 7 | **Answered:** yes, the copy points to the same image asset, and its DMs can regenerate it |
 | 17 | Stage 7 details | Stage 7 | **Answered:** an encounter saves the picked background when it starts; changing a map's size makes its backgrounds outdated; nothing is generated without the DM confirming the job; the map syncs before a job is queued; any `dm` member generates; production uses the same Foundry deployment as development ([AI map generation](/features/ai-map-generation.md), [battle map](/domain/battle-map.md)) |
 | 18 | How do sessions and fights relate? | Stage 7 | **Answered** at the stage 7 gate: every fight belongs to a session; only the session DM plans its fights; continuing an ended session brings back the fight it interrupted; built inside stage 7 ([session planning](/features/session-planning.md)) |
 | 19 | Stage 8 details | Stage 8 | **Answered:** players generate portraits of their own characters from the shared budget; characters get an `appearance` field; an uploaded picture can be restyled into the token style; uploads get a crop step; icons and portraits keep versions to pick from; the board shows the current image, without live updates ([token icons](/features/token-icons.md)) |
+| 20 | Controls for pings and the token card ([token card](/features/token-card.md), "Why this layout") | Stage 9 | **Answered** on 2026-10-16: a double tap on a token pings the token, so there is no "double tap and hold"; pings also work while a token is selected, because the first tap is taken back; tapping the selected token lets it go instead of cycling through the stack, whose tokens the card lists |
+| 21 | May players put statuses on their own characters? | Stage 9 | **Answered** on 2026-10-16: yes, as the backlog had it. Players put statuses on their own characters and on any creature they can see; the session DM on any token |
+| 22 | Whose is the DM's own status list? | Stage 9 | **Answered** on 2026-10-16: one per `dm` member of the campaign, not one per session, so it stays with the person when sessions change hands |
+| 23 | Who may remove a status? | Stage 9 | **Answered** on 2026-10-16: the session DM any; a player those they put on |
+| 24 | Do spectators join a session or the campaign? | Stage 10 | **Answered** on 2026-10-16: a session. The device may differ each time, and usually one person signs in on a phone to play and on a tablet to watch, so spectating is a mode of the connection: members open it from the session page, others get spectator access to that one session ([spectator view](/features/spectator-view.md)) |
+| 25 | Does the spectator QR code also let players join? | Stage 10 | **Answered** on 2026-10-16: yes, the join page asks "Mitspielen" or "Nur zuschauen", and a wrong choice can be changed by joining again; this takes "Join by QR code" out of the [backlog](/backlog.md) |
+| 26 | Open questions 1–5 of [fog of war](/features/fog-of-war.md): background image sent whole, areas on the encounter, characters always visible, no moving into fog, spawning stays in the backlog | Stage 10 | **Answered** on 2026-10-16: the concept's proposals, all six ([fog of war](/features/fog-of-war.md)) |
+| 27 | Which stage gets removing tokens? ([removing tokens](/features/removing-tokens.md)) | Stage 9 | **Answered** on 2026-10-16: stage 9, since its button sits on the token card |
 
 # T0 — Image spike (parallel track)
 
@@ -384,40 +393,80 @@ Completes roadmap phase 3. Reuses the stage 7 queue, so it is smaller.
 - [ ] Regenerate a creature icon, then pick the older version: tokens show the picked one after a reload, also in a running fight.
 - [ ] Rings have the right colours on every device; a creature without an icon still shows its letter.
 
-# Stage 9 — Measuring tools
+# T1 — Condition icon library (before stage 9)
 
-**Feature set:** a ruler between any two points; area templates (cone, sphere, line, cube) sized in meters ([playable map](/features/playable-map.md)). Sharing follows question 12. The reach highlight and distance preview are deferred with the distance rules (see stage 4).
+Needs only the `image-assets` skill and no app code, like T0.
 
-**Order:** a short sequential step for the shared "overlay" message type on the hub, then two parallel lanes (ruler, templates), each its own board layer.
+- Check the German names of the 15 conditions, then generate one icon per condition with the skill's "Status icon" template: the token style block word for word, one bold symbol, transparent background ([statuses](/features/statuses.md)).
+- One generation at a time because of the rate limit. Look at the first two before the rest, so a style problem is fixed early.
+- A review sheet shows every icon at 20, 32 and 64 pixels on the board's dark background.
+- Expected cost: about $0.05 per icon at high quality, so under $2 with a few retries ([image budget](/decisions/image-budget.md)).
+- The picked icons go into the repository as static files of the app (`src/web/public/statuses/<key>.webp`), so the service worker caches them and they work offline.
 
-**Manual gate**
+**Gate:** the project owner accepts the set on the review sheet. Stage 9's card and status lists lane needs it; the other lanes don't.
 
-- [ ] Measure a ranged attack on a phone; the reading matches counting squares by hand.
-- [ ] Place a 4.5 m cone and a 6 m sphere; they cover the expected cells, and everyone sees them.
+# Stage 9 — Pings, token card, statuses and removing tokens
 
-# Stage 10 — DM control at the table
+**Feature set**
 
-Completes roadmap phase 4.
-
-**Feature set:** ping (tap and hold flashes a spot on every screen; broadcast, not saved); hidden tokens that only the DM sees until revealed; HP and conditions as designed in question 13.
+- Pings and arrows: double tap pings a cell or a token, double tap and drag draws an arrow, in the person's colour, broadcast and not saved; off-screen markers ([pings and arrows](/features/pings-and-arrows.md)).
+- The token card: docked at the bottom on phones and top right on wide screens, never beside the token; portrait, name and statuses; a stack lists all its tokens, and a row selects its token if the person may move it ([token card](/features/token-card.md)).
+- Statuses: the 15 conditions from T1 and custom statuses with generated icons in the same style; the session DM sets them on any token, players on creatures; status lists on each character and for each `dm` member ([statuses](/features/statuses.md)).
+- Removing tokens: the session DM takes a token off the board from its card, with undo and a list to bring removed tokens back ([removing tokens](/features/removing-tokens.md)).
 
 **Order**
 
-1. *Sequential:* design HP and conditions with the project owner and write the concept; add `hidden` to the token and the filtering contract.
-2. *Parallel, three lanes:* **ping** (hub and board); **hidden tokens** (the server filters hidden tokens out of board state and broadcasts for players, plus the DM's reveal UI); **HP and conditions.**
-3. *Sequential:* integrate; Playwright checks that a player's network traffic never contains a hidden token.
+1. *Sequential:* status definitions, status list entries and token statuses with a migration; seeding the 15 library statuses; status list and custom status endpoints as stubs; the status icon job kind; `removedAt` on the token; the hub messages for pings, arrows, statuses and removing tokens; the double-tap contract of the gesture tracker (a `doubleTap` and an `arrow` gesture, and taking back the first tap).
+2. *Parallel, three lanes:*
+   - **Backend:** status permissions and the hub methods, saved before broadcast; ping and arrow relay with the rate limit; removing and restoring tokens; status lists; custom status icon jobs through the stage 8 queue with `TokenPrompt` and the same style block.
+   - **Board:** the gesture tracker's double tap, taking back the first tap, the 300 ms delay before a preview is sent; the ping and arrow layer with off-screen markers; status badges on tokens.
+   - **Card and status lists:** the token card with stack rows and the changed tap rules; the status picker; the status list section on the character page and the DM status list; creating a custom status and its icon gallery; "Vom Feld nehmen", its undo bar and the "Vom Feld genommen" list.
+3. *Sequential:* integrate; Playwright with a player and a DM: a ping and an arrow reach the other context, a status set by the player shows for the DM after a reload, a quick double tap on a preview doesn't move the token.
 
 **Manual gate**
 
-- [ ] A ping from a phone shows on every device in that player's colour.
-- [ ] A hidden goblin is invisible on phones, even after reloads, and appears for everyone when revealed.
-- [ ] HP and conditions work as agreed in the design step.
+- [ ] A double tap on a phone pings that cell on every device in the player's colour; on a token, the ring goes around the token. Double tap and drag draws an arrow that fades after a few seconds.
+- [ ] A ping outside the current view shows a marker at the screen's edge; tapping it pans there.
+- [ ] A quick double tap while a token is selected never moves it.
+- [ ] Tapping a goblin opens its card at the bottom of the phone without covering the goblin; tapping a stack lists its tokens, and tapping my character's row selects it for moving.
+- [ ] A player puts "Liegend" on a goblin; the DM puts "Erschöpfung 2" on a character; both show as badges on every device and survive a reload. The player can't remove the DM's status.
+- [ ] A player creates "Verhext" on their character, generates its icon after confirming, and it looks like the condition icons.
+- [ ] The DM's picker lists their own status list and every character's status list in the fight.
+- [ ] A player puts "Vergiftet" on their own character but can't put a status on another player's character.
+- [ ] The DM takes a defeated ghost off the board; it fades out on every phone. "Rückgängig" brings it back, and so does "Zurückholen" later from the list. A player can't remove a token.
+
+# Stage 10 — Fog of war and spectator view
+
+**Feature set**
+
+- Fog of war and hidden creatures as in the concept: prepared offline in the editor, revealed and hidden at the table after a confirm step, filtered on the server for every player ([fog of war](/features/fog-of-war.md)).
+- Spectator view: a tablet joins one session by QR code, link or join code, or a member opens it from the session page; the screen follows that session's fights by itself and always shows what players see, whoever is signed in ([spectator view](/features/spectator-view.md)).
+
+**Order**
+
+1. *Sequential:* `fog` and `fogVersion` on the encounter, the token's `hidden` flag in the contract, session spectators, with a migration; two hub groups per encounter (the session DM, everyone else, spectator connections always among the others) and a session group for spectator screens; the per-viewer filter as one server function that every board load and broadcast goes through, pings and statuses included; the sync format for fog in encounter prep.
+2. *Parallel, three lanes:*
+   - **Fog backend:** the filter for board state, moves, previews, pings and statuses; fog changes and reveals with undo; the target check for hidden cells; reloads on a DM hand-over.
+   - **Fog frontend:** the editor's "Nebel" tool, areas and the "Verborgen" switch; the DM's fog mode on the board with the confirm bar and "Spieleransicht"; fog rendering and fades for players.
+   - **Spectator:** session spectators, the join page with "Mitspielen" and "Nur zuschauen" and changing a wrong choice, "Als Zuschauer öffnen" and the QR code on the session page, the spectator screen and its states, `WatchSession`, the exemption from the idle timeout and the wake lock.
+3. *Sequential:* integrate; Playwright checks that a player's and a spectator's network traffic never contain a hidden creature or the layout of a hidden cell, also when the spectator screen is signed in as the session DM.
+
+**Manual gate**
+
+- [ ] The gate in the [fog of war](/features/fog-of-war.md) concept.
+- [ ] A player signed in on their phone opens "Als Zuschauer öffnen" on a tablet with the same account; the phone still plays, the tablet only watches.
+- [ ] The DM starts a fight; the tablet shows it within about a second, with the whole map in view. Ending it brings the waiting screen back.
+- [ ] The tablet signed in as the session DM still shows only what players see.
+- [ ] Someone outside the campaign scans the QR code, picks "Nur zuschauen", and sees this session only; scanning again and picking "Mitspielen" makes them a member.
+- [ ] The tablet stays connected for an hour without being touched while the session runs, and disconnects when the session ends.
+- [ ] A player joins a new campaign by scanning the QR code and picking "Mitspielen".
 
 # After stage 10
 
 The [backlog](/backlog.md) items are not scheduled. When they are, they fit naturally into these groups, each as its own stage with its own gate:
 
-- **Shared table:** table view, join by QR code, who's here, local mode.
-- **Board extras:** free draw, status rings and terrain statuses, map reveal, monster reveal and spawn, removing tokens.
+- **Shared table:** who's here, local mode.
+- **Board extras:** free draw, terrain statuses, monster spawn, hit points.
+- **Measuring tools:** ruler and area templates, with their concept in the [playable map](/features/playable-map.md) and question 12. Once stage 9, then moved behind pings, statuses, fog and the spectator view, then to the backlog (2026-10-16).
 - **Running the session:** undo for the DM.
 - **Player extras:** colour and portrait, show my token, haptic feedback. These are small and could also be folded into stage 4 or 8 if the project owner wants them earlier.
