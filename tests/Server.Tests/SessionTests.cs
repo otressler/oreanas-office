@@ -399,6 +399,12 @@ public sealed class SessionTests(AppFixture fixture) : IClassFixture<AppFixture>
             Assert.All(responses, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
             var status = (await ListAsync(dm, campaign.Id)).Single(s => s.Id == session.Id).Status;
             Assert.NotEqual(SessionStatus.Planned, status);
+
+            // A session left running would make the next round's start AnotherSessionActive.
+            if (status == SessionStatus.Active)
+            {
+                (await dm.Client.PostAsync($"{path}/end", null)).EnsureSuccessStatusCode();
+            }
         }
     }
 
