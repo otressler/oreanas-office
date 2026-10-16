@@ -36,6 +36,8 @@ public enum ApiErrorCode
     NotSessionDm,
     // SessionInvalid: the session isn't one of this campaign.
     SessionInvalid,
+    // ColorInvalid: a character's ring colour isn't "#rrggbb".
+    ColorInvalid,
 
     // Map imports. Field is the JSON path of the offending entry, e.g. "layout.cells[12]".
     TextTooLong,

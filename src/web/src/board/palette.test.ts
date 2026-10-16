@@ -3,6 +3,7 @@ import {
   CHARACTER_RINGS,
   CREATURE_RING,
   mixColor,
+  parseHexColor,
   ringColor,
   tokenLetter,
   tokenMarks,
@@ -22,6 +23,25 @@ describe('ringColor', () => {
     expect(ringColor({ kind: 'character', colorIndex: 10 })).toBe(CHARACTER_RINGS[2])
     expect(ringColor({ kind: 'character', colorIndex: -1 })).toBe(CHARACTER_RINGS[7])
     expect(ringColor({ kind: 'character', colorIndex: null })).toBe(CHARACTER_RINGS[0])
+  })
+
+  it('takes a colour the player picked over the default, but never for creatures', () => {
+    expect(ringColor({ kind: 'character', colorIndex: 2, color: '#123abc' })).toBe('#123abc')
+    expect(ringColor({ kind: 'character', colorIndex: 2, color: null })).toBe(CHARACTER_RINGS[2])
+    expect(ringColor({ kind: 'creature', colorIndex: null, color: '#123abc' })).toBe(CREATURE_RING)
+  })
+})
+
+describe('parseHexColor', () => {
+  it('accepts six hex digits with or without the hash, in lower case', () => {
+    expect(parseHexColor('#A1B2C3')).toBe('#a1b2c3')
+    expect(parseHexColor(' a1b2c3 ')).toBe('#a1b2c3')
+  })
+
+  it('rejects anything else', () => {
+    for (const text of ['', '#abc', '#a1b2c3d', '#g1b2c3', 'rot', '##a1b2c3']) {
+      expect(parseHexColor(text)).toBeNull()
+    }
   })
 })
 

@@ -229,5 +229,6 @@ export function toBoardToken(
     colorIndex: null,
     version: 0,
     imageUrl,
+    color: null,
   }
 }

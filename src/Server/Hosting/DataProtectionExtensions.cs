@@ -16,13 +16,17 @@ public static class DataProtectionExtensions
     public static WebApplicationBuilder AddDataProtectionKeys(this WebApplicationBuilder builder)
     {
         var dataProtection = builder.Services.AddDataProtection().SetApplicationName("OreanasOffice");
+
+        // Registered also while the build writes openapi.json: the asset store depends on it,
+        // and Development validates every registration at startup. The factory only runs when
+        // something resolves the client, which nothing does then, so the build stays offline.
+        builder.Services.TryAddSingleton(services =>
+            CreateBlobServiceClient(services.GetRequiredService<IConfiguration>()));
+
         if (BuildTime.IsGeneratingOpenApiDocument)
         {
             return builder;
         }
-
-        builder.Services.TryAddSingleton(services =>
-            CreateBlobServiceClient(services.GetRequiredService<IConfiguration>()));
 
         // Registered first so the container exists before Data Protection's own
         // hosted service loads (and on first run creates) the key ring.

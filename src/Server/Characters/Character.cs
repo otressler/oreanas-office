@@ -13,6 +13,9 @@ public class Character
 
     public const int AppearanceMaxLength = 500;
 
+    // "#rrggbb", lower case.
+    public const int ColorLength = 7;
+
     public Guid Id { get; set; }
 
     public Guid CampaignId { get; set; }
@@ -30,6 +33,11 @@ public class Character
     // (generated, uploaded or restyled), or null for the letter.
     public Guid? TokenAssetId { get; set; }
 
+    // The ring colour its player picked, "#rrggbb" in lower case, or null for the one
+    // given by the order characters were added (knowledge/domain/character.md).
+    // Characters may share a colour.
+    public string? Color { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public Campaign Campaign { get; set; } = null!;
@@ -43,6 +51,7 @@ internal sealed class CharacterConfiguration : IEntityTypeConfiguration<Characte
     {
         character.Property(c => c.Name).HasMaxLength(Character.NameMaxLength);
         character.Property(c => c.Appearance).HasMaxLength(Character.AppearanceMaxLength);
+        character.Property(c => c.Color).HasMaxLength(Character.ColorLength).IsUnicode(false);
         character.HasIndex(c => c.TokenAssetId);
         character.HasOne(c => c.Campaign).WithMany(c => c.Characters).HasForeignKey(c => c.CampaignId).OnDelete(DeleteBehavior.Cascade);
         character.HasOne(c => c.Owner).WithMany().HasForeignKey(c => c.OwnerUserId).OnDelete(DeleteBehavior.Restrict);

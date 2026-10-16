@@ -1,12 +1,12 @@
-// Creates a character, or edits one: name, size and the appearance that feeds the portrait
-// prompt. An existing character the user may edit also shows its portraits
+// Creates a character, or edits one: name, size, ring colour and the appearance that
+// feeds the portrait prompt. An existing character the user may edit also shows its portraits
 // (knowledge/features/token-icons.md), outside the form element.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useId, useState, type FormEvent } from 'react'
 import { api } from '../api/client'
 import { errorMessage, unwrap } from '../api/errors'
 import type { Character, CharacterRequest, CreatureSize } from '../api/types'
-import { ringColor } from '../board/palette'
+import { CHARACTER_RINGS, defaultRingColor, parseHexColor, ringColor } from '../board/palette'
 import { Button, ErrorAlert, SelectField, TextField } from '../components/ui'
 import { inputClass } from '../components/styles'
 import { de } from '../text/de'
@@ -36,6 +36,11 @@ export function CharacterForm({
   const [name, setName] = useState(character?.name ?? '')
   const [size, setSize] = useState<CreatureSize>(character?.size ?? 'medium')
   const [appearance, setAppearance] = useState(character?.appearance ?? '')
+  const [color, setColor] = useState(character?.color ?? '')
+  const [colorTouched, setColorTouched] = useState(false)
+  // Empty means the default colour; anything else must be a hex code.
+  const pickedColor = parseHexColor(color)
+  const colorInvalid = color.trim() !== '' && pickedColor === null
 
   const save = useMutation({
     mutationFn: (body: CharacterRequest) =>
@@ -58,10 +63,15 @@ export function CharacterForm({
     name: name.trim(),
     size,
     appearance: appearance.trim(),
+    color: pickedColor,
   })
 
   function submit(event: FormEvent) {
     event.preventDefault()
+    if (colorInvalid) {
+      setColorTouched(true)
+      return
+    }
     save.mutate(request(), { onSuccess: onDone })
   }
 
@@ -72,9 +82,11 @@ export function CharacterForm({
     const changed =
       body.name !== character.name ||
       body.size !== character.size ||
-      body.appearance !== character.appearance
+      body.appearance !== character.appearance ||
+      body.color !== character.color
     if (changed) {
       if (!body.name) return { error: de.errors.nameInvalid }
+      if (colorInvalid) return { error: de.errors.colorInvalid }
       progress(t.portrait.saving)
       try {
         await save.mutateAsync(body)
@@ -111,6 +123,13 @@ export function CharacterForm({
             </option>
           ))}
         </SelectField>
+        <ColorField
+          value={color}
+          fallback={character ? defaultRingColor(character.colorIndex) : null}
+          invalid={colorTouched && colorInvalid}
+          onChange={setColor}
+          onBlur={() => setColorTouched(true)}
+        />
         <div className="flex flex-col gap-1">
           <label htmlFor={appearanceId} className="text-sm text-dim">
             {t.appearance}
@@ -149,7 +168,7 @@ export function CharacterForm({
             campaignId={campaignId}
             owner={{ type: 'character', id: character.id }}
             name={character.name}
-            ring={ringColor({ kind: 'character', colorIndex: character.colorIndex })}
+            ring={ringColor({ kind: 'character', colorIndex: character.colorIndex, color: pickedColor })}
             generateLabel={t.portrait.generate}
             regenerateLabel={t.portrait.regenerate}
             generateHint={appearance.trim() ? null : t.portrait.needsAppearance}
@@ -158,6 +177,79 @@ export function CharacterForm({
           />
         </section>
       )}
+    </div>
+  )
+}
+
+/**
+ * The ring colour as a hex code, with the default colours as buttons that fill it in.
+ * Empty keeps the colour by the order characters were added (`fallback`, unknown for a
+ * new character). Characters may share a colour.
+ */
+function ColorField({
+  value,
+  fallback,
+  invalid,
+  onChange,
+  onBlur,
+}: {
+  value: string
+  fallback: string | null
+  invalid: boolean
+  onChange: (value: string) => void
+  onBlur: () => void
+}) {
+  const id = useId()
+  const c = t.color
+  const picked = parseHexColor(value)
+  const shown = picked ?? (value.trim() ? null : fallback)
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="text-sm text-dim">
+        {c.label}
+      </label>
+      <div className="flex items-center gap-2">
+        <span
+          aria-hidden
+          className="h-8 w-8 shrink-0 rounded-full border-4 bg-table"
+          style={{ borderColor: shown ?? 'transparent' }}
+        />
+        <input
+          id={id}
+          value={value}
+          maxLength={7}
+          spellCheck={false}
+          autoComplete="off"
+          placeholder={fallback ? `${fallback} (${c.automatic})` : c.automatic}
+          aria-describedby={`${id}-hint`}
+          aria-invalid={invalid || undefined}
+          className={`${inputClass} w-44 font-mono`}
+          onChange={(event) => onChange(event.target.value)}
+          onBlur={onBlur}
+        />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {CHARACTER_RINGS.map((ring, index) => (
+          <button
+            key={ring}
+            type="button"
+            aria-label={c.pick(c.swatches[index] ?? ring)}
+            aria-pressed={picked === ring}
+            title={ring}
+            className="h-8 w-8 rounded-full border-2 border-line aria-pressed:border-parchment aria-pressed:ring-2 aria-pressed:ring-candle"
+            style={{ backgroundColor: ring }}
+            onClick={() => onChange(ring)}
+          />
+        ))}
+        {value !== '' && (
+          <button type="button" className="text-sm text-dim underline" onClick={() => onChange('')}>
+            {c.reset}
+          </button>
+        )}
+      </div>
+      <p id={`${id}-hint`} className={`text-sm ${invalid ? 'text-red-200' : 'text-dim'}`}>
+        {invalid ? c.invalid : c.hint}
+      </p>
     </div>
   )
 }

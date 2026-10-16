@@ -46,7 +46,7 @@ public static class CharacterEndpoints
         TimeProvider time,
         CancellationToken cancellationToken)
     {
-        if (Validate(request, out var name, out var appearance) is { } error)
+        if (Validate(request, out var name, out var appearance, out var color) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
@@ -59,6 +59,7 @@ public static class CharacterEndpoints
             Name = name,
             Size = request.Size,
             Appearance = appearance,
+            Color = color,
             CreatedAt = time.GetUtcNow(),
         };
         db.Characters.Add(character);
@@ -90,7 +91,7 @@ public static class CharacterEndpoints
             return TypedResults.Forbid();
         }
 
-        if (Validate(request, out var name, out var appearance) is { } error)
+        if (Validate(request, out var name, out var appearance, out var color) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
@@ -98,15 +99,18 @@ public static class CharacterEndpoints
         character.Name = name;
         character.Size = request.Size;
         character.Appearance = appearance;
+        character.Color = color;
         await db.SaveChangesAsync(cancellationToken);
 
         return TypedResults.Ok(await LoadAsync(db, campaignId, character.Id, userId, cancellationToken));
     }
 
-    private static ApiError? Validate(CharacterRequest request, out string name, out string appearance)
+    private static ApiError? Validate(
+        CharacterRequest request, out string name, out string appearance, out string? color)
     {
         name = request.Name?.Trim() ?? "";
         appearance = request.Appearance?.Trim() ?? "";
+        color = request.Color?.Trim().ToLowerInvariant() is { Length: > 0 } picked ? picked : null;
         if (name.Length is 0 or > Character.NameMaxLength)
         {
             return new ApiError(ApiErrorCode.NameInvalid, "name");
@@ -117,9 +121,17 @@ public static class CharacterEndpoints
             return new ApiError(ApiErrorCode.TextTooLong, "appearance");
         }
 
+        if (color is not null && !IsHexColor(color))
+        {
+            return new ApiError(ApiErrorCode.ColorInvalid, "color");
+        }
+
         return null;
     }
 
+    // "#" and six hex digits, already in lower case.
+    private static bool IsHexColor(string color) =>
+        color.Length == Character.ColorLength && color[0] == '#' && color[1..].All(char.IsAsciiHexDigitLower);
 
     private static async Task<CharacterResponse> LoadAsync(
         AppDbContext db, Guid campaignId, Guid characterId, Guid userId, CancellationToken cancellationToken)
@@ -142,7 +154,8 @@ public static class CharacterEndpoints
                 isDm || c.OwnerUserId == userId,
                 0,
                 c.Appearance,
-                null),
+                null,
+                c.Color),
             c.TokenAssetId));
 
     private static async Task<List<CharacterResponse>> WithColorsAsync(

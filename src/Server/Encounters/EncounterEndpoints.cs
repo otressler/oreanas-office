@@ -137,6 +137,7 @@ public static class EncounterEndpoints
                 t.Version,
                 // The picked portrait or icon as it is now (knowledge/features/token-icons.md).
                 ImageAssetId = t.Kind == TokenKind.Character ? t.Character!.TokenAssetId : t.CreatureType!.IconAssetId,
+                Color = t.Kind == TokenKind.Character ? t.Character!.Color : null,
             })
             .ToListAsync(cancellationToken);
 
@@ -183,7 +184,8 @@ public static class EncounterEndpoints
                     t.Size,
                     t.CharacterId is { } characterId ? colors[characterId] : null,
                     t.Version,
-                    t.ImageAssetId is { } imageId ? MapBackgrounds.Url(imageId) : null)),
+                    t.ImageAssetId is { } imageId ? MapBackgrounds.Url(imageId) : null,
+                    t.Color)),
             ],
             encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId,
             undoable);

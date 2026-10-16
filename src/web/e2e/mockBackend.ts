@@ -42,6 +42,8 @@ interface Character {
   name: string
   size: S['CreatureSize']
   appearance: string
+  /** "#rrggbb", or null for the colour by order. */
+  color: string | null
 }
 
 /** An icon or portrait version, with what /api/assets serves for it. */
@@ -215,6 +217,7 @@ export class MockBackend {
       name,
       size: 'medium',
       appearance: '',
+      color: null,
       ...fields,
     }
     this.characters.push(character)
@@ -933,6 +936,7 @@ export class MockBackend {
         name: String(body.name).trim(),
         size: body.size as S['CreatureSize'],
         appearance: String(body.appearance ?? '').trim(),
+        color: characterColor(body),
       }
       this.characters.push(character)
       return [201, this.characterResponse(character, me.id, isDm)]
@@ -948,6 +952,7 @@ export class MockBackend {
       character.name = String(body.name).trim()
       character.size = body.size as S['CreatureSize']
       character.appearance = String(body.appearance ?? '').trim()
+      character.color = characterColor(body)
       return [200, this.characterResponse(character, me.id, isDm)]
     }
 
@@ -1308,6 +1313,7 @@ export class MockBackend {
           // Ring colours follow the order characters joined the campaign.
           colorIndex: character ? campaignCharacters.indexOf(character) : null,
           imageUrl: this.pickedTokenImageUrl(token.characterId ?? token.creatureTypeId),
+          color: character?.color ?? null,
         }
       }),
       isSessionDm: encounter.status === 'active' && session?.dmUserId === userId,
@@ -1617,7 +1623,14 @@ function canManage(session: Session, campaign: Campaign, userId: string): boolea
 
 function validateCharacter(body: Record<string, unknown>): Reply | null {
   if (!String(body.name ?? '').trim()) return error('nameInvalid', 'name')
+  const color = String(body.color ?? '').trim()
+  if (color && !/^#[0-9a-f]{6}$/i.test(color)) return error('colorInvalid', 'color')
   return null
+}
+
+/** Like the server: lower case, and empty for the colour by order. */
+function characterColor(body: Record<string, unknown>): string | null {
+  return String(body.color ?? '').trim().toLowerCase() || null
 }
 
 function meResponse(user: User): S['MeResponse'] {

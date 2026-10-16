@@ -24,7 +24,7 @@ public sealed class CharacterTests(AppFixture fixture) : IClassFixture<AppFixtur
         var character = await response.ReadAsync<CharacterResponse>(HttpStatusCode.Created);
         Assert.Equal($"/api/campaigns/{campaignId}/characters/{character.Id}", response.Headers.Location?.OriginalString);
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null),
             character);
     }
 
@@ -91,9 +91,56 @@ public sealed class CharacterTests(AppFixture fixture) : IClassFixture<AppFixtur
             .ReadAsync<CharacterResponse>(HttpStatusCode.OK);
 
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null),
             updated);
         Assert.Equal(updated, Assert.Single(await ListAsync(player, campaignId)));
+    }
+
+    // knowledge/domain/character.md: a picked ring colour replaces the default one;
+    // characters may share it, and an empty colour goes back to the default.
+    [Fact]
+    public async Task A_picked_colour_is_saved_in_lower_case_and_can_be_cleared()
+    {
+        var (_, player, otherPlayer, campaignId) = await CreatePartyAsync();
+        var character = await CreateCharacterAsync(player, campaignId, "Thorin");
+        var url = $"/api/campaigns/{campaignId}/characters/{character.Id}";
+
+        var picked = await (await player.Client.PutAsJsonAsync(
+                url, new CharacterRequest("Thorin", CreatureSize.Medium, Color: " #A1B2C3 "), Json))
+            .ReadAsync<CharacterResponse>(HttpStatusCode.OK);
+        var shared = await (await otherPlayer.Client.PostAsJsonAsync(
+                $"/api/campaigns/{campaignId}/characters", new CharacterRequest("Mira", CreatureSize.Medium, Color: "#a1b2c3"), Json))
+            .ReadAsync<CharacterResponse>(HttpStatusCode.Created);
+        var listed = Assert.Single(await ListAsync(player, campaignId), c => c.Id == character.Id);
+        var cleared = await (await player.Client.PutAsJsonAsync(
+                url, new CharacterRequest("Thorin", CreatureSize.Medium, Color: ""), Json))
+            .ReadAsync<CharacterResponse>(HttpStatusCode.OK);
+
+        Assert.Equal(("#a1b2c3", 0), (picked.Color, picked.ColorIndex));
+        Assert.Equal("#a1b2c3", shared.Color);
+        Assert.Equal("#a1b2c3", listed.Color);
+        Assert.Null(cleared.Color);
+    }
+
+    [Theory]
+    [InlineData("a1b2c3")]
+    [InlineData("#a1b2c")]
+    [InlineData("#a1b2c3d")]
+    [InlineData("#abc")]
+    [InlineData("#g1b2c3")]
+    [InlineData("rot")]
+    public async Task Colours_must_be_a_hash_and_six_hex_digits(string color)
+    {
+        var (_, player, _, campaignId) = await CreatePartyAsync();
+        var character = await CreateCharacterAsync(player, campaignId, "Thorin");
+        var request = new CharacterRequest("Thorin", CreatureSize.Medium, Color: color);
+
+        var create = await player.Client.PostAsJsonAsync($"/api/campaigns/{campaignId}/characters", request, Json);
+        var update = await player.Client.PutAsJsonAsync($"/api/campaigns/{campaignId}/characters/{character.Id}", request, Json);
+
+        await create.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.ColorInvalid, "color");
+        await update.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.ColorInvalid, "color");
+        Assert.Null(Assert.Single(await ListAsync(player, campaignId)).Color);
     }
 
     [Fact]

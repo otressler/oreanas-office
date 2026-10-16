@@ -57,6 +57,7 @@ export function previewBoard(
           colorIndex: 0,
           version: 0,
           imageUrl: null,
+          color: null,
         },
       ]
     : []

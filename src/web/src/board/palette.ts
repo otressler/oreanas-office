@@ -78,12 +78,32 @@ export const CHARACTER_RINGS = [
 /** Every creature has the same red ring. */
 export const CREATURE_RING = '#e5484d'
 
-/** A character's ring by colorIndex (wrapping around the palette), or the creature red. */
-export function ringColor(token: Pick<BoardToken, 'kind' | 'colorIndex'>): string {
+/**
+ * A character's ring: the colour its player picked, else the default by colorIndex
+ * (wrapping around the palette). Creatures get the red.
+ */
+export function ringColor(
+  token: Pick<BoardToken, 'kind' | 'colorIndex'> & { color?: string | null },
+): string {
   if (token.kind === 'creature') return CREATURE_RING
+  if (token.color) return token.color
+  return defaultRingColor(token.colorIndex)
+}
+
+/** The ring a character gets by its place in the campaign when its player picks none. */
+export function defaultRingColor(colorIndex: number | null): string {
   const n = CHARACTER_RINGS.length
-  const index = (((token.colorIndex ?? 0) % n) + n) % n
+  const index = (((colorIndex ?? 0) % n) + n) % n
   return CHARACTER_RINGS[index]!
+}
+
+/**
+ * A typed ring colour as the server stores it, "#rrggbb" in lower case, with or without
+ * the "#"; null when it isn't six hex digits. Character.Color on the server.
+ */
+export function parseHexColor(text: string): string | null {
+  const match = /^#?([0-9a-f]{6})$/i.exec(text.trim())
+  return match ? `#${match[1]!.toLowerCase()}` : null
 }
 
 /** The letter in the middle of a token: the label's first character, upper case. */

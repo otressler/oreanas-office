@@ -23,6 +23,7 @@ function character(id: string, fields: Partial<Character> = {}): Character {
     size: 'medium',
     canEdit: true,
     colorIndex: 0,
+    color: null,
     appearance: '',
     portraitUrl: null,
     ...fields,
@@ -59,6 +60,7 @@ describe('withPlacedCharacters', () => {
       colorIndex: 3,
       version: 0,
       imageUrl: null,
+      color: null,
     })
   })
 })

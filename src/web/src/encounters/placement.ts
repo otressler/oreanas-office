@@ -47,6 +47,7 @@ export function withPlacedCharacters(
       colorIndex: character.colorIndex,
       version: 0,
       imageUrl: character.portraitUrl,
+      color: character.color,
     })
   }
   return { ...board, tokens: [...board.tokens, ...placed] }

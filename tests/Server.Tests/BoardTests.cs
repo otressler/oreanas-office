@@ -118,6 +118,32 @@ public sealed class BoardTests(AppFixture fixture) : IClassFixture<AppFixture>
             characters!.Where(c => c.Id == aria.Id || c.Id == thorin.Id).OrderBy(c => c.Name).Select(c => ((Guid?)c.Id, (int?)c.ColorIndex)));
     }
 
+    // A picked ring colour shows on the board; characters without one keep the default.
+    [Fact]
+    public async Task Character_tokens_carry_their_picked_colour()
+    {
+        var table = await fixture.App.CreateEncounterTableAsync();
+        var thorin = await table.Player.CreateCharacterAsync(table.CampaignId, "Thorin");
+        var aria = await table.SecondDm.CreateCharacterAsync(table.CampaignId, "Aria");
+        await table.Player.Client.PutAsJsonAsync(
+            $"/api/campaigns/{table.CampaignId}/characters/{thorin.Id}",
+            new CharacterRequest("Thorin", CreatureSize.Medium, Color: "#123abc"),
+            Json);
+        await table.Dm.StartEncounterAsync(
+            table.CampaignId,
+            table.Session.Id,
+            table.Encounter.Id,
+            new CharacterPlacement(thorin.Id, 0, 1),
+            new CharacterPlacement(aria.Id, 3, 1));
+
+        var board = await ReadBoardAsync(table.Player, table);
+
+        Assert.Equal(
+            [("Aria", null), ("Thorin", "#123abc")],
+            board.Tokens.Where(t => t.Kind == TokenKind.Character).Select(t => (t.Label, t.Color)));
+        Assert.All(board.Tokens.Where(t => t.Kind == TokenKind.Creature), t => Assert.Null(t.Color));
+    }
+
     private static async Task<BoardStateResponse> ReadBoardAsync(Person person, EncounterTable table) =>
         await (await person.GetBoardAsync(table.CampaignId, table.Encounter.Id)).ReadAsync<BoardStateResponse>(HttpStatusCode.OK);
 }

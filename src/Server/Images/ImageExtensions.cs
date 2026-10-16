@@ -6,7 +6,8 @@ namespace OreanasOffice.Server.Images;
 public static class ImageExtensions
 {
     // Map backgrounds: the job queue and its worker, the image model client, the asset store
-    // and the editor's hub. Needs AddDataProtectionKeys first for the BlobServiceClient.
+    // and the editor's hub. Needs AddDataProtectionKeys first for the BlobServiceClient, also
+    // while the build writes openapi.json.
     // Tests replace IImageClient with a fake (tests/Server.Tests/FakeImageClient.cs).
     public static WebApplicationBuilder AddImages(this WebApplicationBuilder builder)
     {

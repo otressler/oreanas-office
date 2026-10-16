@@ -265,6 +265,7 @@ export const de = {
               'Jede Kreaturenart bekommt ein gemaltes Symbol, alle im gleichen Stil.',
               'Porträts für Charaktere: erzeugen lassen oder vom Handy hochladen.',
               'Figuren zeigen ihr Bild im farbigen Ring.',
+              'Eine eigene Farbe für jeden Charakter.',
             ],
           },
         ],
@@ -282,16 +283,21 @@ export const de = {
               'Zustände wie Liegend oder Vergiftet an Figuren, mit eigenen Symbolen.',
               'Eigene Zustände anlegen und ihr Symbol im gleichen Stil malen lassen.',
               'Die Spielleitung nimmt besiegte Figuren vom Feld und kann sie zurückholen.',
+              'Ein Knopf, der die eigene Figur zeigt.',
+              'Kurzes Vibrieren, wenn ein Zug bestätigt ist.',
             ],
           },
           {
             number: 10,
-            title: 'Nebel und Zuschaueransicht',
+            title: 'Nebel, Zuschauen und gemeinsamer Tisch',
             items: [
               'Die Spielleitung verdeckt Teile der Karte und deckt sie im Kampf nach und nach auf.',
               'Verborgene Kreaturen, die nur die Spielleitung sieht, bis sie sie aufdeckt.',
+              'Kreaturen mitten im Kampf auftauchen lassen.',
               'Ein Tablet in der Tischmitte zeigt die Karte für alle und folgt den Kämpfen von selbst.',
               'Beitreten per QR-Code, zum Mitspielen oder Zuschauen.',
+              'Sehen, wer gerade dabei ist.',
+              'Alle Charaktere vom Bildschirm in der Tischmitte aus ziehen.',
             ],
           },
         ],
@@ -302,33 +308,17 @@ export const de = {
       intro: 'Gute Ideen, die noch keiner Stufe zugeordnet sind.',
       groups: [
         {
-          title: 'Gemeinsamer Tisch',
-          items: [
-            'Sehen, wer gerade dabei ist.',
-            'Alle Charaktere vom Bildschirm in der Tischmitte aus ziehen.',
-          ],
-        },
-        {
           title: 'Mehr auf dem Spielfeld',
           items: [
             'Laufwege und Reichweite beim Ziehen.',
             'Ein Lineal in Metern und Flächen für Zauber: Kegel, Kugel, Linie und Würfel.',
             'Freihand zeichnen, Zustände auf Feldern.',
             'Trefferpunkte.',
-            'Kreaturen mitten im Kampf auftauchen lassen.',
           ],
         },
         {
           title: 'Die Sitzung leiten',
           items: ['Rückgängig für die Spielleitung.'],
-        },
-        {
-          title: 'Für Spielende',
-          items: [
-            'Eigene Farbe und eigenes Porträt.',
-            'Ein Knopf, der die eigene Figur zeigt.',
-            'Kurzes Vibrieren, wenn ein Zug bestätigt ist.',
-          ],
         },
         {
           title: 'Spielen aus der Ferne',
@@ -378,6 +368,17 @@ export const de = {
     editTitle: (name: string) => `${name} bearbeiten`,
     appearance: 'Aussehen',
     appearanceHint: 'Kurze Beschreibung, aus der ein Porträt gemalt werden kann.',
+    /** The ring colour (knowledge/domain/character.md): a hex code, or empty for the default. */
+    color: {
+      label: 'Farbe',
+      hint: 'Ein Farbcode wie #4da3ff, oder eine der Farben unten. Leer lassen für die Farbe nach Reihenfolge.',
+      invalid: 'Ein Farbcode ist # und sechs Zeichen aus 0–9 und a–f, etwa #4da3ff.',
+      automatic: 'automatisch',
+      reset: 'Farbe nach Reihenfolge',
+      /** Names of the default ring colours, in the order of CHARACTER_RINGS. */
+      swatches: ['Blau', 'Grün', 'Orange', 'Lila', 'Türkis', 'Pink', 'Zitronengelb', 'Weiß'],
+      pick: (name: string) => `Farbe ${name}`,
+    },
     /** The alt text of a character's picked portrait, e.g. "Porträt: Brom". */
     portraitAlt: (name: string) => `Porträt: ${name}`,
     /** The portrait part of an existing character's form (knowledge/features/token-icons.md). */
@@ -1154,6 +1155,7 @@ export const de = {
     sessionEnded: 'Diese Sitzung ist beendet. Setze sie zuerst fort.',
     notSessionDm: 'Die Kämpfe einer Sitzung plant nur ihre Spielleitung.',
     sessionInvalid: 'Diese Sitzung gibt es in der Kampagne nicht (mehr).',
+    colorInvalid: 'Ein Farbcode ist # und sechs Zeichen aus 0–9 und a–f, etwa #4da3ff.',
     textTooLong: 'Ein Text in der Datei ist zu lang.',
     mapSizeInvalid: 'Eine Karte ist 1 bis 40 Felder breit und hoch.',
     layoutVersionUnsupported: 'Diese Kartendatei stammt aus einer neueren Version der App.',

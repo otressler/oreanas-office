@@ -56,7 +56,12 @@ describe('CharacterForm', () => {
     await vi.waitFor(() => expect(onDone).toHaveBeenCalled())
     const post = calls.find((c) => c.method === 'POST')!
     expect(post.path).toBe(`/api/campaigns/${CAMPAIGN}/characters`)
-    expect(post.body).toEqual({ name: 'Brom', size: 'small', appearance: 'Zwerg mit rotem Bart' })
+    expect(post.body).toEqual({
+      name: 'Brom',
+      size: 'small',
+      appearance: 'Zwerg mit rotem Bart',
+      color: null,
+    })
     // A new character has no portraits yet.
     expect(screen.queryByRole('region', { name: de.characters.portrait.title })).toBeNull()
   })
@@ -67,6 +72,7 @@ describe('CharacterForm', () => {
       ownerUserId: 'u1',
       ownerDisplayName: 'Mira',
       colorIndex: 0,
+      color: null,
       appearance: '',
       portraitUrl: null,
       name: 'Brom',
@@ -84,7 +90,75 @@ describe('CharacterForm', () => {
     await vi.waitFor(() => expect(onDone).toHaveBeenCalled())
     const put = calls.find((c) => c.method === 'PUT')
     expect(put?.path).toBe(`/api/campaigns/${CAMPAIGN}/characters/ch1`)
-    expect(put?.body).toEqual({ name: 'Brom', size: 'large', appearance: '' })
+    expect(put?.body).toEqual({ name: 'Brom', size: 'large', appearance: '', color: null })
+  })
+
+  it('saves a typed colour code as #rrggbb in lower case', async () => {
+    const calls = mockApi({
+      'POST /api/campaigns/:id/characters': (call) => json(201, call.body),
+    })
+    const onDone = renderForm()
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText(de.characters.name), 'Brom')
+    await user.type(screen.getByLabelText(de.characters.color.label), 'A1B2C3')
+    await user.click(screen.getByRole('button', { name: de.common.create }))
+
+    await vi.waitFor(() => expect(onDone).toHaveBeenCalled())
+    expect(calls.find((c) => c.method === 'POST')?.body).toMatchObject({ color: '#a1b2c3' })
+  })
+
+  it('fills in a default colour, and goes back to the colour by order', async () => {
+    const character: Character = {
+      id: 'ch1',
+      ownerUserId: 'u1',
+      ownerDisplayName: 'Mira',
+      colorIndex: 1,
+      color: '#123abc',
+      appearance: '',
+      portraitUrl: null,
+      name: 'Brom',
+      size: 'medium',
+      canEdit: true,
+    }
+    const calls = mockApi({
+      'GET /api/campaigns/:id/characters/:characterId/portraits': () =>
+        json(200, tokenImagesOf([])),
+      'PUT /api/campaigns/:id/characters/:characterId': (call) => json(200, call.body),
+    })
+    const onDone = renderForm(character)
+    const user = userEvent.setup()
+    const field = screen.getByLabelText(de.characters.color.label)
+    expect(field).toHaveValue('#123abc')
+
+    const orange = screen.getByRole('button', { name: de.characters.color.pick('Orange') })
+    await user.click(orange)
+    expect(field).toHaveValue('#f28c38')
+    expect(orange).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(screen.getByRole('button', { name: de.characters.color.reset }))
+    expect(field).toHaveValue('')
+    // The placeholder names the colour the character gets by its place in the campaign.
+    expect(field).toHaveAttribute('placeholder', expect.stringContaining('#4cc76a'))
+    await user.click(screen.getByRole('button', { name: de.common.save }))
+
+    await vi.waitFor(() => expect(onDone).toHaveBeenCalled())
+    expect(calls.find((c) => c.method === 'PUT')?.body).toMatchObject({ color: null })
+  })
+
+  it('does not send a colour that isn’t a hex code', async () => {
+    const calls = mockApi({
+      'POST /api/campaigns/:id/characters': (call) => json(201, call.body),
+    })
+    const onDone = renderForm()
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText(de.characters.name), 'Brom')
+    await user.type(screen.getByLabelText(de.characters.color.label), 'rot')
+    await user.click(screen.getByRole('button', { name: de.common.create }))
+
+    expect(screen.getByLabelText(de.characters.color.label)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText(de.characters.color.invalid)).toBeVisible()
+    expect(calls.filter((c) => c.method === 'POST')).toHaveLength(0)
+    expect(onDone).not.toHaveBeenCalled()
   })
 
   it('shows the server error in German', async () => {
@@ -105,6 +179,7 @@ describe('CharacterForm', () => {
       ownerUserId: 'u1',
       ownerDisplayName: 'Mira',
       colorIndex: 0,
+      color: null,
       appearance: '',
       portraitUrl: null,
       name: 'Brom',

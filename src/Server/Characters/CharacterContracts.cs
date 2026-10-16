@@ -3,12 +3,14 @@ using OreanasOffice.Server.Rules;
 namespace OreanasOffice.Server.Characters;
 
 // Appearance: up to Character.AppearanceMaxLength characters; feeds the portrait prompt.
-public record CharacterRequest(string Name, CreatureSize Size, string? Appearance = null);
+// Color: the ring colour as "#rrggbb" (any case), or null or empty for the default.
+public record CharacterRequest(string Name, CreatureSize Size, string? Appearance = null, string? Color = null);
 
 // CanEdit: the signed-in user owns the character or is a `dm` member. ColorIndex: the
 // character's place in the order characters were added to the campaign (0, 1, 2…),
-// which picks its ring colour on the board (BoardToken.ColorIndex). PortraitUrl: the
-// picked portrait (Character.TokenAssetId), null for the letter.
+// which picks its default ring colour on the board (BoardToken.ColorIndex). Color: the
+// ring colour its player picked, "#rrggbb", which replaces the default; null for the
+// default. PortraitUrl: the picked portrait (Character.TokenAssetId), null for the letter.
 public record CharacterResponse(
     Guid Id,
     Guid OwnerUserId,
@@ -18,4 +20,5 @@ public record CharacterResponse(
     bool CanEdit,
     int ColorIndex,
     string Appearance,
-    string? PortraitUrl);
+    string? PortraitUrl,
+    string? Color);

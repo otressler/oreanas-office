@@ -1591,7 +1591,8 @@
    "speedSquares": 6,
    "colorIndex": null,
    "version": 0,
-   "imageUrl": null
+   "imageUrl": null,
+   "color": null
   },
   {
    "id": "d311c5bf-c73d-5a95-92d8-aebd735a3225",
@@ -1607,7 +1608,8 @@
    "speedSquares": 6,
    "colorIndex": null,
    "version": 0,
-   "imageUrl": null
+   "imageUrl": null,
+   "color": null
   },
   {
    "id": "46c0a2db-d94a-5bc0-9718-37e97e48223f",
@@ -1623,7 +1625,8 @@
    "speedSquares": 6,
    "colorIndex": null,
    "version": 0,
-   "imageUrl": null
+   "imageUrl": null,
+   "color": null
   },
   {
    "id": "8d6f74d7-eea1-5ff6-add4-39111513c68d",
@@ -1639,7 +1642,8 @@
    "speedSquares": 6,
    "colorIndex": null,
    "version": 0,
-   "imageUrl": null
+   "imageUrl": null,
+   "color": null
   },
   {
    "id": "00c8e0d4-47c6-567d-9692-306bb66bec25",
@@ -1655,7 +1659,8 @@
    "speedSquares": 4,
    "colorIndex": null,
    "version": 0,
-   "imageUrl": null
+   "imageUrl": null,
+   "color": null
   },
   {
    "id": "7d5ef3fa-937c-5aa2-9026-a79401e59542",
@@ -1671,7 +1676,8 @@
    "speedSquares": 6,
    "colorIndex": 0,
    "version": 0,
-   "imageUrl": null
+   "imageUrl": null,
+   "color": null
   },
   {
    "id": "6fcdde9a-bd68-59e2-9181-3a4793beca98",
@@ -1687,7 +1693,8 @@
    "speedSquares": 5,
    "colorIndex": 1,
    "version": 0,
-   "imageUrl": null
+   "imageUrl": null,
+   "color": null
   }
  ],
  "isSessionDm": false,

@@ -62,7 +62,7 @@ function CharacterRow({ character, onEdit }: { character: Character; onEdit: () 
       <TokenPicture
         url={character.portraitUrl}
         label={character.name}
-        ring={ringColor({ kind: 'character', colorIndex: character.colorIndex })}
+        ring={ringColor({ kind: 'character', ...character })}
         alt={de.characters.portraitAlt(character.name)}
         className="h-11 w-11 text-base"
       />

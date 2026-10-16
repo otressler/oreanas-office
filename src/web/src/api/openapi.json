@@ -2288,6 +2288,7 @@
           "sessionEnded",
           "notSessionDm",
           "sessionInvalid",
+          "colorInvalid",
           "textTooLong",
           "mapSizeInvalid",
           "layoutVersionUnsupported",
@@ -2517,7 +2518,8 @@
           "size",
           "colorIndex",
           "version",
-          "imageUrl"
+          "imageUrl",
+          "color"
         ],
         "type": "object",
         "properties": {
@@ -2579,6 +2581,12 @@
             "format": "int32"
           },
           "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "color": {
             "type": [
               "null",
               "string"
@@ -2722,6 +2730,12 @@
               "null",
               "string"
             ]
+          },
+          "color": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2735,7 +2749,8 @@
           "canEdit",
           "colorIndex",
           "appearance",
-          "portraitUrl"
+          "portraitUrl",
+          "color"
         ],
         "type": "object",
         "properties": {
@@ -2767,6 +2782,12 @@
             "type": "string"
           },
           "portraitUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "color": {
             "type": [
               "null",
               "string"
@@ -3048,6 +3069,7 @@
               "sessionEnded",
               "notSessionDm",
               "sessionInvalid",
+              "colorInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -4025,6 +4047,7 @@
               "sessionEnded",
               "notSessionDm",
               "sessionInvalid",
+              "colorInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
