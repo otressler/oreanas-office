@@ -3,7 +3,14 @@
 // higher version: a TokenMoved event that arrives after the board, or one that
 // arrived before a board reload that was already on its way. On top of that, the
 // device's own move waits for the server as a pending position (optimistic UI).
-import type { BoardState, BoardToken, TokenMovedEvent } from '../api/types'
+import type {
+  BoardState,
+  BoardToken,
+  TokenMovedEvent,
+  TokenRemovedEvent,
+  TokenRestoredEvent,
+  TokenStatusesChangedEvent,
+} from '../api/types'
 
 /** Where a token stands, at which version. */
 export interface TokenPosition {
@@ -71,4 +78,66 @@ export function withPending(board: BoardState, pending: PendingMoves): BoardStat
     return { ...token, ...target }
   })
   return changed ? { ...board, tokens } : board
+}
+
+// ---- Statuses and removed tokens (stage 9) -----------------------------------------------
+// Status changes carry a token's whole list, so the newest event simply replaces it. A
+// board reload brings the saved state, which wins anyway once it lands.
+
+/** The definitions with any new or changed ones from `added`, by id. */
+function withDefinitions(
+  definitions: BoardState['statuses'],
+  added: BoardState['statuses'],
+): BoardState['statuses'] {
+  if (added.length === 0) return definitions
+  const byId = new Map(definitions.map((definition) => [definition.id, definition]))
+  for (const definition of added) byId.set(definition.id, definition)
+  return [...byId.values()]
+}
+
+/** The board with a token's new status list, on the board or among the removed tokens. */
+export function applyStatuses(board: BoardState, change: TokenStatusesChangedEvent): BoardState {
+  if (change.encounterId !== board.encounterId) return board
+  const update = (tokens: BoardToken[]) =>
+    tokens.map((token) =>
+      token.id === change.tokenId ? { ...token, statuses: change.statuses } : token,
+    )
+  return {
+    ...board,
+    tokens: update(board.tokens),
+    removedTokens: update(board.removedTokens),
+    statuses: withDefinitions(board.statuses, change.definitions),
+  }
+}
+
+/**
+ * The board without the removed token. The session DM's board keeps it at the top of
+ * `removedTokens`, for "Vom Feld genommen"; everyone else's drops it.
+ */
+export function applyRemoved(board: BoardState, removed: TokenRemovedEvent): BoardState {
+  if (removed.encounterId !== board.encounterId) return board
+  const token = board.tokens.find((candidate) => candidate.id === removed.tokenId)
+  if (!token) return board
+  return {
+    ...board,
+    tokens: board.tokens.filter((candidate) => candidate.id !== removed.tokenId),
+    removedTokens: board.isSessionDm
+      ? [
+          { ...token, removedAt: removed.removedAt },
+          ...board.removedTokens.filter((candidate) => candidate.id !== removed.tokenId),
+        ]
+      : board.removedTokens,
+  }
+}
+
+/** The board with the token back on it and out of `removedTokens`. */
+export function applyRestored(board: BoardState, restored: TokenRestoredEvent): BoardState {
+  if (restored.encounterId !== board.encounterId) return board
+  const token = { ...restored.token, removedAt: null }
+  return {
+    ...board,
+    tokens: [...board.tokens.filter((candidate) => candidate.id !== token.id), token],
+    removedTokens: board.removedTokens.filter((candidate) => candidate.id !== token.id),
+    statuses: withDefinitions(board.statuses, restored.definitions),
+  }
 }

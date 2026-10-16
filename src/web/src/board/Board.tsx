@@ -13,11 +13,12 @@
 // cell in about 200 ms (knowledge/decisions/realtime-sync.md): only the token layer
 // redraws per animation frame, without a React render.
 import type Konva from 'konva'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react'
 import { Layer, Shape, Stage } from 'react-konva'
 import type { BoardState, BoardToken } from '../api/types'
 import { de } from '../text/de'
 import { footprint, stackCounts, tokenAt, tokensAt, type GridPoint } from './geometry'
+import type { PingTarget, ShownPing } from './pings'
 import { GestureTracker, wheelZoomFactor, type Gesture, type PointerSample } from './gestures'
 import { drawPicture, mapLayers, useBackgroundImage } from './background'
 import { cellInfo, tokenInfo } from './info'
@@ -75,6 +76,41 @@ export interface BoardProps {
   instantTokenIds?: ReadonlySet<string>
   /** The board fills its container; the page gives it a size. */
   className?: string
+
+  // ---- Stage 9 (knowledge/features/pings-and-arrows.md, token-card.md, player-extras.md) ----
+  // Contract: the board renderer lane implements these.
+
+  /**
+   * The second touch of a double tap went down: the page undoes what the last tap did
+   * (onCellTap or onTokenTap), so a double tap never selects, opens a card or confirms.
+   * The board closes its own info box by itself.
+   */
+  onTapTakenBack?: () => void
+  /** A double tap: ping the token drawn on top of the cell, or the cell. */
+  onDoubleTap?: (target: PingTarget) => void
+  /** A double tap dragged: an arrow from the first tap to `to`; `done` when the finger lifts. */
+  onArrow?: (from: PingTarget, to: GridPoint, done: boolean) => void
+  /** Pings and arrows to draw, with a marker at the screen's edge for those out of view. */
+  pings?: readonly ShownPing[]
+  /**
+   * CSS pixels along the board's edges covered by the page's own overlays (the docked token
+   * card): the board keeps its buttons, edge markers and `keepInView` clear of them.
+   */
+  inset?: { top?: number; right?: number; bottom?: number }
+  /** A token to keep in view: when it lies under `inset`, the board pans just enough. */
+  keepInView?: string | null
+  /** For "Meine Figur": centre a token. */
+  handleRef?: Ref<BoardHandle>
+}
+
+/** What a page can ask of the board. */
+export interface BoardHandle {
+  /**
+   * Pans so the token stands in the middle of the uncovered board; zooms in to the
+   * opening size if it is drawn smaller than a fingertip; with `pulse`, the token pulses
+   * once in its ring colour. Doesn't select it. Nothing if it isn't on the board.
+   */
+  centerOn: (tokenId: string, options?: { pulse?: boolean }) => void
 }
 
 /** What the board's own info box is about. */
@@ -278,7 +314,7 @@ export function Board({
       if (gesture.type === 'tap') tap(gesture.point)
       else if (gesture.type === 'pan')
         transform((v) => ({ ...v, x: v.x + gesture.dx, y: v.y + gesture.dy }))
-      else
+      else if (gesture.type === 'pinch')
         transform((v, world, s) => {
           const zoomed = zoomAt(v, gesture.center, gesture.factor, zoomLimits(world, s))
           return { ...zoomed, x: zoomed.x + gesture.dx, y: zoomed.y + gesture.dy }

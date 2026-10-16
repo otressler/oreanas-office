@@ -1314,10 +1314,15 @@ export class MockBackend {
           colorIndex: character ? campaignCharacters.indexOf(character) : null,
           imageUrl: this.pickedTokenImageUrl(token.characterId ?? token.creatureTypeId),
           color: character?.color ?? null,
+          statuses: [],
         }
       }),
       isSessionDm: encounter.status === 'active' && session?.dmUserId === userId,
       undoableMove: this.undoableMove(encounter, userId),
+      // Stage 9 contract: removed tokens, statuses and people come with the lanes.
+      removedTokens: [],
+      statuses: [],
+      people: [],
     }
   }
 
@@ -1630,7 +1635,11 @@ function validateCharacter(body: Record<string, unknown>): Reply | null {
 
 /** Like the server: lower case, and empty for the colour by order. */
 function characterColor(body: Record<string, unknown>): string | null {
-  return String(body.color ?? '').trim().toLowerCase() || null
+  return (
+    String(body.color ?? '')
+      .trim()
+      .toLowerCase() || null
+  )
 }
 
 function meResponse(user: User): S['MeResponse'] {

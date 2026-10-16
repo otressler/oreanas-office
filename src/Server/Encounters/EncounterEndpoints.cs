@@ -185,10 +185,15 @@ public static class EncounterEndpoints
                     t.CharacterId is { } characterId ? colors[characterId] : null,
                     t.Version,
                     t.ImageAssetId is { } imageId ? MapBackgrounds.Url(imageId) : null,
-                    t.Color)),
+                    t.Color,
+                    [])),
             ],
             encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId,
-            undoable);
+            undoable,
+            // Stage 9 contract: removed tokens, statuses and people come with the backend lane.
+            [],
+            [],
+            []);
         return TypedResults.Ok(board);
     }
 

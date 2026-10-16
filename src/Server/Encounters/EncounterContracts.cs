@@ -1,5 +1,6 @@
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Rules;
+using OreanasOffice.Server.Statuses;
 
 namespace OreanasOffice.Server.Encounters;
 
@@ -33,7 +34,10 @@ public record ActiveEncounterSummary(Guid Id, string Name);
 // it on every reconnect (knowledge/decisions/realtime-sync.md). IsSessionDm: the
 // signed-in user runs the session and moves any token; false for an encounter that
 // hasn't started. UndoableMove: the signed-in user's last move, while they can still
-// undo it; null otherwise.
+// undo it; null otherwise. Tokens leaves out removed tokens (knowledge/features/removing-tokens.md);
+// RemovedTokens lists them, newest first, for the session DM only and empty for everyone
+// else. Statuses: the definitions of every status on Tokens and RemovedTokens. People:
+// every campaign member, for names on pings and the token card and the colour they ping in.
 public record BoardStateResponse(
     Guid EncounterId,
     Guid CampaignId,
@@ -43,7 +47,16 @@ public record BoardStateResponse(
     BoardMap Map,
     List<BoardToken> Tokens,
     bool IsSessionDm,
-    UndoableMove? UndoableMove);
+    UndoableMove? UndoableMove,
+    List<BoardToken> RemovedTokens,
+    List<StatusDefinitionView> Statuses,
+    List<BoardPerson> People);
+
+// PingColor: "#rrggbb" (knowledge/features/pings-and-arrows.md, "Colours"): the session
+// DM's fixed gold; a player's first character in this fight (by the order characters were
+// added to the campaign), in its ring colour; white for anyone else. The server sends the
+// same colour with every ping and arrow of the person.
+public record BoardPerson(Guid UserId, string DisplayName, string PingColor);
 
 // The token the move was made on and the token's Version right after it. The undo stays
 // available while the token still has this version (TokenMovedEvent.Version).
@@ -67,7 +80,9 @@ public record BoardBackground(Guid AssetId, string Url, int X, int Y, int Width,
 // comes from the character or creature type. Version: see
 // Token.Version; devices keep the position with the higher version. ImageUrl: the
 // character's or creature type's picked portrait or icon as it is now, also in a running
-// fight (knowledge/features/token-icons.md); null for the letter.
+// fight (knowledge/features/token-icons.md); null for the letter. Statuses: in the order
+// they were put on (knowledge/features/statuses.md). RemovedAt: set only on
+// BoardStateResponse.RemovedTokens.
 public record BoardToken(
     Guid Id,
     TokenKind Kind,
@@ -82,4 +97,10 @@ public record BoardToken(
     int? ColorIndex,
     int Version,
     string? ImageUrl,
-    string? Color);
+    string? Color,
+    List<BoardTokenStatus> Statuses,
+    DateTimeOffset? RemovedAt = null);
+
+// A status on a token. Level: 1-6 for statuses with levels, else null. AppliedByUserId:
+// who put it on (the card's "von Eli"); a player may remove only their own.
+public record BoardTokenStatus(Guid StatusId, int? Level, Guid AppliedByUserId, DateTimeOffset AppliedAt);

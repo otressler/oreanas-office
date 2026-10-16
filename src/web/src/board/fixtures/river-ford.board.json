@@ -2571,7 +2571,8 @@
    "colorIndex": null,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "311c734f-f0e3-5348-b12d-9f8a934cbd82",
@@ -2588,7 +2589,8 @@
    "colorIndex": null,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "90d48e16-77a7-5f60-b2b9-a5c1de02ae28",
@@ -2605,7 +2607,8 @@
    "colorIndex": null,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "2b2c6078-01de-591f-97c1-262c77141f82",
@@ -2622,7 +2625,8 @@
    "colorIndex": null,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "c2a47ebc-0d7e-58cc-8857-10a350bcbe02",
@@ -2639,7 +2643,8 @@
    "colorIndex": 0,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "0dd47582-2bd4-53ae-8b3e-d45309fc4eee",
@@ -2656,9 +2661,13 @@
    "colorIndex": 2,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   }
  ],
  "isSessionDm": false,
- "undoableMove": null
+ "undoableMove": null,
+ "removedTokens": [],
+ "statuses": [],
+ "people": []
 }

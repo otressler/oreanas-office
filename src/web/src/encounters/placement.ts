@@ -48,6 +48,7 @@ export function withPlacedCharacters(
       version: 0,
       imageUrl: character.portraitUrl,
       color: character.color,
+      statuses: [],
     })
   }
   return { ...board, tokens: [...board.tokens, ...placed] }

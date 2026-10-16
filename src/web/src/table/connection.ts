@@ -14,16 +14,30 @@
 // - the person's pointer input tells the server they are still there (MarkActive), at
 //   most once a minute;
 // - others' move previews are reported as they come and dropped with the connection;
-//   the server sends the ones still shown when the device joins again.
+//   the server sends the ones still shown when the device joins again;
+// - pings, arrows, status changes and removed or restored tokens are passed on as they
+//   come (stage 9); pings and arrows are best effort, like previews.
 // The connection factory is injected, so tests run without a server.
 import type { HubConnection } from '@microsoft/signalr'
 import type {
+  AddStatusRequest,
   ApiErrorCode,
+  ArrowDrawnEvent,
+  DrawArrowRequest,
+  HubResult,
   MovePreviewClearedEvent,
   MovePreviewEvent,
   MoveResult,
   MoveTokenRequest,
+  PingRequest,
+  PingedEvent,
+  RemoveStatusRequest,
+  SetStatusLevelRequest,
+  StatusResult,
   TokenMovedEvent,
+  TokenRemovedEvent,
+  TokenRestoredEvent,
+  TokenStatusesChangedEvent,
 } from '../api/types'
 import { invokeHub, onHubEvent } from './hub'
 
@@ -68,6 +82,14 @@ export interface TableConnectionOptions {
   onEnded: () => void
   /** JoinEncounter said no (encounterNotActive, tokenNotFound): reload the board. */
   onRejected: (error: ApiErrorCode) => void
+  /** Someone else pinged a cell or token. */
+  onPinged?: (ping: PingedEvent) => void
+  /** Someone else drew an arrow. */
+  onArrowDrawn?: (arrow: ArrowDrawnEvent) => void
+  /** A token's statuses changed, this device's own changes included. */
+  onStatusesChanged?: (change: TokenStatusesChangedEvent) => void
+  onTokenRemoved?: (removed: TokenRemovedEvent) => void
+  onTokenRestored?: (restored: TokenRestoredEvent) => void
 }
 
 /** A move or undo while the table isn't connected; moves are never queued. */
@@ -151,6 +173,51 @@ export class TableConnection {
     })
   }
 
+  /** Pings a cell or token for the others. Best effort: nothing while not connected. */
+  ping(request: PingRequest): void {
+    this.bestEffort((connection) => invokeHub(connection, 'Ping', request))
+  }
+
+  /** Draws an arrow for the others. Best effort: nothing while not connected. */
+  drawArrow(request: DrawArrowRequest): void {
+    this.bestEffort((connection) => invokeHub(connection, 'DrawArrow', request))
+  }
+
+  /** Rejects with NotConnectedError unless connected. */
+  addStatus(request: AddStatusRequest): Promise<StatusResult> {
+    return this.call((connection) => invokeHub(connection, 'AddStatus', request))
+  }
+
+  removeStatus(request: RemoveStatusRequest): Promise<StatusResult> {
+    return this.call((connection) => invokeHub(connection, 'RemoveStatus', request))
+  }
+
+  setStatusLevel(request: SetStatusLevelRequest): Promise<StatusResult> {
+    return this.call((connection) => invokeHub(connection, 'SetStatusLevel', request))
+  }
+
+  removeToken(tokenId: string): Promise<HubResult> {
+    return this.call((connection) => invokeHub(connection, 'RemoveToken', tokenId))
+  }
+
+  restoreToken(tokenId: string): Promise<HubResult> {
+    return this.call((connection) => invokeHub(connection, 'RestoreToken', tokenId))
+  }
+
+  private call<T>(send: (connection: HubConnection) => Promise<T>): Promise<T> {
+    const connection = this.activeConnection()
+    if (!connection) return Promise.reject(new NotConnectedError())
+    return send(connection)
+  }
+
+  private bestEffort(send: (connection: HubConnection) => Promise<unknown>): void {
+    const connection = this.activeConnection()
+    if (!connection) return
+    send(connection).catch(() => {
+      // A lost connection shows up through onclose.
+    })
+  }
+
   private activeConnection(): HubConnection | null {
     if (this.state !== 'connected' || !this.connection) return null
     // Any call resets the server's idle timer.
@@ -205,6 +272,21 @@ export class TableConnection {
     })
     onHubEvent(connection, 'EncounterEnded', () => {
       if (!stale()) onEnded()
+    })
+    onHubEvent(connection, 'Pinged', (ping) => {
+      if (!stale()) this.options.onPinged?.(ping)
+    })
+    onHubEvent(connection, 'ArrowDrawn', (arrow) => {
+      if (!stale()) this.options.onArrowDrawn?.(arrow)
+    })
+    onHubEvent(connection, 'TokenStatusesChanged', (change) => {
+      if (!stale()) this.options.onStatusesChanged?.(change)
+    })
+    onHubEvent(connection, 'TokenRemoved', (removed) => {
+      if (!stale()) this.options.onTokenRemoved?.(removed)
+    })
+    onHubEvent(connection, 'TokenRestored', (restored) => {
+      if (!stale()) this.options.onTokenRestored?.(restored)
     })
     onHubEvent(connection, 'IdleTimeout', () => {
       if (stale()) return

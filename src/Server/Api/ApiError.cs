@@ -123,4 +123,14 @@ public enum ApiErrorCode
     UploadInvalid,
     // UploadTooLarge: the body is larger than ImageOptions.UploadMaxBytes.
     UploadTooLarge,
+
+    // Statuses (knowledge/features/statuses.md).
+    // StatusNotFound: no library status or custom status of this campaign with this id.
+    StatusNotFound,
+    // StatusAlreadySet: the token has this status already; statuses don't stack.
+    StatusAlreadySet,
+    // LevelInvalid: a level outside 1-6, or a level for a status without levels.
+    LevelInvalid,
+    // NotYourStatus: a player removes or changes a status someone else put on.
+    NotYourStatus,
 }

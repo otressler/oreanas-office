@@ -646,6 +646,12 @@ export const de = {
     undoFailed: 'Das Rückgängigmachen ist nicht angekommen. Versuch es bitte noch einmal.',
   },
 
+  /** Pings and arrows on the board (stage 9, lane: board renderer). */
+  pings: {},
+
+  /** "Meine Figur" and the "Vibrieren" switch (stage 9, lane: board renderer). */
+  playerExtras: {},
+
   /** The map editor's frame (src/editor). */
   editor: {
     /** Accessible name of the canvas; the name is the map's. */
@@ -1206,6 +1212,11 @@ export const de = {
     imageNotFound: 'Dieses Bild gibt es hier nicht mehr.',
     uploadInvalid: 'Das Bild lässt sich nicht lesen. Nimm ein JPEG-, PNG- oder WebP-Bild.',
     uploadTooLarge: 'Das Bild ist zu groß. Nimm ein kleineres.',
+    statusNotFound: 'Diesen Zustand gibt es hier nicht (mehr).',
+    statusAlreadySet: 'Die Figur hat diesen Zustand schon.',
+    levelInvalid: 'Die Stufe geht von 1 bis 6.',
+    notYourStatus:
+      'Diesen Zustand hat jemand anderes gesetzt. Entfernen kann ihn nur die Person oder die Spielleitung.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */
@@ -1555,6 +1566,33 @@ export const de = {
     startBlocked:
       'Erst muss ein Konflikt oder eine abgelehnte Änderung gelöst werden. Schau in den Synchronisierungsstatus.',
   },
+
+  /**
+   * Statuses (stage 9, lane: card and status lists). `library`: the German names of the 15
+   * conditions of the 2024 rules, by their fixed key (knowledge/features/statuses.md).
+   */
+  statuses: {
+    library: {
+      blinded: 'Blind',
+      charmed: 'Bezaubert',
+      deafened: 'Taub',
+      exhaustion: 'Erschöpfung',
+      frightened: 'Verängstigt',
+      grappled: 'Gepackt',
+      incapacitated: 'Kampfunfähig',
+      invisible: 'Unsichtbar',
+      paralyzed: 'Gelähmt',
+      petrified: 'Versteinert',
+      poisoned: 'Vergiftet',
+      prone: 'Liegend',
+      restrained: 'Festgesetzt',
+      stunned: 'Betäubt',
+      unconscious: 'Bewusstlos',
+    } as Record<string, string>,
+  },
+
+  /** The token card, removing tokens and their lists (stage 9, lane: card and status lists). */
+  tokenCard: {},
 
   /** Failures without an error code. */
   requestErrors: {

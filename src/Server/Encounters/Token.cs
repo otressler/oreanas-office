@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OreanasOffice.Server.Bestiary;
 using OreanasOffice.Server.Characters;
 using OreanasOffice.Server.Rules;
+using OreanasOffice.Server.Statuses;
 
 namespace OreanasOffice.Server.Encounters;
 
@@ -47,11 +48,20 @@ public class Token
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    // Taken off the board by the session DM (knowledge/features/removing-tokens.md): kept
+    // with its moves and statuses, left out of the board, and can be brought back. Null
+    // while on the board.
+    public DateTimeOffset? RemovedAt { get; set; }
+
+    public Guid? RemovedByUserId { get; set; }
+
     public Encounter Encounter { get; set; } = null!;
 
     public Character? Character { get; set; }
 
     public CreatureType? CreatureType { get; set; }
+
+    public List<TokenStatus> Statuses { get; set; } = [];
 }
 
 public enum TokenKind
@@ -73,6 +83,7 @@ internal sealed class TokenConfiguration : IEntityTypeConfiguration<Token>
         // deletes the encounter and its tokens; one cascade path is all SQL Server allows.
         token.HasOne(t => t.Character).WithMany().HasForeignKey(t => t.CharacterId).OnDelete(DeleteBehavior.Restrict);
         token.HasOne(t => t.CreatureType).WithMany().HasForeignKey(t => t.CreatureTypeId).OnDelete(DeleteBehavior.Restrict);
+        token.HasOne<Accounts.AppUser>().WithMany().HasForeignKey(t => t.RemovedByUserId).OnDelete(DeleteBehavior.Restrict);
 
         // A character stands on the board at most once per encounter.
         token.HasIndex(t => new { t.EncounterId, t.CharacterId })

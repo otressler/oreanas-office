@@ -1,16 +1,20 @@
 // The fight page's live table (knowledge/features/playable-map.md, "Phone controls";
 // knowledge/decisions/realtime-sync.md): the board with select, preview and confirm,
 // optimistic moves with rollback, undo, the connection indicator, and arrows where
-// others are about to move tokens.
+// others are about to move tokens. Stage 9: pings and arrows from double taps, whose
+// first tap is taken back; haptic feedback on the mover's device; "Meine Figur".
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { ApiErrorCode, BoardState, BoardToken, UndoableMove } from '../api/types'
 import { useCurrentUser } from '../auth/auth'
-import { Board } from '../board/Board'
+import { Board, type BoardHandle } from '../board/Board'
 import { buildGrid, placementElevation, type GridPoint } from '../board/geometry'
 import { Button } from '../components/ui'
 import { FightScreen } from '../encounters/FightScreen'
 import { de } from '../text/de'
 import { ConnectionIndicator } from './ConnectionIndicator'
+import { vibrate } from './haptics'
+import { MyCharacterButton } from './MyCharacterButton'
+import { usePings } from './usePings'
 import {
   IDLE,
   canMoveToken,
@@ -27,6 +31,12 @@ import { isUndoVisible, undoCandidate } from './undo'
 import { useTable } from './useTable'
 
 const t = de.table
+
+/**
+ * How long a preview must stand before the others see it, so the first tap of a double
+ * tap never flickers on other devices (knowledge/features/pings-and-arrows.md).
+ */
+export const PREVIEW_SEND_DELAY_MS = 300
 
 /** A hint after a tap, or why a move or undo didn't go through. */
 interface Notice {
@@ -55,7 +65,9 @@ export function FightTable({
 }) {
   const me = useCurrentUser()
   const running = board.status === 'active'
-  const table = useTable(campaignId, board.encounterId, running)
+  const pings = usePings(board, me.id)
+  const table = useTable(campaignId, board.encounterId, running, pings.events)
+  const boardHandle = useRef<BoardHandle>(null)
   const connected = table.status === 'connected'
   const grid = useMemo(() => buildGrid(board.map), [board.map])
 
@@ -64,6 +76,8 @@ export function FightTable({
   const sends = useRef(new Map<string, number>())
   const [controls, setControls] = useState<Controls>(IDLE)
   const [notice, setNotice] = useState<Notice | null>(null)
+  // The page as it was before the last tap, for taking it back on a double tap.
+  const beforeTap = useRef<{ controls: Controls; notice: Notice | null } | null>(null)
 
   // The device's own undo; a reload that brings a new `undoableMove` takes over again.
   const [ownUndo, setOwnUndo] = useState<UndoableMove | null | undefined>(undefined)
@@ -101,9 +115,14 @@ export function FightTable({
   const previewShown = useRef(false)
   useEffect(() => {
     if (previewToken !== undefined && previewX !== undefined && previewY !== undefined) {
-      preview({ tokenId: previewToken, x: previewX, y: previewY })
-      previewShown.current = true
-    } else if (previewShown.current) {
+      // Sent once it has stood for a moment: the first tap of a double tap is taken back.
+      const timer = setTimeout(() => {
+        preview({ tokenId: previewToken, x: previewX, y: previewY })
+        previewShown.current = true
+      }, PREVIEW_SEND_DELAY_MS)
+      return () => clearTimeout(timer)
+    }
+    if (previewShown.current) {
       previewShown.current = false
       preview(null)
     }
@@ -131,10 +150,13 @@ export function FightTable({
       if (result.move) {
         table.apply(result.move)
         setOwnUndo({ tokenId: token.id, version: result.move.version })
+        vibrate('taken')
       } else {
+        vibrate('rejected')
         fail(result.error, t.moveFailed)
       }
     } catch {
+      vibrate('rejected')
       fail(null, t.moveFailed)
     } finally {
       // The token stays where the newest known version puts it: the move's, or back.
@@ -153,14 +175,17 @@ export function FightTable({
     setOwnUndo(null)
     try {
       const result = await table.undo()
-      if (result.move) table.apply(result.move)
-      else fail(result.error, t.undoFailed)
+      if (result.move) {
+        table.apply(result.move)
+        vibrate('taken')
+      } else fail(result.error, t.undoFailed)
     } catch {
       fail(null, t.undoFailed)
     }
   }
 
   function tap(cell: GridPoint, token?: BoardToken): boolean {
+    beforeTap.current = { controls, notice }
     const result = tapBoard(
       current,
       { cell, token },
@@ -176,6 +201,15 @@ export function FightTable({
     setNotice(hint ? { kind: 'hint', text: hint } : null)
     if (result.confirm) void send(result.confirm)
     return !result.info
+  }
+
+  // The second touch of a double tap: the page goes back to how it was before the first.
+  function takeBackTap() {
+    const before = beforeTap.current
+    beforeTap.current = null
+    if (!before) return
+    setControls(before.controls)
+    setNotice(before.notice)
   }
 
   function confirm() {
@@ -221,6 +255,14 @@ export function FightTable({
           slide
           instantTokenIds={instant}
           className="min-h-0 flex-1"
+          onTapTakenBack={takeBackTap}
+          onDoubleTap={(target) => table.ping(pings.ping(target))}
+          onArrow={(from, to, done) => {
+            const request = pings.arrow(from, to, done)
+            if (request) table.drawArrow(request)
+          }}
+          pings={pings.shown}
+          handleRef={boardHandle}
         />
 
         {(selected || notice) && (
@@ -261,6 +303,15 @@ export function FightTable({
               </p>
             )}
           </div>
+        )}
+
+        {running && (
+          <MyCharacterButton
+            tokens={shown.tokens}
+            removedTokens={board.removedTokens}
+            userId={me.id}
+            board={boardHandle}
+          />
         )}
 
         {showUndo && (

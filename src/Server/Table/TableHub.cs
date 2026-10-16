@@ -84,6 +84,21 @@ public sealed class TableHub(TableMoves moves, TablePreviews previews) : Hub<ITa
     // The activity filter has already noted the call.
     public Task MarkActive() => Task.CompletedTask;
 
+    // Stage 9 contract: the bodies come with the backend lane.
+    public Task<HubResult> Ping(PingRequest request) => throw new NotImplementedException();
+
+    public Task<HubResult> DrawArrow(DrawArrowRequest request) => throw new NotImplementedException();
+
+    public Task<StatusResult> AddStatus(AddStatusRequest request) => throw new NotImplementedException();
+
+    public Task<StatusResult> RemoveStatus(RemoveStatusRequest request) => throw new NotImplementedException();
+
+    public Task<StatusResult> SetStatusLevel(SetStatusLevelRequest request) => throw new NotImplementedException();
+
+    public Task<HubResult> RemoveToken(Guid tokenId) => throw new NotImplementedException();
+
+    public Task<HubResult> RestoreToken(Guid tokenId) => throw new NotImplementedException();
+
     private Guid UserId => Context.User!.GetUserId();
 
     private static bool SameToken(MovePreviewEvent a, MovePreviewEvent b) =>

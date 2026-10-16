@@ -2187,6 +2187,469 @@
           }
         }
       }
+    },
+    "/api/campaigns/{campaignId}/statuses": {
+      "get": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StatusDefinitionView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusDefinitionView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/characters/{characterId}/status-list": {
+      "get": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetStatusListRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/dm-status-list": {
+      "get": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetStatusListRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/encounters/{encounterId}/status-picker": {
+      "get": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusPickerResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/statuses/{statusId}/icons": {
+      "get": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "statusId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImagesResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "statusId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/statuses/{statusId}/icon": {
+      "put": {
+        "tags": [
+          "Statuses"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "statusId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2245,6 +2708,31 @@
                 "$ref": "#/components/schemas/ActiveEncounterSummary"
               }
             ]
+          }
+        }
+      },
+      "AddStatusRequest": {
+        "required": [
+          "tokenId",
+          "statusId",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statusId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "level": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -2329,8 +2817,56 @@
           "appearanceMissing",
           "imageNotFound",
           "uploadInvalid",
-          "uploadTooLarge"
+          "uploadTooLarge",
+          "statusNotFound",
+          "statusAlreadySet",
+          "levelInvalid",
+          "notYourStatus"
         ]
+      },
+      "ArrowDrawnEvent": {
+        "required": [
+          "encounterId",
+          "userId",
+          "color",
+          "fromCell",
+          "fromTokenId",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "color": {
+            "type": "string"
+          },
+          "fromCell": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/BoardCell"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fromTokenId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "to": {
+            "$ref": "#/components/schemas/BoardCell"
+          }
+        }
       },
       "AssetFailure": {
         "enum": [
@@ -2349,7 +2885,8 @@
         "enum": [
           "battleMap",
           "creatureType",
-          "character"
+          "character",
+          "status"
         ]
       },
       "AssetStatus": {
@@ -2407,6 +2944,23 @@
           }
         }
       },
+      "BoardCell": {
+        "required": [
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "BoardMap": {
         "required": [
           "id",
@@ -2448,6 +3002,26 @@
           }
         }
       },
+      "BoardPerson": {
+        "required": [
+          "userId",
+          "displayName",
+          "pingColor"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "pingColor": {
+            "type": "string"
+          }
+        }
+      },
       "BoardStateResponse": {
         "required": [
           "encounterId",
@@ -2458,7 +3032,10 @@
           "map",
           "tokens",
           "isSessionDm",
-          "undoableMove"
+          "undoableMove",
+          "removedTokens",
+          "statuses",
+          "people"
         ],
         "type": "object",
         "properties": {
@@ -2501,6 +3078,24 @@
                 "$ref": "#/components/schemas/UndoableMove"
               }
             ]
+          },
+          "removedTokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardToken"
+            }
+          },
+          "statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusDefinitionView"
+            }
+          },
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardPerson"
+            }
           }
         }
       },
@@ -2519,7 +3114,8 @@
           "colorIndex",
           "version",
           "imageUrl",
-          "color"
+          "color",
+          "statuses"
         ],
         "type": "object",
         "properties": {
@@ -2591,6 +3187,49 @@
               "null",
               "string"
             ]
+          },
+          "statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardTokenStatus"
+            }
+          },
+          "removedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "BoardTokenStatus": {
+        "required": [
+          "statusId",
+          "level",
+          "appliedByUserId",
+          "appliedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "statusId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "level": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "appliedByUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appliedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -2851,6 +3490,36 @@
           }
         }
       },
+      "CreateStatusRequest": {
+        "required": [
+          "name",
+          "iconDescription",
+          "hasLevels",
+          "characterId"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "iconDescription": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hasLevels": {
+            "type": "boolean"
+          },
+          "characterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "CreatureSize": {
         "enum": [
           "tiny",
@@ -2879,6 +3548,41 @@
           },
           "url": {
             "type": "string"
+          }
+        }
+      },
+      "DrawArrowRequest": {
+        "required": [
+          "encounterId",
+          "fromCell",
+          "fromTokenId",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromCell": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/BoardCell"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fromTokenId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "to": {
+            "$ref": "#/components/schemas/BoardCell"
           }
         }
       },
@@ -3111,6 +3815,10 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
               null
             ]
           }
@@ -4089,6 +4797,10 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
               null
             ]
           },
@@ -4156,6 +4868,77 @@
           }
         }
       },
+      "PingedEvent": {
+        "required": [
+          "encounterId",
+          "userId",
+          "color",
+          "cell",
+          "tokenId"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "color": {
+            "type": "string"
+          },
+          "cell": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/BoardCell"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tokenId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "PingRequest": {
+        "required": [
+          "encounterId",
+          "cell",
+          "tokenId"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cell": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/BoardCell"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tokenId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "RegisterRequest": {
         "required": [
           "inviteToken",
@@ -4176,6 +4959,23 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "RemoveStatusRequest": {
+        "required": [
+          "tokenId",
+          "statusId"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statusId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -4298,6 +5098,43 @@
           "ended"
         ]
       },
+      "SetStatusLevelRequest": {
+        "required": [
+          "tokenId",
+          "statusId",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statusId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SetStatusListRequest": {
+        "required": [
+          "statusIds"
+        ],
+        "type": "object",
+        "properties": {
+          "statusIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
       "StartEncounterRequest": {
         "required": [
           "characters"
@@ -4309,6 +5146,230 @@
             "items": {
               "$ref": "#/components/schemas/CharacterPlacement"
             }
+          }
+        }
+      },
+      "StatusDefinitionView": {
+        "required": [
+          "id",
+          "libraryKey",
+          "name",
+          "hasLevels",
+          "iconUrl",
+          "iconDescription",
+          "characterId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "libraryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "hasLevels": {
+            "type": "boolean"
+          },
+          "iconUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "iconDescription": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "characterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "StatusListKind": {
+        "enum": [
+          "dm",
+          "character"
+        ]
+      },
+      "StatusListResponse": {
+        "required": [
+          "id",
+          "characterId",
+          "statuses",
+          "canEdit"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "characterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusDefinitionView"
+            }
+          },
+          "canEdit": {
+            "type": "boolean"
+          }
+        }
+      },
+      "StatusPickerList": {
+        "required": [
+          "kind",
+          "characterId",
+          "characterName",
+          "statuses"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/StatusListKind"
+          },
+          "characterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "characterName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusDefinitionView"
+            }
+          }
+        }
+      },
+      "StatusPickerResponse": {
+        "required": [
+          "lists"
+        ],
+        "type": "object",
+        "properties": {
+          "lists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusPickerList"
+            }
+          }
+        }
+      },
+      "StatusResult": {
+        "required": [
+          "error",
+          "change"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              null
+            ]
+          },
+          "change": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TokenStatusesChangedEvent"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -4938,21 +5999,33 @@
       },
       "TableClientMethod": {
         "enum": [
+          "ArrowDrawn",
           "EncounterEnded",
           "IdleTimeout",
           "MovePreviewCleared",
           "MovePreviewed",
-          "TokenMoved"
+          "Pinged",
+          "TokenMoved",
+          "TokenRemoved",
+          "TokenRestored",
+          "TokenStatusesChanged"
         ],
         "type": "string"
       },
       "TableHubMethod": {
         "enum": [
+          "AddStatus",
           "ClearPreview",
+          "DrawArrow",
           "JoinEncounter",
           "MarkActive",
           "MoveToken",
+          "Ping",
           "PreviewMove",
+          "RemoveStatus",
+          "RemoveToken",
+          "RestoreToken",
+          "SetStatusLevel",
           "UndoMove"
         ],
         "type": "string"
@@ -5112,6 +6185,87 @@
           }
         }
       },
+      "TokenRemovedEvent": {
+        "required": [
+          "encounterId",
+          "tokenId",
+          "byUserId",
+          "removedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "byUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "removedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TokenRestoredEvent": {
+        "required": [
+          "encounterId",
+          "token",
+          "definitions"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "$ref": "#/components/schemas/BoardToken"
+          },
+          "definitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusDefinitionView"
+            }
+          }
+        }
+      },
+      "TokenStatusesChangedEvent": {
+        "required": [
+          "encounterId",
+          "tokenId",
+          "statuses",
+          "definitions"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardTokenStatus"
+            }
+          },
+          "definitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusDefinitionView"
+            }
+          }
+        }
+      },
       "UndoableMove": {
         "required": [
           "tokenId",
@@ -5216,6 +6370,9 @@
     },
     {
       "name": "Maps"
+    },
+    {
+      "name": "Statuses"
     }
   ]
 }

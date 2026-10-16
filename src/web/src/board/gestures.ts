@@ -1,5 +1,13 @@
 // Turns raw pointer events into board gestures: one finger or the mouse pans, two
 // fingers pinch-zoom, and a tap is a short press that neither moved nor pinched.
+// Stage 9 adds the double tap (knowledge/features/pings-and-arrows.md, "Gestures"): a
+// tap, then a second touch within DOUBLE_TAP_MS after it and within DOUBLE_TAP_SLOP of
+// it. The first tap is reported at once as a 'tap'; the second touch reports 'takeBack'
+// as it goes down, so the board can undo what the first tap did, then either
+// 'doubleTap' (lifted without moving) or 'arrow' (dragged: every move, then once with
+// done when it lifts). A second touch that comes too late or too far is a new tap.
+// Only trackers made with `{ doubleTap: true }` (the board) report these; the crop
+// dialog's tracker keeps plain taps.
 // Pure and clock-free (times come in with the events), so tests can drive it.
 import type { Point } from './viewport'
 
@@ -19,12 +27,24 @@ export type Gesture =
   /** Zoom by `factor` around `center`, then move by (dx, dy): the fingers' midpoint moved. */
   | { type: 'pinch'; center: Point; factor: number; dx: number; dy: number }
   | { type: 'tap'; point: Point }
+  /** The second touch of a double tap is down: undo what the first tap did. */
+  | { type: 'takeBack' }
+  /** A double tap at the first tap's point. */
+  | { type: 'doubleTap'; point: Point }
+  /** A double tap dragged: from the first tap's point to the finger; `done` when it lifts. */
+  | { type: 'arrow'; from: Point; to: Point; done: boolean }
 
 /** How far a press may wander and still count as a tap, in CSS pixels. Fingers wobble more. */
 export const TAP_SLOP: Record<PointerKind, number> = { mouse: 4, pen: 6, touch: 10 }
 
-/** A longer press isn't a tap: holding is kept free for later (ping, phase 4). */
+/** A longer press isn't a tap. Holding stays free (knowledge/features/pings-and-arrows.md, "Notes"). */
 export const TAP_MAX_MS = 500
+
+/** The longest wait from a tap's release to the second touch of a double tap. */
+export const DOUBLE_TAP_MS = 300
+
+/** How far the second touch of a double tap may land from the first, in CSS pixels. */
+export const DOUBLE_TAP_SLOP = 30
 
 const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)
 const midpoint = (a: Point, b: Point) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 })

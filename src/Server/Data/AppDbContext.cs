@@ -8,6 +8,7 @@ using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Images;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Sessions;
+using OreanasOffice.Server.Statuses;
 using OreanasOffice.Server.Table;
 
 namespace OreanasOffice.Server.Data;
@@ -37,6 +38,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityUser
     public DbSet<TokenMove> TokenMoves => Set<TokenMove>();
 
     public DbSet<Asset> Assets => Set<Asset>();
+
+    public DbSet<StatusDefinition> StatusDefinitions => Set<StatusDefinition>();
+
+    public DbSet<StatusList> StatusLists => Set<StatusList>();
+
+    public DbSet<StatusListEntry> StatusListEntries => Set<StatusListEntry>();
+
+    public DbSet<TokenStatus> TokenStatuses => Set<TokenStatus>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

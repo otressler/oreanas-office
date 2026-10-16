@@ -7,14 +7,25 @@
 // can arrive before the board; keep whichever position has the higher token version.
 import type { HubConnection } from '@microsoft/signalr'
 import type {
+  AddStatusRequest,
+  ArrowDrawnEvent,
+  DrawArrowRequest,
   HubResult,
   MovePreviewClearedEvent,
   MovePreviewEvent,
   MoveResult,
   MoveTokenRequest,
+  PingRequest,
+  PingedEvent,
+  RemoveStatusRequest,
+  SetStatusLevelRequest,
+  StatusResult,
   TableClientMethod,
   TableHubMethod,
   TokenMovedEvent,
+  TokenRemovedEvent,
+  TokenRestoredEvent,
+  TokenStatusesChangedEvent,
 } from '../api/types'
 
 export const TABLE_HUB_PATH = '/hubs/table'
@@ -36,6 +47,27 @@ export interface TableHubCalls {
   UndoMove: { args: [encounterId: string]; result: MoveResult }
   /** The person touched the screen: resets the server's 30-minute idle timer. At most once a minute. */
   MarkActive: { args: []; result: void }
+  /**
+   * Points at a cell or a token; the others get Pinged. Not saved; more than three pings and
+   * arrows in two seconds are dropped silently. Errors: tokenNotFound, encounterNotActive,
+   * targetInvalid.
+   */
+  Ping: { args: [request: PingRequest]; result: HubResult }
+  /** An arrow from a cell or token to a cell; the others get ArrowDrawn. Errors as Ping. */
+  DrawArrow: { args: [request: DrawArrowRequest]; result: HubResult }
+  /**
+   * Errors: tokenNotFound, encounterNotActive, notYourToken, statusNotFound,
+   * statusAlreadySet, levelInvalid. Everyone, the caller included, gets TokenStatusesChanged.
+   */
+  AddStatus: { args: [request: AddStatusRequest]; result: StatusResult }
+  /** Errors: tokenNotFound, encounterNotActive, statusNotFound, notYourStatus. */
+  RemoveStatus: { args: [request: RemoveStatusRequest]; result: StatusResult }
+  /** Errors as RemoveStatus, and levelInvalid. */
+  SetStatusLevel: { args: [request: SetStatusLevelRequest]; result: StatusResult }
+  /** Session DM only. Errors: tokenNotFound, encounterNotActive, notSessionDm. Everyone gets TokenRemoved. */
+  RemoveToken: { args: [tokenId: string]; result: HubResult }
+  /** Session DM only. Errors as RemoveToken. Everyone gets TokenRestored. */
+  RestoreToken: { args: [tokenId: string]; result: HubResult }
 }
 
 /** Server → device messages and their arguments. */
@@ -50,6 +82,16 @@ export interface TableClientEvents {
   EncounterEnded: [encounterId: string]
   /** The server is about to drop this idle connection; don't reconnect until the person is back. */
   IdleTimeout: []
+  /** Someone else pointed at a cell or token; the sender's own device showed it already. */
+  Pinged: [ping: PingedEvent]
+  /** Someone else drew an arrow; it replaces their older one. */
+  ArrowDrawn: [arrow: ArrowDrawnEvent]
+  /** A token's whole status list, the device's own changes included. */
+  TokenStatusesChanged: [change: TokenStatusesChangedEvent]
+  /** The session DM took a token off the board. */
+  TokenRemoved: [removed: TokenRemovedEvent]
+  /** A removed token is back. */
+  TokenRestored: [restored: TokenRestoredEvent]
 }
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false

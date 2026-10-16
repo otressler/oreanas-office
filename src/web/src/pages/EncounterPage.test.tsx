@@ -1,4 +1,4 @@
-import { act, screen, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BoardState, BoardToken, MoveResult, TokenMovedEvent } from '../api/types'
@@ -30,6 +30,7 @@ const hero: BoardToken = {
   version: 0,
   imageUrl: null,
   color: null,
+  statuses: [],
 }
 
 function runningBoard(fields: Partial<BoardState> = {}): BoardState {
@@ -202,8 +203,12 @@ describe('EncounterPage', () => {
 
     await user.click(cell(0, 0))
     expect(hub.calls('PreviewMove')).toHaveLength(0)
+    // A preview reaches the others once it has stood for a moment.
     await user.click(cell(1, 1))
+    expect(hub.calls('PreviewMove')).toHaveLength(0)
+    await waitFor(() => expect(hub.calls('PreviewMove')).toHaveLength(1))
     await user.click(cell(2, 1))
+    await waitFor(() => expect(hub.calls('PreviewMove')).toHaveLength(2))
     await user.click(screen.getByRole('button', { name: de.table.cancel }))
     expect(hub.calls('PreviewMove')).toEqual([
       [{ tokenId: hero.id, x: 1, y: 1 }],
@@ -214,9 +219,17 @@ describe('EncounterPage', () => {
     // Confirming sends the move first, which clears the preview on the server.
     await user.click(cell(0, 0))
     await user.click(cell(1, 0))
+    await waitFor(() => expect(hub.calls('PreviewMove')).toHaveLength(3))
     await user.click(cell(1, 0))
     const order = hub.invocations.map((call) => call.method).filter((m) => m !== 'MarkActive')
     expect(order.slice(-3)).toEqual(['PreviewMove', 'MoveToken', 'ClearPreview'])
+
+    // A preview confirmed at once never reaches the others.
+    await user.click(cell(1, 0))
+    await user.click(cell(0, 0))
+    await user.click(cell(0, 0))
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    expect(hub.calls('PreviewMove')).toHaveLength(3)
   })
 
   it('draws an arrow where someone else is about to move a token', async () => {
