@@ -21,6 +21,23 @@ public sealed class TablePreviews
     public MovePreviewEvent? Clear(string connectionId) =>
         _byConnection.TryRemove(connectionId, out var cleared) ? cleared : null;
 
+    // Takes back every preview of the token, with the connection that showed it: the token
+    // left the board (knowledge/features/removing-tokens.md). A preview replaced meanwhile
+    // stays.
+    public List<(string ConnectionId, MovePreviewEvent Preview)> ClearToken(Guid encounterId, Guid tokenId)
+    {
+        var cleared = new List<(string, MovePreviewEvent)>();
+        foreach (var shown in _byConnection)
+        {
+            if (shown.Value.EncounterId == encounterId && shown.Value.TokenId == tokenId && _byConnection.TryRemove(shown))
+            {
+                cleared.Add((shown.Key, shown.Value));
+            }
+        }
+
+        return cleared;
+    }
+
     public List<MovePreviewEvent> In(Guid encounterId) =>
         [.. _byConnection.Values.Where(preview => preview.EncounterId == encounterId)];
 }

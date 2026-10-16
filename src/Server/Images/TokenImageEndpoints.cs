@@ -375,7 +375,7 @@ public static class TokenImageEndpoints
     // take turns on an app lock, so only one job per owner is queued. check loads the owner
     // and applies the owner's own rules; then one job at a time (GenerationRunning) and the
     // monthly limit (ImageBudgetExhausted). The worker builds the prompt when the job runs.
-    private static async Task<Outcome> QueueAsync(
+    internal static async Task<Outcome> QueueAsync(
         AppDbContext db,
         AssetOwnerType ownerType,
         Guid ownerId,
@@ -439,7 +439,7 @@ public static class TokenImageEndpoints
         });
     }
 
-    private static Accepted<TokenImage> QueuedAt(ImageJobQueue queue, string location, TokenImage image)
+    internal static Accepted<TokenImage> QueuedAt(ImageJobQueue queue, string location, TokenImage image)
     {
         queue.Notify();
         return TypedResults.Accepted(location, image);
@@ -471,7 +471,7 @@ public static class TokenImageEndpoints
         return buffer.ToArray();
     }
 
-    private sealed record Check(bool Found, ApiErrorCode? Error, Guid CampaignId)
+    internal sealed record Check(bool Found, ApiErrorCode? Error, Guid CampaignId)
     {
         public static readonly Check NotFound = new(false, null, Guid.Empty);
 
@@ -480,5 +480,5 @@ public static class TokenImageEndpoints
         public static Check Ok(Guid campaignId) => new(true, null, campaignId);
     }
 
-    private sealed record Outcome(TokenImage? Image, ApiErrorCode? Error);
+    internal sealed record Outcome(TokenImage? Image, ApiErrorCode? Error);
 }

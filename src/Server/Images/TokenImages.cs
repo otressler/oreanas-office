@@ -3,8 +3,9 @@ using OreanasOffice.Server.Data;
 
 namespace OreanasOffice.Server.Images;
 
-// Shared rules for token icons and portraits (knowledge/features/token-icons.md): how a
-// version looks to the app, where its picture lies, and the owner's pick.
+// Shared rules for token icons and portraits (knowledge/features/token-icons.md) and the
+// icons of custom statuses (knowledge/features/statuses.md): how a version looks to the
+// app, where its picture lies, and the owner's pick.
 public static class TokenImages
 {
     public static TokenImage ToView(Asset asset) => new(
@@ -19,7 +20,7 @@ public static class TokenImages
         asset.CreatedAt,
         asset.FinishedAt);
 
-    // tokens/creature-type/{ownerId}/{assetId}.webp or tokens/character/{ownerId}/{assetId}.webp.
+    // tokens/creature-type/{ownerId}/{assetId}.webp, tokens/character/… or tokens/status/….
     public static string BlobName(AssetOwnerType ownerType, Guid ownerId, Guid assetId) =>
         $"tokens/{Folder(ownerType)}/{ownerId}/{assetId}.webp";
 
@@ -56,9 +57,9 @@ public static class TokenImages
         VersionsOf(db, ownerType, ownerId).AsNoTracking()
             .SingleOrDefaultAsync(a => a.Id == assetId && a.Status == AssetStatus.Done, cancellationToken);
 
-    // Sets CreatureType.IconAssetId or Character.TokenAssetId. Not part of the creature
-    // type's sync item: its Version and UpdatedAt stay as they are. False when the owner
-    // is gone.
+    // Sets CreatureType.IconAssetId, Character.TokenAssetId or StatusDefinition.IconAssetId.
+    // Not part of the creature type's sync item: its Version and UpdatedAt stay as they are.
+    // False when the owner is gone.
     public static async Task<bool> PickAsync(
         AppDbContext db, AssetOwnerType ownerType, Guid ownerId, Guid? assetId, CancellationToken cancellationToken)
     {
@@ -70,7 +71,10 @@ public static class TokenImages
             AssetOwnerType.Character => await db.Characters
                 .Where(c => c.Id == ownerId)
                 .ExecuteUpdateAsync(set => set.SetProperty(c => c.TokenAssetId, assetId), cancellationToken),
-            _ => throw new ArgumentOutOfRangeException(nameof(ownerType), ownerType, "Only creature types and characters have token images."),
+            AssetOwnerType.Status => await db.StatusDefinitions
+                .Where(s => s.Id == ownerId)
+                .ExecuteUpdateAsync(set => set.SetProperty(s => s.IconAssetId, assetId), cancellationToken),
+            _ => throw new ArgumentOutOfRangeException(nameof(ownerType), ownerType, "Only creature types, characters and statuses have token images."),
         };
         return updated > 0;
     }
@@ -79,6 +83,7 @@ public static class TokenImages
     {
         AssetOwnerType.CreatureType => "creature-type",
         AssetOwnerType.Character => "character",
-        _ => throw new ArgumentOutOfRangeException(nameof(ownerType), ownerType, "Only creature types and characters have token images."),
+        AssetOwnerType.Status => "status",
+        _ => throw new ArgumentOutOfRangeException(nameof(ownerType), ownerType, "Only creature types, characters and statuses have token images."),
     };
 }

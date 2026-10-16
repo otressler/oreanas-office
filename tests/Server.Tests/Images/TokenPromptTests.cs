@@ -64,6 +64,23 @@ public sealed class TokenPromptTests
         Assert.Contains("Aria, elf archer.", TokenPrompt.Restyle("Aria", "elf archer", Style));
     }
 
+    // "Status icon" in prompts.md (knowledge/features/statuses.md, "Icons").
+    [Fact]
+    public void A_status_icon_follows_the_template()
+    {
+        var prompt = TokenPrompt.StatusIcon("Verhext", "a purple eye inside a hand.", Style);
+
+        Assert.Equal(
+            """
+            Status icon for a tabletop battle map: Verhext, shown as a purple eye inside a hand.
+            One bold symbol, centred in the square frame, with a little space around it, readable at 20 pixels.
+            Painterly fantasy illustration, strong silhouette, rich but not neon colours, soft rim light, readable at small size.
+            Transparent background. No text, no letters, no numbers, no border, no ring, no badge shape.
+            """.ReplaceLineEndings("\n"),
+            prompt);
+        Assert.StartsWith("Status icon for a tabletop battle map: Verhext.\nOne bold symbol", TokenPrompt.StatusIcon(" Verhext ", null, Style));
+    }
+
     [Fact]
     public void Line_breaks_in_the_persons_text_become_spaces()
     {

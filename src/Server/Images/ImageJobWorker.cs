@@ -170,7 +170,7 @@ public sealed class ImageJobWorker(
             return;
         }
 
-        if (asset is { Kind: AssetKind.TokenIcon, OwnerType: AssetOwnerType.CreatureType or AssetOwnerType.Character })
+        if (asset is { Kind: AssetKind.TokenIcon, OwnerType: AssetOwnerType.CreatureType or AssetOwnerType.Character or AssetOwnerType.Status })
         {
             await RunTokenAsync(db, client, asset, stoppingToken);
             return;
@@ -283,7 +283,8 @@ public sealed class ImageJobWorker(
         }
     }
 
-    // A creature type's icon or a character's portrait (knowledge/features/token-icons.md):
+    // A creature type's icon, a character's portrait (knowledge/features/token-icons.md) or a
+    // custom status's icon (knowledge/features/statuses.md, from its name and icon description):
     // text to image from the owner's name and appearance as they are when the job runs, or
     // for a restyle the uploaded version sent to the edits endpoint as the reference. Both
     // ask for a transparent PNG; the server keeps a square WebP. Same request spacing,
@@ -329,11 +330,13 @@ public sealed class ImageJobWorker(
                 return;
             }
 
-            var prompt = asset.OwnerType == AssetOwnerType.CreatureType
-                ? TokenPrompt.CreatureIcon(subject.Name, subject.Appearance, _options.TokenStyle)
-                : reference is null
-                    ? TokenPrompt.CharacterPortrait(subject.Name, subject.Appearance, _options.TokenStyle)
-                    : TokenPrompt.Restyle(subject.Name, subject.Appearance, _options.TokenStyle);
+            var prompt = asset.OwnerType switch
+            {
+                AssetOwnerType.CreatureType => TokenPrompt.CreatureIcon(subject.Name, subject.Appearance, _options.TokenStyle),
+                AssetOwnerType.Status => TokenPrompt.StatusIcon(subject.Name, subject.Appearance, _options.TokenStyle),
+                _ when reference is null => TokenPrompt.CharacterPortrait(subject.Name, subject.Appearance, _options.TokenStyle),
+                _ => TokenPrompt.Restyle(subject.Name, subject.Appearance, _options.TokenStyle),
+            };
             asset.Prompt = TokenPrompt.ForStorage(prompt);
             await db.SaveChangesAsync(stoppingToken);
 
@@ -390,17 +393,25 @@ public sealed class ImageJobWorker(
         }
     }
 
+    // The owner's name and what the picture should show: a creature type's or character's
+    // appearance, a status's icon description.
     private static async Task<(string Name, string Appearance)?> TokenOwnerAsync(
         AppDbContext db, Asset asset, CancellationToken cancellationToken) =>
-        asset.OwnerType == AssetOwnerType.CreatureType
-            ? await db.CreatureTypes.AsNoTracking()
+        asset.OwnerType switch
+        {
+            AssetOwnerType.CreatureType => await db.CreatureTypes.AsNoTracking()
                 .Where(t => t.Id == asset.OwnerId)
                 .Select(t => new { t.Name, t.Appearance })
-                .SingleOrDefaultAsync(cancellationToken) is { } type ? (type.Name, type.Appearance) : null
-            : await db.Characters.AsNoTracking()
+                .SingleOrDefaultAsync(cancellationToken) is { } type ? (type.Name, type.Appearance) : null,
+            AssetOwnerType.Status => await db.StatusDefinitions.AsNoTracking()
+                .Where(s => s.Id == asset.OwnerId && s.CampaignId != null)
+                .Select(s => new { s.Name, s.IconDescription })
+                .SingleOrDefaultAsync(cancellationToken) is { } status ? (status.Name, status.IconDescription ?? "") : null,
+            _ => await db.Characters.AsNoTracking()
                 .Where(c => c.Id == asset.OwnerId)
                 .Select(c => new { c.Name, c.Appearance })
-                .SingleOrDefaultAsync(cancellationToken) is { } character ? (character.Name, character.Appearance) : null;
+                .SingleOrDefaultAsync(cancellationToken) is { } character ? (character.Name, character.Appearance) : null,
+        };
 
     // Stores the square WebP and makes it the owner's pick: the newest finished version
     // becomes the picked one (project owner, 2026-10-15).
