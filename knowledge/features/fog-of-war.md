@@ -4,7 +4,7 @@ title: Fog of war
 description: The session DM hides parts of the map and creatures from the players, prepares that before the fight, and reveals them by hand during play; players' devices never receive what is hidden.
 tags: [feature, dm, players, realtime, fog]
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-15T21:44:04Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-16T13:53:58Z }
 ---
 
 # Goal
@@ -65,6 +65,17 @@ The setup screen shows the fog to the DM. Characters may be placed on hidden cel
 - A creature that the DM moves from a hidden cell onto a revealed one appears at its target. One moved from a revealed cell into fog fades out where it stood, so players don't learn where it went.
 - **Move previews** of the DM go to players only when both the token and the whole target are visible to them ([realtime sync](/decisions/realtime-sync.md)).
 
+**Creature numbers**
+
+A label's number must not tell players how many creatures they haven't seen yet: if "Goblin 3" appears first, they know of two more. So in an encounter with fog, numbers follow what players have seen, not what the DM placed (decision 7, question 36):
+
+- **Numbered at first sight.** A creature gets its number the first time it becomes visible to players: the next number after the highest one of its type that players have seen in this encounter. The first goblin to appear is "Goblin 1", whichever of the prepared goblins it is.
+- **Kept for good.** A creature keeps its number when it is hidden again, moves into fog or is [removed](/features/removing-tokens.md), and shows with the same number when it comes back, so players recognise it. Numbers aren't reused.
+- **Several at once**: when a reveal, a start or a spawn makes several creatures of one type visible together, they are numbered in the order they were placed.
+- **Unseen creatures have no number**, on the DM's device too: the DM sees "Goblin" with the closed-eye mark, and the token shows "G" without a number until images arrive. The DM tells them apart by where they stand. One label for everyone keeps table talk simple: what the DM calls "Goblin 2" is what the players see.
+- **Renamed labels** ("Häuptling") are the DM's choice, shown as they are once visible, and take no number.
+- **In the editor**, an encounter with fog shows creatures without numbers, since numbers only come at the table. Without fog, nothing changes: every creature is visible at the start, so first sight is the editor's order and the labels are the ones the DM prepared.
+
 **Undo**
 
 - The DM can undo the last fog change and the last creature reveal with "Rückgängig", like a move. Undoing a reveal hides the cells or creature again, but players have seen it, so the confirm step matters more than undo.
@@ -92,6 +103,8 @@ On the [encounter](/domain/encounter.md):
 
 On the [token](/domain/token.md), the existing `hidden` flag becomes live. The DM sets it in the editor and at the table; players' devices never receive a token while it is hidden.
 
+A creature's label is split into a `number` (int, nullable), given at first sight as above, and the DM's own name, which is empty unless the DM renamed the creature. The board shows the type name and the number, or the DM's name. The number is given in the same save that makes the creature visible.
+
 Every change at the table is saved before it's broadcast, as for moves; nothing about fog lives only in memory ([realtime sync](/decisions/realtime-sync.md)). Fog and hidden flags stay as they are when a session ends and comes back with "Fortsetzen" ([session planning](/features/session-planning.md)). An ended encounter keeps its last fog.
 
 # Keeping secrets on the wire
@@ -104,7 +117,7 @@ The server filters, the device doesn't hide. A player's device must never receiv
 - **Moves**: a creature move goes to players as a `TokenMoved` if the creature is visible before and after, as a `TokenRevealed` if it becomes visible, and as a `TokenHidden` if it stops being visible.
 - **Pings, arrows and statuses** (stage 9) go through the same filter: a ping on a hidden creature, an arrow starting at one and the statuses of hidden tokens reach only the DM group ([pings and arrows](/features/pings-and-arrows.md), [statuses](/features/statuses.md)).
 - **Spectator screens** are always in the players' group, also when signed in as the session DM; filtering goes by connection, not by account, since one person often plays on a phone and watches on a tablet ([spectator view](/features/spectator-view.md)).
-- **Labels**: a revealed "Goblin 3" tells players that two more goblins may exist. This is accepted; the DM can rename labels.
+- **Labels**: an unseen creature has no number, so nothing in a label counts what is hidden (see "Creature numbers"). Token ids are random and leak no order either.
 - **Session DM hand-over**: when another person takes over the session, both devices reload the board, since what they may see changed.
 
 # Decisions
@@ -117,6 +130,7 @@ The project owner confirmed all six on 2026-10-16.
 4. **Players moving into fog**: **Decided:** not allowed. Not chosen: allowed, and the move reveals nothing; the DM decides whether to reveal.
 5. **Monster spawn** ("three more goblins come through the door"), placing creatures that weren't prepared: **Decided:** stays in the [backlog](/backlog.md). Prepared ambushes are covered by hidden creatures. **Changed** later on 2026-10-16: the project owner moved it into stage 10 as [creature spawn](/features/creature-spawn.md), which can place creatures hidden.
 6. **Schedule**: **Decided:** fog of war, hidden creatures included, is stage 10, together with the [spectator view](/features/spectator-view.md) ([implementation plan](/implementation-plan.md)).
+7. **Numbers of unseen creatures**: the concept first accepted that a revealed "Goblin 3" tells players two more goblins may exist. **Changed** on 2026-10-16: the project owner decided that with fog on, numbers count only creatures players can see, and unseen ones give no hint of how many there are. How (numbered at first sight, kept for good, no number for unseen creatures on the DM's device either) is a proposal, question 36 in the [implementation plan](/implementation-plan.md).
 
 # Manual gate (proposal)
 
@@ -124,6 +138,7 @@ The project owner confirmed all six on 2026-10-16.
 - [ ] Phones show only the entrance and the characters; the goblins and the rest of the crypt are invisible, also after a reload, and the player's network traffic contains neither the goblins nor the hidden layout.
 - [ ] The DM reveals "Nordkammer" with two taps; it fades in on every phone with the creature standing in it.
 - [ ] The DM reveals one goblin from its info box; it fades in for everyone.
+- [ ] The first goblin players see is "Goblin 1" and the second "Goblin 2", whichever was placed first; a goblin hidden again and revealed keeps its number.
 - [ ] A player can't move into the fog, and the rejection looks the same for a wall and a floor.
 - [ ] The DM moves a revealed creature into the fog; players see it fade out where it stood.
 - [ ] "Spieleransicht" on the DM's device matches a player's phone.
