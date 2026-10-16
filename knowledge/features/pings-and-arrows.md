@@ -50,8 +50,9 @@ With a mouse, a double click works the same way, and a double click held and dra
 
 # Hub
 
-- Device → server: `Ping { cell }` or `Ping { tokenId }`; `DrawArrow { from, to }` with `from` a cell or a token id, `to` a cell.
-- Server → others in the encounter: `Pinged { userId, colour, cell | tokenId }` and `ArrowDrawn { userId, colour, from, to }`. The server checks that the cells lie inside the map and the token belongs to the encounter, and sets the colour, so a device can't ping as someone else.
+- Device → server: `Ping { encounterId, cell | tokenId }`; `DrawArrow { encounterId, fromCell | fromTokenId, to }`.
+- Server → others in the encounter: `Pinged { userId, color, cell | tokenId }` and `ArrowDrawn { userId, color, fromCell | fromTokenId, to }`. The server checks that the cells lie inside the map and the token is on the encounter's board, and sets the colour, so a device can't ping as someone else.
+- The board state lists every campaign member with their display name and ping colour (`people`), so a device draws its own pings at once in the right colour and names everyone's. The session DM's gold is `#f5b81c`; white is `#ffffff`.
 
 # Discoverability
 
