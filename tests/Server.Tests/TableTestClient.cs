@@ -20,6 +20,11 @@ public sealed class TableTestClient : IAsyncDisposable
     private readonly Channel<Guid> _ended = Channel.CreateUnbounded<Guid>();
     // MovePreviewed and MovePreviewCleared in one list, to check their order.
     private readonly Channel<object> _previews = Channel.CreateUnbounded<object>();
+    private readonly Channel<PingedEvent> _pings = Channel.CreateUnbounded<PingedEvent>();
+    private readonly Channel<ArrowDrawnEvent> _arrows = Channel.CreateUnbounded<ArrowDrawnEvent>();
+    private readonly Channel<TokenStatusesChangedEvent> _statuses = Channel.CreateUnbounded<TokenStatusesChangedEvent>();
+    // TokenRemoved and TokenRestored in one list, to check their order.
+    private readonly Channel<object> _removals = Channel.CreateUnbounded<object>();
     private readonly TaskCompletionSource _idleTimeout = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource _closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -31,6 +36,11 @@ public sealed class TableTestClient : IAsyncDisposable
         connection.On<MovePreviewEvent>(nameof(ITableClient.MovePreviewed), preview => _previews.Writer.TryWrite(preview));
         connection.On<MovePreviewClearedEvent>(nameof(ITableClient.MovePreviewCleared), cleared => _previews.Writer.TryWrite(cleared));
         connection.On(nameof(ITableClient.IdleTimeout), () => _idleTimeout.TrySetResult());
+        connection.On<PingedEvent>(nameof(ITableClient.Pinged), ping => _pings.Writer.TryWrite(ping));
+        connection.On<ArrowDrawnEvent>(nameof(ITableClient.ArrowDrawn), arrow => _arrows.Writer.TryWrite(arrow));
+        connection.On<TokenStatusesChangedEvent>(nameof(ITableClient.TokenStatusesChanged), change => _statuses.Writer.TryWrite(change));
+        connection.On<TokenRemovedEvent>(nameof(ITableClient.TokenRemoved), removed => _removals.Writer.TryWrite(removed));
+        connection.On<TokenRestoredEvent>(nameof(ITableClient.TokenRestored), restored => _removals.Writer.TryWrite(restored));
         connection.Closed += _ =>
         {
             _closed.TrySetResult();
@@ -87,6 +97,29 @@ public sealed class TableTestClient : IAsyncDisposable
 
     public Task MarkActiveAsync() => Connection.InvokeAsync(nameof(ITableHub.MarkActive));
 
+    public Task<HubResult> PingAsync(PingRequest request) =>
+        Connection.InvokeAsync<HubResult>(nameof(ITableHub.Ping), request);
+
+    public Task<HubResult> PingCellAsync(Guid encounterId, int x, int y) => PingAsync(new PingRequest(encounterId, new BoardCell(x, y), null));
+
+    public Task<HubResult> ArrowAsync(DrawArrowRequest request) =>
+        Connection.InvokeAsync<HubResult>(nameof(ITableHub.DrawArrow), request);
+
+    public Task<StatusResult> AddStatusAsync(Guid tokenId, Guid statusId, int? level = null) =>
+        Connection.InvokeAsync<StatusResult>(nameof(ITableHub.AddStatus), new AddStatusRequest(tokenId, statusId, level));
+
+    public Task<StatusResult> RemoveStatusAsync(Guid tokenId, Guid statusId) =>
+        Connection.InvokeAsync<StatusResult>(nameof(ITableHub.RemoveStatus), new RemoveStatusRequest(tokenId, statusId));
+
+    public Task<StatusResult> SetStatusLevelAsync(Guid tokenId, Guid statusId, int level) =>
+        Connection.InvokeAsync<StatusResult>(nameof(ITableHub.SetStatusLevel), new SetStatusLevelRequest(tokenId, statusId, level));
+
+    public Task<HubResult> RemoveTokenAsync(Guid tokenId) =>
+        Connection.InvokeAsync<HubResult>(nameof(ITableHub.RemoveToken), tokenId);
+
+    public Task<HubResult> RestoreTokenAsync(Guid tokenId) =>
+        Connection.InvokeAsync<HubResult>(nameof(ITableHub.RestoreToken), tokenId);
+
     // The next TokenMoved this device received. Messages arrive in the order the server
     // sent them, so a rejected move followed by a good one shows nothing was broadcast
     // for the rejected one.
@@ -111,7 +144,28 @@ public sealed class TableTestClient : IAsyncDisposable
 
     public bool HasPendingPreview => _previews.Reader.TryPeek(out _);
 
+    public Task<PingedEvent> NextPingAsync() => NextAsync(_pings);
+
+    public Task<ArrowDrawnEvent> NextArrowAsync() => NextAsync(_arrows);
+
+    public Task<TokenStatusesChangedEvent> NextStatusesAsync() => NextAsync(_statuses);
+
+    // The next TokenRemoved or TokenRestored.
+    public Task<object> NextRemovalAsync() => NextAsync(_removals);
+
+    public bool HasPendingPing => _pings.Reader.TryPeek(out _) || _arrows.Reader.TryPeek(out _);
+
+    public bool HasPendingStatuses => _statuses.Reader.TryPeek(out _);
+
+    public bool HasPendingRemoval => _removals.Reader.TryPeek(out _);
+
     public bool HasPendingMove => _moves.Reader.TryPeek(out _);
 
     public async ValueTask DisposeAsync() => await Connection.DisposeAsync();
+
+    private static async Task<T> NextAsync<T>(Channel<T> channel)
+    {
+        using var timeout = new CancellationTokenSource(Wait);
+        return await channel.Reader.ReadAsync(timeout.Token);
+    }
 }

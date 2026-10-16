@@ -6,12 +6,19 @@ namespace OreanasOffice.Server.Table;
 
 // The live table: one group per active encounter (knowledge/decisions/realtime-sync.md).
 // Every call checks permissions against the database, like the HTTP policies, so a new
-// session DM applies at once. The rules live in TableMoves; the hub saves first, then
-// broadcasts. TableActivity counts every call as activity for the idle timeout. Move
-// previews go only to the others and live in TablePreviews until the move, a cancel or
-// the connection's end.
+// session DM applies at once. The rules live in TableMoves, TableStatuses, TableRemovals
+// and TablePings; the hub saves first, then broadcasts. TableActivity counts every call as
+// activity for the idle timeout. Move previews go only to the others and live in
+// TablePreviews until the move, a cancel, the token's removal or the connection's end.
+// Pings and arrows go only to the others and are never saved.
 [Authorize]
-public sealed class TableHub(TableMoves moves, TablePreviews previews) : Hub<ITableClient>, ITableHub
+public sealed class TableHub(
+    TableMoves moves,
+    TablePreviews previews,
+    TableStatuses statuses,
+    TableRemovals removals,
+    TablePings pings,
+    TablePingLimiter pingLimiter) : Hub<ITableClient>, ITableHub
 {
     public const string Path = "/hubs/table";
 
@@ -84,20 +91,68 @@ public sealed class TableHub(TableMoves moves, TablePreviews previews) : Hub<ITa
     // The activity filter has already noted the call.
     public Task MarkActive() => Task.CompletedTask;
 
-    // Stage 9 contract: the bodies come with the backend lane.
-    public Task<HubResult> Ping(PingRequest request) => throw new NotImplementedException();
+    // Pings and arrows share the rate limit. Only those that pass the checks count; one
+    // over the limit is dropped and answers as if it went out.
+    public async Task<HubResult> Ping(PingRequest request)
+    {
+        var (error, ping) = await pings.PingAsync(UserId, request);
+        if (ping is not null && pingLimiter.TryTake(ping.UserId, ping.EncounterId))
+        {
+            await Clients.OthersInGroup(GroupName(ping.EncounterId)).Pinged(ping);
+        }
 
-    public Task<HubResult> DrawArrow(DrawArrowRequest request) => throw new NotImplementedException();
+        return new HubResult(error);
+    }
 
-    public Task<StatusResult> AddStatus(AddStatusRequest request) => throw new NotImplementedException();
+    public async Task<HubResult> DrawArrow(DrawArrowRequest request)
+    {
+        var (error, arrow) = await pings.ArrowAsync(UserId, request);
+        if (arrow is not null && pingLimiter.TryTake(arrow.UserId, arrow.EncounterId))
+        {
+            await Clients.OthersInGroup(GroupName(arrow.EncounterId)).ArrowDrawn(arrow);
+        }
 
-    public Task<StatusResult> RemoveStatus(RemoveStatusRequest request) => throw new NotImplementedException();
+        return new HubResult(error);
+    }
 
-    public Task<StatusResult> SetStatusLevel(SetStatusLevelRequest request) => throw new NotImplementedException();
+    public async Task<StatusResult> AddStatus(AddStatusRequest request) => await Broadcast(await statuses.AddAsync(UserId, request));
 
-    public Task<HubResult> RemoveToken(Guid tokenId) => throw new NotImplementedException();
+    public async Task<StatusResult> RemoveStatus(RemoveStatusRequest request) => await Broadcast(await statuses.RemoveAsync(UserId, request));
 
-    public Task<HubResult> RestoreToken(Guid tokenId) => throw new NotImplementedException();
+    public async Task<StatusResult> SetStatusLevel(SetStatusLevelRequest request) =>
+        await Broadcast(await statuses.SetLevelAsync(UserId, request));
+
+    // Saved, then the token's previews go (to everyone but the device that showed each),
+    // then TokenRemoved reaches the whole group.
+    public async Task<HubResult> RemoveToken(Guid tokenId)
+    {
+        var (error, removed) = await removals.RemoveAsync(UserId, tokenId);
+        if (removed is null)
+        {
+            return new HubResult(error);
+        }
+
+        var group = GroupName(removed.EncounterId);
+        foreach (var (connectionId, preview) in previews.ClearToken(removed.EncounterId, removed.TokenId))
+        {
+            await Clients.GroupExcept(group, connectionId)
+                .MovePreviewCleared(new MovePreviewClearedEvent(preview.EncounterId, preview.TokenId, preview.ByUserId));
+        }
+
+        await Clients.Group(group).TokenRemoved(removed);
+        return new HubResult(null);
+    }
+
+    public async Task<HubResult> RestoreToken(Guid tokenId)
+    {
+        var (error, restored) = await removals.RestoreAsync(UserId, tokenId);
+        if (restored is not null)
+        {
+            await Clients.Group(GroupName(restored.EncounterId)).TokenRestored(restored);
+        }
+
+        return new HubResult(error);
+    }
 
     private Guid UserId => Context.User!.GetUserId();
 
@@ -114,6 +169,17 @@ public sealed class TableHub(TableMoves moves, TablePreviews previews) : Hub<ITa
         if (result.Move is { } move)
         {
             await Clients.Group(GroupName(move.EncounterId)).TokenMoved(move);
+        }
+
+        return result;
+    }
+
+    // Only a saved change reaches the group, the caller included.
+    private async Task<StatusResult> Broadcast(StatusResult result)
+    {
+        if (result.Change is { } change)
+        {
+            await Clients.Group(GroupName(change.EncounterId)).TokenStatusesChanged(change);
         }
 
         return result;

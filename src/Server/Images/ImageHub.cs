@@ -8,6 +8,7 @@ using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Statuses;
 using OreanasOffice.Server.Table;
 
 namespace OreanasOffice.Server.Images;
@@ -26,8 +27,10 @@ public interface IImageHub
     // Adds the connection to the group of a creature type's icons or a character's
     // portraits (knowledge/features/token-icons.md), while one of its jobs is queued or
     // running. Creature types: `dm` members only. Characters: the owner and `dm` members.
-    // Errors: NotADm (not allowed), ItemNotFound (no such creature type or character in the
-    // campaign, or OwnerType BattleMap).
+    // Custom statuses (knowledge/features/statuses.md): whoever may edit the character it
+    // was made for, or `dm` members for one made in a DM status list.
+    // Errors: NotADm (not allowed), ItemNotFound (no such creature type, character or custom
+    // status in the campaign, or OwnerType BattleMap).
     Task<HubResult> WatchTokenImages(Guid campaignId, AssetOwnerType ownerType, Guid ownerId);
 }
 
@@ -106,6 +109,26 @@ public sealed class ImageHub(AppDbContext db) : Hub<IImageHubClient>, IImageHub
                 }
 
                 if (!isDm && owner != userId)
+                {
+                    return new HubResult(ApiErrorCode.NotADm);
+                }
+
+                break;
+
+            case AssetOwnerType.Status:
+                // Members only, as for characters.
+                if (!isDm && !await db.CampaignMembers.AnyAsync(m => m.CampaignId == campaignId && m.UserId == userId, cancellationToken))
+                {
+                    return new HubResult(ApiErrorCode.NotADm);
+                }
+
+                var (status, allowed) = await StatusIcons.AccessAsync(db, campaignId, ownerId, userId, cancellationToken);
+                if (status is null)
+                {
+                    return new HubResult(ApiErrorCode.ItemNotFound);
+                }
+
+                if (!allowed)
                 {
                     return new HubResult(ApiErrorCode.NotADm);
                 }
