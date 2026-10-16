@@ -27,23 +27,23 @@ Every status list can hold the conditions of the 2024 rules.[^roll20-conditions]
 
 | Key | German name | Motif for the icon |
 |-----|-------------|--------------------|
-| `blinded` | Blind | A blindfold over closed eyes |
+| `blinded` | Blind | A white cloth blindfold across closed eyes, close up |
 | `charmed` | Bezaubert | A heart wrapped in a pink spiral |
 | `deafened` | Taub | An ear with broken sound waves |
-| `exhaustion` | Erschöpfung | A sagging hourglass, nearly run out (has levels 1–6) |
-| `frightened` | Verängstigt | A pale face with wide eyes, shrinking back |
+| `exhaustion` | Erschöpfung | A glowing golden hourglass, sagging, nearly run out (has levels 1–6) |
+| `frightened` | Verängstigt | A pale ghostly face with huge wide eyes and a screaming mouth |
 | `grappled` | Gepackt | A clawed hand gripping an arm |
 | `incapacitated` | Kampfunfähig | A dropped sword lying across a broken shield |
 | `invisible` | Unsichtbar | A faint, dotted silhouette |
 | `paralyzed` | Gelähmt | A rigid figure locked in crackling blue lightning |
 | `petrified` | Versteinert | A grey stone head, cracked |
 | `poisoned` | Vergiftet | A green drop with a small skull in it |
-| `prone` | Liegend | A figure lying flat on the ground |
+| `prone` | Liegend | A figure lying flat on a bright ground line, a bold arrow pointing down at it |
 | `restrained` | Festgesetzt | A wrist bound by heavy chains |
 | `stunned` | Betäubt | Stars circling over a dazed head |
-| `unconscious` | Bewusstlos | Closed eyes with a "Z" drifting up |
+| `unconscious` | Bewusstlos | Closed eyes under a big white sleep swirl |
 
-The German names follow the German edition of the rules, as the project owner confirmed on 2026-10-16; the keys are fixed. The motifs are a first proposal for the prompts.
+The German names follow the German edition of the rules, as the project owner confirmed on 2026-10-16; the keys are fixed. The motifs are the ones the T1 icons were generated from (2026-10-16); five were changed from the first proposal because they didn't read at 20 pixels.
 
 # Icons
 

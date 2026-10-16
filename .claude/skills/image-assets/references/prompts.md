@@ -58,13 +58,13 @@ With an uploaded reference picture, add `--image <file>` and start the prompt wi
 ## Status icon (condition or custom status)
 
 ```
-Status icon for a tabletop battle map: <status name>, shown as <motif, e.g. "a figure lying flat on the ground">.
+Status icon for a tabletop battle map: <status name>, shown as <motif, e.g. "a figure lying flat on the ground">, drawn as a simple bold emblem rather than a detailed scene.
 One bold symbol, centred in the square frame, with a little space around it, readable at 20 pixels.
 <STYLE BLOCK>
 Transparent background. No text, no letters, no numbers, no border, no ring, no badge shape.
 ```
 
-Use the token style block word for word, so statuses sit with creature icons and portraits as one set. Use `--background transparent --size 1024x1024`. The app draws each icon on a small dark disc on the token's edge, so a symbol needs a clear silhouette and a light or saturated colour against dark grey. Check every result at 20 px before generating the next. The 15 conditions and their motifs are in `knowledge/features/statuses.md`.
+Use the token style block word for word, so statuses sit with creature icons and portraits as one set. Use `--background transparent --size 1024x1024`. The app draws each icon on a small dark disc on the token's edge, so a symbol needs a clear silhouette and a light or saturated colour against dark grey. Check every result at 20 px before generating the next. Learned in T1 (2026-10-16): without "simple bold emblem" the model paints whole people (a blindfolded elf, a cowering halfling) that turn to mush at 20 px; light, saturated subjects and one large shape read best, dark brown wood and thin horizontal shapes don't ("prone" needed a big arrow above the figure). The 15 conditions and their motifs are in `knowledge/features/statuses.md`.
 
 ## Texture or fallback tile
 
