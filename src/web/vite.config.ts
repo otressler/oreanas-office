@@ -46,7 +46,8 @@ export default defineConfig({
       workbox: {
         // App shell and static files only. API calls, sign-in and SignalR are
         // never cached (knowledge/decisions/frontend-stack.md), except images below.
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // The condition icons (statuses/<key>.webp) are part of the app, so they work offline.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}', 'statuses/*.webp'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/hubs(\/|$)/, /^\/signin-/, /^\/signout/],
         cleanupOutdatedCaches: true,
