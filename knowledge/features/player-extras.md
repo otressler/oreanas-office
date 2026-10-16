@@ -19,7 +19,7 @@ A player zoomed into one corner of a big map, or one who just opened the app, fi
 
 - **The button** sits at the board's lower right, above the [token card](/features/token-card.md) when the card is docked at the bottom. It shows for anyone with a character in the running fight; the session DM without a character and the [spectator view](/features/spectator-view.md) don't get it.
 - **A tap** pans the board so the character stands in the middle. If the board is zoomed out so far that the token is smaller than a fingertip, it also zooms in to the size the board opens with. The token pulses once in its ring colour, on this device only.
-- **Several characters in the fight** (question 32): each tap goes to the next one, in the order they were added to the campaign, and then starts again.
+- **Several characters in the fight** (question 32, confirmed by the project owner on 2026-10-16): each tap goes to the next one, in the order they were added to the campaign, and then starts again.
 - **It doesn't select the token.** The person taps it as usual to move it, so a tap on the button never starts a move by accident.
 - A character that isn't on the board, because it wasn't placed or was taken off ([removing tokens](/features/removing-tokens.md)), is skipped. With none on the board, the button is off and says "Deine Figur ist nicht in diesem Kampf".
 - Works while disconnected: it only moves the view.
