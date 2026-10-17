@@ -13,7 +13,7 @@ const t = de.fog.board
 const TOOLS: FogTool[] = ['area', 'brush', 'rect']
 
 /** The one-line hint under the tools, by what the tool waits for. */
-export function fogHint(draft: FogDraft): string {
+function fogHint(draft: FogDraft): string {
   if (draft.tool === 'area') return t.hints.area
   if (draft.tool === 'brush') return t.hints.brush
   return draft.corner ? t.hints.rectSecond : t.hints.rectFirst

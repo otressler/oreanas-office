@@ -3,11 +3,15 @@
 // the tokens, the selection, the preview, others' move arrows, pings and the info box are
 // plain text. `fakeBoard` (fakeBoard.ts) drives what has no button: the second touch of a
 // double tap (it takes back the tap before it, then pings) and arrows. "Meine Figur"
-// shows as "Mitte: …".
+// shows as "Mitte: …". Stage 10: the fog is a list "Nebel x,y" of the hidden cells (its look in
+// `data-look`), the chosen cells of fog mode "Markiert …", hidden creatures and the
+// creatures about to be spawned carry `data-hidden` and `data-faint`, and a tap on a hidden
+// cell in the players' look says "Unerkundet", as the real board does.
 import { useImperativeHandle, useLayoutEffect, useState } from 'react'
 import type { BoardProps } from '../board/Board'
 import { tokenAt, type GridPoint } from '../board/geometry'
 import type { PingTarget } from '../board/pings'
+import { de } from '../text/de'
 import { fakeBoard } from './fakeBoard'
 
 export function FakeTableBoard({
@@ -23,6 +27,9 @@ export function FakeTableBoard({
   onArrow,
   pings,
   handleRef,
+  fog,
+  highlight,
+  faintTokenIds,
 }: BoardProps) {
   const [info, setInfo] = useState<string | null>(null)
   const [centred, setCentred] = useState<string | null>(null)
@@ -56,7 +63,15 @@ export function FakeTableBoard({
     const cell = { x, y }
     const token = tokenAt(board.tokens, cell, selectedTokenId)
     const handled = token ? onTokenTap?.(token, cell) : onCellTap?.(cell)
-    setInfo(handled === false ? `Info ${token ? token.label : `${x},${y}`}` : null)
+    const unexplored =
+      handled === false && !token && fog?.look === 'player' && fog.hidden.has(`${x},${y}`)
+    setInfo(
+      unexplored
+        ? de.fog.unexplored
+        : handled === false
+          ? `Info ${token ? token.label : `${x},${y}`}`
+          : null,
+    )
   }
 
   const label = (tokenId: string) => board.tokens.find((token) => token.id === tokenId)?.label
@@ -74,11 +89,24 @@ export function FakeTableBoard({
       )}
       <ul aria-label="Figuren">
         {board.tokens.map((token) => (
-          <li key={token.id} data-instant={instantTokenIds?.has(token.id) || undefined}>
+          <li
+            key={token.id}
+            data-instant={instantTokenIds?.has(token.id) || undefined}
+            data-hidden={token.hidden || undefined}
+            data-faint={faintTokenIds?.has(token.id) || undefined}
+          >
             {`Figur ${token.label} auf ${token.x},${token.y}`}
           </li>
         ))}
       </ul>
+      {fog && (
+        <ul aria-label="Nebel" data-look={fog.look}>
+          {[...fog.hidden].sort().map((key) => (
+            <li key={key}>{`Nebel ${key}`}</li>
+          ))}
+        </ul>
+      )}
+      {highlight && highlight.size > 0 && <p>{`Markiert ${[...highlight].sort().join(' ')}`}</p>}
       {selected && <p>{`Ausgewählt: ${selected.label}`}</p>}
       {ghost && ghostToken && <p>{`Vorschau ${ghostToken.label} auf ${ghost.x},${ghost.y}`}</p>}
       {arrows?.map((arrow) => (
