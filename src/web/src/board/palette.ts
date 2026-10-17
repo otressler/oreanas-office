@@ -119,13 +119,16 @@ export function tokenLetter(label: string): string {
  */
 export function tokenMarks(
   tokens: readonly Pick<BoardToken, 'id' | 'kind' | 'label'>[],
+  { fog = false }: { fog?: boolean } = {},
 ): Map<string, string> {
   const marks = new Map<string, string>()
   const creatures = new Map<string, Pick<BoardToken, 'id' | 'label'>[]>()
   for (const token of tokens) {
     const letter = tokenLetter(token.label)
     marks.set(token.id, letter)
-    if (token.kind === 'creature') creatures.set(letter, [...(creatures.get(letter) ?? []), token])
+    // With fog, a creature without a number in its label (not seen yet) keeps its plain letter.
+    if (token.kind === 'creature' && (!fog || /\d$/.test(token.label)))
+      creatures.set(letter, [...(creatures.get(letter) ?? []), token])
   }
   const byLabel = new Intl.Collator('de-DE', { numeric: true }).compare
   for (const [letter, group] of creatures) {

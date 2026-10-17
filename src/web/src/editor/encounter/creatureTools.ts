@@ -9,6 +9,7 @@ import type { CreatureSize } from '../../api/types'
 import type { EditorTool, ToolContext } from '../tools'
 import { PlaceIcon, SelectCreatureIcon } from './icons'
 import { PlacePanel, SelectCreaturePanel } from './panels'
+import { useFogOptions } from '../fog/options'
 import { pickedType } from './picked'
 import type { EncounterStore } from './store'
 import { canStandAt, gridOf, moveToken, placeToken, removeToken } from './tokens'
@@ -62,7 +63,8 @@ export const placeTool: EditorTool = {
     // An invalid click places nothing.
     if (!showFootprint(ctx, type.size, pointer.cell)) return
     const id = crypto.randomUUID()
-    encounter.getState().apply((doc) => placeToken(doc, type, pointer.cell, id))
+    const hidden = useFogOptions.getState().placeHidden
+    encounter.getState().apply((doc) => placeToken(doc, type, pointer.cell, id, hidden))
     encounter.getState().select(id)
     // The new token now stands there, so the preview turns red.
     showFootprint(ctx, type.size, pointer.cell)

@@ -716,7 +716,7 @@ export function Board({
   }, [fogHidden, fogEncounterId, slide, kick])
 
   const stacks = useMemo(() => stackCounts(tokens, selectedTokenId), [tokens, selectedTokenId])
-  const marks = useMemo(() => tokenMarks(tokens), [tokens])
+  const marks = useMemo(() => tokenMarks(tokens, { fog: !!board.fog }), [tokens, board.fog])
   // Each token image loads once; its arrival re-renders, which redraws the tokens.
   const images = useTokenPictures(useMemo(() => tokens.map((token) => token.imageUrl), [tokens]))
   const ghostToken = useMemo(() => {
