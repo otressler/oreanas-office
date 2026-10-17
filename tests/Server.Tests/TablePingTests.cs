@@ -42,10 +42,10 @@ public sealed class TablePingTests(AppFixture fixture) : IClassFixture<AppFixtur
 
         Assert.Equal(new HubResult(null), cell);
         Assert.Equal(new HubResult(null), token);
-        var bromsPing = new PingedEvent(fight.EncounterId, player.Id, ThorinsRing, new BoardCell(2, 2), null);
-        var oreanasPing = new PingedEvent(fight.EncounterId, dm.Id, Gold, null, fight.Goblin);
-        var yarasPing = new PingedEvent(fight.EncounterId, secondDm.Id, AriasRing, new BoardCell(0, 4), null);
-        var kirasPing = new PingedEvent(fight.EncounterId, kira.Id, White, new BoardCell(7, 4), null);
+        var bromsPing = new PingedEvent(fight.EncounterId, player.Id, ThorinsRing, new BoardCell(2, 2), null, false);
+        var oreanasPing = new PingedEvent(fight.EncounterId, dm.Id, Gold, null, fight.Goblin, false);
+        var yarasPing = new PingedEvent(fight.EncounterId, secondDm.Id, AriasRing, new BoardCell(0, 4), null, false);
+        var kirasPing = new PingedEvent(fight.EncounterId, kira.Id, White, new BoardCell(7, 4), null, false);
 
         // Everyone but the sender, in the order sent.
         Assert.Equal([oreanasPing, yarasPing, kirasPing], [await playerDevice.NextPingAsync(), await playerDevice.NextPingAsync(), await playerDevice.NextPingAsync()]);
@@ -73,10 +73,10 @@ public sealed class TablePingTests(AppFixture fixture) : IClassFixture<AppFixtur
         Assert.Null(fromToken.Error);
         Assert.Null(fromCell.Error);
         Assert.Equal(
-            new ArrowDrawnEvent(fight.EncounterId, player.Id, ThorinsRing, null, fight.Thorin, new BoardCell(5, 1)),
+            new ArrowDrawnEvent(fight.EncounterId, player.Id, ThorinsRing, null, fight.Thorin, new BoardCell(5, 1), false),
             await dmDevice.NextArrowAsync());
         Assert.Equal(
-            new ArrowDrawnEvent(fight.EncounterId, dm.Id, Gold, new BoardCell(7, 4), null, new BoardCell(0, 0)),
+            new ArrowDrawnEvent(fight.EncounterId, dm.Id, Gold, new BoardCell(7, 4), null, new BoardCell(0, 0), false),
             await playerDevice.NextArrowAsync());
     }
 

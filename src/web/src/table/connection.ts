@@ -31,6 +31,7 @@ import type {
   MoveTokenRequest,
   PingRequest,
   PingedEvent,
+  PresenceChangedEvent,
   RemoveStatusRequest,
   SetStatusLevelRequest,
   StatusResult,
@@ -96,6 +97,8 @@ export interface TableConnectionOptions {
    * (knowledge/features/spectator-view.md).
    */
   beforeJoin?: (connection: HubConnection) => Promise<ApiErrorCode | null>
+  /** Who is connected to the fight changed (knowledge/features/shared-table.md). */
+  onPresenceChanged?: (presence: PresenceChangedEvent) => void
 }
 
 /** A move or undo while the table isn't connected; moves are never queued. */
@@ -298,6 +301,9 @@ export class TableConnection {
     })
     onHubEvent(connection, 'TokenRestored', (restored) => {
       if (!stale()) this.options.onTokenRestored?.(restored)
+    })
+    onHubEvent(connection, 'PresenceChanged', (presence) => {
+      if (!stale()) this.options.onPresenceChanged?.(presence)
     })
     onHubEvent(connection, 'IdleTimeout', () => {
       if (stale()) return

@@ -28,6 +28,7 @@ public sealed partial class TableHub(
     TablePings pings,
     TablePingLimiter pingLimiter,
     TableConnections connections,
+    TablePresence presence,
     TableBroadcaster broadcaster,
     TableFanOut fanOut,
     TableFog fog,
@@ -64,6 +65,8 @@ public sealed partial class TableHub(
             {
                 await Clients.Caller.MovePreviewed(preview);
             }
+
+            await presence.JoinedAsync(encounterId, Context.ConnectionAborted);
         }
 
         return new HubResult(error);
@@ -76,7 +79,7 @@ public sealed partial class TableHub(
             return new MoveResult(readOnly, null);
         }
 
-        var result = await Broadcast(await moves.MoveAsync(UserId, request));
+        var result = await Broadcast(await moves.MoveAsync(UserId, request, Connection.Mode));
         await ClearPreview();
         return result;
     }
@@ -89,7 +92,7 @@ public sealed partial class TableHub(
             return new HubResult(readOnly);
         }
 
-        var (error, preview) = await moves.PreviewAsync(UserId, request);
+        var (error, preview) = await moves.PreviewAsync(UserId, request, Connection.Mode);
         if (preview is null)
         {
             await ClearPreview();
@@ -123,14 +126,20 @@ public sealed partial class TableHub(
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         await ClearPreview();
+        var gone = connections.Find(Context.ConnectionId);
         connections.Remove(Context.ConnectionId);
+        if (gone?.EncounterId is { } encounterId)
+        {
+            await presence.DisconnectedAsync(encounterId, gone.UserId, gone.Mode);
+        }
+
         await base.OnDisconnectedAsync(exception);
     }
 
     public async Task<MoveResult> UndoMove(Guid encounterId) =>
         ReadOnly() is { } readOnly
             ? new MoveResult(readOnly, null)
-            : await Broadcast(await moves.UndoAsync(UserId, encounterId));
+            : await Broadcast(await moves.UndoAsync(UserId, encounterId, Connection.Mode));
 
     // The activity filter has already noted the call.
     public Task MarkActive() => Task.CompletedTask;
@@ -144,7 +153,7 @@ public sealed partial class TableHub(
             return new HubResult(readOnly);
         }
 
-        var (error, ping) = await pings.PingAsync(UserId, request);
+        var (error, ping) = await pings.PingAsync(UserId, request, Connection.Mode);
         if (ping is not null && pingLimiter.TryTake(ping.UserId, ping.EncounterId))
         {
             await fanOut.PingedAsync(ping, Context.ConnectionId);
@@ -160,7 +169,7 @@ public sealed partial class TableHub(
             return new HubResult(readOnly);
         }
 
-        var (error, arrow) = await pings.ArrowAsync(UserId, request);
+        var (error, arrow) = await pings.ArrowAsync(UserId, request, Connection.Mode);
         if (arrow is not null && pingLimiter.TryTake(arrow.UserId, arrow.EncounterId))
         {
             await fanOut.ArrowDrawnAsync(arrow, Context.ConnectionId);
@@ -170,13 +179,13 @@ public sealed partial class TableHub(
     }
 
     public async Task<StatusResult> AddStatus(AddStatusRequest request) =>
-        ReadOnly() is { } readOnly ? new StatusResult(readOnly, null) : await Broadcast(await statuses.AddAsync(UserId, request));
+        ReadOnly() is { } readOnly ? new StatusResult(readOnly, null) : await Broadcast(await statuses.AddAsync(UserId, request, Connection.Mode));
 
     public async Task<StatusResult> RemoveStatus(RemoveStatusRequest request) =>
-        ReadOnly() is { } readOnly ? new StatusResult(readOnly, null) : await Broadcast(await statuses.RemoveAsync(UserId, request));
+        ReadOnly() is { } readOnly ? new StatusResult(readOnly, null) : await Broadcast(await statuses.RemoveAsync(UserId, request, Connection.Mode));
 
     public async Task<StatusResult> SetStatusLevel(SetStatusLevelRequest request) =>
-        ReadOnly() is { } readOnly ? new StatusResult(readOnly, null) : await Broadcast(await statuses.SetLevelAsync(UserId, request));
+        ReadOnly() is { } readOnly ? new StatusResult(readOnly, null) : await Broadcast(await statuses.SetLevelAsync(UserId, request, Connection.Mode));
 
     // Saved, then the token's previews go (to everyone but the device that showed each),
     // then TokenRemoved reaches the whole group.
@@ -185,6 +194,11 @@ public sealed partial class TableHub(
         if (ReadOnly() is { } readOnly)
         {
             return new HubResult(readOnly);
+        }
+
+        if (Connection.Mode != ConnectionMode.Player)
+        {
+            return new HubResult(ApiErrorCode.NotSessionDm);
         }
 
         var (error, removed) = await removals.RemoveAsync(UserId, tokenId);
@@ -208,6 +222,11 @@ public sealed partial class TableHub(
         if (ReadOnly() is { } readOnly)
         {
             return new HubResult(readOnly);
+        }
+
+        if (Connection.Mode != ConnectionMode.Player)
+        {
+            return new HubResult(ApiErrorCode.NotSessionDm);
         }
 
         var (error, restored) = await removals.RestoreAsync(UserId, tokenId);

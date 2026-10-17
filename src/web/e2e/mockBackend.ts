@@ -64,6 +64,8 @@ interface Session {
   createdByUserId: string
   /** The fight that ending the session cut off; continuing brings it back. */
   interruptedEncounterId: string | null
+  /** "Spielweise"; byod when unset. */
+  playMode?: S['PlayMode']
 }
 
 interface CreatureType {
@@ -165,6 +167,8 @@ interface Encounter {
   map: S['BoardMap']
   tokens: Token[]
   createdAt: string
+  /** Who is connected, as the board lists it; nobody when unset (shared-table specs set it). */
+  presence?: S['PresenceState']
 }
 
 /** Reads one of the app's sample maps (src/samples/maps), e.g. "gorge-crossing". */
@@ -1128,6 +1132,16 @@ export class MockBackend {
       }
       return [404]
     }
+    if ((params = match(`${base}/sessions/:sessionId/play-mode`)) && method === 'PUT') {
+      const session = this.sessions.find(
+        (s) => s.id === params!.sessionId && s.campaignId === campaign.id,
+      )
+      if (!session) return [404]
+      if (session.dmUserId !== me.id) return [403]
+      if (session.status === 'ended') return error('sessionEnded', undefined, 409)
+      session.playMode = body.playMode === 'local' ? 'local' : 'byod'
+      return [200, this.sessionResponse(session, campaign, me.id)]
+    }
     if ((params = match(`${base}/sessions/:sessionId/:action`))) {
       const session = this.sessions.find(
         (s) => s.id === params!.sessionId && s.campaignId === campaign.id,
@@ -1402,8 +1416,8 @@ export class MockBackend {
       people: this.boardPeople(encounter),
       viewer: 'dm',
       fog: null,
-      playMode: 'byod',
-      presence: { people: [], sharedScreen: false },
+      playMode: session?.playMode ?? 'byod',
+      presence: encounter.presence ?? { people: [], sharedScreen: false },
     }
   }
 
@@ -1636,7 +1650,13 @@ export class MockBackend {
     const status = this.statusDefinitions.find((s) => s.libraryKey === libraryKey)!
     token.statuses = [
       ...(token.statuses ?? []),
-      { statusId: status.id, level, appliedByUserId: userId, appliedAt: new Date().toISOString() },
+      {
+        statusId: status.id,
+        level,
+        appliedByUserId: userId,
+        appliedAt: new Date().toISOString(),
+        fromSharedScreen: false,
+      },
     ]
   }
 
@@ -1705,6 +1725,7 @@ export class MockBackend {
         level: status.hasLevels ? (level ?? 1) : null,
         appliedByUserId: userId!,
         appliedAt: new Date().toISOString(),
+        fromSharedScreen: false,
       },
     ]
     return this.statusesChanged(encounter, token)
@@ -1974,7 +1995,7 @@ export class MockBackend {
       activeEncounter: this.activeEncounterSummary(session),
       interruptedEncounter: interrupted ? { id: interrupted.id, name: interrupted.name } : null,
       encounters: memberOf(campaign, userId)?.role === 'dm' ? this.sessionEncounters(session) : [],
-      playMode: 'byod',
+      playMode: session.playMode ?? 'byod',
     }
   }
 

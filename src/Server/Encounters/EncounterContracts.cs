@@ -80,8 +80,8 @@ public record FogView(int Version, List<BoardCell> HiddenCells, List<FogArea> Ar
 public record PresenceState(List<PresentPerson> People, bool SharedScreen);
 
 // A person (campaign member) in the row of avatars; Connected is false when none of their
-// devices is, for longer than the 10-second grace.
-public record PresentPerson(Guid UserId, bool Connected);
+// devices is, for longer than the 10-second grace. IsSessionDm: the avatar gets the gold ring.
+public record PresentPerson(Guid UserId, bool Connected, bool IsSessionDm);
 
 // PingColor: "#rrggbb" (knowledge/features/pings-and-arrows.md, "Colours"): the session
 // DM's fixed gold; a player's first character in this fight (by the order characters were
@@ -136,5 +136,7 @@ public record BoardToken(
     bool Hidden = false);
 
 // A status on a token. Level: 1-6 for statuses with levels, else null. AppliedByUserId:
-// who put it on (the card's "von Eli"); a player may remove only their own.
-public record BoardTokenStatus(Guid StatusId, int? Level, Guid AppliedByUserId, DateTimeOffset AppliedAt);
+// who put it on (the card's "von Eli"); a player may remove only their own. FromSharedScreen:
+// put on from a shared screen (the card says "Tisch"); only a shared screen removes it
+// (knowledge/features/shared-table.md).
+public record BoardTokenStatus(Guid StatusId, int? Level, Guid AppliedByUserId, DateTimeOffset AppliedAt, bool FromSharedScreen);

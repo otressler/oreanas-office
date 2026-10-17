@@ -97,7 +97,8 @@ public static class EncounterEndpoints
         AppDbContext db,
         TablePresence presence,
         CancellationToken cancellationToken,
-        [FromQuery] string? view = null)
+        [FromQuery] string? view = null,
+        [FromQuery] bool sharedScreen = false)
     {
         var userId = user.GetUserId();
         var asPlayer = string.Equals(view, "player", StringComparison.OrdinalIgnoreCase);
@@ -109,7 +110,8 @@ public static class EncounterEndpoints
             userId,
             asPlayer,
             () => db.IsCampaignDmAsync(campaignId, userId, cancellationToken),
-            cancellationToken);
+            cancellationToken,
+            sharedScreen);
         return board is null ? TypedResults.NotFound() : TypedResults.Ok(board);
     }
 
@@ -126,7 +128,8 @@ public static class EncounterEndpoints
         Guid userId,
         bool asPlayer,
         Func<Task<bool>> mayViewInactive,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool sharedScreen = false)
     {
         var encounter = await db.Encounters
             .Where(e => e.Id == encounterId && e.CampaignId == campaignId)
@@ -169,8 +172,11 @@ public static class EncounterEndpoints
         var statuses = await StatusViews.ForIdsAsync(
             db, onBoard.Concat(removed).SelectMany(t => t.Statuses).Select(s => s.StatusId), cancellationToken);
         var people = await TablePeople.LoadAsync(db, campaignId, encounter.SessionDmUserId, characters, cancellationToken);
+        // ?sharedScreen=true: the board of a shared screen in local mode, whose undo is the last
+        // move made from a shared screen (knowledge/features/shared-table.md, "Undo").
+        var screen = TablePermissions.Effective(sharedScreen ? ConnectionMode.SharedScreen : ConnectionMode.Player, encounter.PlayMode);
         var undoable = encounter.Status == EncounterStatus.Active
-            ? await TableMoves.UndoableMoveAsync(db, encounterId, userId, encounter.SessionDmUserId, cancellationToken)
+            ? await TableMoves.UndoableMoveAsync(db, encounterId, userId, encounter.SessionDmUserId, cancellationToken, screen)
             : null;
 
         // The map as it was when the fight started, once it has; the battle map itself
@@ -211,10 +217,10 @@ public static class EncounterEndpoints
                     fog.Areas)
                 : null,
             encounter.PlayMode,
-            presence.Snapshot(encounterId, people.Select(p => p.UserId)));
+            presence.Snapshot(encounterId, encounter.SessionDmUserId, characters.Select(c => c.OwnerUserId), people.Select(p => p.UserId)));
 
         // Players, and anyone who asked for the players' view, get the filtered board.
-        return isSessionDm ? board : TableVisibility.ForPlayers(board with { UndoableMove = asPlayer ? null : board.UndoableMove });
+        return isSessionDm ? board : TableVisibility.ForPlayers(board with { UndoableMove = asPlayer && screen != ConnectionMode.SharedScreen ? null : board.UndoableMove });
     }
 
     // Ready → active in its session, creating one character token per placement in the

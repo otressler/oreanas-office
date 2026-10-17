@@ -122,8 +122,8 @@ public sealed class TableVisibilityTests
     {
         var shown = Guid.NewGuid();
         var secret = Guid.NewGuid();
-        var visibleToken = Creature("Goblin 1", 0) with { Statuses = [new BoardTokenStatus(shown, null, Dm, DateTimeOffset.UnixEpoch)] };
-        var hiddenToken = Creature("Goblin 2", 1, hidden: true) with { Statuses = [new BoardTokenStatus(secret, null, Dm, DateTimeOffset.UnixEpoch)] };
+        var visibleToken = Creature("Goblin 1", 0) with { Statuses = [new BoardTokenStatus(shown, null, Dm, DateTimeOffset.UnixEpoch, false)] };
+        var hiddenToken = Creature("Goblin 2", 1, hidden: true) with { Statuses = [new BoardTokenStatus(secret, null, Dm, DateTimeOffset.UnixEpoch, false)] };
         var board = Board(visibleToken, hiddenToken) with
         {
             Statuses = [Definition(shown), Definition(secret)],

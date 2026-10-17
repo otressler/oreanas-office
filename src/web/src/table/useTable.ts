@@ -160,6 +160,10 @@ export function useTable(
       onStatusesChanged: takeStatuses,
       onTokenRemoved: (removed) => updateBoard((board) => applyRemoved(board, removed)),
       onTokenRestored: (restored) => updateBoard((board) => applyRestored(board, restored)),
+      onPresenceChanged: (event) =>
+        updateBoard((board) =>
+          board.encounterId === event.encounterId ? { ...board, presence: event.presence } : board,
+        ),
     })
     connection.current = table
     table.start()

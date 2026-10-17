@@ -1395,6 +1395,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "sharedScreen",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -2705,6 +2713,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "sharedScreen",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -3066,7 +3082,8 @@
           "color",
           "fromCell",
           "fromTokenId",
-          "to"
+          "to",
+          "fromSharedScreen"
         ],
         "type": "object",
         "properties": {
@@ -3100,6 +3117,9 @@
           },
           "to": {
             "$ref": "#/components/schemas/BoardCell"
+          },
+          "fromSharedScreen": {
+            "type": "boolean"
           }
         }
       },
@@ -3470,7 +3490,8 @@
           "statusId",
           "level",
           "appliedByUserId",
-          "appliedAt"
+          "appliedAt",
+          "fromSharedScreen"
         ],
         "type": "object",
         "properties": {
@@ -3492,6 +3513,9 @@
           "appliedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "fromSharedScreen": {
+            "type": "boolean"
           }
         }
       },
@@ -5382,7 +5406,8 @@
           "userId",
           "color",
           "cell",
-          "tokenId"
+          "tokenId",
+          "fromSharedScreen"
         ],
         "type": "object",
         "properties": {
@@ -5413,6 +5438,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "fromSharedScreen": {
+            "type": "boolean"
           }
         }
       },
@@ -5509,7 +5537,8 @@
       "PresentPerson": {
         "required": [
           "userId",
-          "connected"
+          "connected",
+          "isSessionDm"
         ],
         "type": "object",
         "properties": {
@@ -5518,6 +5547,9 @@
             "format": "uuid"
           },
           "connected": {
+            "type": "boolean"
+          },
+          "isSessionDm": {
             "type": "boolean"
           }
         }

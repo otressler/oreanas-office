@@ -16,6 +16,7 @@ import { buildScene } from '../board/scene'
 import { Button } from '../components/ui'
 import { FightScreen } from '../encounters/FightScreen'
 import { useWideScreen } from '../lib/useWideScreen'
+import { PresenceRow } from '../sharedTable/PresenceRow'
 import { canRemoveStatus } from '../statuses/rules'
 import { StatusPicker } from '../statuses/StatusPicker'
 import { de } from '../text/de'
@@ -433,6 +434,7 @@ export function FightTable({
       }
     >
       <div className="relative flex min-h-0 flex-1 flex-col">
+        <PresenceRow presence={board.presence} people={board.people} tokens={board.tokens} />
         <Board
           board={shown}
           onCellTap={(cell) => tap(cell)}

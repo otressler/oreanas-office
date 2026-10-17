@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Encounters;
+using OreanasOffice.Server.Sessions;
 
 namespace OreanasOffice.Server.Table;
 
@@ -14,21 +15,26 @@ public sealed class TablePings(AppDbContext db)
     // Checks in this order: the encounter exists and the caller is a member of its campaign
     // (TokenNotFound), it is active (EncounterNotActive), exactly one of Cell and TokenId,
     // a cell inside the map (TargetInvalid), a token on its board, not removed (TokenNotFound).
-    public async Task<(ApiErrorCode? Error, PingedEvent? Ping)> PingAsync(Guid userId, PingRequest? request)
+    // `mode` is the connection's: a shared screen in local mode pings in white (it is "Tisch",
+    // not the signed-in person); a spectator screen, or a shared screen outside local mode,
+    // gets ReadOnlyConnection after the membership and active checks.
+    public async Task<(ApiErrorCode? Error, PingedEvent? Ping)> PingAsync(
+        Guid userId, PingRequest? request, ConnectionMode mode = ConnectionMode.Player)
     {
         if (request is null)
         {
             return (ApiErrorCode.TokenNotFound, null);
         }
 
-        var (error, color) = await CheckAsync(userId, request.EncounterId, request.TokenId, (request.Cell is null) == (request.TokenId is null), [request.Cell]);
+        var (error, color, shared) = await CheckAsync(userId, mode, request.EncounterId, request.TokenId, (request.Cell is null) == (request.TokenId is null), [request.Cell]);
         return error is null
-            ? (null, new PingedEvent(request.EncounterId, userId, color!, request.Cell, request.TokenId))
+            ? (null, new PingedEvent(request.EncounterId, userId, color!, request.Cell, request.TokenId, shared))
             : (error, null);
     }
 
     // As PingAsync, for the arrow's start (FromCell or FromTokenId) and its end (To).
-    public async Task<(ApiErrorCode? Error, ArrowDrawnEvent? Arrow)> ArrowAsync(Guid userId, DrawArrowRequest? request)
+    public async Task<(ApiErrorCode? Error, ArrowDrawnEvent? Arrow)> ArrowAsync(
+        Guid userId, DrawArrowRequest? request, ConnectionMode mode = ConnectionMode.Player)
     {
         if (request is null)
         {
@@ -36,14 +42,14 @@ public sealed class TablePings(AppDbContext db)
         }
 
         var malformed = (request.FromCell is null) == (request.FromTokenId is null) || request.To is null;
-        var (error, color) = await CheckAsync(userId, request.EncounterId, request.FromTokenId, malformed, [request.FromCell, request.To]);
+        var (error, color, shared) = await CheckAsync(userId, mode, request.EncounterId, request.FromTokenId, malformed, [request.FromCell, request.To]);
         return error is null
-            ? (null, new ArrowDrawnEvent(request.EncounterId, userId, color!, request.FromCell, request.FromTokenId, request.To!))
+            ? (null, new ArrowDrawnEvent(request.EncounterId, userId, color!, request.FromCell, request.FromTokenId, request.To!, shared))
             : (error, null);
     }
 
-    private async Task<(ApiErrorCode? Error, string? Color)> CheckAsync(
-        Guid userId, Guid encounterId, Guid? tokenId, bool malformed, BoardCell?[] cells)
+    private async Task<(ApiErrorCode? Error, string? Color, bool FromSharedScreen)> CheckAsync(
+        Guid userId, ConnectionMode mode, Guid encounterId, Guid? tokenId, bool malformed, BoardCell?[] cells)
     {
         var found = await db.Encounters.AsNoTracking()
             .Where(e => e.Id == encounterId)
@@ -52,6 +58,7 @@ public sealed class TablePings(AppDbContext db)
                 IsMember = db.CampaignMembers.Any(m => m.CampaignId == e.CampaignId && m.UserId == userId),
                 e.Status,
                 SessionDmUserId = (Guid?)e.Session.DmUserId,
+                e.Session.PlayMode,
                 e.MapCopy,
                 e.BattleMap.Width,
                 e.BattleMap.Height,
@@ -67,31 +74,42 @@ public sealed class TablePings(AppDbContext db)
             .SingleOrDefaultAsync();
         if (found is null || !found.IsMember)
         {
-            return (ApiErrorCode.TokenNotFound, null);
+            return (ApiErrorCode.TokenNotFound, null, false);
         }
 
         if (found.Status != EncounterStatus.Active)
         {
-            return (ApiErrorCode.EncounterNotActive, null);
+            return (ApiErrorCode.EncounterNotActive, null, false);
+        }
+
+        var effective = TablePermissions.Effective(mode, found.PlayMode);
+        if (!TablePermissions.MayPoint(effective))
+        {
+            return (ApiErrorCode.ReadOnlyConnection, null, false);
         }
 
         // The fight's map as it was at the start.
         var (width, height) = found.MapCopy is { } copy ? (copy.Width, copy.Height) : (found.Width, found.Height);
         if (malformed || cells.Any(cell => cell is not null && (cell.X < 0 || cell.Y < 0 || cell.X >= width || cell.Y >= height)))
         {
-            return (ApiErrorCode.TargetInvalid, null);
+            return (ApiErrorCode.TargetInvalid, null, false);
         }
 
         if (tokenId is not null && !found.TokenOnBoard)
         {
-            return (ApiErrorCode.TokenNotFound, null);
+            return (ApiErrorCode.TokenNotFound, null, false);
+        }
+
+        if (effective == ConnectionMode.SharedScreen)
+        {
+            return (null, TablePeople.NoCharacterColor, true);
         }
 
         var characters = found.Characters
             .Select((c, index) => (c.InFight, Character: new TablePeople.FightCharacter(c.OwnerUserId, index, c.Color)))
             .Where(c => c.InFight)
             .Select(c => c.Character);
-        return (null, TablePeople.PingColor(userId, found.SessionDmUserId, characters));
+        return (null, TablePeople.PingColor(userId, found.SessionDmUserId, characters), false);
     }
 }
 

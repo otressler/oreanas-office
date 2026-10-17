@@ -59,6 +59,11 @@ export interface TokenCardProps {
   onRemoveToken: (token: BoardToken) => void
   onRemoveStatus: (token: BoardToken, statusId: string) => void
   onSetLevel: (token: BoardToken, statusId: string, level: number) => void
+  /**
+   * The card of a shared screen in local mode (knowledge/features/shared-table.md): statuses
+   * on any token, removed only when they came from a shared screen.
+   */
+  sharedScreen?: boolean
   /** The card's size in CSS pixels, null once it is gone: the board keeps clear of it. */
   onSize: (size: { width: number; height: number } | null) => void
 }
@@ -239,10 +244,11 @@ function TokenDetails({
   onRemoveToken,
   onRemoveStatus,
   onSetLevel,
+  sharedScreen,
 }: TokenCardProps & { token: BoardToken }) {
   const [open, setOpen] = useState<string | null>(null)
-  const may = (status: BoardTokenStatus) => canRemoveStatus(status, board, userId)
-  const addable = live.running && canAddStatus(token, board, userId)
+  const may = (status: BoardTokenStatus) => canRemoveStatus(status, board, userId, sharedScreen)
+  const addable = live.running && canAddStatus(token, board, userId, sharedScreen)
   const removable = live.running && board.isSessionDm
   const off = !live.connected
 
@@ -261,7 +267,9 @@ function TokenDetails({
                   ? de.statuses.withLevel(name, status.level)
                   : name
               const by = de.statuses.appliedBy(
-                personName(board.people, status.appliedByUserId) ?? de.statuses.someone,
+                status.fromSharedScreen
+                  ? de.statuses.table
+                  : (personName(board.people, status.appliedByUserId) ?? de.statuses.someone),
               )
               const content = (
                 <>
