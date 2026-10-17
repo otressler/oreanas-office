@@ -217,4 +217,32 @@ describe('usePings', () => {
     expect(request).toBeNull()
     expect(result.current.shown).toEqual([])
   })
+
+  it('names a ping from a shared screen "Tisch" and keeps its arrow apart from the account’s own', () => {
+    const { result } = renderHook(() => usePings(board(), me))
+    const event = (fromSharedScreen: boolean, x: number) => ({
+      encounterId: 'e',
+      userId: other,
+      color: fromSharedScreen ? '#ffffff' : '#d4a017',
+      fromCell: { x, y: 0 },
+      fromTokenId: null,
+      to: { x: 3, y: 1 },
+      fromSharedScreen,
+    })
+    act(() => {
+      result.current.events.onArrowDrawn!(event(true, 0))
+      result.current.events.onArrowDrawn!(event(false, 1))
+    })
+    expect(result.current.shown).toHaveLength(2)
+    expect(result.current.shown[0]).toMatchObject({ name: 'Tisch', color: '#ffffff' })
+    expect(result.current.shown[1]).toMatchObject({ name: 'Oreana' })
+  })
+
+  it('shows the own ping of a shared screen in white as "Tisch"', () => {
+    const { result } = renderHook(() => usePings(board(), me, true))
+    act(() => {
+      result.current.ping({ cell: { x: 1, y: 1 } })
+    })
+    expect(result.current.shown[0]).toMatchObject({ name: 'Tisch', color: '#ffffff' })
+  })
 })
