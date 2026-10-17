@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import type { BrowserContext, Request, Route } from '@playwright/test'
 import type { components } from '../src/api/schema.js'
+import { fogView } from './mockFog.ts'
 
 type S = components['schemas']
 type ErrorCode = S['ApiErrorCode']
@@ -87,6 +88,8 @@ interface Token {
   statuses?: S['BoardTokenStatus'][]
   /** Stage 9: set while the token is off the board (knowledge/features/removing-tokens.md). */
   removedAt?: string | null
+  /** Stage 10: only the session DM sees a hidden creature (fog.ts holds the rest of fog). */
+  hidden?: boolean
 }
 
 /**
@@ -1387,7 +1390,8 @@ export class MockBackend {
     const used = new Set(
       [...onBoard, ...removed].flatMap((t) => (t.statuses ?? []).map((s) => s.statusId)),
     )
-    return {
+    // Stage 10: for an encounter with fog (mockFog.ts) the view is filtered per viewer.
+    return fogView(encounter, isSessionDm, {
       encounterId: encounter.id,
       campaignId: encounter.campaignId,
       sessionId: encounter.sessionId,
@@ -1404,7 +1408,7 @@ export class MockBackend {
       fog: null,
       playMode: 'byod',
       presence: { people: [], sharedScreen: false },
-    }
+    })
   }
 
   /** A token as the board shows it: size, owner, ring, picture and statuses. */
@@ -1421,7 +1425,7 @@ export class MockBackend {
       imageUrl: this.pickedTokenImageUrl(token.characterId ?? token.creatureTypeId),
       color: character?.color ?? null,
       statuses: [...(statuses ?? [])],
-      hidden: false,
+      hidden: token.hidden ?? false,
       ...(removedAt ? { removedAt } : {}),
     }
   }

@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto'
 import type { BrowserContext, WebSocketRoute } from '@playwright/test'
 import type { components } from '../src/api/schema.js'
 import type { MockBackend } from './mockBackend.ts'
+import { fogCall } from './mockFog.ts'
 
 type S = components['schemas']
 
@@ -169,6 +170,13 @@ export class MockHub {
       case 'RestoreToken':
         result = this.statusOrRemoval(userId, message.target, args)
         break
+      // ---- Fog, hidden creatures and spawn (stage 10, fog frontend lane): mockFog.ts ----
+      case 'ChangeFog':
+      case 'SetTokensHidden':
+      case 'SpawnCreatures':
+      case 'UndoChange':
+        result = fogCall(this.backend, this, userId, message.target, args)
+        break
       default:
         throw new Error(`Unknown hub method ${message.target}`)
     }
@@ -249,6 +257,18 @@ export class MockHub {
         if (event) this.sendToEncounter(event.encounterId, 'TokenRestored', event)
         return result
       }
+    }
+  }
+
+  /**
+   * A server message built for each device joined to the encounter by who is on it (null to
+   * skip it): the fog filter sends the session DM and the players different events.
+   */
+  sendEach(encounterId: string, target: string, build: (userId: string | null) => unknown) {
+    for (const client of this.clients) {
+      if (client.encounterId !== encounterId) continue
+      const event = build(this.backend.userId(client.context))
+      if (event !== null) this.send(client, { type: 1, target, arguments: [event] })
     }
   }
 

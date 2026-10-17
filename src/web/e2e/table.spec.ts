@@ -51,7 +51,8 @@ const shot = (page: Page, name: string) =>
 async function countTokenDraws(page: Page) {
   await page.evaluate(() => {
     const w = window as any
-    const layer = w.Konva.stages[0].getLayers()[1]
+    // Layers: map, fog (stage 10), tokens, pings.
+    const layer = w.Konva.stages[0].getLayers()[2]
     const draw = layer.batchDraw.bind(layer)
     w.tokenDraws = 0
     layer.batchDraw = () => {
