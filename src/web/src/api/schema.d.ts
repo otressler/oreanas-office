@@ -1373,6 +1373,7 @@ export interface paths {
             parameters: {
                 query?: {
                     view?: string;
+                    sharedScreen?: boolean;
                 };
                 header?: never;
                 path: {
@@ -2814,6 +2815,7 @@ export interface components {
             /** Format: uuid */
             fromTokenId: null | string;
             to: components["schemas"]["BoardCell"];
+            fromSharedScreen: boolean;
         };
         /** @enum {unknown} */
         AssetFailure: "rejected" | "error" | null;
@@ -2922,6 +2924,7 @@ export interface components {
             appliedByUserId: string;
             /** Format: date-time */
             appliedAt: string;
+            fromSharedScreen: boolean;
         };
         /** @enum {unknown} */
         BoardViewer: "dm" | "player";
@@ -3378,6 +3381,7 @@ export interface components {
             cell: components["schemas"]["BoardCell"] | null;
             /** Format: uuid */
             tokenId: null | string;
+            fromSharedScreen: boolean;
         };
         PingRequest: {
             /** Format: uuid */
