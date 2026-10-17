@@ -19,6 +19,9 @@ public class TokenStatus
     // Shown on the token card ("von Eli"); a player may remove only the ones they put on.
     public Guid AppliedByUserId { get; set; }
 
+    // Put on from a shared screen; shown as "Tisch" and removable only from a shared screen.
+    public bool FromSharedScreen { get; set; }
+
     public DateTimeOffset AppliedAt { get; set; }
 
     public Token Token { get; set; } = null!;

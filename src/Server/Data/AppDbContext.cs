@@ -47,6 +47,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityUser
 
     public DbSet<TokenStatus> TokenStatuses => Set<TokenStatus>();
 
+    public DbSet<SessionSpectator> SessionSpectators => Set<SessionSpectator>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
