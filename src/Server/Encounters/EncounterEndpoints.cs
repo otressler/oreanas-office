@@ -100,6 +100,34 @@ public static class EncounterEndpoints
         [FromQuery] string? view = null)
     {
         var userId = user.GetUserId();
+        var asPlayer = string.Equals(view, "player", StringComparison.OrdinalIgnoreCase);
+        var board = await LoadBoardAsync(
+            db,
+            presence,
+            campaignId,
+            encounterId,
+            userId,
+            asPlayer,
+            () => db.IsCampaignDmAsync(campaignId, userId, cancellationToken),
+            cancellationToken);
+        return board is null ? TypedResults.NotFound() : TypedResults.Ok(board);
+    }
+
+    // The board as `userId` gets it: the session DM's full board, or the players' filtered
+    // one (TableVisibility.ForPlayers) for everyone else and whenever `asPlayer` asks for it.
+    // Null for an unknown encounter, and for one that isn't active unless mayViewInactive
+    // says yes (`dm` members see prepared ones). The caller has checked access to the
+    // campaign or session. Also used by the spectator endpoints.
+    internal static async Task<BoardStateResponse?> LoadBoardAsync(
+        AppDbContext db,
+        TablePresence presence,
+        Guid campaignId,
+        Guid encounterId,
+        Guid userId,
+        bool asPlayer,
+        Func<Task<bool>> mayViewInactive,
+        CancellationToken cancellationToken)
+    {
         var encounter = await db.Encounters
             .Where(e => e.Id == encounterId && e.CampaignId == campaignId)
             .Select(e => new
@@ -122,9 +150,9 @@ public static class EncounterEndpoints
         // An active encounter always belongs to the active session: starting needs an
         // active session, and ending the session ends its encounter.
         if (encounter is null
-            || (encounter.Status != EncounterStatus.Active && !await db.IsCampaignDmAsync(campaignId, userId, cancellationToken)))
+            || (encounter.Status != EncounterStatus.Active && !await mayViewInactive()))
         {
-            return TypedResults.NotFound();
+            return null;
         }
 
         // Removed tokens stay off the board; only the session DM of the running fight gets
@@ -132,8 +160,7 @@ public static class EncounterEndpoints
         // ?view=player asks for the players' board whoever is signed in: spectator and shared
         // screens do, so the session DM's tablet never gets hidden things
         // (knowledge/features/spectator-view.md). Asking for less is always allowed.
-        var asPlayer = string.Equals(view, "player", StringComparison.OrdinalIgnoreCase);
-        var isSessionDm = encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId;
+        var isSessionDm = !asPlayer && encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId;
         var (tokens, characters) = await BoardTokens.LoadAsync(db, campaignId, db.Tokens.Where(t => t.EncounterId == encounterId), cancellationToken);
         var onBoard = tokens.Where(t => t.RemovedAt is null).ToList();
         List<BoardToken> removed = isSessionDm
@@ -187,7 +214,7 @@ public static class EncounterEndpoints
             presence.Snapshot(encounterId, people.Select(p => p.UserId)));
 
         // Players, and anyone who asked for the players' view, get the filtered board.
-        return TypedResults.Ok(isSessionDm && !asPlayer ? board : TableVisibility.ForPlayers(board with { UndoableMove = asPlayer ? null : board.UndoableMove }));
+        return isSessionDm ? board : TableVisibility.ForPlayers(board with { UndoableMove = asPlayer ? null : board.UndoableMove });
     }
 
     // Ready → active in its session, creating one character token per placement in the

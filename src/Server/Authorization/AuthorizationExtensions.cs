@@ -9,12 +9,14 @@ public static class AuthorizationExtensions
     public static WebApplicationBuilder AddAppAuthorization(this WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<IAuthorizationHandler, CampaignAuthorizationHandler>();
+        builder.Services.AddScoped<IAuthorizationHandler, SessionWatcherHandler>();
         builder.Services.AddAuthorizationBuilder()
             .AddPolicy(Policies.Admin, policy => policy.RequireAuthenticatedUser().RequireClaim(AppClaims.Admin, "true"))
             .AddPolicy(Policies.CampaignMember, policy => Campaign(policy, CampaignAccess.Member))
             .AddPolicy(Policies.CampaignDm, policy => Campaign(policy, CampaignAccess.Dm))
             .AddPolicy(Policies.SessionManager, policy => Campaign(policy, CampaignAccess.SessionManager))
-            .AddPolicy(Policies.SessionDm, policy => Campaign(policy, CampaignAccess.SessionDm));
+            .AddPolicy(Policies.SessionDm, policy => Campaign(policy, CampaignAccess.SessionDm))
+            .AddPolicy(Policies.SessionWatcher, policy => policy.RequireAuthenticatedUser().AddRequirements(new SessionWatcherRequirement()));
         return builder;
     }
 
