@@ -1400,6 +1400,10 @@ export class MockBackend {
       removedTokens: removed.map((token) => this.boardToken(encounter, token)),
       statuses: this.statusDefinitions.filter((s) => used.has(s.id)).map((s) => this.statusView(s)),
       people: this.boardPeople(encounter),
+      viewer: 'dm',
+      fog: null,
+      playMode: 'byod',
+      presence: { people: [], sharedScreen: false },
     }
   }
 
@@ -1417,6 +1421,7 @@ export class MockBackend {
       imageUrl: this.pickedTokenImageUrl(token.characterId ?? token.creatureTypeId),
       color: character?.color ?? null,
       statuses: [...(statuses ?? [])],
+      hidden: false,
       ...(removedAt ? { removedAt } : {}),
     }
   }
@@ -1969,6 +1974,7 @@ export class MockBackend {
       activeEncounter: this.activeEncounterSummary(session),
       interruptedEncounter: interrupted ? { id: interrupted.id, name: interrupted.name } : null,
       encounters: memberOf(campaign, userId)?.role === 'dm' ? this.sessionEncounters(session) : [],
+      playMode: 'byod',
     }
   }
 

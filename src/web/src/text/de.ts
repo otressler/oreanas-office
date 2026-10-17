@@ -1238,7 +1238,8 @@ export const de = {
     levelInvalid: 'Die Stufe geht von 1 bis 6.',
     notYourStatus:
       'Diesen Zustand hat jemand anderes gesetzt. Entfernen kann ihn nur die Person oder die Spielleitung.',
-    fogInvalid: 'Mit dem Nebel stimmt etwas nicht: Felder außerhalb der Karte, oder der Kampf hat keinen Nebel.',
+    fogInvalid:
+      'Mit dem Nebel stimmt etwas nicht: Felder außerhalb der Karte, oder der Kampf hat keinen Nebel.',
     readOnlyConnection: 'Dieser Bildschirm schaut nur zu.',
     spawnInvalid: 'Diese Kreaturen lassen sich nicht erscheinen lassen.',
     notLocalMode: 'Ein gemeinsamer Bildschirm geht nur in der Spielweise „Gemeinsamer Bildschirm“.',
@@ -1739,6 +1740,15 @@ export const de = {
     /** When a token was taken off, e.g. "um 20:15". */
     removedAt: (time: string) => `um ${time}`,
   },
+
+  /** Fog of war and creature spawn (fog frontend lane). */
+  fog: {},
+
+  /** The spectator screen and the join page (spectator lane). */
+  spectator: {},
+
+  /** Who is here and local mode (shared table lane). */
+  sharedTable: {},
 
   /** Failures without an error code. */
   requestErrors: {

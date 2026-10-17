@@ -14,6 +14,16 @@ export function setupPath(campaignId: string, sessionId: string, encounterId: st
   return `${sessionPath(campaignId, sessionId)}/kampf/${encounterId}/aufstellen`
 }
 
+/** The spectator screen of the session. */
+export function spectatorPath(campaignId: string, sessionId: string): string {
+  return `${sessionPath(campaignId, sessionId)}/zuschauen`
+}
+
+/** The join page the QR code opens; a session lets the page offer "Nur zuschauen" for it. */
+export function joinPath(joinCode: string, sessionId?: string): string {
+  return sessionId ? `/beitreten/${joinCode}?sitzung=${sessionId}` : `/beitreten/${joinCode}`
+}
+
 export function fightPath(campaignId: string, encounterId: string): string {
   return `/kampagnen/${campaignId}/kampf/${encounterId}`
 }
