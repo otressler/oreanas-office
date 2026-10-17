@@ -87,6 +87,13 @@ export class MockHub {
     return result.move
   }
 
+  /** Who is connected changed: sent to every device joined to the encounter. */
+  presenceChanged(encounterId: string, presence: S['PresenceState']) {
+    const encounter = this.backend.encounters.find((e) => e.id === encounterId)
+    if (encounter) encounter.presence = presence
+    this.sendToEncounter(encounterId, 'PresenceChanged', { encounterId, presence })
+  }
+
   /** Drops every connection; with `down` they can't come back until it is false again. */
   dropAll({ down = true } = {}) {
     this.down = down

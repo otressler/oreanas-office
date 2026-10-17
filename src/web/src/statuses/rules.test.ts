@@ -27,8 +27,12 @@ describe('canAddStatus', () => {
 describe('canRemoveStatus', () => {
   it('lets players take off the statuses they put on, the session DM any', () => {
     expect(canRemoveStatus({ appliedByUserId: ME, fromSharedScreen: false }, player, ME)).toBe(true)
-    expect(canRemoveStatus({ appliedByUserId: 'dm', fromSharedScreen: false }, player, ME)).toBe(false)
-    expect(canRemoveStatus({ appliedByUserId: 'other', fromSharedScreen: false }, dm, ME)).toBe(true)
+    expect(canRemoveStatus({ appliedByUserId: 'dm', fromSharedScreen: false }, player, ME)).toBe(
+      false,
+    )
+    expect(canRemoveStatus({ appliedByUserId: 'other', fromSharedScreen: false }, dm, ME)).toBe(
+      true,
+    )
   })
 
   it('lets a shared screen take off only the statuses that came from a shared screen', () => {

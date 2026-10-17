@@ -125,10 +125,7 @@ export function SharedScreenControls({
   // moves this device made itself (so a move shows at once) and the play mode.
   const { events: pingEvents } = pings
   useEffect(() => {
-    if (!connection) {
-      setPreviews(NO_PREVIEWS)
-      return
-    }
+    if (!connection) return
     const off = [
       onHubEvent(connection, 'Pinged', (ping) => pingEvents.onPinged?.(ping)),
       onHubEvent(connection, 'ArrowDrawn', (arrow) => pingEvents.onArrowDrawn?.(arrow)),
@@ -143,20 +140,29 @@ export function SharedScreenControls({
       ),
       onHubEvent(connection, 'PlayModeChanged', (changed) => setPlayMode(changed.playMode)),
     ]
-    return () => off.forEach((unsubscribe) => unsubscribe())
+    return () => {
+      off.forEach((unsubscribe) => unsubscribe())
+      setPreviews(NO_PREVIEWS)
+    }
   }, [connection, pingEvents])
 
   // Switched back to "Eigene Geräte": let go of the selected token, take the preview back
   // and close what is open. The screen only watches from here on.
+  const [wasLocal, setWasLocal] = useState(local)
+  if (wasLocal !== local) {
+    setWasLocal(local)
+    if (!local) {
+      setControls(IDLE)
+      setCard(null)
+      setNotice(null)
+      setPicking(null)
+      setPending(new Map())
+    }
+  }
   useEffect(() => {
     if (local) return
     clearTimeout(heldConfirm.current?.timer)
     heldConfirm.current = null
-    setControls(IDLE)
-    setCard(null)
-    setNotice(null)
-    setPicking(null)
-    setPending(new Map())
     if (connection) void invokeHub(connection, 'ClearPreview').catch(() => {})
   }, [local, connection])
 
