@@ -3,9 +3,11 @@
 // server merged into the cached board by version, others' move previews, and reloads
 // after every (re)connect.
 import { useQueryClient } from '@tanstack/react-query'
+import type { HubConnection } from '@microsoft/signalr'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   AddStatusRequest,
+  ApiErrorCode,
   ArrowDrawnEvent,
   BoardState,
   DrawArrowRequest,
@@ -60,6 +62,8 @@ export interface Table {
   applyStatuses: (change: TokenStatusesChangedEvent) => void
   removeToken: (tokenId: string) => Promise<HubResult>
   restoreToken: (tokenId: string) => Promise<HubResult>
+  /** The SignalR connection while joined to the encounter; null otherwise (spectator and shared screens). */
+  hubConnection: HubConnection | null
 }
 
 /** Others' pings and arrows as they arrive; not kept anywhere, so the page keeps them. */
@@ -68,11 +72,18 @@ export interface TableEvents {
   onArrowDrawn?: (arrow: ArrowDrawnEvent) => void
 }
 
+/** A screen that isn't a player's device (spectator view): what to do on a fresh connection. */
+export interface TableScreen {
+  /** Runs before JoinEncounter on every (re)connect: WatchSession. An error code stops the join. */
+  beforeJoin: (connection: HubConnection) => Promise<ApiErrorCode | null>
+}
+
 export function useTable(
   campaignId: string,
   encounterId: string,
   running: boolean,
   events: TableEvents = {},
+  screen?: TableScreen,
 ): Table {
   const queryClient = useQueryClient()
   // The latest handlers, so a new function each render doesn't reconnect.
@@ -80,7 +91,13 @@ export function useTable(
   useEffect(() => {
     handlers.current = events
   })
+  const screenRef = useRef(screen)
+  useEffect(() => {
+    screenRef.current = screen
+  })
+  const isScreen = screen !== undefined
   const [status, setStatus] = useState<TableStatus>('connecting')
+  const [hubConnection, setHubConnection] = useState<HubConnection | null>(null)
   const [known, setKnown] = useState<KnownPositions>(() => new Map())
   const [previews, setPreviews] = useState<Previews>(NO_PREVIEWS)
   const connection = useRef<TableConnection | null>(null)
@@ -122,7 +139,13 @@ export function useTable(
       encounterId,
       createConnection: createTableConnection,
       recheckServer,
-      onStatus: setStatus,
+      onStatus: (next) => {
+        setStatus(next)
+        setHubConnection(next === 'connected' ? table.hubConnection : null)
+      },
+      beforeJoin: isScreen
+        ? (connection) => screenRef.current?.beforeJoin(connection) ?? Promise.resolve(null)
+        : undefined,
       onJoined: reload,
       onMoved: apply,
       onPreview: (preview) =>
@@ -145,7 +168,7 @@ export function useTable(
       if (connection.current === table) connection.current = null
       setStatus('connecting')
     }
-  }, [running, encounterId, apply, reload, takeStatuses, updateBoard])
+  }, [running, encounterId, apply, reload, takeStatuses, updateBoard, isScreen])
 
   const move = useCallback(
     (request: MoveTokenRequest) =>
@@ -214,5 +237,6 @@ export function useTable(
     applyStatuses: takeStatuses,
     removeToken,
     restoreToken,
+    hubConnection: running ? hubConnection : null,
   }
 }

@@ -147,6 +147,8 @@ export interface BoardHandle {
    * once in its ring colour. Doesn't select it. Nothing if it isn't on the board.
    */
   centerOn: (tokenId: string, options?: { pulse?: boolean }) => void
+  /** Zooms out until the whole map fits ("Ganze Karte"), as the board's own button does. Missing on test doubles. */
+  fit?: () => void
 }
 
 /** What the board's own info box is about. */
@@ -747,6 +749,7 @@ export function Board({
   useImperativeHandle(
     handleRef,
     () => ({
+      fit,
       centerOn(tokenId, options) {
         const token = tokensRef.current.find((candidate) => candidate.id === tokenId)
         const v = view.current
@@ -767,7 +770,7 @@ export function Board({
         }
       },
     }),
-    [width, height, moveView, kick],
+    [width, height, moveView, kick, fit],
   )
 
   /** Tapping a marker pans its ping to the middle of the uncovered board. */

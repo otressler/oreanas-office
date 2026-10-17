@@ -90,6 +90,12 @@ export interface TableConnectionOptions {
   onStatusesChanged?: (change: TokenStatusesChangedEvent) => void
   onTokenRemoved?: (removed: TokenRemovedEvent) => void
   onTokenRestored?: (restored: TokenRestoredEvent) => void
+  /**
+   * Runs on the fresh connection just before JoinEncounter; an error code stops the join like
+   * JoinEncounter's own. The spectator and shared screens call WatchSession here
+   * (knowledge/features/spectator-view.md).
+   */
+  beforeJoin?: (connection: HubConnection) => Promise<ApiErrorCode | null>
 }
 
 /** A move or undo while the table isn't connected; moves are never queued. */
@@ -119,6 +125,11 @@ export class TableConnection {
 
   get status(): TableStatus {
     return this.state
+  }
+
+  /** The SignalR connection while joined to the encounter, for screens that call the hub themselves. */
+  get hubConnection(): HubConnection | null {
+    return this.state === 'connected' ? this.connection : null
   }
 
   start(): void {
@@ -301,7 +312,9 @@ export class TableConnection {
     try {
       await connection.start()
       if (stale()) return
-      error = (await invokeHub(connection, 'JoinEncounter', encounterId)).error
+      error = (await this.options.beforeJoin?.(connection)) ?? null
+      if (stale()) return
+      error ??= (await invokeHub(connection, 'JoinEncounter', encounterId)).error
     } catch {
       if (!stale()) this.lost(true)
       return
