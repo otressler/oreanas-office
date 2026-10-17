@@ -176,6 +176,7 @@ public sealed class TableStatuses(AppDbContext db, TimeProvider time)
                 t.Encounter.Status,
                 t.Encounter.Session.PlayMode,
                 t.RemovedAt,
+                t.Hidden,
             })
             .SingleOrDefaultAsync();
         if (token is null || !token.IsMember)
@@ -192,6 +193,13 @@ public sealed class TableStatuses(AppDbContext db, TimeProvider time)
         if (!TablePermissions.MayPoint(effective))
         {
             return (ApiErrorCode.ReadOnlyConnection, null);
+        }
+
+        // A hidden creature is not on the board for anyone but the session DM
+        // (knowledge/features/fog-of-war.md).
+        if (token.Hidden && !TablePermissions.ActsAsSessionDm(effective, userId, token.Access.SessionDmUserId))
+        {
+            return (ApiErrorCode.TokenNotFound, null);
         }
 
         return token.RemovedAt is null ? (null, token.Access with { Effective = effective }) : (ApiErrorCode.TokenNotFound, null);

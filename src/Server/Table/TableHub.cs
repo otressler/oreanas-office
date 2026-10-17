@@ -29,7 +29,10 @@ public sealed partial class TableHub(
     TablePingLimiter pingLimiter,
     TableConnections connections,
     TablePresence presence,
-    TableBroadcaster broadcaster) : Hub<ITableClient>, ITableHub
+    TableBroadcaster broadcaster,
+    TableFanOut fanOut,
+    TableFog fog,
+    TableSpawns spawns) : Hub<ITableClient>, ITableHub
 {
     public const string Path = "/hubs/table";
 
@@ -57,7 +60,8 @@ public sealed partial class TableHub(
                 Context.ConnectionId,
                 connection.InDmGroup ? TableGroups.Dm(encounterId) : TableGroups.Players(encounterId),
                 Context.ConnectionAborted);
-            foreach (var preview in previews.In(encounterId))
+            // A player never gets a preview of a creature or a target it cannot see.
+            foreach (var preview in await fanOut.PreviewsForAsync(previews.In(encounterId), connection.InDmGroup))
             {
                 await Clients.Caller.MovePreviewed(preview);
             }
@@ -100,7 +104,7 @@ public sealed partial class TableHub(
             await SendCleared(replaced);
         }
 
-        await Others(preview.EncounterId, client => client.MovePreviewed(preview));
+        await fanOut.PreviewedAsync(preview, Context.ConnectionId);
 
         // The connection may have closed meanwhile, after OnDisconnectedAsync cleared it.
         if (Context.ConnectionAborted.IsCancellationRequested)
@@ -152,7 +156,7 @@ public sealed partial class TableHub(
         var (error, ping) = await pings.PingAsync(UserId, request, Connection.Mode);
         if (ping is not null && pingLimiter.TryTake(ping.UserId, ping.EncounterId))
         {
-            await Others(ping.EncounterId, client => client.Pinged(ping));
+            await fanOut.PingedAsync(ping, Context.ConnectionId);
         }
 
         return new HubResult(error);
@@ -168,7 +172,7 @@ public sealed partial class TableHub(
         var (error, arrow) = await pings.ArrowAsync(UserId, request, Connection.Mode);
         if (arrow is not null && pingLimiter.TryTake(arrow.UserId, arrow.EncounterId))
         {
-            await Others(arrow.EncounterId, client => client.ArrowDrawn(arrow));
+            await fanOut.ArrowDrawnAsync(arrow, Context.ConnectionId);
         }
 
         return new HubResult(error);
@@ -205,11 +209,11 @@ public sealed partial class TableHub(
 
         foreach (var (connectionId, preview) in previews.ClearToken(removed.EncounterId, removed.TokenId))
         {
-            await Others(removed.EncounterId, client => client.MovePreviewCleared(
-                new MovePreviewClearedEvent(preview.EncounterId, preview.TokenId, preview.ByUserId)), connectionId);
+            await fanOut.ClearedAsync(
+                new MovePreviewClearedEvent(preview.EncounterId, preview.TokenId, preview.ByUserId), connectionId);
         }
 
-        await Everyone(removed.EncounterId).TokenRemoved(removed);
+        await fanOut.RemovedAsync(removed);
         return new HubResult(null);
     }
 
@@ -228,7 +232,7 @@ public sealed partial class TableHub(
         var (error, restored) = await removals.RestoreAsync(UserId, tokenId);
         if (restored is not null)
         {
-            await Everyone(restored.EncounterId).TokenRestored(restored);
+            await fanOut.RestoredAsync(restored);
         }
 
         return new HubResult(error);
@@ -252,15 +256,15 @@ public sealed partial class TableHub(
         a.EncounterId == b.EncounterId && a.TokenId == b.TokenId;
 
     private Task SendCleared(MovePreviewEvent preview) =>
-        Others(preview.EncounterId, client => client.MovePreviewCleared(
-            new MovePreviewClearedEvent(preview.EncounterId, preview.TokenId, preview.ByUserId)));
+        fanOut.ClearedAsync(
+            new MovePreviewClearedEvent(preview.EncounterId, preview.TokenId, preview.ByUserId), Context.ConnectionId);
 
     // Only a saved move reaches the group; errors send nothing.
     private async Task<MoveResult> Broadcast(MoveResult result)
     {
         if (result.Move is { } move)
         {
-            await Everyone(move.EncounterId).TokenMoved(move);
+            await fanOut.MovedAsync(move, moves.LastFrom);
         }
 
         return result;
@@ -271,7 +275,7 @@ public sealed partial class TableHub(
     {
         if (result.Change is { } change)
         {
-            await Everyone(change.EncounterId).TokenStatusesChanged(change);
+            await fanOut.StatusesChangedAsync(change);
         }
 
         return result;

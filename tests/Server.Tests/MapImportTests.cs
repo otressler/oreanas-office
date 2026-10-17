@@ -253,7 +253,7 @@ public sealed class MapImportTests
         Assert.Equal(
             [(5, 1, 1m), (6, 1, 1m), (1, 3, 0m), (2, 1, 0.5m), (4, 1, 0.5m)],
             import.Encounter.Tokens.Select(t => (t.X, t.Y, t.Elevation)));
-        Assert.All(import.Encounter.Tokens, t => Assert.Equal((TokenKind.Creature, Now), (t.Kind, t.CreatedAt)));
+        Assert.All(import.Encounter.Tokens.Select((t, i) => (t, i)), p => Assert.Equal((TokenKind.Creature, Now.AddTicks(p.i)), (p.t.Kind, p.t.CreatedAt)));
     }
 
     [Fact]

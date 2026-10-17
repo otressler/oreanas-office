@@ -16,6 +16,9 @@ public static class TableExtensions
         builder.Services.AddScoped<TableStatuses>();
         builder.Services.AddScoped<TableRemovals>();
         builder.Services.AddScoped<TablePings>();
+        builder.Services.AddScoped<TableFanOut>();
+        builder.Services.AddScoped<TableFog>();
+        builder.Services.AddScoped<TableSpawns>();
         builder.Services.AddSingleton<TablePingLimiter>();
         builder.Services.AddSingleton<TableActivity>();
         builder.Services.AddSingleton<TablePreviews>();
