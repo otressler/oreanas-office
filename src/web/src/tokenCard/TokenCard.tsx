@@ -61,6 +61,15 @@ export interface TokenCardProps {
   onSetLevel: (token: BoardToken, statusId: string, level: number) => void
   /** The card's size in CSS pixels, null once it is gone: the board keeps clear of it. */
   onSize: (size: { width: number; height: number } | null) => void
+  /** Stage 10, the session DM only: reveal and hide creatures (knowledge/features/fog-of-war.md). */
+  fog?: CardFog
+}
+
+export interface CardFog {
+  /** "Aufdecken" or "Verbergen" for these creatures. */
+  onSetHidden: (tokens: BoardToken[], hidden: boolean) => void
+  /** The hidden creatures in the same area or areas as the token, for "Alle verborgenen hier". */
+  hiddenHere: (token: BoardToken) => BoardToken[]
 }
 
 export function TokenCard(props: TokenCardProps) {
@@ -195,6 +204,9 @@ function StackRows({
               />
               <span className="min-w-0 flex-1 truncate">
                 {row.label}
+                {row.hidden && (
+                  <span className="ml-2 text-xs text-candle">{de.fog.hiddenMark}</span>
+                )}
                 {selected?.id === row.id && (
                   <span className="ml-2 text-xs text-candle">{de.tokenCard.selectedMark}</span>
                 )}
@@ -239,15 +251,20 @@ function TokenDetails({
   onRemoveToken,
   onRemoveStatus,
   onSetLevel,
+  fog,
 }: TokenCardProps & { token: BoardToken }) {
   const [open, setOpen] = useState<string | null>(null)
   const may = (status: BoardTokenStatus) => canRemoveStatus(status, board, userId)
   const addable = live.running && canAddStatus(token, board, userId)
   const removable = live.running && board.isSessionDm
   const off = !live.connected
+  // Creatures can be hidden from the players; characters are always visible.
+  const hideable = !!fog && live.running && board.isSessionDm && token.kind === 'creature'
+  const hiddenHere = hideable && token.hidden ? fog.hiddenHere(token) : []
 
   return (
     <>
+      {hideable && token.hidden && <p className="text-sm text-dim">{de.fog.token.hiddenNote}</p>}
       <section aria-label={t.statuses} className="flex flex-col gap-1">
         {token.statuses.length === 0 ? (
           <p className="text-sm text-dim">{t.noStatuses}</p>
@@ -345,6 +362,16 @@ function TokenDetails({
           <Button disabled={off} onClick={() => onShow(token)}>
             {t.show}
           </Button>
+          {hideable && (
+            <Button disabled={off} onClick={() => fog.onSetHidden([token], !token.hidden)}>
+              {token.hidden ? de.fog.token.reveal : de.fog.token.hide}
+            </Button>
+          )}
+          {hiddenHere.length > 1 && (
+            <Button disabled={off} onClick={() => fog?.onSetHidden(hiddenHere, false)}>
+              {`${de.fog.token.revealAllHere} (${hiddenHere.length})`}
+            </Button>
+          )}
           {removable && (
             <Button disabled={off} onClick={() => onRemoveToken(token)}>
               <RemoveIcon />

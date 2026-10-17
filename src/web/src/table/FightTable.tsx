@@ -15,6 +15,7 @@ import type { PingTarget } from '../board/pings'
 import { buildScene } from '../board/scene'
 import { Button } from '../components/ui'
 import { FightScreen } from '../encounters/FightScreen'
+import { useDmFog } from '../fog/useDmFog'
 import { useWideScreen } from '../lib/useWideScreen'
 import { canRemoveStatus } from '../statuses/rules'
 import { StatusPicker } from '../statuses/StatusPicker'
@@ -37,6 +38,7 @@ import {
   type Controls,
   type MoveIntent,
 } from './controls'
+import { mergeFog } from './fogMerge'
 import { mergeKnown, withPending, type PendingMoves } from './merge'
 import { moveArrows } from './previews'
 import { RemovedTokensMenu, UndoRemoveBar, type JustRemoved } from './RemovedTokens'
@@ -130,34 +132,48 @@ export function FightTable({
 
   // The person's own characters are drawn, and tapped, on top of any stack.
   const shown = useMemo(() => {
-    const merged = withPending(mergeKnown(board, table.known), pending)
+    const merged = withPending(mergeFog(mergeKnown(board, table.known), table.knownFog), pending)
     return { ...merged, tokens: ownTokensOnTop(merged.tokens, me.id) }
-  }, [board, table.known, pending, me.id])
+  }, [board, table.known, table.knownFog, pending, me.id])
   const instant = useMemo(() => new Set(pending.keys()), [pending])
-  const current = currentControls(controls, shown.tokens, running && connected)
+
+  // Fog and spawn (stage 10). The session DM's "Spieleransicht" shows exactly what players
+  // see: there `seen` is that board, and nothing can be selected, moved or sent.
+  const dmFog = useDmFog({ campaignId, board: shown, grid, table, connected, running })
+  const seen = dmFog.playerView ? dmFog.board : shown
+  // Fog mode and placing creatures take the taps; the card and a selection wait meanwhile.
+  const frozen = dmFog.modal || dmFog.playerView
+  const current = currentControls(
+    frozen ? IDLE : controls,
+    seen.tokens,
+    running && connected && !frozen,
+  )
   const selected =
-    current.mode === 'idle' ? null : shown.tokens.find((token) => token.id === current.tokenId)!
+    current.mode === 'idle' ? null : seen.tokens.find((token) => token.id === current.tokenId)!
   const undoable = undoCandidate(ownUndo, board.undoableMove)
-  const showUndo = isUndoVisible(undoable, shown.tokens, connected)
+  const showUndo = isUndoVisible(undoable, seen.tokens, connected)
   const arrows = useMemo(
-    () => moveArrows(table.previews, shown.tokens),
-    [table.previews, shown.tokens],
+    () => moveArrows(table.previews, seen.tokens),
+    [table.previews, seen.tokens],
   )
 
   const canMove = useCallback(
-    (token: BoardToken) => canMoveToken(token, board, me.id),
-    [board, me.id],
+    (token: BoardToken) => !dmFog.playerView && canMoveToken(token, board, me.id),
+    [board, me.id, dmFog.playerView],
   )
   // A selected token always has its card; a removed token's card closes by itself.
-  const shownCard = showCard(
-    card ?? (selected ? { kind: 'token', tokenId: selected.id, cell: selected } : null),
-    shown.tokens,
-    scene,
-    canMove,
-  )
+  const shownCard = dmFog.modal
+    ? null
+    : showCard(
+        card ?? (selected ? { kind: 'token', tokenId: selected.id, cell: selected } : null),
+        seen.tokens,
+        scene,
+        canMove,
+        dmFog.unexplored,
+      )
   const settledCard = cardWaiting ? null : shownCard
   const cardTokenId = settledCard?.kind === 'token' ? settledCard.token.id : null
-  const pickerToken = picking ? shown.tokens.find((token) => token.id === picking) : undefined
+  const pickerToken = picking ? seen.tokens.find((token) => token.id === picking) : undefined
   const covered = settledCard ? cardSize : null
   const inset = covered
     ? wide
@@ -270,11 +286,12 @@ export function FightTable({
       current,
       { cell, token },
       {
-        tokens: shown.tokens,
+        tokens: seen.tokens,
         grid,
         canMove,
         enabled: running && connected,
         card: shownCard && card,
+        blocked: dmFog.blocked,
       },
     )
     setControls(result.controls)
@@ -411,11 +428,14 @@ export function FightTable({
   }
 
   const dmActions = board.isSessionDm && running && (
-    <RemovedTokensMenu
-      tokens={board.removedTokens}
-      connected={connected}
-      onRestore={(token) => void restoreToken(token.id)}
-    />
+    <>
+      {dmFog.toolbar}
+      <RemovedTokensMenu
+        tokens={board.removedTokens}
+        connected={connected}
+        onRestore={(token) => void restoreToken(token.id)}
+      />
+    </>
   )
 
   return (
@@ -434,9 +454,12 @@ export function FightTable({
     >
       <div className="relative flex min-h-0 flex-1 flex-col">
         <Board
-          board={shown}
-          onCellTap={(cell) => tap(cell)}
-          onTokenTap={(token, cell) => tap(cell, token)}
+          board={dmFog.board}
+          fog={dmFog.fog}
+          highlight={dmFog.highlight}
+          faintTokenIds={dmFog.faintTokenIds}
+          onCellTap={(cell) => dmFog.tapCell(cell) || tap(cell)}
+          onTokenTap={(token, cell) => dmFog.tapToken(token, cell) || tap(cell, token)}
           selectedTokenId={selected?.id ?? null}
           ghost={
             current.mode === 'preview' ? { tokenId: current.tokenId, ...current.target } : null
@@ -502,6 +525,11 @@ export function FightTable({
                 pingTarget({ cell: { x: token.x, y: token.y }, tokenId: token.id })
               }
               onRemoveToken={(token) => void removeToken(token)}
+              fog={
+                board.isSessionDm && running
+                  ? { onSetHidden: dmFog.setTokensHidden, hiddenHere: dmFog.hiddenHere }
+                  : undefined
+              }
               onRemoveStatus={(token, statusId) =>
                 void statusFromCard(() => table.removeStatus({ tokenId: token.id, statusId }))
               }
@@ -514,6 +542,8 @@ export function FightTable({
             />
           </div>
         )}
+
+        {dmFog.bars(bottomOverlay)}
 
         {pickerToken && running && (
           <StatusPicker
