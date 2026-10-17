@@ -29,7 +29,7 @@ The image comes from the linked character or creature type: always its currently
 
 - `character` tokens: the character's owner and the session DM.
 - `creature` tokens: the session DM only.
-- Later (stage 10), in local mode: a shared screen, a spectator screen opened by a campaign member, moves every `character` token in the fight, whoever owns it. In bring-your-own-device mode it moves none ([shared table](/features/shared-table.md)).
+- Later (stage 10), in local mode: a shared screen, a device a campaign member opened in that mode (not a spectator screen), moves every `character` token in the fight, whoever owns it. In bring-your-own-device mode it moves none ([shared table](/features/shared-table.md)).
 
 There are no turn-order or distance restrictions ([overview](/overview.md)). The only check is the target: the whole footprint inside the map on walkable cells, as for [placement](/domain/encounter.md), except that tokens may overlap ([realtime sync](/decisions/realtime-sync.md)).
 

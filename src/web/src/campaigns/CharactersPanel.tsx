@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { Character } from '../api/types'
 import { ringColor } from '../board/palette'
 import { Button, LoadError, Loading, Panel } from '../components/ui'
+import { StatusListEditor } from '../statuses/StatusListEditor'
 import { de } from '../text/de'
 import { TokenPicture } from '../tokenImages/TokenPicture'
 import { CharacterForm } from './CharacterForm'
@@ -45,6 +46,7 @@ export function CharactersPanel({ campaignId }: { campaignId: string }) {
             ) : (
               <CharacterRow
                 key={character.id}
+                campaignId={campaignId}
                 character={character}
                 onEdit={() => setEditingId(character.id)}
               />
@@ -56,30 +58,69 @@ export function CharactersPanel({ campaignId }: { campaignId: string }) {
   )
 }
 
-function CharacterRow({ character, onEdit }: { character: Character; onEdit: () => void }) {
+function CharacterRow({
+  campaignId,
+  character,
+  onEdit,
+}: {
+  campaignId: string
+  character: Character
+  onEdit: () => void
+}) {
+  // The character's status list (stage 9): everyone reads it, its editors change it.
+  const [statuses, setStatuses] = useState(false)
+  const listId = useId()
   return (
-    <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
-      <TokenPicture
-        url={character.portraitUrl}
-        label={character.name}
-        ring={ringColor({ kind: 'character', ...character })}
-        alt={de.characters.portraitAlt(character.name)}
-        className="h-11 w-11 text-base"
-      />
-      <div className="flex min-w-0 flex-col">
-        <span className="font-semibold text-parchment">{character.name}</span>
-        <span className="text-sm text-dim">{de.characters.owner(character.ownerDisplayName)}</span>
+    <li className="flex flex-col gap-2 py-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <TokenPicture
+          url={character.portraitUrl}
+          label={character.name}
+          ring={ringColor({ kind: 'character', ...character })}
+          alt={de.characters.portraitAlt(character.name)}
+          className="h-11 w-11 text-base"
+        />
+        <div className="flex min-w-0 flex-col">
+          <span className="font-semibold text-parchment">{character.name}</span>
+          <span className="text-sm text-dim">
+            {de.characters.owner(character.ownerDisplayName)}
+          </span>
+        </div>
+        <span className="text-sm text-dim">{de.sizes[character.size]}</span>
+        <div className="ml-auto flex flex-wrap items-center gap-1">
+          <Button
+            variant="quiet"
+            aria-expanded={statuses}
+            aria-controls={statuses ? listId : undefined}
+            aria-label={de.statuses.list.show(character.name)}
+            onClick={() => setStatuses((open) => !open)}
+          >
+            {de.statuses.list.title}
+          </Button>
+          {character.canEdit && (
+            <Button
+              variant="quiet"
+              onClick={onEdit}
+              aria-label={de.characters.editTitle(character.name)}
+            >
+              {de.common.edit}
+            </Button>
+          )}
+        </div>
       </div>
-      <span className="text-sm text-dim">{de.sizes[character.size]}</span>
-      {character.canEdit && (
-        <Button
-          className="ml-auto"
-          variant="quiet"
-          onClick={onEdit}
-          aria-label={de.characters.editTitle(character.name)}
+      {statuses && (
+        <section
+          id={listId}
+          aria-label={de.statuses.list.show(character.name)}
+          className="flex flex-col gap-2 rounded-lg border border-line p-3"
         >
-          {de.common.edit}
-        </Button>
+          <h3 className="font-semibold text-parchment">{de.statuses.list.title}</h3>
+          <p className="text-sm text-dim">{de.statuses.list.help}</p>
+          <StatusListEditor
+            campaignId={campaignId}
+            owner={{ kind: 'character', characterId: character.id }}
+          />
+        </section>
       )}
     </li>
   )

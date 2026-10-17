@@ -58,6 +58,7 @@ export function previewBoard(
           version: 0,
           imageUrl: null,
           color: null,
+          statuses: [],
         },
       ]
     : []
@@ -78,5 +79,8 @@ export function previewBoard(
     tokens,
     isSessionDm: false,
     undoableMove: null,
+    removedTokens: [],
+    statuses: [],
+    people: [],
   }
 }

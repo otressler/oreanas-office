@@ -12,6 +12,7 @@ using OreanasOffice.Server.Images;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Sessions;
+using OreanasOffice.Server.Statuses;
 using OreanasOffice.Server.Table;
 
 namespace OreanasOffice.Server.Encounters;
@@ -117,31 +118,17 @@ public static class EncounterEndpoints
             return TypedResults.NotFound();
         }
 
-        var tokens = await db.Tokens
-            .Where(t => t.EncounterId == encounterId)
-            .OrderBy(t => t.Kind == TokenKind.Creature ? 0 : 1)
-            .ThenBy(t => t.Kind == TokenKind.Creature ? t.Label : t.Character!.Name)
-            .ThenBy(t => t.Id)
-            .Select(t => new
-            {
-                t.Id,
-                t.Kind,
-                t.CharacterId,
-                t.CreatureTypeId,
-                OwnerUserId = (Guid?)t.Character!.OwnerUserId,
-                Label = t.Kind == TokenKind.Creature ? t.Label : t.Character!.Name,
-                t.X,
-                t.Y,
-                t.Elevation,
-                t.Size,
-                t.Version,
-                // The picked portrait or icon as it is now (knowledge/features/token-icons.md).
-                ImageAssetId = t.Kind == TokenKind.Character ? t.Character!.TokenAssetId : t.CreatureType!.IconAssetId,
-                Color = t.Kind == TokenKind.Character ? t.Character!.Color : null,
-            })
-            .ToListAsync(cancellationToken);
-
-        var colors = await db.CharacterColorIndexesAsync(campaignId, cancellationToken);
+        // Removed tokens stay off the board; only the session DM of the running fight gets
+        // them, newest first, for "Vom Feld genommen" (knowledge/features/removing-tokens.md).
+        var isSessionDm = encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId;
+        var (tokens, characters) = await BoardTokens.LoadAsync(db, campaignId, db.Tokens.Where(t => t.EncounterId == encounterId), cancellationToken);
+        var onBoard = tokens.Where(t => t.RemovedAt is null).ToList();
+        List<BoardToken> removed = isSessionDm
+            ? [.. tokens.Where(t => t.RemovedAt is not null).OrderByDescending(t => t.RemovedAt).ThenBy(t => t.Id)]
+            : [];
+        var statuses = await StatusViews.ForIdsAsync(
+            db, onBoard.Concat(removed).SelectMany(t => t.Statuses).Select(s => s.StatusId), cancellationToken);
+        var people = await TablePeople.LoadAsync(db, campaignId, encounter.SessionDmUserId, characters, cancellationToken);
         var undoable = encounter.Status == EncounterStatus.Active
             ? await TableMoves.UndoableMoveAsync(db, encounterId, userId, encounter.SessionDmUserId, cancellationToken)
             : null;
@@ -170,25 +157,12 @@ public static class EncounterEndpoints
             encounter.Name,
             encounter.Status,
             map,
-            [
-                .. tokens.Select(t => new BoardToken(
-                    t.Id,
-                    t.Kind,
-                    t.CharacterId,
-                    t.CreatureTypeId,
-                    t.Kind == TokenKind.Character ? t.OwnerUserId : null,
-                    t.Label ?? "",
-                    t.X,
-                    t.Y,
-                    t.Elevation,
-                    t.Size,
-                    t.CharacterId is { } characterId ? colors[characterId] : null,
-                    t.Version,
-                    t.ImageAssetId is { } imageId ? MapBackgrounds.Url(imageId) : null,
-                    t.Color)),
-            ],
-            encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId,
-            undoable);
+            onBoard,
+            isSessionDm,
+            undoable,
+            removed,
+            statuses,
+            people);
         return TypedResults.Ok(board);
     }
 

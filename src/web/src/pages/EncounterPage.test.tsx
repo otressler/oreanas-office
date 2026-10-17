@@ -1,8 +1,9 @@
-import { act, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { act, screen, waitFor, within } from '@testing-library/react'
+import userEvent, { PointerEventsCheckLevel } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BoardState, BoardToken, MoveResult, TokenMovedEvent } from '../api/types'
 import { encounter, ids, smallBoard } from '../encounters/testing'
+import { fakeBoard } from '../table/fakeBoard'
 import { deferred, FakeHub, fakeTable, refused } from '../table/testing'
 import { json, mockApi, renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
@@ -30,6 +31,7 @@ const hero: BoardToken = {
   version: 0,
   imageUrl: null,
   color: null,
+  statuses: [],
 }
 
 function runningBoard(fields: Partial<BoardState> = {}): BoardState {
@@ -64,13 +66,20 @@ function openFight(board: BoardState = runningBoard()) {
     'GET /api/campaigns/:id/encounters/:eid/board': () => json(200, board),
   })
   const app = renderApp(fightPath)
-  return { ...app, calls, user: userEvent.setup() }
+  // A card that just opened lets taps through for the double-tap time (FightTable); people
+  // can't reach its buttons that fast, tests can.
+  return {
+    ...app,
+    calls,
+    user: userEvent.setup({ pointerEventsCheck: PointerEventsCheckLevel.Never }),
+  }
 }
 
 const cell = (x: number, y: number) => screen.getByRole('button', { name: `Feld ${x},${y}` })
 const tokenText = (label: string) =>
   within(screen.getByRole('list', { name: 'Figuren' })).getByText(new RegExp(`^Figur ${label} `))
 const indicator = () => screen.getByTestId('connection-indicator')
+const card = () => screen.getByRole('region', { name: de.tokenCard.label })
 
 /** Until the table has joined the encounter. */
 async function connected() {
@@ -165,7 +174,12 @@ describe('EncounterPage', () => {
     expect(screen.getByText('Vorschau Held auf 2,1')).toBeInTheDocument()
     await user.click(cell(2, 1))
 
-    expect(hub.calls('MoveToken')).toEqual([[{ tokenId: hero.id, x: 2, y: 1 }]])
+    // It shows at once and is sent once a double tap can't take it back any more.
+    expect(tokenText('Held')).toHaveTextContent('auf 2,1')
+    expect(hub.calls('MoveToken')).toEqual([])
+    await waitFor(() =>
+      expect(hub.calls('MoveToken')).toEqual([[{ tokenId: hero.id, x: 2, y: 1 }]]),
+    )
     expect(tokenText('Held')).toHaveTextContent('auf 2,1')
     // The own move jumps; it doesn't slide in.
     expect(tokenText('Held')).toHaveAttribute('data-instant', 'true')
@@ -175,6 +189,23 @@ describe('EncounterPage', () => {
     expect(tokenText('Held')).toHaveTextContent('auf 2,1')
     expect(tokenText('Held')).not.toHaveAttribute('data-instant')
     expect(screen.getByRole('button', { name: de.table.undo })).toBeInTheDocument()
+  })
+
+  it('never moves the token when the tap on the preview was the first of a double tap', async () => {
+    const { user } = openFight()
+    await connected()
+
+    await user.click(cell(0, 0))
+    await user.click(cell(1, 1))
+    await user.click(cell(1, 1))
+    expect(tokenText('Held')).toHaveTextContent('auf 1,1')
+    act(() => fakeBoard.doubleTap({ x: 1, y: 1 }))
+
+    expect(tokenText('Held')).toHaveTextContent('auf 0,0')
+    expect(screen.getByText('Vorschau Held auf 1,1')).toBeInTheDocument()
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    expect(hub.calls('MoveToken')).toEqual([])
+    expect(hub.calls('Ping')).toHaveLength(1)
   })
 
   it('confirms with the "Hierhin" button and cancels with "Abbrechen" or Escape', async () => {
@@ -202,8 +233,12 @@ describe('EncounterPage', () => {
 
     await user.click(cell(0, 0))
     expect(hub.calls('PreviewMove')).toHaveLength(0)
+    // A preview reaches the others once it has stood for a moment.
     await user.click(cell(1, 1))
+    expect(hub.calls('PreviewMove')).toHaveLength(0)
+    await waitFor(() => expect(hub.calls('PreviewMove')).toHaveLength(1))
     await user.click(cell(2, 1))
+    await waitFor(() => expect(hub.calls('PreviewMove')).toHaveLength(2))
     await user.click(screen.getByRole('button', { name: de.table.cancel }))
     expect(hub.calls('PreviewMove')).toEqual([
       [{ tokenId: hero.id, x: 1, y: 1 }],
@@ -211,12 +246,21 @@ describe('EncounterPage', () => {
     ])
     expect(hub.calls('ClearPreview')).toHaveLength(1)
 
-    // Confirming sends the move first, which clears the preview on the server.
+    // Confirming keeps the preview until the move, which clears it on the server.
     await user.click(cell(0, 0))
     await user.click(cell(1, 0))
+    await waitFor(() => expect(hub.calls('PreviewMove')).toHaveLength(3))
     await user.click(cell(1, 0))
+    await waitFor(() => expect(hub.calls('MoveToken')).toHaveLength(1))
     const order = hub.invocations.map((call) => call.method).filter((m) => m !== 'MarkActive')
-    expect(order.slice(-3)).toEqual(['PreviewMove', 'MoveToken', 'ClearPreview'])
+    expect(order.slice(-2)).toEqual(['PreviewMove', 'MoveToken'])
+
+    // A preview confirmed at once never reaches the others.
+    await user.click(cell(1, 0))
+    await user.click(cell(0, 0))
+    await user.click(cell(0, 0))
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    expect(hub.calls('PreviewMove')).toHaveLength(3)
   })
 
   it('draws an arrow where someone else is about to move a token', async () => {
@@ -259,6 +303,7 @@ describe('EncounterPage', () => {
     await user.click(cell(0, 0))
     await user.click(cell(1, 0))
     await user.click(cell(1, 0))
+    await waitFor(() => expect(hub.calls('MoveToken')).toHaveLength(1))
     act(() => hub.latest.emit('TokenMoved', moved({ x: 2, y: 0, version: 1, byUserId: 'dm2' })))
     await act(async () => answer.resolve(refused('targetInvalid')))
 
@@ -286,12 +331,13 @@ describe('EncounterPage', () => {
     expect(hub.calls('MoveToken')).toHaveLength(0)
   })
 
-  it('shows info for tokens the person can’t move, and takes their cell as a target', async () => {
+  it('shows the card of tokens the person can’t move, and takes their cell as a target', async () => {
     const { user } = openFight()
     await connected()
 
     await user.click(cell(3, 0)) // the goblin
-    expect(screen.getByText('Info Goblin 1')).toBeInTheDocument()
+    expect(within(card()).getByRole('heading', { name: 'Goblin 1' })).toBeInTheDocument()
+    expect(screen.queryByText(/^Info/)).not.toBeInTheDocument()
     expect(screen.queryByText(/^Ausgewählt/)).not.toBeInTheDocument()
 
     await user.click(cell(0, 0))

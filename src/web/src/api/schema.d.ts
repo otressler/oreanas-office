@@ -2293,6 +2293,430 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/campaigns/{campaignId}/statuses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StatusDefinitionView"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StatusDefinitionView"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/characters/{characterId}/status-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    characterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StatusListResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    characterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetStatusListRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StatusListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/dm-status-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StatusListResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetStatusListRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StatusListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/encounters/{encounterId}/status-picker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    encounterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StatusPickerResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/statuses/{statusId}/icons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    statusId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TokenImagesResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    statusId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GenerateTokenImageRequest"];
+                };
+            };
+            responses: {
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TokenImage"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/statuses/{statusId}/icon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    statusId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PickTokenImageRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2313,18 +2737,37 @@ export interface components {
             dmDisplayName: string;
             activeEncounter: null | components["schemas"]["ActiveEncounterSummary"];
         };
+        AddStatusRequest: {
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: uuid */
+            statusId: string;
+            /** Format: int32 */
+            level: null | number;
+        };
         ApiError: {
             code: components["schemas"]["ApiErrorCode"];
             field?: null | string;
         };
         /** @enum {unknown} */
-        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge";
+        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus";
+        ArrowDrawnEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: uuid */
+            userId: string;
+            color: string;
+            fromCell: components["schemas"]["BoardCell"] | null;
+            /** Format: uuid */
+            fromTokenId: null | string;
+            to: components["schemas"]["BoardCell"];
+        };
         /** @enum {unknown} */
         AssetFailure: "rejected" | "error" | null;
         /** @enum {unknown} */
         AssetOrigin: "generated" | "uploaded";
         /** @enum {unknown} */
-        AssetOwnerType: "battleMap" | "creatureType" | "character";
+        AssetOwnerType: "battleMap" | "creatureType" | "character" | "status";
         /** @enum {unknown} */
         AssetStatus: "queued" | "running" | "done" | "failed";
         AuthOptionsResponse: {
@@ -2343,6 +2786,12 @@ export interface components {
             /** Format: int32 */
             height: number;
         };
+        BoardCell: {
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+        };
         BoardMap: {
             /** Format: uuid */
             id: string;
@@ -2353,6 +2802,12 @@ export interface components {
             height: number;
             layout: components["schemas"]["MapLayout"];
             background: null | components["schemas"]["BoardBackground"];
+        };
+        BoardPerson: {
+            /** Format: uuid */
+            userId: string;
+            displayName: string;
+            pingColor: string;
         };
         BoardStateResponse: {
             /** Format: uuid */
@@ -2367,6 +2822,9 @@ export interface components {
             tokens: components["schemas"]["BoardToken"][];
             isSessionDm: boolean;
             undoableMove: null | components["schemas"]["UndoableMove"];
+            removedTokens: components["schemas"]["BoardToken"][];
+            statuses: components["schemas"]["StatusDefinitionView"][];
+            people: components["schemas"]["BoardPerson"][];
         };
         BoardToken: {
             /** Format: uuid */
@@ -2392,6 +2850,19 @@ export interface components {
             version: number;
             imageUrl: null | string;
             color: null | string;
+            statuses: components["schemas"]["BoardTokenStatus"][];
+            /** Format: date-time */
+            removedAt?: null | string;
+        };
+        BoardTokenStatus: {
+            /** Format: uuid */
+            statusId: string;
+            /** Format: int32 */
+            level: null | number;
+            /** Format: uuid */
+            appliedByUserId: string;
+            /** Format: date-time */
+            appliedAt: string;
         };
         CampaignResponse: {
             /** Format: uuid */
@@ -2464,6 +2935,13 @@ export interface components {
             /** Format: uuid */
             dmUserId: null | string;
         };
+        CreateStatusRequest: {
+            name: string;
+            iconDescription: null | string;
+            hasLevels: boolean;
+            /** Format: uuid */
+            characterId: null | string;
+        };
         /** @enum {unknown} */
         CreatureSize: "tiny" | "small" | "medium" | "large" | "huge" | "gargantuan";
         CreatureTypeIcon: {
@@ -2472,6 +2950,14 @@ export interface components {
             /** Format: uuid */
             assetId: string;
             url: string;
+        };
+        DrawArrowRequest: {
+            /** Format: uuid */
+            encounterId: string;
+            fromCell: components["schemas"]["BoardCell"] | null;
+            /** Format: uuid */
+            fromTokenId: null | string;
+            to: components["schemas"]["BoardCell"];
         };
         EncounterMapCopy: {
             /** Format: int32 */
@@ -2525,7 +3011,7 @@ export interface components {
         };
         HubResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | null;
         };
         ImageBudgetResponse: {
             /** Format: double */
@@ -2764,7 +3250,7 @@ export interface components {
         };
         MoveResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | null;
             move: components["schemas"]["TokenMovedEvent"] | null;
         };
         MoveTokenRequest: {
@@ -2783,11 +3269,34 @@ export interface components {
             /** Format: uuid */
             assetId: null | string;
         };
+        PingedEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: uuid */
+            userId: string;
+            color: string;
+            cell: components["schemas"]["BoardCell"] | null;
+            /** Format: uuid */
+            tokenId: null | string;
+        };
+        PingRequest: {
+            /** Format: uuid */
+            encounterId: string;
+            cell: components["schemas"]["BoardCell"] | null;
+            /** Format: uuid */
+            tokenId: null | string;
+        };
         RegisterRequest: {
             inviteToken: string;
             displayName: string;
             email: string;
             password: string;
+        };
+        RemoveStatusRequest: {
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: uuid */
+            statusId: string;
         };
         ResetLinkResponse: {
             url: string;
@@ -2820,8 +3329,55 @@ export interface components {
         };
         /** @enum {unknown} */
         SessionStatus: "planned" | "active" | "ended";
+        SetStatusLevelRequest: {
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: uuid */
+            statusId: string;
+            /** Format: int32 */
+            level: number;
+        };
+        SetStatusListRequest: {
+            statusIds: string[];
+        };
         StartEncounterRequest: {
             characters: components["schemas"]["CharacterPlacement"][];
+        };
+        StatusDefinitionView: {
+            /** Format: uuid */
+            id: string;
+            libraryKey: null | string;
+            name: string;
+            hasLevels: boolean;
+            iconUrl: null | string;
+            iconDescription: null | string;
+            /** Format: uuid */
+            characterId: null | string;
+        };
+        /** @enum {unknown} */
+        StatusListKind: "dm" | "character";
+        StatusListResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            characterId: null | string;
+            statuses: components["schemas"]["StatusDefinitionView"][];
+            canEdit: boolean;
+        };
+        StatusPickerList: {
+            kind: components["schemas"]["StatusListKind"];
+            /** Format: uuid */
+            characterId: null | string;
+            characterName: null | string;
+            statuses: components["schemas"]["StatusDefinitionView"][];
+        };
+        StatusPickerResponse: {
+            lists: components["schemas"]["StatusPickerList"][];
+        };
+        StatusResult: {
+            /** @enum {unknown} */
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | null;
+            change: components["schemas"]["TokenStatusesChangedEvent"] | null;
         };
         StoreMapResponse: {
             /** Format: uuid */
@@ -2975,9 +3531,9 @@ export interface components {
             sessions: components["schemas"]["SyncSession"][];
         };
         /** @enum {string} */
-        TableClientMethod: "EncounterEnded" | "IdleTimeout" | "MovePreviewCleared" | "MovePreviewed" | "TokenMoved";
+        TableClientMethod: "ArrowDrawn" | "EncounterEnded" | "IdleTimeout" | "MovePreviewCleared" | "MovePreviewed" | "Pinged" | "TokenMoved" | "TokenRemoved" | "TokenRestored" | "TokenStatusesChanged";
         /** @enum {string} */
-        TableHubMethod: "ClearPreview" | "JoinEncounter" | "MarkActive" | "MoveToken" | "PreviewMove" | "UndoMove";
+        TableHubMethod: "AddStatus" | "ClearPreview" | "DrawArrow" | "JoinEncounter" | "MarkActive" | "MoveToken" | "Ping" | "PreviewMove" | "RemoveStatus" | "RemoveToken" | "RestoreToken" | "SetStatusLevel" | "UndoMove";
         /** @enum {unknown} */
         Terrain: "void" | "floor" | "difficult" | "water" | "wall";
         TokenImage: {
@@ -3021,6 +3577,30 @@ export interface components {
             /** Format: uuid */
             byUserId: string;
             undo: boolean;
+        };
+        TokenRemovedEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: uuid */
+            byUserId: string;
+            /** Format: date-time */
+            removedAt: string;
+        };
+        TokenRestoredEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            token: components["schemas"]["BoardToken"];
+            definitions: components["schemas"]["StatusDefinitionView"][];
+        };
+        TokenStatusesChangedEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: uuid */
+            tokenId: string;
+            statuses: components["schemas"]["BoardTokenStatus"][];
+            definitions: components["schemas"]["StatusDefinitionView"][];
         };
         UndoableMove: {
             /** Format: uuid */

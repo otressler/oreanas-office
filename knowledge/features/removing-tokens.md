@@ -33,3 +33,10 @@ When the ghost is defeated, it leaves the board. Asked for by the project owner 
 - Board state leaves removed tokens out. The session DM's board state also carries the list of removed tokens for "Vom Feld genommen".
 - With [fog of war](/features/fog-of-war.md), a token restored onto a hidden cell, or one that is still `hidden`, reaches only the DM group.
 - Removed tokens stay removed when the fight ends, and when an interrupted fight is continued.
+
+# As built (stage 9)
+
+- Removing and restoring a token each raise its version, so a move racing a removal fails, and a player's undo of a removed character stays gone after it comes back.
+- The DM's list is a "Vom Feld genommen (n)" button next to "Kampf beenden", shown only while a token is removed; each row has "Zurückholen". The undo bar stays 8 seconds.
+- Only the session DM's board carries the removed tokens. A player whose only character is taken off sees "Meine Figur" switched off with the reason while the page stays open; after a reload the button is gone (open question for the project owner).
+- The fights list still counts removed creatures (open question for the project owner).

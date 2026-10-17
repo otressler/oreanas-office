@@ -200,7 +200,7 @@ function CropBox({
       if (!gesture || gesture.type === 'tap') return
       if (gesture.type === 'pan') {
         apply(({ size, view, box }) => panCrop(size, view, gesture.dx, gesture.dy, box))
-      } else {
+      } else if (gesture.type === 'pinch') {
         apply(({ size, view, box }) =>
           panCrop(
             size,

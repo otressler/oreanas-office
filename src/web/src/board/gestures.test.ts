@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { GestureTracker, TAP_MAX_MS, wheelZoomFactor, type PointerKind } from './gestures'
+import {
+  DOUBLE_TAP_MS,
+  DOUBLE_TAP_SLOP,
+  GestureTracker,
+  TAP_MAX_MS,
+  wheelZoomFactor,
+  type PointerKind,
+} from './gestures'
 
 const at = (id: number, x: number, y: number, time = 0, kind: PointerKind = 'touch') => ({
   id,
@@ -78,6 +85,167 @@ describe('GestureTracker', () => {
     const tracker = new GestureTracker()
     expect(tracker.move(at(7, 10, 10))).toBeNull()
     expect(tracker.up(at(7, 10, 10))).toBeNull()
+  })
+})
+
+describe('GestureTracker double taps', () => {
+  const doubleTapper = () => new GestureTracker({ doubleTap: true })
+
+  /** A first tap at (100, 100), released at time 100. */
+  function firstTap(tracker: GestureTracker, kind: PointerKind = 'touch') {
+    expect(tracker.down(at(1, 100, 100, 0, kind))).toBeNull()
+    expect(tracker.up(at(1, 100, 100, 100, kind))).toEqual({
+      type: 'tap',
+      point: { x: 100, y: 100 },
+    })
+  }
+
+  it('reports the first tap at once, takes it back on the second touch, then pings', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    expect(tracker.down(at(2, 110, 108, 100 + DOUBLE_TAP_MS))).toEqual({ type: 'takeBack' })
+    expect(tracker.move(at(2, 113, 110, 450))).toBeNull()
+    // At the first tap's point, wherever the second touch landed.
+    expect(tracker.up(at(2, 113, 110, 480))).toEqual({
+      type: 'doubleTap',
+      point: { x: 100, y: 100 },
+    })
+    expect(tracker.active).toBe(false)
+  })
+
+  it('works the same with a mouse double click', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker, 'mouse')
+    expect(tracker.down(at(2, 101, 100, 200, 'mouse'))).toEqual({ type: 'takeBack' })
+    expect(tracker.up(at(2, 101, 100, 260, 'mouse'))).toEqual({
+      type: 'doubleTap',
+      point: { x: 100, y: 100 },
+    })
+  })
+
+  it('draws an arrow when the second touch drags, and never pans meanwhile', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    expect(tracker.down(at(2, 100, 100, 200))).toEqual({ type: 'takeBack' })
+    // Within the tap slop nothing happens yet.
+    expect(tracker.move(at(2, 105, 100, 220))).toBeNull()
+    expect(tracker.move(at(2, 160, 130, 260))).toEqual({
+      type: 'arrow',
+      from: { x: 100, y: 100 },
+      to: { x: 160, y: 130 },
+      done: false,
+    })
+    expect(tracker.move(at(2, 240, 180, 300))).toEqual({
+      type: 'arrow',
+      from: { x: 100, y: 100 },
+      to: { x: 240, y: 180 },
+      done: false,
+    })
+    // Even back near the start, it stays an arrow.
+    expect(tracker.move(at(2, 102, 101, 340))?.type).toBe('arrow')
+    expect(tracker.up(at(2, 250, 190, 2000))).toEqual({
+      type: 'arrow',
+      from: { x: 100, y: 100 },
+      to: { x: 250, y: 190 },
+      done: true,
+    })
+    // The next press is plain again.
+    expect(tracker.down(at(3, 250, 190, 2050))).toBeNull()
+    expect(tracker.up(at(3, 250, 190, 2100))?.type).toBe('tap')
+  })
+
+  it('makes a second touch that comes too late a new tap', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    expect(tracker.down(at(2, 100, 100, 100 + DOUBLE_TAP_MS + 1))).toBeNull()
+    expect(tracker.up(at(2, 100, 100, 450))).toEqual({ type: 'tap', point: { x: 100, y: 100 } })
+  })
+
+  it('makes a second touch too far away a new tap', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    expect(tracker.down(at(2, 100 + DOUBLE_TAP_SLOP + 1, 100, 150))).toBeNull()
+    expect(tracker.up(at(2, 131, 100, 200))).toEqual({ type: 'tap', point: { x: 131, y: 100 } })
+  })
+
+  it('takes three quick taps as a double tap and a new tap', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    tracker.down(at(2, 100, 100, 150))
+    expect(tracker.up(at(2, 100, 100, 200))?.type).toBe('doubleTap')
+    expect(tracker.down(at(3, 100, 100, 250))).toBeNull()
+    expect(tracker.up(at(3, 100, 100, 300))?.type).toBe('tap')
+  })
+
+  it('does nothing more when the second touch is held', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    expect(tracker.down(at(2, 100, 100, 150))).toEqual({ type: 'takeBack' })
+    expect(tracker.up(at(2, 100, 100, 150 + TAP_MAX_MS + 1))).toBeNull()
+  })
+
+  it('pinches when a second finger joins the second touch, calling off an arrow', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    tracker.down(at(2, 100, 100, 150))
+    tracker.move(at(2, 160, 100, 180))
+    // The arrow ends where it started, which draws nothing.
+    expect(tracker.down(at(3, 300, 100, 200))).toEqual({
+      type: 'arrow',
+      from: { x: 100, y: 100 },
+      to: { x: 100, y: 100 },
+      done: true,
+    })
+    expect(tracker.move(at(3, 340, 100, 220))?.type).toBe('pinch')
+    expect(tracker.up(at(3, 340, 100, 240))).toBeNull()
+    expect(tracker.up(at(2, 160, 100, 260))).toBeNull()
+  })
+
+  it('pinches without an arrow when a second finger joins before the drag', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    tracker.down(at(2, 100, 100, 150))
+    expect(tracker.down(at(3, 200, 100, 170))).toBeNull()
+    expect(tracker.move(at(3, 250, 100, 190))?.type).toBe('pinch')
+  })
+
+  it('calls off an arrow when the browser takes the pointer', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    tracker.down(at(2, 100, 100, 150))
+    tracker.move(at(2, 180, 100, 180))
+    expect(tracker.cancel(2)).toEqual({
+      type: 'arrow',
+      from: { x: 100, y: 100 },
+      to: { x: 100, y: 100 },
+      done: true,
+    })
+    expect(tracker.active).toBe(false)
+  })
+
+  it('does not start a double tap after a pan or a cancelled press', () => {
+    const tracker = doubleTapper()
+    tracker.down(at(1, 100, 100, 0))
+    tracker.move(at(1, 150, 100, 50))
+    expect(tracker.up(at(1, 150, 100, 80))).toBeNull()
+    expect(tracker.down(at(2, 150, 100, 100))).toBeNull()
+    tracker.cancel(2)
+    expect(tracker.down(at(3, 150, 100, 150))).toBeNull()
+  })
+
+  it('pans as before with a single press after a tap', () => {
+    const tracker = doubleTapper()
+    firstTap(tracker)
+    // Too late for a double tap: a plain pan.
+    tracker.down(at(2, 100, 100, 1000))
+    expect(tracker.move(at(2, 140, 100, 1020))).toEqual({ type: 'pan', dx: 40, dy: 0 })
+  })
+
+  it('reports only plain taps without the option', () => {
+    const tracker = new GestureTracker()
+    firstTap(tracker)
+    expect(tracker.down(at(2, 100, 100, 150))).toBeNull()
+    expect(tracker.up(at(2, 100, 100, 200))).toEqual({ type: 'tap', point: { x: 100, y: 100 } })
   })
 })
 

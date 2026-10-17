@@ -10,6 +10,7 @@ using OreanasOffice.Server.Hosting;
 using OreanasOffice.Server.Images;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Sessions;
+using OreanasOffice.Server.Statuses;
 using OreanasOffice.Server.Sync;
 using OreanasOffice.Server.Table;
 
@@ -54,6 +55,7 @@ app.MapSyncEndpoints();
 app.MapMapStoreEndpoints();
 app.MapImageEndpoints();
 app.MapTokenImageEndpoints();
+app.MapStatusEndpoints();
 app.MapTableHub();
 app.MapImageHub();
 

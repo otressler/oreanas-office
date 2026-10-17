@@ -11,6 +11,7 @@ import { RedirectError } from '../auth/RedirectError'
 import { Button, ButtonLink, ErrorAlert, Note, PageTitle, Panel, TextField } from '../components/ui'
 import { de } from '../text/de'
 import { limits } from '../lib/limits'
+import { canVibrate, setVibrationEnabled, vibrationEnabled } from '../table/haptics'
 
 /** /profil: display name, Google, sign out, and the way to the admin page. */
 export function ProfilePage() {
@@ -48,6 +49,8 @@ export function ProfilePage() {
         )
       )}
 
+      <VibrationSwitch />
+
       <div className="mt-6 flex flex-wrap gap-3">
         {me.isAdmin && <ButtonLink to="/admin">{de.profile.admin}</ButtonLink>}
         <Button
@@ -62,6 +65,33 @@ export function ProfilePage() {
       </div>
       {signOutGuard.dialog}
     </div>
+  )
+}
+
+/**
+ * "Vibrieren" (knowledge/features/player-extras.md): remembered on this device, on by
+ * default. Only where the device can vibrate; iPhones and iPads can't from a web app.
+ */
+function VibrationSwitch() {
+  const [on, setOn] = useState(vibrationEnabled)
+  if (!canVibrate()) return null
+  return (
+    <Panel title={de.playerExtras.vibrateTitle}>
+      <label className="flex min-h-11 items-center gap-3 text-parchment">
+        <input
+          type="checkbox"
+          role="switch"
+          className="size-5 shrink-0 accent-candle"
+          checked={on}
+          onChange={(event) => {
+            setOn(event.target.checked)
+            setVibrationEnabled(event.target.checked)
+          }}
+        />
+        {de.playerExtras.vibrate}
+      </label>
+      <p className="text-sm text-dim">{de.playerExtras.vibrateHint}</p>
+    </Panel>
   )
 }
 

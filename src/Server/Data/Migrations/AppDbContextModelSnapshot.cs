@@ -468,6 +468,12 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
 
+                    b.Property<DateTimeOffset?>("RemovedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("RemovedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Size")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -488,6 +494,8 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasIndex("CharacterId");
 
                     b.HasIndex("CreatureTypeId");
+
+                    b.HasIndex("RemovedByUserId");
 
                     b.HasIndex("EncounterId", "CharacterId")
                         .IsUnique()
@@ -744,6 +752,266 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.ToTable("Sessions", (string)null);
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CampaignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("HasLevels")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("IconAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IconDescription")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("LibraryKey")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("IconAssetId");
+
+                    b.HasIndex("LibraryKey")
+                        .IsUnique()
+                        .HasFilter("[LibraryKey] IS NOT NULL");
+
+                    b.ToTable("StatusDefinitions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_StatusDefinitions_Library", "([LibraryKey] IS NOT NULL AND [CampaignId] IS NULL) OR ([LibraryKey] IS NULL AND [CampaignId] IS NOT NULL)");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "blinded",
+                            Name = "Blind"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "charmed",
+                            Name = "Bezaubert"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000003"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "deafened",
+                            Name = "Taub"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000004"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = true,
+                            LibraryKey = "exhaustion",
+                            Name = "Erschöpfung"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000005"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "frightened",
+                            Name = "Verängstigt"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000006"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "grappled",
+                            Name = "Gepackt"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000007"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "incapacitated",
+                            Name = "Kampfunfähig"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000008"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "invisible",
+                            Name = "Unsichtbar"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000009"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "paralyzed",
+                            Name = "Gelähmt"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-00000000000a"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "petrified",
+                            Name = "Versteinert"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-00000000000b"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "poisoned",
+                            Name = "Vergiftet"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-00000000000c"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "prone",
+                            Name = "Liegend"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-00000000000d"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "restrained",
+                            Name = "Festgesetzt"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-00000000000e"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "stunned",
+                            Name = "Betäubt"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-00000000000f"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "unconscious",
+                            Name = "Bewusstlos"
+                        });
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusList", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId")
+                        .IsUnique()
+                        .HasFilter("[CharacterId] IS NOT NULL");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CampaignId", "UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
+
+                    b.ToTable("StatusLists", t =>
+                        {
+                            t.HasCheckConstraint("CK_StatusLists_Owner", "([CharacterId] IS NOT NULL AND [UserId] IS NULL) OR ([CharacterId] IS NULL AND [UserId] IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusListEntry", b =>
+                {
+                    b.Property<Guid>("StatusListId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StatusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.HasKey("StatusListId", "StatusId");
+
+                    b.HasIndex("StatusId");
+
+                    b.ToTable("StatusListEntries");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Statuses.TokenStatus", b =>
+                {
+                    b.Property<Guid>("TokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StatusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AppliedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("AppliedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Level")
+                        .HasColumnType("int");
+
+                    b.HasKey("TokenId", "StatusId");
+
+                    b.HasIndex("AppliedByUserId");
+
+                    b.HasIndex("StatusId");
+
+                    b.ToTable("TokenStatuses");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Table.TokenMove", b =>
                 {
                     b.Property<long>("Id")
@@ -950,6 +1218,11 @@ namespace OreanasOffice.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("RemovedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Character");
 
                     b.Navigation("CreatureType");
@@ -1014,6 +1287,89 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Dm");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusDefinition", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Campaigns.Campaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("OreanasOffice.Server.Characters.Character", null)
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Campaign");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusList", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Campaigns.Campaign", null)
+                        .WithMany()
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Characters.Character", null)
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusListEntry", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Statuses.StatusDefinition", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Statuses.StatusList", "StatusList")
+                        .WithMany("Entries")
+                        .HasForeignKey("StatusListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Status");
+
+                    b.Navigation("StatusList");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Statuses.TokenStatus", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("AppliedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Statuses.StatusDefinition", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Encounters.Token", "Token")
+                        .WithMany("Statuses")
+                        .HasForeignKey("TokenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Status");
+
+                    b.Navigation("Token");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Table.TokenMove", b =>
                 {
                     b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
@@ -1045,9 +1401,19 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Tokens");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.Token", b =>
+                {
+                    b.Navigation("Statuses");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Sessions.GameSession", b =>
                 {
                     b.Navigation("Encounters");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusList", b =>
+                {
+                    b.Navigation("Entries");
                 });
 #pragma warning restore 612, 618
         }

@@ -114,6 +114,10 @@ public enum AssetOwnerType
     BattleMap,
     CreatureType,
     Character,
+
+    // A custom status's icon (knowledge/features/statuses.md, "Custom statuses"): a
+    // TokenIcon asset like creature icons, with the same style block.
+    Status,
 }
 
 public enum AssetOrigin

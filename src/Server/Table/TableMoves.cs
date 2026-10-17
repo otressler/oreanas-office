@@ -34,7 +34,8 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
     }
 
     // Checks in this order: the token exists in a campaign of the caller (TokenNotFound),
-    // its encounter is active (EncounterNotActive), the caller may move it (NotYourToken),
+    // its encounter is active (EncounterNotActive), it is on the board and not removed
+    // (TokenNotFound), the caller may move it (NotYourToken),
     // the footprint stands on walkable cells inside the map (TargetInvalid). Tokens may
     // overlap; there are no distance or turn checks.
     public async Task<MoveResult> MoveAsync(Guid userId, MoveTokenRequest? request)
@@ -131,6 +132,12 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
             return MoveCheck.Failed(ApiErrorCode.EncounterNotActive);
         }
 
+        // A token taken off the board isn't on it (knowledge/features/removing-tokens.md).
+        if (found.Token.RemovedAt is not null)
+        {
+            return MoveCheck.Failed(ApiErrorCode.TokenNotFound);
+        }
+
         if (!MayMove(userId, found.SessionDmUserId, found.Token.Kind, found.OwnerUserId))
         {
             return MoveCheck.Failed(ApiErrorCode.NotYourToken);
@@ -210,7 +217,12 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
 
     private static ApiErrorCode? UndoError(LatestTokenMove? latest, Guid userId, Guid? sessionDmUserId)
     {
-        if (latest is null || latest.Move.UndoneAt is not null || latest.Token.Version != latest.Move.Version)
+        // Removing a token raises its version too, so the undo of a move of a removed token
+        // stays gone once the token is back (knowledge/features/removing-tokens.md).
+        if (latest is null
+            || latest.Move.UndoneAt is not null
+            || latest.Token.Version != latest.Move.Version
+            || latest.Token.RemovedAt is not null)
         {
             return ApiErrorCode.NothingToUndo;
         }

@@ -1225,7 +1225,8 @@
    "colorIndex": null,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "ddc1b77b-d248-5a04-ba5b-84838473cbb8",
@@ -1242,7 +1243,8 @@
    "colorIndex": null,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "224cf06c-019a-54d5-8ad8-b5fcfae2f908",
@@ -1259,7 +1261,8 @@
    "colorIndex": null,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "25de291e-b741-5fb0-a451-2bef93f6cca1",
@@ -1276,7 +1279,8 @@
    "colorIndex": null,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "d05227ab-4f40-59ec-a82f-9a00b0d1efd5",
@@ -1293,7 +1297,8 @@
    "colorIndex": 0,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "2059ac01-6c42-51ee-aa16-212174427881",
@@ -1310,7 +1315,8 @@
    "colorIndex": 1,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "81b48f16-76c7-5eb4-bcf1-d53295f72320",
@@ -1327,7 +1333,8 @@
    "colorIndex": 2,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   },
   {
    "id": "3edf62d6-7477-5dc9-9e20-6df8451fd8c8",
@@ -1344,9 +1351,13 @@
    "colorIndex": 3,
    "version": 0,
    "imageUrl": null,
-   "color": null
+   "color": null,
+   "statuses": []
   }
  ],
  "isSessionDm": false,
- "undoableMove": null
+ "undoableMove": null,
+ "removedTokens": [],
+ "statuses": [],
+ "people": []
 }

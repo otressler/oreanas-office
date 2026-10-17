@@ -46,4 +46,10 @@ A short vibration tells the player that a move counted, without looking at the s
 - [ ] On an Android phone, a confirmed move and an undo each vibrate once; other people's moves don't. Switching "Vibrieren" off on the profile page stops it, also after a reload. (The double pulse for a rejected move is covered by the automated tests, since a rejection is hard to cause by hand.)
 - [ ] On an iPhone, moving works as before, without errors.
 
+# As built (stage 9)
+
+- "Meine Figur" sits at the lower right above "Ganze Karte", and above the token card when the card is docked at the bottom. It zooms to cells of at least 48 CSS pixels when the board is zoomed out further, since a big map's fitted view is smaller than a fingertip.
+- Vibration: 30 ms for a taken move or undo, 30–80–30 ms for a rejected move. The "Vibrieren" switch on the profile page is shown only where the browser can vibrate, so not on iPhones; it is stored on the device.
+- A move confirmed by tapping its preview vibrates after the server takes it, which is at least 300 ms after the tap: the confirm waits that long so a double tap can still take it back.
+
 [^mdn-vibrate]: MDN Web Docs, "Navigator: vibrate() method", https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate, browser compatibility table: no support in Safari on iOS.

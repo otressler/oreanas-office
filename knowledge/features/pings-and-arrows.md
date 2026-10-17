@@ -42,7 +42,7 @@ With a mouse, a double click works the same way, and a double click held and dra
 
 # Rules
 
-- Everyone in the encounter may ping and draw arrows: players, the session DM and other `dm` members. Spectators can't ([spectator view](/features/spectator-view.md)), except a shared screen in local mode, which pings in white as "Tisch" ([shared table](/features/shared-table.md)).
+- Everyone in the encounter may ping and draw arrows: players, the session DM and other `dm` members. Spectators can't ([spectator view](/features/spectator-view.md)); a shared screen in local mode, which pings in white as "Tisch" ([shared table](/features/shared-table.md)).
 - **Not saved.** Pings and arrows are sent to the others over the hub and live only on the devices. A device that joins later doesn't see the ones already shown. Nothing is written to the database, so they don't wake or keep anything ([hosting](/decisions/hosting.md)).
 - **Rate limit**: at most three pings or arrows per person in two seconds. The server drops the rest without an error.
 - Off while disconnected, like moving.
@@ -50,8 +50,9 @@ With a mouse, a double click works the same way, and a double click held and dra
 
 # Hub
 
-- Device → server: `Ping { cell }` or `Ping { tokenId }`; `DrawArrow { from, to }` with `from` a cell or a token id, `to` a cell.
-- Server → others in the encounter: `Pinged { userId, colour, cell | tokenId }` and `ArrowDrawn { userId, colour, from, to }`. The server checks that the cells lie inside the map and the token belongs to the encounter, and sets the colour, so a device can't ping as someone else.
+- Device → server: `Ping { encounterId, cell | tokenId }`; `DrawArrow { encounterId, fromCell | fromTokenId, to }`.
+- Server → others in the encounter: `Pinged { userId, color, cell | tokenId }` and `ArrowDrawn { userId, color, fromCell | fromTokenId, to }`. The server checks that the cells lie inside the map and the token is on the encounter's board, and sets the colour, so a device can't ping as someone else.
+- The board state lists every campaign member with their display name and ping colour (`people`), so a device draws its own pings at once in the right colour and names everyone's. The session DM's gold is `#f5b81c`; white is `#ffffff`.
 
 # Discoverability
 
@@ -62,3 +63,13 @@ Double tap is invisible. The first time someone opens a fight on a device, a sho
 - The gesture tracker in `src/web/src/board/gestures.ts` already treats a press longer than 500 ms as no tap and kept holding "free for later (ping)". This design uses the double tap instead, because a long press is slow at the table and phones use it for text selection and the context menu. Holding stays unused.
 - Browsers zoom on a double tap. The board already handles every touch itself, so this changes nothing outside the board.
 - Free draw (lines that fade) stays in the [backlog](/backlog.md). Arrows are its simple, single-stroke part.
+
+# As built (stage 9)
+
+- The double tap is the gesture tracker's `takeBack`, `doubleTap` and `arrow` gestures, only on the fight page's board. A second touch held longer than 500 ms without moving does nothing, but the first tap is still taken back.
+- A move confirmed by tapping its preview shows at once and is sent after 300 ms, so the second touch of a double tap can still take it back; the others keep seeing the preview until the move arrives. "Hierhin" sends at once.
+- A token card that just opened lets taps through for 300 ms, and the board pans to make room for it only after that, so it never swallows the second touch.
+- Off-screen markers are buttons at the edge of the uncovered board ("Zur Markierung von …"); an arrow counts as in view when either end is, and its marker points at its middle.
+- A ping or arrow over the rate limit still reports success to the sender, whose device draws it; nobody else sees it.
+- While the table isn't connected, a double tap or "Zeigen" only says "Ohne Verbindung zum Tisch lässt sich nichts zeigen."
+- A removed character still counts for its player's ping colour, so the colour stays the same for the whole fight (open question for the project owner).

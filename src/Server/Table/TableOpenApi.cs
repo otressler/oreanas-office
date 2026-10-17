@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
@@ -13,6 +15,10 @@ public sealed class TableOpenApi : IOpenApiDocumentTransformer
         [
             typeof(MoveTokenRequest), typeof(TokenMovedEvent), typeof(MovePreviewEvent), typeof(MovePreviewClearedEvent),
             typeof(HubResult), typeof(MoveResult),
+            typeof(BoardCell), typeof(PingRequest), typeof(DrawArrowRequest), typeof(PingedEvent), typeof(ArrowDrawnEvent),
+            typeof(AddStatusRequest), typeof(RemoveStatusRequest), typeof(SetStatusLevelRequest),
+            typeof(TokenStatusesChangedEvent), typeof(StatusResult),
+            typeof(TokenRemovedEvent), typeof(TokenRestoredEvent),
         ];
 
     public async Task TransformAsync(
@@ -23,18 +29,51 @@ public sealed class TableOpenApi : IOpenApiDocumentTransformer
             document.AddComponent(type.Name, await context.GetOrCreateSchemaAsync(type, null, cancellationToken));
         }
 
-        // The generator inlines MoveResult.Move and drops its nullability; it is null
-        // whenever Error is set.
-        if (document.Components?.Schemas?[nameof(MoveResult)] is OpenApiSchema result && result.Properties is { } properties)
+        // The generator inlines nested records and drops their nullability (MoveResult.Move is
+        // null whenever Error is set; PingRequest.Cell is null for a token ping). Every
+        // property of a message whose type has a component of its own becomes a reference,
+        // nullable where the C# property is.
+        var nullability = new NullabilityInfoContext();
+        foreach (var type in Messages)
         {
-            properties["move"] = new OpenApiSchema
+            if (document.Components?.Schemas?[type.Name] is not OpenApiSchema schema || schema.Properties is not { } properties)
             {
-                OneOf = [new OpenApiSchemaReference(nameof(TokenMovedEvent), document), new OpenApiSchema { Type = JsonSchemaType.Null }],
-            };
+                continue;
+            }
+
+            foreach (var parameter in type.GetConstructors().Single().GetParameters())
+            {
+                var name = JsonNamingPolicy.CamelCase.ConvertName(parameter.Name!);
+                if (Reference(document, parameter.ParameterType) is not { } reference)
+                {
+                    continue;
+                }
+
+                properties[name] = nullability.Create(parameter).WriteState == NullabilityState.Nullable
+                    ? new OpenApiSchema { OneOf = [reference, new OpenApiSchema { Type = JsonSchemaType.Null }] }
+                    : reference;
+            }
         }
 
         document.AddComponent("TableHubMethod", MethodNames<ITableHub>());
         document.AddComponent("TableClientMethod", MethodNames<ITableClient>());
+    }
+
+    // A reference to the type's component, or to an array of it for a list; null for types
+    // without a component of their own (strings, ids, numbers).
+    private static IOpenApiSchema? Reference(OpenApiDocument document, Type type)
+    {
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+        {
+            return Reference(document, type.GetGenericArguments()[0]) is { } item
+                ? new OpenApiSchema { Type = JsonSchemaType.Array, Items = item }
+                : null;
+        }
+
+        var underlying = Nullable.GetUnderlyingType(type) ?? type;
+        return underlying.IsClass && underlying != typeof(string) && document.Components?.Schemas?.ContainsKey(underlying.Name) == true
+            ? new OpenApiSchemaReference(underlying.Name, document)
+            : null;
     }
 
     public static IReadOnlyList<string> MethodNamesOf<T>() =>

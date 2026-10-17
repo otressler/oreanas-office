@@ -27,23 +27,23 @@ Every status list can hold the conditions of the 2024 rules.[^roll20-conditions]
 
 | Key | German name | Motif for the icon |
 |-----|-------------|--------------------|
-| `blinded` | Blind | A blindfold over closed eyes |
+| `blinded` | Blind | A white cloth blindfold across closed eyes, close up |
 | `charmed` | Bezaubert | A heart wrapped in a pink spiral |
 | `deafened` | Taub | An ear with broken sound waves |
-| `exhaustion` | Erschöpfung | A sagging hourglass, nearly run out (has levels 1–6) |
-| `frightened` | Verängstigt | A pale face with wide eyes, shrinking back |
+| `exhaustion` | Erschöpfung | A glowing golden hourglass, sagging, nearly run out (has levels 1–6) |
+| `frightened` | Verängstigt | A pale ghostly face with huge wide eyes and a screaming mouth |
 | `grappled` | Gepackt | A clawed hand gripping an arm |
 | `incapacitated` | Kampfunfähig | A dropped sword lying across a broken shield |
 | `invisible` | Unsichtbar | A faint, dotted silhouette |
 | `paralyzed` | Gelähmt | A rigid figure locked in crackling blue lightning |
 | `petrified` | Versteinert | A grey stone head, cracked |
 | `poisoned` | Vergiftet | A green drop with a small skull in it |
-| `prone` | Liegend | A figure lying flat on the ground |
+| `prone` | Liegend | A figure lying flat on a bright ground line, a bold arrow pointing down at it |
 | `restrained` | Festgesetzt | A wrist bound by heavy chains |
 | `stunned` | Betäubt | Stars circling over a dazed head |
-| `unconscious` | Bewusstlos | Closed eyes with a "Z" drifting up |
+| `unconscious` | Bewusstlos | Closed eyes under a big white sleep swirl |
 
-The German names follow the German edition of the rules, as the project owner confirmed on 2026-10-16; the keys are fixed. The motifs are a first proposal for the prompts.
+The German names follow the German edition of the rules, as the project owner confirmed on 2026-10-16; the keys are fixed. The motifs are the ones the T1 icons were generated from (2026-10-16); five were changed from the first proposal because they didn't read at 20 pixels.
 
 # Icons
 
@@ -90,5 +90,13 @@ See [status](/domain/status.md).
 - Rules effects: Prone doesn't change movement, Restrained doesn't stop a move.
 - Terrain statuses (burning, webbed, darkness on cells) stay in the [backlog](/backlog.md); they would use the same status lists later.
 - Hit points move to the [backlog](/backlog.md) (question 13).
+
+# As built (stage 9)
+
+- The 15 condition icons are `src/web/public/statuses/<key>.webp` (T1, 256 px), precached by the service worker. Library statuses have fixed ids, seeded by the `Statuses` migration.
+- A status list is made the first time it is read (the status list editor or the picker), with the 15 conditions ([status](/domain/status.md)). Characters show theirs under "Zustandsliste" on their row in the campaign's character list, readable by every member and editable by the owner and `dm` members; each `dm` member has "Meine Zustandsliste (Spielleitung)" on the campaign page. Editing is ↑/↓, remove and add; every change saves the whole list.
+- The picker opens from the token card's "Status hinzufügen" and stays open for several statuses until "Fertig"; a status already on the token shows as set, and tapping it takes it off where allowed. Characters taken off the board are left out of the session DM's picker.
+- Adding a status the token has already gives "Die Figur hat diesen Zustand schon"; two people adding the same one at once can't both succeed. Removing or changing a level only touches the status as the person saw it: if someone else took it off and put it on again meanwhile, it stays.
+- A custom status's icon is generated, versioned and picked like a creature icon; the prompt is the `image-assets` skill's status icon template with "drawn as a simple bold emblem rather than a detailed scene".
 
 [^roll20-conditions]: Conditions | D&D 2024 (Roll20 compendium)

@@ -13,6 +13,10 @@ public static class TableExtensions
     {
         builder.Services.Configure<TableOptions>(builder.Configuration.GetSection(TableOptions.Section));
         builder.Services.AddScoped<TableMoves>();
+        builder.Services.AddScoped<TableStatuses>();
+        builder.Services.AddScoped<TableRemovals>();
+        builder.Services.AddScoped<TablePings>();
+        builder.Services.AddSingleton<TablePingLimiter>();
         builder.Services.AddSingleton<TableActivity>();
         builder.Services.AddSingleton<TablePreviews>();
         builder.Services.AddSingleton<TableActivityFilter>();
