@@ -393,7 +393,7 @@ public static class MapImport
                 X = creature.X,
                 Y = creature.Y,
                 Elevation = elevation,
-                CreatedAt = now,
+                CreatedAt = now.AddTicks(i),
             });
         }
 
