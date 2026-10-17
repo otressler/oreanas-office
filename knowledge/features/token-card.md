@@ -63,4 +63,4 @@ Compared with the request, two things differ. The project owner confirmed both, 
 
 # Not included
 
-The [spectator view](/features/spectator-view.md) shows no card: nobody taps a screen in the middle of the table. In local mode it does, since people then move characters from it ([shared table](/features/shared-table.md)).
+The [spectator view](/features/spectator-view.md) shows no card: nobody taps a screen in the middle of the table. A shared screen in local mode shows it, since people then move characters from it ([shared table](/features/shared-table.md)).

@@ -9,14 +9,14 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-16T07:55:00Z }
 
 # Goal
 
-A tablet in the middle of the table shows the board for everyone, without anyone working it. When the DM starts a fight, the tablet shows it; when the fight ends, it waits for the next one. Planned for stage 10 ([implementation plan](/implementation-plan.md)); asked for by the project owner on 2026-10-16. It is the watching half of the former **table view** in the [backlog](/backlog.md); moving characters from the same screen is **local mode** in the [shared table](/features/shared-table.md), also stage 10.
+A tablet in the middle of the table shows the board for everyone, without anyone working it. When the DM starts a fight, the tablet shows it; when the fight ends, it waits for the next one. Planned for stage 10 ([implementation plan](/implementation-plan.md)); asked for by the project owner on 2026-10-16. It is the watching half of the former **table view** in the [backlog](/backlog.md); moving characters from a screen is **local mode** in the [shared table](/features/shared-table.md), also stage 10, and a different mode of the device (project owner, 2026-10-17).
 
 # Spectating is a mode of the device, not of the person
 
 - **A spectator needs an account.** Registration stays invite-only ([auth](/decisions/auth.md)).
 - **The usual case**: one person signs in with their own account on two devices, as a player on their phone and as a spectator on the tablet (project owner, 2026-10-16). So spectating belongs to the connection, not to the account. The same account can play on one device and watch on another at the same time.
 - **A spectator connection always sees what players see**, whoever is signed in, the session DM included. The tablet never shows hidden creatures or fog ([fog of war](/features/fog-of-war.md)).
-- **A spectator connection only watches.** It can't move, ping, draw arrows, set statuses or remove tokens, even when the account could on another device. Its own characters aren't drawn on top, and the person counts once in "who's here", where the screen shows as a table icon. The exception is local mode, where a member's spectator screen becomes a shared screen with controls ([shared table](/features/shared-table.md)).
+- **A spectator connection only watches.** It can't move, ping, draw arrows, set statuses or remove tokens, even when the account could on another device. Its own characters aren't drawn on top, and the person counts once in "who's here", where the screen shows as a table icon. This holds in local mode too: moving characters is a separate shared screen that members open, not a spectator screen ([shared table](/features/shared-table.md)).
 - **The device may differ every time** (project owner, 2026-10-16), so nothing depends on a particular tablet. Any device a person signs in on can become the spectator screen.
 
 # Joining a session
@@ -65,4 +65,4 @@ The link and the QR code open a join page that asks the signed-in account **"Mit
 
 # Not included
 
-Moving characters from the shared screen: that is local mode in the [shared table](/features/shared-table.md).
+Moving characters: that is the shared screen of local mode in the [shared table](/features/shared-table.md), a different mode of the device.

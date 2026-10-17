@@ -48,4 +48,4 @@ Session attendance isn't modelled. Who takes part in a fight comes from the [tok
 
 # Later
 
-Stage 10: a `playMode` field, `byod` ("Eigene Geräte", default) or `local` ("Gemeinsamer Bildschirm"), set by the session DM on the session page, also during a fight. In local mode, a spectator screen opened by a campaign member moves every player character ([shared table](/features/shared-table.md)).
+Stage 10: a `playMode` field, `byod` ("Eigene Geräte", default) or `local` ("Gemeinsamer Bildschirm"), set by the session DM on the session page, also during a fight. In local mode, any campaign member may open a shared screen, a mode of the device separate from spectating, which moves every player character ([shared table](/features/shared-table.md)).

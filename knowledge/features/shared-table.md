@@ -1,7 +1,7 @@
 ---
 type: Feature
 title: Shared table
-description: Avatars on the board show who is connected to the fight right now, and in local mode the shared screen in the middle of the table moves every player character, while the DM keeps the hidden things on their own device.
+description: Avatars on the board show who is connected to the fight right now, and in local mode a shared screen in the middle of the table, opened by any member, moves every player character, while the DM keeps the hidden things on their own device.
 tags: [feature, table, realtime, players, spectator]
 status: draft
 generated: { by: claude-code/claude-opus-5-5, at: 2026-10-16T09:12:56Z }
@@ -14,7 +14,7 @@ Two backlog ideas that belong to the table as a whole, scheduled for stage 10 by
 - **Who's here**: everyone sees at a glance who is connected to the fight, so the DM notices a remote player who dropped out.
 - **Local mode**: a group that plays around one tablet moves every character from that screen, without phones or accounts for the players. The DM keeps their own device for the creatures and everything hidden.
 
-Local mode builds on the [spectator view](/features/spectator-view.md), which already puts a screen in the middle of the table but only lets it watch. Both follow the [overview](/overview.md) principle "show, don't enforce" and work for in-person, remote and mixed groups ([play setting](/decisions/play-setting.md)).
+Local mode is not the spectator view. A [spectator](/features/spectator-view.md) is a read-only device that only ever watches; local mode is a play mode the session DM flags, in which a member's device becomes a **shared screen** that moves characters (project owner, 2026-10-17). Both follow the [overview](/overview.md) principle "show, don't enforce" and work for in-person, remote and mixed groups ([play setting](/decisions/play-setting.md)).
 
 Proposals in this concept that the project owner hasn't confirmed yet are marked with their question number in the [implementation plan](/implementation-plan.md).
 
@@ -43,10 +43,13 @@ Proposals in this concept that the project owner hasn't confirmed yet are marked
 - The **session DM** sets it on the session page, also while a fight runs. A change reaches every device of the session at once; nothing reloads.
 - Other `dm` members and players see the mode on the session page but don't change it.
 
-**Which screens get the controls** (question 29)
+**Which screens get the controls** (question 29, answered 2026-10-17)
 
-- In local mode, every **spectator screen opened by a campaign member** becomes a **shared screen**: it keeps showing what players see, and it may move every character in the fight, whoever owns it.
-- A spectator screen of a **session spectator** who isn't a member only watches, also in local mode. Someone who scanned the QR code to watch shouldn't be able to move the party.
+- **A spectator screen never gets controls**, in either play mode. Spectating stays a read-only mode of the device.
+- While the session is in local mode, **any campaign member** (not only the DM) opens a **shared screen** from the session page with **"Gemeinsamen Bildschirm öffnen"**. Opening it is a mode of the connection, like spectating: the same account may play on a phone and run the shared screen on a tablet.
+- A shared screen follows the session's fights by itself and shows what players see, like a spectator screen ([spectator view](/features/spectator-view.md)). It may move every character in the fight, whoever owns it.
+- **Connection**: a shared screen gets the spectator screen's treatment: no idle timeout while its session is active, and a wake lock, so a tablet in the middle of the table stays connected ([spectator view](/features/spectator-view.md), "Connection and costs"). Confirmed 2026-10-17.
+- **Someone who isn't a campaign member** can't open a shared screen, so a QR-code spectator can't move the party.
 - The shared screen stays in the players' hub group, whoever is signed in, the session DM included. Hidden creatures and fog never reach it ([fog of war](/features/fog-of-war.md)). The DM works hidden things on their own device, as the backlog had it.
 
 **Players' own devices keep working** (question 30)
@@ -68,7 +71,7 @@ Proposals in this concept that the project owner hasn't confirmed yet are marked
 - **Tapping** follows a player's rules, with every character counting as the person's own: a tap on a character selects it, a tap on a creature opens only its card. Every character is drawn above the creatures, so none gets buried.
 - **The view** starts with the whole map, as on the spectator screen. Pinch and drag zoom and pan; "Ganze Karte" in the corner menu goes back. The screen doesn't zoom back by itself.
 - A move's preview shows on the other devices in the moved character's ring colour, as when its owner moves it.
-- **Switching back** to "Eigene Geräte" during a fight: the shared screen lets go of a selected token, its preview disappears, and it only watches again.
+- **Switching back** to "Eigene Geräte" during a fight: the shared screen lets go of a selected token, its preview disappears, and it only watches again, like a spectator screen. "Gemeinsamen Bildschirm öffnen" is gone from the session page until local mode is switched on again.
 
 **Who did it**
 
@@ -84,16 +87,16 @@ Proposals in this concept that the project owner hasn't confirmed yet are marked
 
 # Not included
 
-- Turning a player's phone into the shared screen by itself: any member's device becomes one through "Als Zuschauer öffnen" ([spectator view](/features/spectator-view.md)).
+- Turning a spectator screen into a shared screen: they are different modes of the device ([spectator view](/features/spectator-view.md)).
 - Who's here outside a fight, such as on the session page between fights.
 
 # Gate
 
 - [ ] Four phones and the DM's laptop are in a fight: the row shows five avatars, full. A player locks their phone; within about 10 seconds their avatar greys out on every device, and comes back when they open the app.
 - [ ] A player signed in on a phone and on the spectator tablet appears once; the tablet appears as the table icon.
-- [ ] The DM switches the session to "Gemeinsamer Bildschirm" during a fight; the tablet moves every character, and each move shows on the phones. It can't select a goblin.
+- [ ] The DM switches the session to "Gemeinsamer Bildschirm" during a fight. A spectator tablet still only watches. A player (not the DM) opens "Gemeinsamen Bildschirm öffnen" on another tablet; it moves every character, and each move shows on the phones. It can't select a goblin.
 - [ ] The tablet pings a cell in white with "Tisch", puts "Liegend" on a character and removes it again; it undoes its own last move.
 - [ ] A player's phone still moves their character in local mode, and its undo doesn't touch the tablet's move.
 - [ ] A tablet signed in as the session DM shows no hidden goblin and no fog layout, also in local mode.
-- [ ] A spectator who isn't a campaign member can't move anything in local mode.
-- [ ] Switching back to "Eigene Geräte" ends the tablet's selection, and it only watches again.
+- [ ] A spectator who isn't a campaign member can't move anything and isn't offered a shared screen in local mode.
+- [ ] Switching back to "Eigene Geräte" ends the shared screen's selection, and it only watches again.
