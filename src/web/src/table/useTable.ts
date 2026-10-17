@@ -7,8 +7,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   AddStatusRequest,
   ArrowDrawnEvent,
+  BoardCell,
   BoardState,
   DrawArrowRequest,
+  FogChangedEvent,
   HubResult,
   MoveResult,
   MoveTokenRequest,
@@ -16,6 +18,8 @@ import type {
   PingedEvent,
   RemoveStatusRequest,
   SetStatusLevelRequest,
+  SpawnCreaturesRequest,
+  SpawnResult,
   StatusResult,
   TokenMovedEvent,
   TokenStatusesChangedEvent,
@@ -32,6 +36,13 @@ import {
   rememberMove,
   type KnownPositions,
 } from './merge'
+import {
+  applyAdded,
+  applyFogChanged,
+  applyRevealed,
+  applyTokenHidden,
+  type KnownFog,
+} from './fogMerge'
 import { NO_PREVIEWS, withPreview, withoutPreview, type Previews } from './previews'
 
 export interface Table {
@@ -60,6 +71,19 @@ export interface Table {
   applyStatuses: (change: TokenStatusesChangedEvent) => void
   removeToken: (tokenId: string) => Promise<HubResult>
   restoreToken: (tokenId: string) => Promise<HubResult>
+
+  // ---- Stage 10: fog and spawning, for the session DM (knowledge/features/fog-of-war.md) ----
+
+  /** The newest fog seen from events; mergeFog puts it into a reloaded board that has an older one. */
+  knownFog: KnownFog | null
+  /** Reveals or hides cells. Everyone, the caller included, gets FogChanged. */
+  changeFog: (cells: BoardCell[], reveal: boolean) => Promise<HubResult>
+  /** Reveals or hides creatures; the change also arrives as events. */
+  setTokensHidden: (tokenIds: string[], hidden: boolean) => Promise<HubResult>
+  /** Puts new creatures on the board; they arrive as TokensAdded. */
+  spawnCreatures: (request: Omit<SpawnCreaturesRequest, 'encounterId'>) => Promise<SpawnResult>
+  /** Takes back the latest fog change, reveal or spawn. */
+  undoChange: () => Promise<HubResult>
 }
 
 /** Others' pings and arrows as they arrive; not kept anywhere, so the page keeps them. */
@@ -83,6 +107,7 @@ export function useTable(
   const [status, setStatus] = useState<TableStatus>('connecting')
   const [known, setKnown] = useState<KnownPositions>(() => new Map())
   const [previews, setPreviews] = useState<Previews>(NO_PREVIEWS)
+  const [knownFog, setKnownFog] = useState<KnownFog | null>(null)
   const connection = useRef<TableConnection | null>(null)
 
   const apply = useCallback(
@@ -107,6 +132,19 @@ export function useTable(
   const takeStatuses = useCallback(
     (change: TokenStatusesChangedEvent) => updateBoard((board) => applyStatuses(board, change)),
     [updateBoard],
+  )
+
+  const takeFog = useCallback(
+    (event: FogChangedEvent) => {
+      const key = encounterKeys.board(campaignId, encounterId)
+      const board = queryClient.getQueryData<BoardState>(key)
+      if (!board) return
+      const next = applyFogChanged(board, event)
+      if (next === board) return
+      queryClient.setQueryData<BoardState>(key, next)
+      if (next.fog) setKnownFog({ version: next.fog.version, hiddenCells: next.fog.hiddenCells })
+    },
+    [queryClient, campaignId, encounterId],
   )
 
   const reload = useCallback(() => {
@@ -137,6 +175,10 @@ export function useTable(
       onStatusesChanged: takeStatuses,
       onTokenRemoved: (removed) => updateBoard((board) => applyRemoved(board, removed)),
       onTokenRestored: (restored) => updateBoard((board) => applyRestored(board, restored)),
+      onFogChanged: takeFog,
+      onTokenRevealed: (revealed) => updateBoard((board) => applyRevealed(board, revealed)),
+      onTokenHidden: (hidden) => updateBoard((board) => applyTokenHidden(board, hidden)),
+      onTokensAdded: (added) => updateBoard((board) => applyAdded(board, added)),
     })
     connection.current = table
     table.start()
@@ -145,7 +187,7 @@ export function useTable(
       if (connection.current === table) connection.current = null
       setStatus('connecting')
     }
-  }, [running, encounterId, apply, reload, takeStatuses, updateBoard])
+  }, [running, encounterId, apply, reload, takeStatuses, takeFog, updateBoard])
 
   const move = useCallback(
     (request: MoveTokenRequest) =>
@@ -197,6 +239,29 @@ export function useTable(
     [],
   )
 
+  const changeFog = useCallback(
+    (cells: BoardCell[], reveal: boolean) =>
+      connection.current?.changeFog({ encounterId, cells, reveal }) ??
+      Promise.reject(new NotConnectedError()),
+    [encounterId],
+  )
+  const setTokensHidden = useCallback(
+    (tokenIds: string[], hidden: boolean) =>
+      connection.current?.setTokensHidden({ encounterId, tokenIds, hidden }) ??
+      Promise.reject(new NotConnectedError()),
+    [encounterId],
+  )
+  const spawnCreatures = useCallback(
+    (request: Omit<SpawnCreaturesRequest, 'encounterId'>) =>
+      connection.current?.spawnCreatures({ encounterId, ...request }) ??
+      Promise.reject(new NotConnectedError()),
+    [encounterId],
+  )
+  const undoChange = useCallback(
+    () => connection.current?.undoChange() ?? Promise.reject(new NotConnectedError()),
+    [],
+  )
+
   return {
     status: running ? status : null,
     known,
@@ -214,5 +279,10 @@ export function useTable(
     applyStatuses: takeStatuses,
     removeToken,
     restoreToken,
+    knownFog,
+    changeFog,
+    setTokensHidden,
+    spawnCreatures,
+    undoChange,
   }
 }

@@ -1742,7 +1742,149 @@ export const de = {
   },
 
   /** Fog of war and creature spawn (fog frontend lane). */
-  fog: {},
+  fog: {
+    /** Tapping a hidden cell as a player: no terrain, no height. */
+    unexplored: 'Unerkundet',
+    /** The closed-eye mark's accessible name. */
+    hiddenMark: 'Verborgen',
+    needsConnection: 'Dafür braucht es eine Verbindung zum Tisch.',
+
+    /** The session DM's board: fog mode, previews, the confirm bar. */
+    board: {
+      fogButton: 'Nebel',
+      playerView: 'Spieleransicht',
+      /** Shown while "Spieleransicht" is on. */
+      playerViewNote: 'So sehen die Spielenden den Tisch. Es wird nichts gesendet.',
+      toolsLabel: 'Nebelwerkzeuge',
+      tools: { area: 'Bereich', brush: 'Pinsel', rect: 'Rechteck' },
+      reveal: 'Aufdecken',
+      hide: 'Verdecken',
+      directionLabel: 'Felder',
+      hints: {
+        area: 'Tippe auf ein Feld, um einen Bereich zu wählen.',
+        brush: 'Tippe auf die Felder, die du ändern willst.',
+        rectFirst: 'Tippe auf die erste Ecke.',
+        rectSecond: 'Tippe auf die gegenüberliegende Ecke.',
+      },
+      noArea: 'Auf diesem Feld liegt kein Bereich.',
+      chooseArea: 'Welcher Bereich?',
+      /** "12 Felder aufdecken?" / "1 Feld verdecken?" */
+      confirmReveal: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} aufdecken?`,
+      confirmHide: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} verdecken?`,
+      nothingToChange: 'Diese Felder sind schon so.',
+      cancel: 'Abbrechen',
+      undo: 'Rückgängig',
+      /** The undo bar after a change, e.g. "12 Felder aufgedeckt". */
+      revealed: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} aufgedeckt`,
+      hidden: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} verdeckt`,
+      failed: 'Die Änderung ist nicht angekommen. Versuch es bitte noch einmal.',
+      undoFailed: 'Das Rückgängigmachen ist nicht angekommen. Versuch es bitte noch einmal.',
+    },
+
+    /** The token card's buttons for a creature. */
+    token: {
+      reveal: 'Aufdecken',
+      hide: 'Verbergen',
+      revealAllHere: 'Alle verborgenen hier',
+      /** A note on a hidden creature's card. */
+      hiddenNote: 'Verborgen: Nur du siehst diese Kreatur.',
+      /** The undo bar, e.g. "Goblin aufgedeckt". */
+      revealed: (label: string) => `${label} aufgedeckt`,
+      hidden: (label: string) => `${label} verborgen`,
+      revealedMany: (count: number) => `${count} Kreaturen aufgedeckt`,
+      failed: 'Das Aufdecken oder Verbergen ist nicht angekommen. Versuch es bitte noch einmal.',
+    },
+
+    /** "Kreatur hinzufügen": the picker, placing, the confirm bar (creature-spawn.md). */
+    spawn: {
+      button: 'Kreatur hinzufügen',
+      pickerTitle: 'Welche Kreatur?',
+      usedHere: 'In diesem Kampf',
+      others: 'Weitere Arten',
+      loading: 'Arten werden geladen…',
+      loadFailed: 'Die Arten konnten nicht geladen werden.',
+      empty: 'Diese Kampagne hat noch keine Kreaturenart.',
+      /** A type's button, e.g. "Goblin hinzufügen". */
+      pick: (name: string) => `${name} hinzufügen`,
+      newType: 'Neue Art',
+      newName: 'Name',
+      newSize: 'Größe',
+      newCreate: 'Anlegen',
+      newNameTaken: 'Diese Kampagne hat schon eine Art mit diesem Namen.',
+      newFailed: 'Die Art konnte nicht angelegt werden. Versuch es bitte noch einmal.',
+      close: 'Schließen',
+      /** While placing; `name` is the picked type. */
+      placing: (name: string) =>
+        `${name}: Tippe auf Felder, um Kreaturen zu platzieren. Tippe auf eine platzierte Kreatur, um sie wegzunehmen.`,
+      /** Chips of what is placed, e.g. "Goblin × 2". */
+      placed: (name: string, count: number) => `${name} × ${count}`,
+      otherType: 'Andere Art',
+      done: 'Fertig',
+      /** The confirm bar: "3 Kreaturen erscheinen lassen?" */
+      confirm: (count: number) =>
+        `${count} ${count === 1 ? 'Kreatur' : 'Kreaturen'} erscheinen lassen?`,
+      hidden: 'Verborgen',
+      appear: 'Erscheinen lassen',
+      cancel: 'Abbrechen',
+      back: 'Weiter platzieren',
+      /** The undo bar, e.g. "3 Kreaturen erschienen". */
+      appeared: (count: number) => `${count} ${count === 1 ? 'Kreatur' : 'Kreaturen'} erschienen`,
+      undo: 'Rückgängig',
+      failed: 'Die Kreaturen sind nicht angekommen. Versuch es bitte noch einmal.',
+    },
+
+    /** The map editor, encounter mode. */
+    editor: {
+      tool: 'Nebel',
+      /** The panel's heading for areas. */
+      areas: 'Bereiche',
+      turnOn: 'Nebel einschalten',
+      turnOnHelp:
+        'Mit Nebel ist die ganze Karte für die Spielenden verdeckt. Danach deckst du auf, was sie zuerst sehen sollen.',
+      turnOff: 'Nebel ausschalten',
+      on: 'Nebel an',
+      shapes: { brush: 'Pinsel', rect: 'Rechteck', fill: 'Füllen' },
+      shapesLabel: 'Werkzeug',
+      reveal: 'Aufdecken',
+      hide: 'Verdecken',
+      modeLabel: 'Wirkung',
+      revealAll: 'Alles aufdecken',
+      hideAll: 'Alles verdecken',
+      counts: (hidden: number, total: number) => `${hidden} von ${total} Feldern verdeckt`,
+      help: 'Ziehen oder Klicken verdeckt oder deckt auf. Verdeckte Felder siehst du schraffiert; die Spielenden sehen dort nichts.',
+      /** The cells chosen for a new area or a redraw. */
+      selectCells: 'Felder wählen',
+      selectCellsHelp:
+        'Schalte „Felder wählen“ ein und male mit dem Pinsel oder Rechteck die Felder eines Bereichs, statt Nebel zu ändern.',
+      selectionCount: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} gewählt`,
+      clearSelection: 'Auswahl aufheben',
+      createArea: 'Bereich anlegen',
+      areaName: 'Name des Bereichs',
+      areaNameInvalid: 'Der Name braucht 1 bis 40 Zeichen.',
+      noAreas: 'Noch kein Bereich.',
+      areaCells: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'}`,
+      rename: 'Umbenennen',
+      redraw: 'Neu zeichnen',
+      delete: 'Löschen',
+      renameLabel: (name: string) => `${name} umbenennen`,
+      redrawLabel: (name: string) => `${name} mit der Auswahl neu zeichnen`,
+      deleteLabel: (name: string) => `${name} löschen`,
+      showLabel: (name: string) => `${name} auf der Karte zeigen`,
+      /** The creature panel's switch and the placement option. */
+      hiddenSwitch: 'Verborgen',
+      hiddenHelp: 'Nur du siehst diese Kreatur, bis du sie am Tisch aufdeckst.',
+      placeHidden: 'Verborgen platzieren',
+      placeHiddenHelp: 'Neue Kreaturen werden verborgen hingestellt.',
+      /** The Prüfung note: an entrance lies entirely in the fog. */
+      checksTitle: 'Prüfung',
+      entranceInFog: (label: string) => `${label} liegt ganz im Nebel.`,
+      entranceInFogHint: 'Meist beginnen die Charaktere dort. Die Begegnung kann trotzdem starten.',
+      /** An entrance without a label. */
+      entrance: 'Ein Eingang',
+      /** Unnumbered creatures in an encounter with fog. */
+      numbersNote: 'Mit Nebel bekommen Kreaturen ihre Nummer erst, wenn die Spielenden sie sehen.',
+    },
+  },
 
   /** The spectator screen and the join page (spectator lane). */
   spectator: {},
