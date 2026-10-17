@@ -99,6 +99,19 @@ export async function tapCell(page: Page, x: number, y: number) {
   const wait = (lastTaps.get(page) ?? 0) + 350 - Date.now()
   if (wait > 0) await page.waitForTimeout(wait)
   const point = await cellCentre(page, x, y)
+  // A cell under the token card, a hint or a button can't be tapped; say so instead of
+  // tapping whatever lies on top.
+  const covering = await page.evaluate(
+    ({ px, py }) => {
+      const hit = document.elementFromPoint(px, py)
+      if (!hit) return 'nothing: the cell is off screen'
+      if (hit.closest('[data-board-surface]')) return null
+      const region = hit.closest('[aria-label], [role]')
+      return region?.getAttribute('aria-label') ?? region?.getAttribute('role') ?? hit.tagName
+    },
+    { px: point.x, py: point.y },
+  )
+  if (covering) throw new Error(`Cell (${x}, ${y}) is covered by "${covering}"`)
   await page.mouse.click(point.x, point.y)
   lastTaps.set(page, Date.now())
 }

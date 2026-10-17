@@ -3,7 +3,7 @@
 // (0, 5). Each call makes new accounts and a new campaign, so specs don't share state.
 import { randomUUID } from 'node:crypto'
 import { expect, type Browser, type Page } from '@playwright/test'
-import { text } from './support.ts'
+import { tapCell, text } from './support.ts'
 
 export async function registerOnNewDevice(
   browser: Browser,
@@ -71,10 +71,12 @@ export async function startFight(browser: Browser, page: Page) {
   await mira.goto('/')
   await expect(mira).toHaveURL(/\/kampf\//)
   await expect(indicator(mira)).toHaveAttribute('data-status', 'connected')
+  await clearBoard(oreana)
+  await clearBoard(mira)
   return { oreana, mira }
 }
 
-/** Where a token stands on the server. */
+/** Where a token stands on the server; null when it isn't on the board. */
 export async function position(page: Page, label: string) {
   const url = page
     .url()
@@ -82,8 +84,21 @@ export async function position(page: Page, label: string) {
   const board = (await page.evaluate(async (u) => (await fetch(u)).json(), url)) as {
     tokens: { label: string; x: number; y: number }[]
   }
-  const token = board.tokens.find((t) => t.label === label)!
-  return { x: token.x, y: token.y }
+  const token = board.tokens.find((t) => t.label === label)
+  return token ? { x: token.x, y: token.y } : null
 }
 
 export const ilse = (page: Page) => position(page, 'Ilse')
+
+/**
+ * Closes the one-time double-tap hint and folds the token card to one line, which it
+ * stays for the next token, so neither covers the cells the specs tap. A phone's card
+ * otherwise takes the bottom quarter of the screen, as a person would fold it too.
+ */
+export async function clearBoard(page: Page) {
+  await page.getByRole('button', { name: 'Hinweis schließen' }).click()
+  await tapCell(page, 1, 1)
+  const card = page.getByRole('region', { name: 'Feld', exact: true })
+  await card.getByRole('button', { name: 'Karte einklappen' }).click()
+  await card.getByRole('button', { name: 'Karte schließen' }).click()
+}

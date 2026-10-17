@@ -18,7 +18,8 @@ test('pings, statuses, removing tokens and the player extras on two devices', as
   page,
 }) => {
   test.setTimeout(150_000)
-  await page.context().addInitScript(() => {
+  const { oreana, mira } = await startFight(browser, page)
+  await mira.context().addInitScript(() => {
     const w = window as unknown as { vibrations: unknown[] }
     w.vibrations = []
     Object.defineProperty(navigator, 'vibrate', {
@@ -29,7 +30,8 @@ test('pings, statuses, removing tokens and the player extras on two devices', as
       },
     })
   })
-  const { oreana, mira } = await startFight(browser, page)
+  await mira.reload()
+  await expect(mira.getByTestId('connection-indicator')).toHaveAttribute('data-status', 'connected')
   const vibrations = () =>
     mira.evaluate(() => (window as unknown as { vibrations?: unknown[] }).vibrations ?? [])
 
@@ -87,17 +89,20 @@ test('pings, statuses, removing tokens and the player extras on two devices', as
   const ilse = await cellCentre(mira, 2, 8)
   expect(Math.abs(ilse.y - (box.y + box.height / 2))).toBeLessThan(box.height / 4)
   await expect(mira.getByText(text.pickTarget('Ilse'))).toHaveCount(0)
+  await mira.getByRole('button', { name: 'Ganze Karte' }).click()
 
   // Oreana takes the goblin off the board: it's gone for Mira; "Rückgängig" brings it back.
   await tapCell(oreana, 14, 4)
   await card(oreana).getByRole('button', { name: 'Vom Feld nehmen' }).click()
   await expect(oreana.getByText('Goblin 1 vom Feld genommen')).toBeVisible()
-  await expect
-    .poll(async () => (await position(mira, 'Goblin 1').catch(() => null)) ?? 'gone')
-    .toBe('gone')
+  await expect.poll(() => position(mira, 'Goblin 1')).toBeNull()
   await oreana.getByRole('button', { name: text.undo }).click()
   await expect.poll(() => position(mira, 'Goblin 1')).toEqual({ x: 14, y: 4 })
-  await tapCell(mira, 14, 4)
-  await expect(card(mira)).toContainText('Goblin 1')
+  // The server has it back; Mira's board gets it with the event, a moment later.
+  await expect(async () => {
+    await mira.keyboard.press('Escape')
+    await tapCell(mira, 14, 4)
+    await expect(card(mira)).toContainText('Goblin 1', { timeout: 1_000 })
+  }).toPass({ timeout: 10_000 })
   await expect(card(mira).getByRole('button', { name: 'Vom Feld nehmen' })).toHaveCount(0)
 })
