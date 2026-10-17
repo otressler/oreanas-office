@@ -14,6 +14,8 @@ import { de } from '../../text/de'
 import { saveEncounter } from './encounters'
 import { pickType, usePickedState } from './picked'
 import { useEncounter, useEncounterStore } from './store'
+import { FogChecks } from '../fog/FogPanel'
+import { useFogOptions } from '../fog/options'
 import { useEditor } from '../store'
 import {
   cleanLabel,
@@ -22,6 +24,7 @@ import {
   notReadyReason,
   removeToken,
   renameToken,
+  setTokenHidden,
   setArchived,
   setReady,
   LABEL_MAX,
@@ -40,6 +43,8 @@ export function PlacePanel() {
   const campaignId = useEncounter((s) => s.meta.campaignId)
   const { type: picked, campaignId: pickedCampaign } = usePickedState()
   const types = useCreatureTypes(db, campaignId)
+  const placeHidden = useFogOptions((s) => s.placeHidden)
+  const setPlaceHidden = useFogOptions((s) => s.setPlaceHidden)
 
   // The pick is a copy of the type. Editing or archiving it in the list updates the pick;
   // here it is dropped when it belongs to another campaign or was archived elsewhere.
@@ -53,6 +58,15 @@ export function PlacePanel() {
   return (
     <div className="flex flex-col gap-3">
       <Help>{picked ? t.placeHelp(picked.name) : t.placePickFirst}</Help>
+      <label className="flex min-h-9 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          role="switch"
+          checked={placeHidden}
+          onChange={(event) => setPlaceHidden(event.target.checked)}
+        />
+        {de.fog.editor.placeHidden}
+      </label>
       <BestiaryList campaignId={campaignId} pickedId={picked?.id ?? null} onPick={pickType} />
     </div>
   )
@@ -72,6 +86,19 @@ export function SelectCreaturePanel() {
   return (
     <div className="flex flex-col gap-3">
       <LabelField key={token.id} id={token.id} label={token.label} disabled={readOnly} />
+      <label className="flex min-h-9 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          role="switch"
+          checked={token.hidden ?? false}
+          disabled={readOnly}
+          onChange={(event) =>
+            store.getState().apply((doc) => setTokenHidden(doc, token.id, event.target.checked))
+          }
+        />
+        {de.fog.editor.hiddenSwitch}
+      </label>
+      <Help>{de.fog.editor.hiddenHelp}</Help>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
         <dt className="text-dim">{t.type}</dt>
         <dd>{type?.name ?? '…'}</dd>
@@ -186,6 +213,8 @@ export function EncounterPanel() {
           {t.readyBroken(labels.join(', '))}
         </p>
       )}
+
+      <FogChecks />
 
       <StartEncounter ready={ready} reason={reason} />
 

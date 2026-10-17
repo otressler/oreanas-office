@@ -29,6 +29,11 @@ import {
 } from '../board/viewport'
 import { footprint, type GridPoint } from '../board/geometry'
 import { de } from '../text/de'
+import { hiddenOfDocument } from '../fog/cells'
+import { NO_FADES } from '../fog/fade'
+import { labelWithoutNumber } from '../fog/labels'
+import { buildFogScene, drawFog } from '../board/fogRender'
+import { useTypeNames } from './fog/typeNames'
 import type { EditorMap } from './model'
 import type { LocalCreatureToken } from '../offline/model'
 import { useOptionalEncounter, type EncounterStore } from './encounter/store'
@@ -61,8 +66,15 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
   const selection = useStore(store, (s) => s.selection)
   const tokens = useOptionalEncounter(encounter, (s) => s.doc.tokens, NO_TOKENS)
   const selectedTokenId = useOptionalEncounter(encounter, (s) => s.selectedId, null)
+  // Fog (knowledge/features/fog-of-war.md): hidden cells hatched, creatures without numbers.
+  const fog = useOptionalEncounter(encounter, (s) => s.doc.fog ?? null, null)
+  const fogScene = useMemo(
+    () => (fog ? buildFogScene(hiddenOfDocument(fog), doc.width, doc.height) : null),
+    [fog, doc.width, doc.height],
+  )
   // Creature icons need a connection; offline, or until they load, tokens show letters.
   const campaignId = useOptionalEncounter(encounter, (s) => s.meta.campaignId, null)
+  const typeNames = useTypeNames(campaignId)
   const icons = useCreatureIcons(campaignId)
   const iconUrl = useCallback(
     (token: LocalCreatureToken) => icons.get(token.creatureTypeId)?.url ?? null,
@@ -279,8 +291,9 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
       )
       drawEditorGrid(ctx, scene, dpr)
       drawLabels(ctx, scene, dpr)
+      if (fogScene) drawFog(ctx, fogScene, 'dm', NO_FADES, 0, m.a / dpr)
     },
-    [scene],
+    [scene, fogScene],
   )
 
   // Creatures, with a red frame where one doesn't stand validly on the map.
@@ -291,8 +304,22 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
       const cssScale = ctx.getTransform().a / con.canvas.getPixelRatio()
       const grid = gridOf(doc)
       const bad = misplacedIds(grid, tokens)
-      const drawn = tokens.map((token) => toBoardToken(token, grid, iconUrl(token)))
-      drawTokens(ctx, drawn, { selectedTokenId, cssScale, marks: tokenMarks(drawn), images })
+      // Numbers only come at the table, when players first see a creature.
+      const drawn = tokens.map((token) => {
+        const board = toBoardToken(token, grid, iconUrl(token))
+        return fog
+          ? {
+              ...board,
+              label: labelWithoutNumber(token.label, typeNames.get(token.creatureTypeId)),
+            }
+          : board
+      })
+      drawTokens(ctx, drawn, {
+        selectedTokenId,
+        cssScale,
+        marks: tokenMarks(drawn, { fog: !!fog }),
+        images,
+      })
       for (const token of tokens) {
         if (!bad.has(token.id)) continue
         const n = footprint(token.size)
@@ -303,7 +330,7 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
         )
       }
     },
-    [doc, tokens, selectedTokenId, iconUrl, images],
+    [doc, tokens, selectedTokenId, iconUrl, images, fog, typeNames],
   )
 
   const drawOverlayShape = useCallback(

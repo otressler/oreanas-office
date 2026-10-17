@@ -89,3 +89,35 @@ describe('mixColor', () => {
     expect(mixColor('#000000', '#ff8040', 0.5)).toBe('#804020')
   })
 })
+
+describe('tokenMarks with fog', () => {
+  const creature = (id: string, label: string) => ({ id, kind: 'creature' as const, label })
+
+  it('keeps the plain letter for a creature without a number (not seen yet)', () => {
+    const marks = tokenMarks(
+      [creature('a', 'Goblin'), creature('b', 'Goblin'), creature('c', 'Goblin')],
+      { fog: true },
+    )
+    expect([...marks.values()]).toEqual(['G', 'G', 'G'])
+  })
+
+  it('numbers only the creatures that have a number, once two share a letter', () => {
+    const marks = tokenMarks(
+      [creature('a', 'Goblin 2'), creature('b', 'Goblin'), creature('c', 'Goblin 1')],
+      { fog: true },
+    )
+    expect(Object.fromEntries(marks)).toEqual({ a: 'G2', b: 'G', c: 'G1' })
+  })
+
+  it('a single numbered creature keeps its letter, and a renamed one too', () => {
+    const marks = tokenMarks([creature('a', 'Goblin 3'), creature('b', 'Häuptling')], {
+      fog: true,
+    })
+    expect(Object.fromEntries(marks)).toEqual({ a: 'G', b: 'H' })
+  })
+
+  it('without fog the marks stay as before, whether or not the label ends in a number', () => {
+    const marks = tokenMarks([creature('a', 'Goblin'), creature('b', 'Goblin')])
+    expect(Object.fromEntries(marks)).toEqual({ a: 'G1', b: 'G2' })
+  })
+})

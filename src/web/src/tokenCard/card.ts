@@ -3,7 +3,7 @@
 // tapped cell for a stack (the ones the person may move first), or a cell's terrain. Pure
 // functions; the fight page keeps the state.
 import type { BoardState, BoardToken } from '../api/types'
-import { tokensAt, type GridPoint } from '../board/geometry'
+import { cellKey, tokensAt, type GridPoint } from '../board/geometry'
 import { cellInfo, type BoardInfo } from '../board/info'
 import type { MapScene } from '../board/scene'
 import { formatElevation } from '../lib/units'
@@ -26,17 +26,22 @@ export type ShownCard =
 /**
  * The card as it shows now: closed when its token left the board (taken off, or a reload
  * without it) or its cell has nothing to say. A token that moved away from the tapped cell
- * takes the card along to where it stands now.
+ * takes the card along to where it stands now. A cell in the fog (`unexplored`, the players'
+ * look) is "Unerkundet", with nothing about its terrain or height.
  */
 export function showCard(
   card: Card | null,
   tokens: readonly BoardToken[],
   scene: MapScene,
   canMove: (token: BoardToken) => boolean,
+  unexplored?: ReadonlySet<string>,
 ): ShownCard | null {
   if (!card) return null
   if (card.kind === 'cell') {
-    const info = cellInfo(scene, card.cell.x, card.cell.y)
+    const fogged = unexplored?.has(cellKey(card.cell.x, card.cell.y))
+    const info = fogged
+      ? { title: de.fog.unexplored, details: [] }
+      : cellInfo(scene, card.cell.x, card.cell.y)
     return info ? { kind: 'cell', cell: card.cell, info } : null
   }
   const token = tokens.find((candidate) => candidate.id === card.tokenId)
