@@ -64,3 +64,10 @@ Compared with the request, two things differ. The project owner confirmed both, 
 # Not included
 
 The [spectator view](/features/spectator-view.md) shows no card: nobody taps a screen in the middle of the table. A shared screen in local mode shows it, since people then move characters from it ([shared table](/features/shared-table.md)).
+
+# As built (stage 9)
+
+- The card is a sheet at the bottom of the screen up to 25 % of its height on narrow screens, and a panel at the top right from 1024 CSS pixels wide. It scrolls inside itself when a token has many statuses.
+- The old confirm bar is the card's first line: "<Name>: Tippe auf das Feld …" or "<Name> hierhin?" with "Hierhin" and "Abbrechen". Closing the card with "✕" or Escape also lets go of the selected token.
+- A creature's card says "Kreatur" rather than its creature type's name, which the board doesn't carry; its label usually names the type anyway ("Goblin 3"). Open question for the project owner.
+- Folding lasts while the fight page is open; it isn't stored.
