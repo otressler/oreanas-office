@@ -1142,6 +1142,65 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/play-mode": {
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlayModeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/encounters/{encounterId}/board": {
       "get": {
         "tags": [
@@ -1164,6 +1223,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -2821,7 +2887,12 @@
           "statusNotFound",
           "statusAlreadySet",
           "levelInvalid",
-          "notYourStatus"
+          "notYourStatus",
+          "fogInvalid",
+          "readOnlyConnection",
+          "spawnInvalid",
+          "notLocalMode",
+          "notBuilt"
         ]
       },
       "ArrowDrawnEvent": {
@@ -3035,7 +3106,11 @@
           "undoableMove",
           "removedTokens",
           "statuses",
-          "people"
+          "people",
+          "viewer",
+          "fog",
+          "playMode",
+          "presence"
         ],
         "type": "object",
         "properties": {
@@ -3096,6 +3171,25 @@
             "items": {
               "$ref": "#/components/schemas/BoardPerson"
             }
+          },
+          "viewer": {
+            "$ref": "#/components/schemas/BoardViewer"
+          },
+          "fog": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FogView"
+              }
+            ]
+          },
+          "playMode": {
+            "$ref": "#/components/schemas/PlayMode"
+          },
+          "presence": {
+            "$ref": "#/components/schemas/PresenceState"
           }
         }
       },
@@ -3200,6 +3294,10 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "hidden": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -3232,6 +3330,12 @@
             "format": "date-time"
           }
         }
+      },
+      "BoardViewer": {
+        "enum": [
+          "dm",
+          "player"
+        ]
       },
       "CampaignResponse": {
         "required": [
@@ -3314,6 +3418,29 @@
                 "$ref": "#/components/schemas/ActiveSessionSummary"
               }
             ]
+          }
+        }
+      },
+      "ChangeFogRequest": {
+        "required": [
+          "encounterId",
+          "cells",
+          "reveal"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardCell"
+            }
+          },
+          "reveal": {
+            "type": "boolean"
           }
         }
       },
@@ -3607,6 +3734,23 @@
           }
         }
       },
+      "EncounterStartedEvent": {
+        "required": [
+          "sessionId",
+          "encounterId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "EncounterStatus": {
         "enum": [
           "draft",
@@ -3688,6 +3832,144 @@
           "exit",
           "both"
         ]
+      },
+      "FogArea": {
+        "required": [
+          "id",
+          "name",
+          "cells"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        }
+      },
+      "FogChangedEvent": {
+        "required": [
+          "encounterId",
+          "version",
+          "reveal",
+          "cells",
+          "revealedLayout",
+          "appeared",
+          "disappeared",
+          "numbered"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reveal": {
+            "type": "boolean"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardCell"
+            }
+          },
+          "revealedLayout": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MapLayout"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "appeared": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardToken"
+            }
+          },
+          "disappeared": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "numbered": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenNumber"
+            }
+          }
+        }
+      },
+      "FogDocument": {
+        "required": [
+          "hiddenCells",
+          "areas"
+        ],
+        "type": "object",
+        "properties": {
+          "hiddenCells": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          "areas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FogArea"
+            }
+          }
+        }
+      },
+      "FogView": {
+        "required": [
+          "version",
+          "hiddenCells",
+          "areas"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hiddenCells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardCell"
+            }
+          },
+          "areas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FogArea"
+            }
+          }
+        }
       },
       "GenerateBackgroundRequest": {
         "required": [
@@ -3819,6 +4101,11 @@
               "statusAlreadySet",
               "levelInvalid",
               "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "notBuilt",
               null
             ]
           }
@@ -4801,6 +5088,11 @@
               "statusAlreadySet",
               "levelInvalid",
               "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "notBuilt",
               null
             ]
           },
@@ -4939,6 +5231,81 @@
           }
         }
       },
+      "PlayMode": {
+        "enum": [
+          "byod",
+          "local"
+        ]
+      },
+      "PlayModeChangedEvent": {
+        "required": [
+          "sessionId",
+          "playMode"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "playMode": {
+            "enum": [
+              "byod",
+              "local"
+            ]
+          }
+        }
+      },
+      "PresenceChangedEvent": {
+        "required": [
+          "encounterId",
+          "presence"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "presence": {
+            "$ref": "#/components/schemas/PresenceState"
+          }
+        }
+      },
+      "PresenceState": {
+        "required": [
+          "people",
+          "sharedScreen"
+        ],
+        "type": "object",
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PresentPerson"
+            }
+          },
+          "sharedScreen": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PresentPerson": {
+        "required": [
+          "userId",
+          "connected"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connected": {
+            "type": "boolean"
+          }
+        }
+      },
       "RegisterRequest": {
         "required": [
           "inviteToken",
@@ -5028,7 +5395,8 @@
           "isSessionDm",
           "activeEncounter",
           "interruptedEncounter",
-          "encounters"
+          "encounters",
+          "playMode"
         ],
         "type": "object",
         "properties": {
@@ -5088,6 +5456,9 @@
             "items": {
               "$ref": "#/components/schemas/EncounterSummaryResponse"
             }
+          },
+          "playMode": {
+            "$ref": "#/components/schemas/PlayMode"
           }
         }
       },
@@ -5097,6 +5468,17 @@
           "active",
           "ended"
         ]
+      },
+      "SetPlayModeRequest": {
+        "required": [
+          "playMode"
+        ],
+        "type": "object",
+        "properties": {
+          "playMode": {
+            "$ref": "#/components/schemas/PlayMode"
+          }
+        }
       },
       "SetStatusLevelRequest": {
         "required": [
@@ -5128,6 +5510,171 @@
         "properties": {
           "statusIds": {
             "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "SetTokensHiddenRequest": {
+        "required": [
+          "encounterId",
+          "tokenIds",
+          "hidden"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "hidden": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SpawnCreaturesRequest": {
+        "required": [
+          "encounterId",
+          "creatures",
+          "hidden"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creatures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpawnedCreature"
+            }
+          },
+          "hidden": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SpawnedCreature": {
+        "required": [
+          "creatureTypeId",
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "properties": {
+          "creatureTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SpawnResult": {
+        "required": [
+          "error",
+          "tokenIds"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "notBuilt",
+              null
+            ]
+          },
+          "tokenIds": {
+            "type": [
+              "null",
+              "array"
+            ],
             "items": {
               "type": "string",
               "format": "uuid"
@@ -5358,6 +5905,11 @@
               "statusAlreadySet",
               "levelInvalid",
               "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "notBuilt",
               null
             ]
           },
@@ -5454,6 +6006,10 @@
           },
           "size": {
             "$ref": "#/components/schemas/CreatureSize"
+          },
+          "hidden": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -5525,6 +6081,16 @@
           "sessionId": {
             "type": "string",
             "format": "uuid"
+          },
+          "fog": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FogDocument"
+              }
+            ]
           }
         }
       },
@@ -5574,6 +6140,16 @@
               },
               {
                 "$ref": "#/components/schemas/EncounterMapCopy"
+              }
+            ]
+          },
+          "fog": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FogDocument"
               }
             ]
           }
@@ -6001,20 +6577,30 @@
         "enum": [
           "ArrowDrawn",
           "EncounterEnded",
+          "EncounterStarted",
+          "FogChanged",
           "IdleTimeout",
           "MovePreviewCleared",
           "MovePreviewed",
           "Pinged",
+          "PlayModeChanged",
+          "PresenceChanged",
+          "ReloadBoard",
+          "SessionEnded",
+          "TokenHidden",
           "TokenMoved",
           "TokenRemoved",
           "TokenRestored",
-          "TokenStatusesChanged"
+          "TokenRevealed",
+          "TokenStatusesChanged",
+          "TokensAdded"
         ],
         "type": "string"
       },
       "TableHubMethod": {
         "enum": [
           "AddStatus",
+          "ChangeFog",
           "ClearPreview",
           "DrawArrow",
           "JoinEncounter",
@@ -6026,7 +6612,11 @@
           "RemoveToken",
           "RestoreToken",
           "SetStatusLevel",
-          "UndoMove"
+          "SetTokensHidden",
+          "SpawnCreatures",
+          "UndoChange",
+          "UndoMove",
+          "WatchSession"
         ],
         "type": "string"
       },
@@ -6038,6 +6628,23 @@
           "water",
           "wall"
         ]
+      },
+      "TokenHiddenEvent": {
+        "required": [
+          "encounterId",
+          "tokenId"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       },
       "TokenImage": {
         "required": [
@@ -6185,6 +6792,27 @@
           }
         }
       },
+      "TokenNumber": {
+        "required": [
+          "tokenId",
+          "number",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
       "TokenRemovedEvent": {
         "required": [
           "encounterId",
@@ -6231,6 +6859,41 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/StatusDefinitionView"
+            }
+          }
+        }
+      },
+      "TokenRevealedEvent": {
+        "required": [
+          "encounterId",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "$ref": "#/components/schemas/BoardToken"
+          }
+        }
+      },
+      "TokensAddedEvent": {
+        "required": [
+          "encounterId",
+          "tokens"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardToken"
             }
           }
         }
@@ -6334,6 +6997,212 @@
             "type": "boolean"
           },
           "hasGoogle": {
+            "type": "boolean"
+          }
+        }
+      },
+      "WatchedCharacter": {
+        "required": [
+          "name",
+          "imageUrl",
+          "color",
+          "colorIndex"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "color": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "colorIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "WatchedSession": {
+        "required": [
+          "sessionId",
+          "campaignId",
+          "title",
+          "date",
+          "status",
+          "playMode",
+          "activeEncounterId",
+          "characters"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "enum": [
+              "planned",
+              "active",
+              "ended"
+            ]
+          },
+          "playMode": {
+            "enum": [
+              "byod",
+              "local"
+            ]
+          },
+          "activeEncounterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "characters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchedCharacter"
+            }
+          }
+        }
+      },
+      "WatchResult": {
+        "required": [
+          "error",
+          "mode",
+          "session"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "notBuilt",
+              null
+            ]
+          },
+          "mode": {
+            "enum": [
+              "player",
+              "spectator",
+              "sharedScreen"
+            ]
+          },
+          "session": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WatchedSession"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "WatchSessionRequest": {
+        "required": [
+          "sessionId",
+          "sharedScreen"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sharedScreen": {
             "type": "boolean"
           }
         }

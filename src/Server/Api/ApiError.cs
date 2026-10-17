@@ -133,4 +133,19 @@ public enum ApiErrorCode
     LevelInvalid,
     // NotYourStatus: a player removes or changes a status someone else put on.
     NotYourStatus,
+
+    // Fog of war, spawning and the shared table (stage 10).
+    // FogInvalid: fog cells or areas are malformed, outside the map, or the encounter has no
+    // fog to change. Field names the offending entry.
+    FogInvalid,
+    // ReadOnlyConnection: a spectator screen, or a shared screen outside local mode, tried to
+    // act (move, ping, set statuses, remove, spawn).
+    ReadOnlyConnection,
+    // SpawnInvalid: no creatures, too many, or a creature type outside the campaign.
+    SpawnInvalid,
+    // NotLocalMode: a shared screen was asked for in a session that isn't in local mode.
+    NotLocalMode,
+    // NotBuilt: a hub method of stage 10 whose lane has not been built yet. Removed with the
+    // last stub.
+    NotBuilt,
 }

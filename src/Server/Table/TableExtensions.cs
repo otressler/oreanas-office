@@ -19,6 +19,9 @@ public static class TableExtensions
         builder.Services.AddSingleton<TablePingLimiter>();
         builder.Services.AddSingleton<TableActivity>();
         builder.Services.AddSingleton<TablePreviews>();
+        builder.Services.AddSingleton<TableConnections>();
+        builder.Services.AddSingleton<TableBroadcaster>();
+        builder.Services.AddSingleton<TablePresence>();
         builder.Services.AddSingleton<TableActivityFilter>();
         if (!BuildTime.IsGeneratingOpenApiDocument)
         {

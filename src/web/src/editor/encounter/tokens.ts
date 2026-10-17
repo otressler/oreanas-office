@@ -231,5 +231,6 @@ export function toBoardToken(
     imageUrl,
     color: null,
     statuses: [],
+    hidden: false,
   }
 }

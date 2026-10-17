@@ -19,6 +19,11 @@ public sealed class TableOpenApi : IOpenApiDocumentTransformer
             typeof(AddStatusRequest), typeof(RemoveStatusRequest), typeof(SetStatusLevelRequest),
             typeof(TokenStatusesChangedEvent), typeof(StatusResult),
             typeof(TokenRemovedEvent), typeof(TokenRestoredEvent),
+            typeof(WatchSessionRequest), typeof(WatchedSession), typeof(WatchedCharacter), typeof(WatchResult),
+            typeof(EncounterStartedEvent), typeof(PlayModeChangedEvent), typeof(PresenceChangedEvent),
+            typeof(ChangeFogRequest), typeof(FogChangedEvent), typeof(TokenNumber), typeof(SetTokensHiddenRequest),
+            typeof(TokenRevealedEvent), typeof(TokenHiddenEvent), typeof(SpawnCreaturesRequest), typeof(SpawnedCreature),
+            typeof(SpawnResult), typeof(TokensAddedEvent),
         ];
 
     public async Task TransformAsync(

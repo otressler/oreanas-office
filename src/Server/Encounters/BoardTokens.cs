@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Images;
+using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Statuses;
 using OreanasOffice.Server.Table;
 
@@ -19,26 +20,27 @@ public static class BoardTokens
         AppDbContext db, Guid campaignId, IQueryable<Token> tokens, CancellationToken cancellationToken)
     {
         var rows = await tokens.AsNoTracking()
-            .OrderBy(t => t.Kind == TokenKind.Creature ? 0 : 1)
-            .ThenBy(t => t.Kind == TokenKind.Creature ? t.Label : t.Character!.Name)
-            .ThenBy(t => t.Id)
-            .Select(t => new
+            .Select(t => new Row
             {
-                t.Id,
-                t.Kind,
-                t.CharacterId,
-                t.CreatureTypeId,
+                Id = t.Id,
+                Kind = t.Kind,
+                CharacterId = t.CharacterId,
+                CreatureTypeId = t.CreatureTypeId,
                 OwnerUserId = (Guid?)t.Character!.OwnerUserId,
-                Label = t.Kind == TokenKind.Creature ? t.Label : t.Character!.Name,
-                t.X,
-                t.Y,
-                t.Elevation,
-                t.Size,
-                t.Version,
+                CharacterName = t.Character!.Name,
+                X = t.X,
+                Y = t.Y,
+                Elevation = t.Elevation,
+                Size = t.Size,
+                Version = t.Version,
                 // The picked portrait or icon as it is now (knowledge/features/token-icons.md).
                 ImageAssetId = t.Kind == TokenKind.Character ? t.Character!.TokenAssetId : t.CreatureType!.IconAssetId,
                 Color = t.Kind == TokenKind.Character ? t.Character!.Color : null,
-                t.RemovedAt,
+                RemovedAt = t.RemovedAt,
+                Hidden = t.Hidden,
+                Number = t.Number,
+                TypeName = t.CreatureType != null ? t.CreatureType.Name : null,
+                DmName = t.Label,
             })
             .ToListAsync(cancellationToken);
         if (rows.Count == 0)
@@ -48,13 +50,17 @@ public static class BoardTokens
 
         var statuses = await StatusViews.OnTokensAsync(db, tokens.Select(t => t.Id), cancellationToken);
         var colors = await db.CharacterColorIndexesAsync(campaignId, cancellationToken);
-        var board = rows.Select(t => new BoardToken(
+        var board = rows
+            .OrderBy(t => t.Kind == TokenKind.Creature ? 0 : 1)
+            .ThenBy(t => LabelOf(t), StringComparer.OrdinalIgnoreCase)
+            .ThenBy(t => t.Id)
+            .Select(t => new BoardToken(
                 t.Id,
                 t.Kind,
                 t.CharacterId,
                 t.CreatureTypeId,
                 t.Kind == TokenKind.Character ? t.OwnerUserId : null,
-                t.Label ?? "",
+                LabelOf(t),
                 t.X,
                 t.Y,
                 t.Elevation,
@@ -64,12 +70,56 @@ public static class BoardTokens
                 t.ImageAssetId is { } imageId ? MapBackgrounds.Url(imageId) : null,
                 t.Color,
                 [.. statuses[t.Id]],
-                t.RemovedAt))
+                t.RemovedAt,
+                t.Hidden))
             .ToList();
         var characters = board
             .Where(t => t is { Kind: TokenKind.Character, OwnerUserId: not null, ColorIndex: not null })
             .Select(t => new TablePeople.FightCharacter(t.OwnerUserId!.Value, t.ColorIndex!.Value, t.Color))
             .ToList();
         return (board, characters);
+    }
+
+    private static string LabelOf(Row t) => t.Kind == TokenKind.Character
+        ? t.CharacterName ?? ""
+        : CreatureLabels.Display(t.TypeName ?? "", t.Number, t.DmName);
+
+    private sealed class Row
+    {
+        public Guid Id { get; init; }
+
+        public TokenKind Kind { get; init; }
+
+        public Guid? CharacterId { get; init; }
+
+        public Guid? CreatureTypeId { get; init; }
+
+        public Guid? OwnerUserId { get; init; }
+
+        public string? CharacterName { get; init; }
+
+        public int X { get; init; }
+
+        public int Y { get; init; }
+
+        public decimal Elevation { get; init; }
+
+        public CreatureSize Size { get; init; }
+
+        public int Version { get; init; }
+
+        public Guid? ImageAssetId { get; init; }
+
+        public string? Color { get; init; }
+
+        public DateTimeOffset? RemovedAt { get; init; }
+
+        public bool Hidden { get; init; }
+
+        public int? Number { get; init; }
+
+        public string? TypeName { get; init; }
+
+        public string? DmName { get; init; }
     }
 }

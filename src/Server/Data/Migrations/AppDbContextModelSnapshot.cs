@@ -441,6 +441,44 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.ToTable("Encounters");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.EncounterChange", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("UndoneAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ByUserId");
+
+                    b.HasIndex("EncounterId", "Id");
+
+                    b.ToTable("EncounterChanges");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Encounters.Token", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1237,6 +1275,15 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Campaign");
 
                     b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.EncounterChange", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("ByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Encounters.Token", b =>

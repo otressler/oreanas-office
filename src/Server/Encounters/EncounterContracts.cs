@@ -1,5 +1,7 @@
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Rules;
+using OreanasOffice.Server.Sessions;
+using OreanasOffice.Server.Table;
 using OreanasOffice.Server.Statuses;
 
 namespace OreanasOffice.Server.Encounters;
@@ -50,7 +52,36 @@ public record BoardStateResponse(
     UndoableMove? UndoableMove,
     List<BoardToken> RemovedTokens,
     List<StatusDefinitionView> Statuses,
-    List<BoardPerson> People);
+    List<BoardPerson> People,
+    BoardViewer Viewer,
+    FogView? Fog,
+    PlayMode PlayMode,
+    PresenceState Presence);
+
+// Who the board was built for (knowledge/features/fog-of-war.md, "Keeping secrets on the
+// wire"). Dm: the session DM's own device, which sees everything. Player: everyone else, and
+// any connection that asked for the players' view (?view=player: spectator and shared
+// screens, also when signed in as the session DM). A Player board has no hidden creature,
+// no layout of a hidden cell, no areas and no removed tokens, and IsSessionDm is false.
+public enum BoardViewer
+{
+    Dm,
+    Player,
+}
+
+// Fog as a device gets it. Version: FogVersion; devices keep the fog with the higher
+// version. HiddenCells: the DM's and the players' alike. Areas: the DM only (empty for
+// players).
+public record FogView(int Version, List<BoardCell> HiddenCells, List<FogArea> Areas);
+
+// Who is connected to the fight right now (knowledge/features/shared-table.md), built from
+// live connections and never stored. SharedScreen: a spectator screen is connected to the
+// session (the table icon).
+public record PresenceState(List<PresentPerson> People, bool SharedScreen);
+
+// A person (campaign member) in the row of avatars; Connected is false when none of their
+// devices is, for longer than the 10-second grace.
+public record PresentPerson(Guid UserId, bool Connected);
 
 // PingColor: "#rrggbb" (knowledge/features/pings-and-arrows.md, "Colours"): the session
 // DM's fixed gold; a player's first character in this fight (by the order characters were
@@ -80,7 +111,9 @@ public record BoardBackground(Guid AssetId, string Url, int X, int Y, int Width,
 // comes from the character or creature type. Version: see
 // Token.Version; devices keep the position with the higher version. ImageUrl: the
 // character's or creature type's picked portrait or icon as it is now, also in a running
-// fight (knowledge/features/token-icons.md); null for the letter. Statuses: in the order
+// fight (knowledge/features/token-icons.md); null for the letter. Label of a creature:
+// CreatureLabels.Display, the type name and number or the DM's own name; an unseen creature
+// has no number (knowledge/features/fog-of-war.md). Hidden: only on a Dm board. Statuses: in the order
 // they were put on (knowledge/features/statuses.md). RemovedAt: set only on
 // BoardStateResponse.RemovedTokens.
 public record BoardToken(
@@ -99,7 +132,8 @@ public record BoardToken(
     string? ImageUrl,
     string? Color,
     List<BoardTokenStatus> Statuses,
-    DateTimeOffset? RemovedAt = null);
+    DateTimeOffset? RemovedAt = null,
+    bool Hidden = false);
 
 // A status on a token. Level: 1-6 for statuses with levels, else null. AppliedByUserId:
 // who put it on (the card's "von Eli"); a player may remove only their own.

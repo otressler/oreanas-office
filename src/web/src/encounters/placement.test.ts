@@ -62,6 +62,7 @@ describe('withPlacedCharacters', () => {
       imageUrl: null,
       color: null,
       statuses: [],
+      hidden: false,
     })
   })
 })

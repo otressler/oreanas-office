@@ -1238,6 +1238,11 @@ export const de = {
     levelInvalid: 'Die Stufe geht von 1 bis 6.',
     notYourStatus:
       'Diesen Zustand hat jemand anderes gesetzt. Entfernen kann ihn nur die Person oder die Spielleitung.',
+    fogInvalid: 'Mit dem Nebel stimmt etwas nicht: Felder außerhalb der Karte, oder der Kampf hat keinen Nebel.',
+    readOnlyConnection: 'Dieser Bildschirm schaut nur zu.',
+    spawnInvalid: 'Diese Kreaturen lassen sich nicht erscheinen lassen.',
+    notLocalMode: 'Ein gemeinsamer Bildschirm geht nur in der Spielweise „Gemeinsamer Bildschirm“.',
+    notBuilt: 'Das gibt es noch nicht.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */

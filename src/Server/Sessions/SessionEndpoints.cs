@@ -30,6 +30,7 @@ public static class SessionEndpoints
         session.MapPost("/activate", ActivateSession).RequireAuthorization(Policies.SessionManager);
         session.MapPost("/end", EndSession).RequireAuthorization(Policies.SessionManager);
         session.MapPut("/dm", ChangeSessionDm).RequireAuthorization(Policies.SessionManager);
+        session.MapPut("/play-mode", SetPlayMode).RequireAuthorization(Policies.SessionDm);
 
         return app;
     }
@@ -230,7 +231,7 @@ public static class SessionEndpoints
         ClaimsPrincipal user,
         AppDbContext db,
         TimeProvider time,
-        [FromServices] IHubContext<TableHub, ITableClient> table,
+        [FromServices] TableBroadcaster table,
         CancellationToken cancellationToken)
     {
         var strategy = db.Database.CreateExecutionStrategy();
@@ -266,9 +267,35 @@ public static class SessionEndpoints
 
         foreach (var encounterId in ended)
         {
-            await table.Clients.Group(TableHub.GroupName(encounterId)).EncounterEnded(encounterId);
+            await table.EncounterEndedAsync(sessionId, encounterId);
         }
 
+        await table.SessionEndedAsync(sessionId);
+
+        return TypedResults.Ok(await LoadAsync(db, campaignId, sessionId, user.GetUserId(), cancellationToken));
+    }
+
+    // The session DM switches between "Eigene Geräte" and "Gemeinsamer Bildschirm", also while
+    // a fight runs (knowledge/features/shared-table.md). Every screen of the session hears
+    // PlayModeChanged; nothing reloads. SessionEnded for an ended session.
+    private static async Task<Results<Ok<SessionResponse>, Conflict<ApiError>>> SetPlayMode(
+        Guid campaignId,
+        Guid sessionId,
+        SetPlayModeRequest request,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        [FromServices] TableBroadcaster table,
+        CancellationToken cancellationToken)
+    {
+        if (await StatusAsync(db, campaignId, sessionId, cancellationToken) == SessionStatus.Ended)
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
+        }
+
+        await db.Sessions
+            .Where(s => s.Id == sessionId)
+            .ExecuteUpdateAsync(set => set.SetProperty(s => s.PlayMode, request.PlayMode), cancellationToken);
+        await table.PlayModeChangedAsync(sessionId, request.PlayMode);
         return TypedResults.Ok(await LoadAsync(db, campaignId, sessionId, user.GetUserId(), cancellationToken));
     }
 
@@ -344,5 +371,6 @@ public static class SessionEndpoints
                 .OrderBy(e => e.CreatedAt)
                 .ThenBy(e => e.Id)
                 .Select(EncounterEndpoints.SummaryOf)
-                .ToList()));
+                .ToList(),
+            s.PlayMode));
 }

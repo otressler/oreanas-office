@@ -53,6 +53,30 @@ namespace OreanasOffice.Server.Data.Migrations
                 defaultValue: 0);
 
             migrationBuilder.CreateTable(
+                name: "EncounterChanges",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EncounterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Kind = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Payload = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    At = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UndoneAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EncounterChanges", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EncounterChanges_AspNetUsers_ByUserId",
+                        column: x => x.ByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SessionSpectators",
                 columns: table => new
                 {
@@ -78,14 +102,39 @@ namespace OreanasOffice.Server.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_EncounterChanges_ByUserId",
+                table: "EncounterChanges",
+                column: "ByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EncounterChanges_EncounterId_Id",
+                table: "EncounterChanges",
+                columns: new[] { "EncounterId", "Id" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SessionSpectators_UserId",
                 table: "SessionSpectators",
                 column: "UserId");
+
+            // knowledge/domain/token.md: a creature's label becomes Number and the DM's own name.
+            // "Goblin 3" of type "Goblin" gives Number 3 and no name; the bare type name gives
+            // neither; any other label stays as the DM's name.
+            migrationBuilder.Sql(@"
+UPDATE t SET t.Number = TRY_CAST(RIGHT(t.Label, LEN(t.Label) - LEN(ct.Name) - 1) AS int), t.Label = NULL
+FROM Tokens t JOIN CreatureTypes ct ON ct.Id = t.CreatureTypeId
+WHERE t.Kind = N'Creature' AND t.Label LIKE ct.Name + N' [0-9]%'
+  AND TRY_CAST(RIGHT(t.Label, LEN(t.Label) - LEN(ct.Name) - 1) AS int) > 0;
+UPDATE t SET t.Label = NULL
+FROM Tokens t JOIN CreatureTypes ct ON ct.Id = t.CreatureTypeId
+WHERE t.Kind = N'Creature' AND t.Label = ct.Name;");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "EncounterChanges");
+
             migrationBuilder.DropTable(
                 name: "SessionSpectators");
 

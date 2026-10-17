@@ -25,6 +25,7 @@ const ogre: BoardToken = {
   imageUrl: null,
   color: null,
   statuses: [],
+  hidden: false,
 }
 
 function board(fields: Partial<BoardState> = {}): BoardState {

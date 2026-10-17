@@ -52,10 +52,12 @@ public record SyncEncounterData(
     EncounterStatus Status,
     DateTimeOffset? ArchivedAt,
     List<SyncCreatureToken> Tokens,
-    Guid SessionId);
+    Guid SessionId,
+    FogDocument? Fog = null);
 
 // Elevation is not pushed: the server takes the highest elevation under the footprint.
-public record SyncCreatureToken(Guid Id, Guid CreatureTypeId, string Label, int X, int Y, CreatureSize Size);
+// Hidden: only the session DM sees it until revealed (knowledge/features/fog-of-war.md).
+public record SyncCreatureToken(Guid Id, Guid CreatureTypeId, string Label, int X, int Y, CreatureSize Size, bool Hidden = false);
 
 // What the server sends back for an encounter: the pushed fields plus the server-only ones.
 public record SyncEncounterServerData(
@@ -65,7 +67,8 @@ public record SyncEncounterServerData(
     DateTimeOffset? ArchivedAt,
     List<SyncCreatureToken> Tokens,
     Guid SessionId,
-    EncounterMapCopy? MapCopy);
+    EncounterMapCopy? MapCopy,
+    FogDocument? Fog = null);
 
 // POST /api/sync/push. Items are handled in request order, each in its own transaction.
 public record SyncPushRequest(List<SyncPushItem> Items);

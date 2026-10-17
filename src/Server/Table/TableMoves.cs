@@ -21,15 +21,27 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
     // interleave, and the last one saved wins.
     private const int SaveAttempts = 5;
 
-    // Any campaign member, while the encounter is active.
-    public async Task<ApiErrorCode?> JoinAsync(Guid userId, Guid encounterId, CancellationToken cancellationToken)
+    // Any campaign member, while the encounter is active; or a spectator of its session
+    // (knowledge/features/spectator-view.md). SessionDmUserId decides which group the
+    // connection joins.
+    public async Task<(ApiErrorCode? Error, Guid? SessionDmUserId)> JoinAsync(
+        Guid userId, Guid encounterId, CancellationToken cancellationToken)
     {
-        var encounter = await Encounter(encounterId, userId).SingleOrDefaultAsync(cancellationToken);
+        var encounter = await db.Encounters
+            .Where(e => e.Id == encounterId)
+            .Select(e => new
+            {
+                IsMember = db.CampaignMembers.Any(m => m.CampaignId == e.CampaignId && m.UserId == userId)
+                    || db.SessionSpectators.Any(s => s.SessionId == e.SessionId && s.UserId == userId),
+                e.Status,
+                SessionDmUserId = (Guid?)e.Session.DmUserId,
+            })
+            .SingleOrDefaultAsync(cancellationToken);
         return encounter switch
         {
-            null or { IsMember: false } => ApiErrorCode.TokenNotFound,
-            { Status: not EncounterStatus.Active } => ApiErrorCode.EncounterNotActive,
-            _ => null,
+            null or { IsMember: false } => (ApiErrorCode.TokenNotFound, null),
+            { Status: not EncounterStatus.Active } => (ApiErrorCode.EncounterNotActive, null),
+            _ => (null, encounter.SessionDmUserId),
         };
     }
 

@@ -372,10 +372,15 @@ public static class MapImport
                 return new ApiError(ApiErrorCode.PlacementInvalid, field);
             }
 
+            int? number = null;
             if (label is null)
             {
                 numbers[type] = numbers.GetValueOrDefault(type) + 1;
-                label = NumberedLabel(type.Name, numbers[type]);
+                number = numbers[type];
+            }
+            else
+            {
+                (number, label) = CreatureLabels.Split(type.Name, label);
             }
 
             encounter.Tokens.Add(new Token
@@ -383,6 +388,7 @@ public static class MapImport
                 Kind = TokenKind.Creature,
                 CreatureType = type,
                 Size = type.Size,
+                Number = number,
                 Label = label,
                 X = creature.X,
                 Y = creature.Y,
@@ -392,14 +398,6 @@ public static class MapImport
         }
 
         return null;
-    }
-
-    // "Goblin 3". A type name near the length limit is shortened so the number fits.
-    private static string NumberedLabel(string typeName, int number)
-    {
-        var suffix = $" {number}";
-        var room = TextMaxLength - suffix.Length;
-        return (typeName.Length > room ? typeName[..room].TrimEnd() : typeName) + suffix;
     }
 
     private static string NextFreeId(string prefix, HashSet<string> taken, ref int next)

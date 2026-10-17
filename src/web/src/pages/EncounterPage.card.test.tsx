@@ -76,6 +76,7 @@ const hero: BoardToken = {
   imageUrl: null,
   color: null,
   statuses: [],
+  hidden: false,
 }
 /** Someone else's character next to Mira's. */
 const friend: BoardToken = {
