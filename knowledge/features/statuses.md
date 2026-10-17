@@ -91,4 +91,12 @@ See [status](/domain/status.md).
 - Terrain statuses (burning, webbed, darkness on cells) stay in the [backlog](/backlog.md); they would use the same status lists later.
 - Hit points move to the [backlog](/backlog.md) (question 13).
 
+# As built (stage 9)
+
+- The 15 condition icons are `src/web/public/statuses/<key>.webp` (T1, 256 px), precached by the service worker. Library statuses have fixed ids, seeded by the `Statuses` migration.
+- A status list is made the first time it is read (the status list editor or the picker), with the 15 conditions ([status](/domain/status.md)). Characters show theirs under "Zustandsliste" on their row in the campaign's character list, readable by every member and editable by the owner and `dm` members; each `dm` member has "Meine Zustandsliste (Spielleitung)" on the campaign page. Editing is ↑/↓, remove and add; every change saves the whole list.
+- The picker opens from the token card's "Status hinzufügen" and stays open for several statuses until "Fertig"; a status already on the token shows as set, and tapping it takes it off where allowed. Characters taken off the board are left out of the session DM's picker.
+- Adding a status the token has already gives "Die Figur hat diesen Zustand schon"; two people adding the same one at once can't both succeed. Removing or changing a level only touches the status as the person saw it: if someone else took it off and put it on again meanwhile, it stays.
+- A custom status's icon is generated, versioned and picked like a creature icon; the prompt is the `image-assets` skill's status icon template with "drawn as a simple bold emblem rather than a detailed scene".
+
 [^roll20-conditions]: Conditions | D&D 2024 (Roll20 compendium)
