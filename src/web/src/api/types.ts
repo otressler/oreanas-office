@@ -138,3 +138,8 @@ export type SpawnCreaturesRequest = Schemas['SpawnCreaturesRequest']
 export type SpawnedCreature = Schemas['SpawnedCreature']
 export type SpawnResult = Schemas['SpawnResult']
 export type TokensAddedEvent = Schemas['TokensAddedEvent']
+// Spectator join page and spectate endpoints.
+export type JoinLookupResponse = Schemas['JoinLookupResponse']
+export type JoinableSession = Schemas['JoinableSession']
+export type SpectateSessionRequest = Schemas['SpectateSessionRequest']
+export type SpectateSessionResponse = Schemas['SpectateSessionResponse']
