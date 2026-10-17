@@ -82,9 +82,11 @@ public sealed class TableActivityFilter(TableActivity activity) : IHubFilter
 
 // Drops connections idle for TableOptions.IdleTimeout, so a forgotten tab doesn't keep
 // the container awake: IdleTimeout() first, then the connection is closed without a
-// reconnect. Looks every IdleCheckInterval; never touches the database.
+// reconnect. Looks every IdleCheckInterval; touches the database only to ask whether an idle
+// screen's session is still active (TableScreenKeepAlive).
 public sealed class TableIdleTimeout(
     TableActivity activity,
+    TableScreenKeepAlive screens,
     IHubContext<TableHub, ITableClient> hub,
     IOptions<TableOptions> options,
     TimeProvider time,
@@ -97,7 +99,7 @@ public sealed class TableIdleTimeout(
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                var idle = activity.TakeIdle(options.Value.IdleTimeout);
+                var idle = await DropScreensOfRunningSessionsAsync(activity.TakeIdle(options.Value.IdleTimeout), stoppingToken);
                 if (idle.Count == 0)
                 {
                     continue;
@@ -119,6 +121,41 @@ public sealed class TableIdleTimeout(
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
+        }
+    }
+
+    // Spectator and shared screens of an active session stay (TableScreenKeepAlive): they go
+    // back into the activity list, as if just touched, and are looked at again after another
+    // timeout.
+    private async Task<List<HubCallerContext>> DropScreensOfRunningSessionsAsync(
+        List<HubCallerContext> idle, CancellationToken cancellationToken)
+    {
+        var dropped = new List<HubCallerContext>();
+        foreach (var connection in idle)
+        {
+            if (await KeepsAsync(connection, cancellationToken))
+            {
+                activity.Connected(connection);
+            }
+            else
+            {
+                dropped.Add(connection);
+            }
+        }
+
+        return dropped;
+    }
+
+    private async Task<bool> KeepsAsync(HubCallerContext connection, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await screens.KeepsAsync(connection.ConnectionId, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Could not check the session of {ConnectionId}", connection.ConnectionId);
+            return false;
         }
     }
 

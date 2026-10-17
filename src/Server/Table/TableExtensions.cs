@@ -25,6 +25,7 @@ public static class TableExtensions
         builder.Services.AddSingleton<TableConnections>();
         builder.Services.AddSingleton<TableBroadcaster>();
         builder.Services.AddSingleton<TablePresence>();
+        builder.Services.AddSingleton<TableScreenKeepAlive>();
         builder.Services.AddSingleton<TableActivityFilter>();
         if (!BuildTime.IsGeneratingOpenApiDocument)
         {

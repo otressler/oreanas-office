@@ -6,6 +6,7 @@ using Microsoft.Net.Http.Headers;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Images.Guide;
 
 namespace OreanasOffice.Server.Images;
@@ -250,17 +251,26 @@ public static class ImageEndpoints
     // The image, for a signed-in member of a campaign that uses it: the asset's own campaign,
     // or one whose map or encounter points to it. Images never change, so the answer may be
     // cached for good (Cache-Control: private, max-age=31536000, immutable). 404 otherwise,
-    // and for an asset that isn't Done.
+    // and for an asset that isn't Done. A session spectator (not a member) also gets the
+    // pictures that session's screen draws: the campaign's character portraits, and the
+    // background and token pictures of the session's running fights
+    // (knowledge/features/spectator-view.md); nothing else of the campaign.
     private static async Task<Results<FileStreamHttpResult, NotFound>> GetAsset(
         Guid assetId, ClaimsPrincipal user, AppDbContext db, IAssetStore store, HttpContext http, CancellationToken cancellationToken)
     {
         var userId = user.GetUserId();
         var campaigns = db.CampaignMembers.Where(m => m.UserId == userId).Select(m => m.CampaignId);
+        var watched = db.SessionSpectators.Where(p => p.UserId == userId).Select(p => p.SessionId);
         var asset = await db.Assets.AsNoTracking()
             .Where(a => a.Id == assetId && a.Status == AssetStatus.Done && a.BlobName != null)
             .Where(a => campaigns.Contains(a.CampaignId)
                 || db.BattleMaps.Any(m => m.BackgroundAssetId == a.Id && campaigns.Contains(m.CampaignId))
-                || db.Encounters.Any(e => e.BackgroundAssetId == a.Id && campaigns.Contains(e.CampaignId)))
+                || db.Encounters.Any(e => e.BackgroundAssetId == a.Id && campaigns.Contains(e.CampaignId))
+                || db.Characters.Any(c => c.TokenAssetId == a.Id && db.Sessions.Any(s => watched.Contains(s.Id) && s.CampaignId == c.CampaignId))
+                || db.Encounters.Any(e => e.Status == EncounterStatus.Active && watched.Contains(e.SessionId)
+                    && (e.BackgroundAssetId == a.Id
+                        || e.Tokens.Any(t => !t.Hidden && t.RemovedAt == null
+                            && (t.Character!.TokenAssetId == a.Id || t.CreatureType!.IconAssetId == a.Id)))))
             .Select(a => new { a.BlobName, a.ContentType })
             .SingleOrDefaultAsync(cancellationToken);
         if (asset is null || await store.OpenReadAsync(asset.BlobName!, cancellationToken) is not { } content)

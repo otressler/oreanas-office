@@ -1,5 +1,7 @@
 import type { HubConnection } from '@microsoft/signalr'
+import type { Ref } from 'react'
 import type { BoardState } from '../api/types'
+import type { BoardHandle } from '../board/Board'
 
 export interface SharedScreenControlsProps {
   encounterId: string
@@ -7,6 +9,8 @@ export interface SharedScreenControlsProps {
   board: BoardState
   /** The screen's table connection, already joined to the encounter as a shared screen. */
   connection: HubConnection | null
+  /** For "Ganze Karte" in the spectator screen's corner menu: the board's own handle. */
+  handleRef?: Ref<BoardHandle>
 }
 
 // The controls of a shared screen in local mode (knowledge/features/shared-table.md): selection,

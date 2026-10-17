@@ -32,7 +32,7 @@ public static class SessionEndpoints
         session.MapPut("/dm", ChangeSessionDm).RequireAuthorization(Policies.SessionManager);
         session.MapPut("/play-mode", SetPlayMode).RequireAuthorization(Policies.SessionDm);
 
-        return app;
+        return app.MapSessionSpectatorEndpoints();
     }
 
     // Newest date first.

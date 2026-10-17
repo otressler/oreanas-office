@@ -20,13 +20,18 @@ import {
 import { formatDate } from '../lib/dates'
 import { SyncMark } from '../maps/SyncMark'
 import type { CampaignCopy } from '../offline/db'
+import { cleanJoinCode } from '../spectator/joinCode'
+import { useResumeScreen } from '../spectator/useResumeScreen'
+import { joinPath } from '../sessions/paths'
 import { de } from '../text/de'
 import { limits } from '../lib/limits'
 
 /** The landing page: your campaigns, joining one by code, creating one. */
 export function HomePage() {
   const campaigns = useCampaigns()
-  useLandOnFight(campaigns.data)
+  // A device that is a session's spectator screen goes back to it before anything else.
+  const resuming = useResumeScreen()
+  useLandOnFight(resuming ? undefined : campaigns.data)
   // Campaigns made offline that the server doesn't list yet.
   const listed = new Set(campaigns.data?.map((campaign) => campaign.id))
   const local = (useLocalCampaigns() ?? []).filter((copy) => !listed.has(copy.id))
@@ -185,9 +190,16 @@ function JoinForm() {
           onChange={(event) => setCode(event.target.value)}
         />
         <ErrorAlert error={join.error} />
-        <div>
+        <div className="flex flex-wrap gap-2">
           <Button type="submit" variant="primary" busy={join.isPending}>
             {de.home.join}
+          </Button>
+          {/* The same choice as the QR code's join page: "Mitspielen" or "Nur zuschauen". */}
+          <Button
+            disabled={!code.trim()}
+            onClick={() => void navigate(joinPath(cleanJoinCode(code)))}
+          >
+            {de.spectator.joinFormWatch}
           </Button>
         </div>
       </form>

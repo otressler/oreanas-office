@@ -1201,6 +1201,170 @@
         }
       }
     },
+    "/api/join/{joinCode}": {
+      "get": {
+        "tags": [
+          "Spectators"
+        ],
+        "parameters": [
+          {
+            "name": "joinCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinLookupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/join/{joinCode}/spectate": {
+      "post": {
+        "tags": [
+          "Spectators"
+        ],
+        "parameters": [
+          {
+            "name": "joinCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpectateSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpectateSessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/{sessionId}/spectate": {
+      "get": {
+        "tags": [
+          "Spectators"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchedSession"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/sessions/{sessionId}/spectate/board": {
+      "get": {
+        "tags": [
+          "Spectators"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardStateResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/encounters/{encounterId}/board": {
       "get": {
         "tags": [
@@ -4287,6 +4451,31 @@
           }
         }
       },
+      "JoinableSession": {
+        "required": [
+          "id",
+          "title",
+          "date",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SessionStatus"
+          }
+        }
+      },
       "JoinCampaignRequest": {
         "required": [
           "code"
@@ -4306,6 +4495,33 @@
         "properties": {
           "joinCode": {
             "type": "string"
+          }
+        }
+      },
+      "JoinLookupResponse": {
+        "required": [
+          "campaignId",
+          "campaignName",
+          "isMember",
+          "sessions"
+        ],
+        "type": "object",
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignName": {
+            "type": "string"
+          },
+          "isMember": {
+            "type": "boolean"
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JoinableSession"
+            }
           }
         }
       },
@@ -5679,6 +5895,39 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "SpectateSessionRequest": {
+        "required": [
+          "sessionId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "SpectateSessionResponse": {
+        "required": [
+          "campaignId",
+          "sessionId",
+          "isMember"
+        ],
+        "type": "object",
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isMember": {
+            "type": "boolean"
           }
         }
       },
@@ -7060,17 +7309,10 @@
             "format": "date"
           },
           "status": {
-            "enum": [
-              "planned",
-              "active",
-              "ended"
-            ]
+            "$ref": "#/components/schemas/SessionStatus"
           },
           "playMode": {
-            "enum": [
-              "byod",
-              "local"
-            ]
+            "$ref": "#/components/schemas/PlayMode"
           },
           "activeEncounterId": {
             "type": [
@@ -7230,6 +7472,9 @@
     },
     {
       "name": "Sessions"
+    },
+    {
+      "name": "Spectators"
     },
     {
       "name": "Encounters"
