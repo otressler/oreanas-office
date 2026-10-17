@@ -21,6 +21,10 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
     // interleave, and the last one saved wins.
     private const int SaveAttempts = 5;
 
+    // Where the token of the last MoveAsync or UndoAsync stood before it, for the hub's
+    // fan-out (TableFanOut.MovedAsync): whether players see it before and after.
+    public MovedFrom? LastFrom { get; private set; }
+
     // Any campaign member, while the encounter is active; or a spectator of its session
     // (knowledge/features/spectator-view.md). SessionDmUserId decides which group the
     // connection joins.
@@ -67,6 +71,7 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
             }
 
             var (token, grid, size) = (check.Token!, check.Grid!, check.Size);
+            var from = new MovedFrom(token.X, token.Y);
 
             var move = new TokenMove
             {
@@ -88,6 +93,9 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
             token.Version = move.Version;
             db.TokenMoves.Add(move);
 
+            // A creature that players see for the first time gets its number in this save.
+            await CreatureNumbers.OnMovedAsync(db, token, from.X, from.Y);
+
             // The token and its history row land in one SaveChanges, so in one transaction.
             try
             {
@@ -98,6 +106,7 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
                 continue;
             }
 
+            LastFrom = from;
             return new MoveResult(null, Event(token, userId, undo: false));
         }
     }
@@ -132,6 +141,7 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
                 t.Encounter.BattleMap.Width,
                 t.Encounter.BattleMap.Height,
                 t.Encounter.BattleMap.Layout,
+                t.Encounter.Fog,
             })
             .SingleOrDefaultAsync();
         if (found is null || !found.IsMember)
@@ -160,9 +170,23 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
         var grid = found.MapCopy is { } copy
             ? new MapGrid(copy.Width, copy.Height, copy.Layout)
             : new MapGrid(found.Width, found.Height, found.Layout);
-        return MapGrid.FootprintCells(size, request.X, request.Y).All(cell => grid.Walkable(cell.X, cell.Y))
-            ? new MoveCheck(null, found.Token, grid, size)
-            : MoveCheck.Failed(ApiErrorCode.TargetInvalid);
+        if (!MapGrid.FootprintCells(size, request.X, request.Y).All(cell => grid.Walkable(cell.X, cell.Y)))
+        {
+            return MoveCheck.Failed(ApiErrorCode.TargetInvalid);
+        }
+
+        // Players cannot choose a target that touches the fog, moving out of it is fine
+        // (knowledge/features/fog-of-war.md, "Moving in and out of the fog"). The answer is
+        // the same as for a wall, so a rejected move does not say what the cell holds.
+        // TODO(shared table lane): the session DM on a shared screen is a player here; pass
+        // the connection's mode and use TablePermissions.ActsAsSessionDm instead of this id check.
+        if (userId != found.SessionDmUserId
+            && !TableVisibility.FootprintRevealed(FogCells.Set(found.Fog), size, request.X, request.Y))
+        {
+            return MoveCheck.Failed(ApiErrorCode.TargetInvalid);
+        }
+
+        return new MoveCheck(null, found.Token, grid, size);
     }
 
     // Puts the caller's latest move in the encounter back, while it isn't undone and the
@@ -192,11 +216,13 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
             }
 
             var (move, token) = (latest!.Move, latest.Token);
+            var from = new MovedFrom(token.X, token.Y);
             token.X = move.FromX;
             token.Y = move.FromY;
             token.Elevation = move.FromElevation;
             token.Version++;
             move.UndoneAt = time.GetUtcNow();
+            await CreatureNumbers.OnMovedAsync(db, token, from.X, from.Y);
 
             try
             {
@@ -207,6 +233,7 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
                 continue;
             }
 
+            LastFrom = from;
             return new MoveResult(null, Event(token, userId, undo: true));
         }
     }

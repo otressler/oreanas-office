@@ -208,7 +208,7 @@ public static class EncounterEndpoints
     {
         var encounter = await db.Encounters
             .Where(e => e.Id == encounterId && e.CampaignId == campaignId && e.SessionId == sessionId)
-            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, e.BattleMap.BackgroundAssetId })
+            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, e.BattleMap.BackgroundAssetId, e.Fog })
             .SingleOrDefaultAsync(cancellationToken);
         if (encounter is null)
         {
@@ -348,6 +348,9 @@ public static class EncounterEndpoints
                     creature.Elevation = elevation;
                 }
             }
+
+            // With fog, numbers follow what players see at the start (fog-of-war.md).
+            CreatureNumbers.NumberAtStart(creatures, encounter.Fog);
 
             db.Tokens.AddRange(tokens);
             await db.SaveChangesAsync(cancellationToken);

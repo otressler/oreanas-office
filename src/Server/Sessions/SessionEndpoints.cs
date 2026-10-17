@@ -306,6 +306,7 @@ public static class SessionEndpoints
         ChangeSessionDmRequest request,
         ClaimsPrincipal user,
         AppDbContext db,
+        [FromServices] TableBroadcaster table,
         CancellationToken cancellationToken)
     {
         if (await StatusAsync(db, campaignId, sessionId, cancellationToken) == SessionStatus.Ended)
@@ -324,6 +325,14 @@ public static class SessionEndpoints
         if (updated == 0)
         {
             return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
+        }
+
+        // What the devices at the table may see changed: both groups reload the board
+        // (knowledge/features/fog-of-war.md, "Session DM hand-over").
+        if (await db.Encounters.Where(e => e.SessionId == sessionId && e.Status == EncounterStatus.Active)
+            .Select(e => (Guid?)e.Id).SingleOrDefaultAsync(cancellationToken) is { } encounterId)
+        {
+            await table.Everyone(encounterId).ReloadBoard(encounterId);
         }
 
         return TypedResults.Ok(await LoadAsync(db, campaignId, sessionId, user.GetUserId(), cancellationToken));

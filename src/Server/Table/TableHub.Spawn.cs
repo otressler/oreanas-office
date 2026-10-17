@@ -6,7 +6,19 @@ namespace OreanasOffice.Server.Table;
 // since spawning shares the visibility filter and the numbering at first sight.
 public sealed partial class TableHub
 {
-    // STUB: see ITableHub.SpawnCreatures.
-    public Task<SpawnResult> SpawnCreatures(SpawnCreaturesRequest request) =>
-        Task.FromResult(new SpawnResult(ApiErrorCode.NotBuilt, null));
+    public async Task<SpawnResult> SpawnCreatures(SpawnCreaturesRequest request)
+    {
+        if (ReadOnly() is { } readOnly)
+        {
+            return new SpawnResult(readOnly, null);
+        }
+
+        var (error, outcome, tokenIds) = await spawns.SpawnAsync(UserId, Connection.Mode, request);
+        if (outcome is not null)
+        {
+            await outcome.Delivery.SendAsync(broadcaster, outcome.EncounterId);
+        }
+
+        return new SpawnResult(error, tokenIds);
+    }
 }

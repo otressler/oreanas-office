@@ -59,6 +59,17 @@ public sealed class TableRemovals(AppDbContext db, TimeProvider time)
             token!.RemovedAt = null;
             token.RemovedByUserId = null;
             token.Version++;
+
+            // Taken off while players had not seen it, and visible now: first sight is here
+            // (knowledge/features/fog-of-war.md, "Creature numbers"). Only with fog; without it
+            // a bare label is the DM's.
+            var fogDocument = await db.Encounters.Where(e => e.Id == token.EncounterId).Select(e => e.Fog).SingleAsync();
+            if (fogDocument is not null
+                && TableVisibility.TokenVisible(FogCells.Set(fogDocument), token.Kind, token.Hidden, token.Size, token.X, token.Y))
+            {
+                await CreatureNumbers.NumberAsync(db, token.EncounterId, [token]);
+            }
+
             try
             {
                 await db.SaveChangesAsync();
