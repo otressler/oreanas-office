@@ -66,3 +66,11 @@ The link and the QR code open a join page that asks the signed-in account **"Mit
 # Not included
 
 Moving characters: that is the shared screen of local mode in the [shared table](/features/shared-table.md), a different mode of the device.
+
+# As built (stage 10)
+
+- Endpoints: `GET /api/join/{code}`, `POST /api/join/{code}/spectate`, `GET /api/sessions/{id}/spectate` and `.../spectate/board` (the players' board), guarded by the `SessionWatcher` policy (member or session spectator). Session spectators may also read the pictures of that session's fights.
+- `WatchSession` makes a connection a spectator or shared screen and joins the session group. Such a connection is exempt from the 30-minute idle timeout while its session is active (decision cached for three minutes, asked only for idle candidates).
+- Each screen opens two hub connections: one for the session (start, end, play mode) and the table connection of the running fight.
+- The home page's join form kept "Beitreten" and gained "Zuschauen …", which opens the choice page.
+- Open: no "session started" event, so a waiting screen of a planned session notices activation on a touch or its five-second refetch; players don't receive the join code, so a tablet signed in as a player can't show the QR code; "back to the join page" needs the join code remembered on the device; the remembered screen expires after three days (the concept says until left).

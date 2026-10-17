@@ -100,3 +100,10 @@ Proposals in this concept that the project owner hasn't confirmed yet are marked
 - [ ] A tablet signed in as the session DM shows no hidden goblin and no fog layout, also in local mode.
 - [ ] A spectator who isn't a campaign member can't move anything and isn't offered a shared screen in local mode.
 - [ ] Switching back to "Eigene Geräte" ends the shared screen's selection, and it only watches again.
+
+# As built (stage 10)
+
+- `PUT /api/campaigns/{c}/sessions/{s}/play-mode` (session DM) saves the mode and sends `PlayModeChanged` to the session group; the session page refetches.
+- Presence: `TablePresence` keeps a roster per encounter in memory, with the 10-second grace in a timer; spectator and shared screens only make `sharedScreen` true. `PresentPerson` also tells whether the person is the session DM.
+- Permissions: `TablePermissions` decides by connection mode and play mode; a shared screen outside local mode is read-only at its next call. Moves, statuses and pings from a shared screen carry `fromSharedScreen`; a shared screen's undo is fight-wide (the last move made from any shared screen), a player's undo stays their own. Board and status picker take `?sharedScreen=true` for a shared screen.
+- Known gaps: any member can pass `?sharedScreen=true` to the status picker and see every character's status list; `SharedScreenControls` is covered by unit and backend tests but was not run in a browser against the real backend.
