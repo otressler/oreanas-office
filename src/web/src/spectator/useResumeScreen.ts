@@ -3,16 +3,17 @@
 // browser tab, so the back button from the screen doesn't bounce straight back to it.
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { useCurrentUser } from '../auth/auth'
+import { useMe } from '../auth/auth'
 import { screenPath, screenToResume } from './remember'
 
 const RESUMED_KEY = 'oreana.resumedSpectator'
 
 /** Opens the remembered screen from the landing page. True while that is going to happen. */
 export function useResumeScreen(): boolean {
-  const me = useCurrentUser()
+  // Not useCurrentUser: the landing page can render for a moment before the redirect to sign-in.
+  const me = useMe().data
   const navigate = useNavigate()
-  const screen = screenToResume(me.id)
+  const screen = me ? screenToResume(me.id) : null
   const resume = screen !== null && !resumedInThisTab()
   useEffect(() => {
     if (!resume || !screen) return

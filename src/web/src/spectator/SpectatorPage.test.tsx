@@ -11,10 +11,19 @@ import { rememberScreen, rememberedScreen } from './remember'
 vi.mock('../board/Board', async () => ({
   Board: (await import('../table/FakeTableBoard')).FakeTableBoard,
 }))
+// The layer's own board handle, as the real controls hand it to the corner menu's "Ganze Karte".
+const layerFit = vi.fn()
 vi.mock('../sharedTable/SharedScreenControls', () => ({
-  SharedScreenControls: ({ encounterId }: { encounterId: string }) => (
-    <div data-testid="shared-controls">{encounterId}</div>
-  ),
+  SharedScreenControls: ({
+    encounterId,
+    handleRef,
+  }: {
+    encounterId: string
+    handleRef?: { current: unknown }
+  }) => {
+    if (handleRef) handleRef.current = { fit: layerFit }
+    return <div data-testid="shared-controls">{encounterId}</div>
+  },
 }))
 
 const t = de.spectator
@@ -84,6 +93,8 @@ function open(options: { member?: boolean; role?: Campaign['myRole']; url?: stri
     'GET /api/campaigns/:id': () => (member ? json(200, campaign(role)) : json(403)),
     'GET /api/sessions/:id/spectate': () => json(200, session),
     'GET /api/sessions/:id/spectate/board': () => json(200, board),
+    // A shared screen is a member's device: the campaign's board, as the players get it.
+    'GET /api/campaigns/:id/encounters/:encounterId/board': () => json(200, board),
   })
   return { ...renderApp(url), calls }
 }
@@ -243,15 +254,31 @@ describe('the corner menu', () => {
 describe('as a shared screen', () => {
   it('lays the shared table’s controls over the fight in local mode', async () => {
     session = watchedSession({ activeEncounterId: ids.encounter, playMode: 'local' })
-    open({ url: `${path}?gemeinsam=1` })
+    const { calls } = open({ url: `${path}?gemeinsam=1` })
 
     expect(await screen.findByTestId('shared-controls')).toHaveTextContent(ids.encounter)
+    const boardCall = calls.find((call) => call.path.endsWith('/board'))
+    expect(boardCall?.path).toBe(`/api/campaigns/${ids.campaign}/encounters/${ids.encounter}/board`)
+    expect(new URLSearchParams(boardCall?.search)).toEqual(
+      new URLSearchParams({ view: 'player', sharedScreen: 'true' }),
+    )
     expect(hub.calls('WatchSession')[0]).toEqual([{ sessionId: ids.session, sharedScreen: true }])
     await waitFor(() => expect(hub.calls('JoinEncounter')).toHaveLength(1))
     expect(
       fightConnection().invocations.find((call) => call.method === 'WatchSession')?.args,
     ).toEqual([{ sessionId: ids.session, sharedScreen: true }])
     expect(rememberedScreen()?.sharedScreen).toBe(true)
+  })
+
+  it('fits the controls layer’s board from the corner menu', async () => {
+    session = watchedSession({ activeEncounterId: ids.encounter, playMode: 'local' })
+    open({ url: `${path}?gemeinsam=1` })
+    layerFit.mockClear()
+    await screen.findByTestId('shared-controls')
+
+    await userEvent.click(screen.getByRole('button', { name: t.menuLabel }))
+    await userEvent.click(screen.getByRole('menuitem', { name: t.fit }))
+    expect(layerFit).toHaveBeenCalledTimes(1)
   })
 
   it('has no controls outside local mode, nor on a plain spectator screen', async () => {

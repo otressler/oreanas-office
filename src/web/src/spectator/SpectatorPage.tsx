@@ -32,6 +32,8 @@ export function SpectatorPage() {
   const screen = useSpectatorScreen(sessionId, requestedShared)
   const { model, phase, status } = screen
   const board = useRef<BoardHandle>(null)
+  // The shared screen's controls draw their own board over this one while they are there.
+  const layerBoard = useRef<BoardHandle>(null)
 
   // Members are in the campaigns list; session spectators are not, and can't read the campaign.
   const campaigns = useCampaigns()
@@ -90,13 +92,15 @@ export function SpectatorPage() {
               session={model.session}
               encounterId={model.encounterId}
               screen={screen.screen}
+              sharedScreen={screen.sharedScreen}
               sharedControls={showsSharedControls(model, screen.sharedScreen)}
               handleRef={board}
+              layerHandleRef={layerBoard}
             />
           )}
           {phase !== 'loading' && phase !== 'fight' && <StatusLine status={status} />}
           <CornerMenu
-            onFit={phase === 'fight' ? () => board.current?.fit?.() : null}
+            onFit={phase === 'fight' ? () => (layerBoard.current ?? board.current)?.fit?.() : null}
             onLeave={leave}
           />
         </>

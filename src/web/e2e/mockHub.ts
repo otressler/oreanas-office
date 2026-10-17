@@ -16,7 +16,7 @@ type S = components['schemas']
 
 const RS = '\u001e'
 
-interface Client {
+export interface Client {
   context: BrowserContext
   socket: WebSocketRoute
   handshaken: boolean
@@ -42,6 +42,14 @@ export class MockHub {
   down = false
   /** When set, every MoveToken is turned down with this code instead of being checked. */
   refuseMoves: S['ApiErrorCode'] | null = null
+  /**
+   * Hub methods that other specs' mocks answer or take over (spectatorMock.ts: WatchSession,
+   * and JoinEncounter for session spectators). The handler returns the invocation's result.
+   */
+  readonly handlers = new Map<
+    string,
+    (call: { client: Client; userId: string | null; args: unknown[] }) => unknown
+  >()
   private readonly clients = new Set<Client>()
   private readonly backend: MockBackend
 
@@ -127,6 +135,12 @@ export class MockHub {
     const userId = this.backend.userId(client.context)
     const args = message.arguments ?? []
     this.calls.push({ context: client.context, method: message.target, args })
+    const custom = this.handlers.get(message.target)
+    if (custom) {
+      const handled = custom({ client, userId, args })
+      if (message.invocationId === undefined) return
+      return this.send(client, { type: 3, invocationId: message.invocationId, result: handled })
+    }
     let result: unknown
     switch (message.target) {
       case 'JoinEncounter': {
@@ -261,7 +275,8 @@ export class MockHub {
     }
   }
 
-  private send(client: Client, message: object) {
+  /** A raw hub message to one device. */
+  send(client: Client, message: object) {
     client.socket.send(JSON.stringify(message) + RS)
   }
 }

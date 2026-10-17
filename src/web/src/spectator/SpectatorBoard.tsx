@@ -23,14 +23,19 @@ interface SpectatorBoardProps {
   session: WatchedSession
   encounterId: string
   screen: TableScreen
+  /** The connection is a shared screen: ask for the shared screen's board. */
+  sharedScreen: boolean
   /** A shared screen in local mode: lay the shared table's controls over the board. */
   sharedControls: boolean
+  /** The watching board's handle ("Ganze Karte" when the controls layer isn't there). */
   handleRef: Ref<BoardHandle>
+  /** The controls layer's own board, which covers the watching one while it is there. */
+  layerHandleRef: Ref<BoardHandle>
 }
 
 /** Loads the players' board; the live table starts once there is one to keep current. */
 export function SpectatorBoard(props: SpectatorBoardProps) {
-  const query = useWatchedBoard(props.session.sessionId, props.encounterId)
+  const query = useWatchedBoard(props.session, props.encounterId, props.sharedScreen)
   const board = query.data && query.data.encounterId === props.encounterId ? query.data : null
   if (board) return <LiveBoard {...props} board={board} />
   return (
@@ -63,6 +68,7 @@ function LiveBoard({
   screen,
   sharedControls,
   handleRef,
+  layerHandleRef,
   board,
 }: SpectatorBoardProps & { board: BoardState }) {
   const me = useCurrentUser()
@@ -78,6 +84,7 @@ function LiveBoard({
         presence={shown.presence}
         people={shown.people}
         tokens={shown.tokens}
+        // Unused once PresentPerson.isSessionDm says who runs the session; the stub still asks.
         sessionDmUserId={null}
       />
       <div className="relative flex min-h-0 flex-1 flex-col">
@@ -97,6 +104,7 @@ function LiveBoard({
             encounterId={encounterId}
             board={shown}
             connection={table.hubConnection}
+            handleRef={layerHandleRef}
           />
         )}
         {table.status && (

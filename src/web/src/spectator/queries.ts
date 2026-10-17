@@ -19,16 +19,31 @@ export function fetchWatchedSession(sessionId: string) {
 
 /**
  * The players' board of the session's running fight, kept current by useTable. Not reloaded on
- * focus: the table connection reloads it when the app is visible again.
+ * focus: the table connection reloads it when the app is visible again. A shared screen (local
+ * mode, a member's device) asks the campaign's board endpoint for the players' view with
+ * `sharedScreen`, which gives it the undo of moves made from a shared screen.
  */
-export function useWatchedBoard(sessionId: string, encounterId: string | null) {
+export function useWatchedBoard(
+  session: { sessionId: string; campaignId: string },
+  encounterId: string | null,
+  sharedScreen: boolean,
+) {
   return useQuery({
     enabled: encounterId !== null,
-    queryKey: encounterKeys.board(spectatorScope(sessionId), encounterId ?? ''),
+    queryKey: encounterKeys.board(spectatorScope(session.sessionId), encounterId ?? ''),
     refetchOnWindowFocus: false,
     queryFn: () =>
       unwrap(
-        api.GET('/api/sessions/{sessionId}/spectate/board', { params: { path: { sessionId } } }),
+        sharedScreen && encounterId
+          ? api.GET('/api/campaigns/{campaignId}/encounters/{encounterId}/board', {
+              params: {
+                path: { campaignId: session.campaignId, encounterId },
+                query: { view: 'player', sharedScreen: true },
+              },
+            })
+          : api.GET('/api/sessions/{sessionId}/spectate/board', {
+              params: { path: { sessionId: session.sessionId } },
+            }),
       ),
   })
 }
