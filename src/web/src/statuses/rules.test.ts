@@ -17,13 +17,27 @@ describe('canAddStatus', () => {
   it('lets the session DM put statuses on any token', () => {
     expect(canAddStatus({ kind: 'character', ownerUserId: 'other' }, dm, ME)).toBe(true)
   })
+
+  it('lets a shared screen put statuses on any character and creature', () => {
+    expect(canAddStatus({ kind: 'character', ownerUserId: 'other' }, player, ME, true)).toBe(true)
+    expect(canAddStatus({ kind: 'creature', ownerUserId: null }, player, ME, true)).toBe(true)
+  })
 })
 
 describe('canRemoveStatus', () => {
   it('lets players take off the statuses they put on, the session DM any', () => {
-    expect(canRemoveStatus({ appliedByUserId: ME }, player, ME)).toBe(true)
-    expect(canRemoveStatus({ appliedByUserId: 'dm' }, player, ME)).toBe(false)
-    expect(canRemoveStatus({ appliedByUserId: 'other' }, dm, ME)).toBe(true)
+    expect(canRemoveStatus({ appliedByUserId: ME, fromSharedScreen: false }, player, ME)).toBe(true)
+    expect(canRemoveStatus({ appliedByUserId: 'dm', fromSharedScreen: false }, player, ME)).toBe(false)
+    expect(canRemoveStatus({ appliedByUserId: 'other', fromSharedScreen: false }, dm, ME)).toBe(true)
+  })
+
+  it('lets a shared screen take off only the statuses that came from a shared screen', () => {
+    const fromTable = { appliedByUserId: ME, fromSharedScreen: true }
+    const fromPhone = { appliedByUserId: ME, fromSharedScreen: false }
+    expect(canRemoveStatus(fromTable, player, ME, true)).toBe(true)
+    expect(canRemoveStatus(fromPhone, player, ME, true)).toBe(false)
+    // Even signed in as the session DM, the shared screen is no session DM.
+    expect(canRemoveStatus(fromPhone, dm, ME, true)).toBe(false)
   })
 })
 

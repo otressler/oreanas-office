@@ -44,7 +44,7 @@ public sealed class TablePresenceRulesTests
         var state = Snapshot(presence);
 
         Assert.Equal(
-            [new PresentPerson(Dm, true), new PresentPerson(Brom, true), new PresentPerson(Yara, false), new PresentPerson(Kira, true)],
+            [new PresentPerson(Dm, true, true), new PresentPerson(Brom, true, false), new PresentPerson(Yara, false, false), new PresentPerson(Kira, true, false)],
             state.People);
         Assert.False(state.SharedScreen);
     }
@@ -143,7 +143,7 @@ public sealed class TablePresenceTests(AppFixture fixture) : IClassFixture<AppFi
         var first = await listener.NextPresenceAsync();
         Assert.Equal(fight.EncounterId, first.EncounterId);
         Assert.Equal(
-            [new PresentPerson(oreana.Id, true), new PresentPerson(yara.Id, false), new PresentPerson(brom.Id, false)],
+            [new PresentPerson(oreana.Id, true, true), new PresentPerson(yara.Id, false, false), new PresentPerson(brom.Id, false, false)],
             first.Presence.People);
 
         await using var bromDevice = await TableTestClient.JoinAsync(App, brom, fight.EncounterId);

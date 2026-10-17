@@ -5313,7 +5313,8 @@
       "PresentPerson": {
         "required": [
           "userId",
-          "connected"
+          "connected",
+          "isSessionDm"
         ],
         "type": "object",
         "properties": {
@@ -5322,6 +5323,9 @@
             "format": "uuid"
           },
           "connected": {
+            "type": "boolean"
+          },
+          "isSessionDm": {
             "type": "boolean"
           }
         }

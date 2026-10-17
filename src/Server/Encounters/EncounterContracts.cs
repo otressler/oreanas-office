@@ -80,8 +80,8 @@ public record FogView(int Version, List<BoardCell> HiddenCells, List<FogArea> Ar
 public record PresenceState(List<PresentPerson> People, bool SharedScreen);
 
 // A person (campaign member) in the row of avatars; Connected is false when none of their
-// devices is, for longer than the 10-second grace.
-public record PresentPerson(Guid UserId, bool Connected);
+// devices is, for longer than the 10-second grace. IsSessionDm: the avatar gets the gold ring.
+public record PresentPerson(Guid UserId, bool Connected, bool IsSessionDm);
 
 // PingColor: "#rrggbb" (knowledge/features/pings-and-arrows.md, "Colours"): the session
 // DM's fixed gold; a player's first character in this fight (by the order characters were

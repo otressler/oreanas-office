@@ -1636,7 +1636,13 @@ export class MockBackend {
     const status = this.statusDefinitions.find((s) => s.libraryKey === libraryKey)!
     token.statuses = [
       ...(token.statuses ?? []),
-      { statusId: status.id, level, appliedByUserId: userId, appliedAt: new Date().toISOString() },
+      {
+        statusId: status.id,
+        level,
+        appliedByUserId: userId,
+        appliedAt: new Date().toISOString(),
+        fromSharedScreen: false,
+      },
     ]
   }
 
@@ -1705,6 +1711,7 @@ export class MockBackend {
         level: status.hasLevels ? (level ?? 1) : null,
         appliedByUserId: userId!,
         appliedAt: new Date().toISOString(),
+        fromSharedScreen: false,
       },
     ]
     return this.statusesChanged(encounter, token)

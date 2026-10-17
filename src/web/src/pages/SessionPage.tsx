@@ -8,6 +8,7 @@ import { EndEncounterButton } from '../encounters/EndEncounterButton'
 import { formatDate } from '../lib/dates'
 import { FightsPanel } from '../sessions/FightsPanel'
 import { fightPath } from '../sessions/paths'
+import { SessionTableControls } from '../sharedTable/SessionTableControls'
 import { de } from '../text/de'
 
 const t = de.sessionPage
@@ -76,6 +77,7 @@ export function SessionPage() {
           )
         )}
         <SessionControls campaign={campaign.data} session={s} />
+        <SessionTableControls campaignId={campaignId} session={s} />
       </div>
 
       {s.activeEncounter && (

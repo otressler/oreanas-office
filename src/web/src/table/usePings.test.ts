@@ -105,6 +105,7 @@ describe('usePings', () => {
         color: '#d4a017',
         cell: null,
         tokenId: ogre.id,
+        fromSharedScreen: false,
       })
       result.current.events.onArrowDrawn!({
         encounterId: 'e',
@@ -113,6 +114,7 @@ describe('usePings', () => {
         fromCell: { x: 0, y: 0 },
         fromTokenId: null,
         to: { x: 4, y: 3 },
+        fromSharedScreen: false,
       })
     })
     expect(result.current.shown).toEqual([
@@ -141,6 +143,7 @@ describe('usePings', () => {
       fromCell: null,
       fromTokenId: ogre.id,
       to,
+      fromSharedScreen: false,
     })
     act(() => {
       result.current.events.onArrowDrawn!(drawn({ x: 0, y: 0 }))

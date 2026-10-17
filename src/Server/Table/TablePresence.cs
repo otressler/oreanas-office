@@ -164,7 +164,7 @@ public sealed class TablePresence(
         var people = members
             .Distinct()
             .Where(id => id == dmUserId || owners.Contains(id) || Connected(id))
-            .Select(id => new PresentPerson(id, Connected(id)))
+            .Select(id => new PresentPerson(id, Connected(id), id == dmUserId))
             .ToList();
         return new PresenceState(people, inEncounter.Any(c => c.Mode != ConnectionMode.Player));
     }

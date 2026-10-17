@@ -1624,6 +1624,8 @@ export const de = {
     appliedBy: (name: string) => `von ${name}`,
     /** Someone who isn't (any more) in the campaign. */
     someone: 'jemandem',
+    /** Who put a status on when it came from the shared screen: "von Tisch". */
+    table: 'Tisch',
     /** The status picker on the token card (knowledge/features/statuses.md, "What the picker shows"). */
     picker: {
       title: (label: string) => `Zustand für ${label}`,
@@ -1748,7 +1750,39 @@ export const de = {
   spectator: {},
 
   /** Who is here and local mode (shared table lane). */
-  sharedTable: {},
+  sharedTable: {
+    /** The shared screen's name on pings, arrows and in the row of avatars. */
+    tableName: 'Tisch',
+    /** The row of avatars along the top of the board (knowledge/features/shared-table.md, "Who's here"). */
+    presence: {
+      label: 'Wer am Tisch ist',
+      connected: 'verbunden',
+      notConnected: 'nicht verbunden',
+      /** The avatar's accessible name, e.g. "Eli, verbunden". */
+      person: (name: string, connected: boolean) =>
+        `${name}, ${connected ? 'verbunden' : 'nicht verbunden'}`,
+      /** A person whose name the board doesn't list. */
+      unknown: 'Jemand',
+    },
+    /** The play mode on the session page ("Spielweise"). */
+    playMode: {
+      title: 'Spielweise',
+      byod: 'Eigene Geräte',
+      local: 'Gemeinsamer Bildschirm',
+      byodHint: 'Jede und jeder spielt am eigenen Gerät.',
+      localHint: 'Ein Bildschirm in der Mitte des Tisches bewegt alle Figuren.',
+      /** Shown to everyone but the session DM: the mode, which they can't change. */
+      readOnly: (mode: string) => `Spielweise: ${mode}`,
+      failed: 'Die Spielweise konnte nicht geändert werden.',
+    },
+    /** On the session page while the session is in local mode. */
+    openScreen: 'Gemeinsamen Bildschirm öffnen',
+    /** The shared screen's own controls. */
+    screen: {
+      /** The board is read-only again after the session DM switched back. */
+      watchingOnly: 'Der Bildschirm zeigt nur noch zu.',
+    },
+  },
 
   /** Failures without an error code. */
   requestErrors: {

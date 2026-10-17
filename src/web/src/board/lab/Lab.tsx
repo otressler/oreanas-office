@@ -65,6 +65,7 @@ export function Lab() {
                 level: s.hasLevels ? 2 : null,
                 appliedByUserId: LAB_USER,
                 appliedAt: '2026-10-16T10:00:00Z',
+                fromSharedScreen: false,
               }))
             : token.statuses,
         }

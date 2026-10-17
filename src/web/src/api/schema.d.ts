@@ -3411,6 +3411,7 @@ export interface components {
             /** Format: uuid */
             userId: string;
             connected: boolean;
+            isSessionDm: boolean;
         };
         RegisterRequest: {
             inviteToken: string;
