@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using OreanasOffice.Server.Api;
@@ -194,9 +195,18 @@ public static class StatusEndpoints
 
     // Characters taken off the board are left out: no status can be put on them. The session
     // DM's own list is first, also when they have no character in the fight; a player with
-    // no character in the fight gets no lists.
+    // no character in the fight gets no lists. ?sharedScreen=true is a shared screen's picker
+    // (knowledge/features/shared-table.md): it acts like a player who owns every character, so
+    // the lists of all characters in the fight and no DM list, also when the account is the
+    // session DM.
     private static async Task<Results<Ok<StatusPickerResponse>, NotFound>> GetPicker(
-        Guid campaignId, Guid encounterId, ClaimsPrincipal user, AppDbContext db, TimeProvider time, CancellationToken cancellationToken)
+        Guid campaignId,
+        Guid encounterId,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        TimeProvider time,
+        CancellationToken cancellationToken,
+        [FromQuery] bool sharedScreen = false)
     {
         var encounter = await db.Encounters.AsNoTracking()
             .Where(e => e.Id == encounterId && e.CampaignId == campaignId && e.Status == EncounterStatus.Active)
@@ -215,7 +225,7 @@ public static class StatusEndpoints
         }
 
         var userId = user.GetUserId();
-        var isSessionDm = encounter.SessionDmUserId == userId;
+        var isSessionDm = encounter.SessionDmUserId == userId && !sharedScreen;
         var now = time.GetUtcNow();
         var lists = new List<(StatusListKind Kind, Guid? CharacterId, string? Name, Guid ListId)>();
         if (isSessionDm)
@@ -224,7 +234,7 @@ public static class StatusEndpoints
         }
 
         var characters = encounter.Characters
-            .Where(c => isSessionDm || c.OwnerUserId == userId)
+            .Where(c => isSessionDm || sharedScreen || c.OwnerUserId == userId)
             .OrderBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(c => c.Id);
         foreach (var character in characters)

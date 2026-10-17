@@ -2592,7 +2592,9 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    sharedScreen?: boolean;
+                };
                 header?: never;
                 path: {
                     campaignId: string;

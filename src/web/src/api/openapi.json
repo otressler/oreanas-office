@@ -2549,6 +2549,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "sharedScreen",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {

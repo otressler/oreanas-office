@@ -147,6 +147,8 @@ export interface BoardHandle {
    * once in its ring colour. Doesn't select it. Nothing if it isn't on the board.
    */
   centerOn: (tokenId: string, options?: { pulse?: boolean }) => void
+  /** "Ganze Karte": zooms to show the whole map (a shared screen's corner menu). */
+  fit: () => void
 }
 
 /** What the board's own info box is about. */
@@ -766,8 +768,9 @@ export function Board({
           kick()
         }
       },
+      fit,
     }),
-    [width, height, moveView, kick],
+    [width, height, moveView, kick, fit],
   )
 
   /** Tapping a marker pans its ping to the middle of the uncovered board. */

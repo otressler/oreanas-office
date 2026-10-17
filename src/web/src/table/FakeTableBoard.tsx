@@ -50,6 +50,7 @@ export function FakeTableBoard({
   useImperativeHandle(handleRef, () => ({
     centerOn: (tokenId) =>
       setCentred(board.tokens.find((token) => token.id === tokenId)?.label ?? null),
+    fit: () => {},
   }))
 
   function tap(x: number, y: number) {
