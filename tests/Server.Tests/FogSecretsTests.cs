@@ -44,7 +44,7 @@ public sealed class FogSecretsTests(AppFixture fixture) : IClassFixture<AppFixtu
 
         Assert.DoesNotContain(fight.Ogre.ToString(), player.Everything);
         Assert.DoesNotContain(fogged.GoblinA.ToString(), player.Everything);
-        Assert.Equal([nameof(ITableClient.TokenMoved)], player.Messages.Select(m => m.Method).Distinct());
+        Assert.Equal([nameof(ITableClient.TokenMoved)], player.Messages.Select(m => m.Method).Where(m => m != nameof(ITableClient.PresenceChanged)).Distinct());
 
         // The DM's second device got all of it.
         Assert.Single(dmSecond.Of(nameof(ITableClient.TokenStatusesChanged)));

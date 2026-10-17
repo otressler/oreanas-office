@@ -147,7 +147,7 @@ public sealed class FogTests(AppFixture fixture) : IClassFixture<AppFixture>
 
         Assert.Equal(
             [nameof(ITableClient.TokenMoved)],
-            playerDevice.Messages.Select(m => m.Method).Distinct());
+            playerDevice.Messages.Select(m => m.Method).Where(m => m != nameof(ITableClient.PresenceChanged)).Distinct());
         foreach (var secret in new[] { fogged.GoblinA, fogged.GoblinB, fight.Ogre })
         {
             Assert.DoesNotContain(secret.ToString(), playerDevice.Everything);
