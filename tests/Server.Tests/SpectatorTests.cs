@@ -69,7 +69,7 @@ public sealed class SpectatorTests(AppFixture fixture) : IClassFixture<AppFixtur
         await using var spectatorScreen = await TableTestClient.ConnectAsync(App, spectator);
 
         Assert.Equal(ApiErrorCode.NotLocalMode, (await memberScreen.WatchAsync(table.Session.Id, sharedScreen: true)).Error);
-        await table.Dm.SetPlayModeAsync(table.CampaignId, table.Session.Id, PlayMode.Local);
+        await table.Dm.SetPlayModeOkAsync(table.CampaignId, table.Session.Id, PlayMode.Local);
 
         var shared = await memberScreen.WatchAsync(table.Session.Id, sharedScreen: true);
         var refused = await spectatorScreen.WatchAsync(table.Session.Id, sharedScreen: true);
@@ -84,7 +84,7 @@ public sealed class SpectatorTests(AppFixture fixture) : IClassFixture<AppFixtur
     public async Task A_stranger_cannot_open_a_shared_screen_in_local_mode()
     {
         var table = await App.CreateEncounterTableAsync();
-        await table.Dm.SetPlayModeAsync(table.CampaignId, table.Session.Id, PlayMode.Local);
+        await table.Dm.SetPlayModeOkAsync(table.CampaignId, table.Session.Id, PlayMode.Local);
         await using var screen = await TableTestClient.ConnectAsync(App, await App.CreatePersonAsync("Fremder"));
 
         Assert.Equal(ApiErrorCode.TokenNotFound, (await screen.WatchAsync(table.Session.Id, sharedScreen: true)).Error);
@@ -122,7 +122,7 @@ public sealed class SpectatorTests(AppFixture fixture) : IClassFixture<AppFixtur
         var messages = screen.ListenToSession();
         await screen.WatchAsync(table.Session.Id);
 
-        await table.Dm.SetPlayModeAsync(table.CampaignId, table.Session.Id, PlayMode.Local);
+        await table.Dm.SetPlayModeOkAsync(table.CampaignId, table.Session.Id, PlayMode.Local);
 
         Assert.Equal(new PlayModeChangedEvent(table.Session.Id, PlayMode.Local), await messages.PlayModeChangedAsync());
     }

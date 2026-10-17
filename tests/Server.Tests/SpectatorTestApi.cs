@@ -36,7 +36,7 @@ public static class SpectatorTestApi
     public static Task<HttpResponseMessage> GetSpectateBoardAsync(this Person person, Guid sessionId) =>
         person.Client.GetAsync($"/api/sessions/{sessionId}/spectate/board");
 
-    public static async Task SetPlayModeAsync(this Person dm, Guid campaignId, Guid sessionId, PlayMode mode)
+    public static async Task SetPlayModeOkAsync(this Person dm, Guid campaignId, Guid sessionId, PlayMode mode)
     {
         var response = await dm.Client.PutAsJsonAsync($"/api/campaigns/{campaignId}/sessions/{sessionId}/play-mode", new SetPlayModeRequest(mode), Json);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
