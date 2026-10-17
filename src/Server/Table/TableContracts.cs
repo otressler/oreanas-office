@@ -227,10 +227,12 @@ public record PingRequest(Guid EncounterId, BoardCell? Cell, Guid? TokenId);
 // From exactly one of FromCell and FromTokenId, to a cell.
 public record DrawArrowRequest(Guid EncounterId, BoardCell? FromCell, Guid? FromTokenId, BoardCell To);
 
-// Color: "#rrggbb", set by the server (BoardPerson.PingColor of UserId).
-public record PingedEvent(Guid EncounterId, Guid UserId, string Color, BoardCell? Cell, Guid? TokenId);
+// Color: "#rrggbb", set by the server (BoardPerson.PingColor of UserId). FromSharedScreen: sent
+// from a shared screen, in white and named "Tisch" (knowledge/features/shared-table.md).
+public record PingedEvent(Guid EncounterId, Guid UserId, string Color, BoardCell? Cell, Guid? TokenId, bool FromSharedScreen);
 
-public record ArrowDrawnEvent(Guid EncounterId, Guid UserId, string Color, BoardCell? FromCell, Guid? FromTokenId, BoardCell To);
+public record ArrowDrawnEvent(
+    Guid EncounterId, Guid UserId, string Color, BoardCell? FromCell, Guid? FromTokenId, BoardCell To, bool FromSharedScreen);
 
 // Level: only for statuses with levels, 1 to 6; null means 1.
 public record AddStatusRequest(Guid TokenId, Guid StatusId, int? Level);

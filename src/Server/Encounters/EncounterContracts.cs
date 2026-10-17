@@ -136,5 +136,7 @@ public record BoardToken(
     bool Hidden = false);
 
 // A status on a token. Level: 1-6 for statuses with levels, else null. AppliedByUserId:
-// who put it on (the card's "von Eli"); a player may remove only their own.
-public record BoardTokenStatus(Guid StatusId, int? Level, Guid AppliedByUserId, DateTimeOffset AppliedAt);
+// who put it on (the card's "von Eli"); a player may remove only their own. FromSharedScreen:
+// put on from a shared screen (the card says "Tisch"); only a shared screen removes it
+// (knowledge/features/shared-table.md).
+public record BoardTokenStatus(Guid StatusId, int? Level, Guid AppliedByUserId, DateTimeOffset AppliedAt, bool FromSharedScreen);

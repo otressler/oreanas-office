@@ -56,4 +56,8 @@ public sealed class TableOptions
 
     // How often idle connections are looked for; in memory only, never the database.
     public TimeSpan IdleCheckInterval { get; set; } = TimeSpan.FromMinutes(1);
+
+    // How long a person who lost their last connection still shows as connected in the
+    // row of avatars (knowledge/features/shared-table.md, "Who's here").
+    public TimeSpan PresenceGrace { get; set; } = TimeSpan.FromSeconds(10);
 }
