@@ -3,7 +3,7 @@
 // board and hub as in EncounterPage.test.tsx.
 import type { QueryClient } from '@tanstack/react-query'
 import { act, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import userEvent, { PointerEventsCheckLevel } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type {
   BoardState,
@@ -141,7 +141,13 @@ function openFight(board: BoardState = runningBoard()) {
   }))
   const app = renderApp(fightPath)
   queryClient = app.queryClient
-  return { ...app, calls, user: userEvent.setup() }
+  // A card that just opened lets taps through for the double-tap time (FightTable); people
+  // can't reach its buttons that fast, tests can.
+  return {
+    ...app,
+    calls,
+    user: userEvent.setup({ pointerEventsCheck: PointerEventsCheckLevel.Never }),
+  }
 }
 
 const cell = (x: number, y: number) => screen.getByRole('button', { name: `Feld ${x},${y}` })

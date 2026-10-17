@@ -1,5 +1,5 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import userEvent, { PointerEventsCheckLevel } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BoardState, BoardToken, MoveResult, TokenMovedEvent } from '../api/types'
 import { encounter, ids, smallBoard } from '../encounters/testing'
@@ -66,7 +66,13 @@ function openFight(board: BoardState = runningBoard()) {
     'GET /api/campaigns/:id/encounters/:eid/board': () => json(200, board),
   })
   const app = renderApp(fightPath)
-  return { ...app, calls, user: userEvent.setup() }
+  // A card that just opened lets taps through for the double-tap time (FightTable); people
+  // can't reach its buttons that fast, tests can.
+  return {
+    ...app,
+    calls,
+    user: userEvent.setup({ pointerEventsCheck: PointerEventsCheckLevel.Never }),
+  }
 }
 
 const cell = (x: number, y: number) => screen.getByRole('button', { name: `Feld ${x},${y}` })

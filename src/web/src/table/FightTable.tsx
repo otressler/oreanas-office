@@ -113,6 +113,12 @@ export function FightTable({
     null,
   )
   useEffect(() => () => clearTimeout(heldConfirm.current?.timer), [])
+  // A card that wasn't open lets taps through for DOUBLE_TAP_MS, and the board makes room
+  // for it only then: it may lie under the second touch of a double tap (the wide panel top
+  // right, the phone sheet at the bottom), and panning would move the cell away from it.
+  const [cardWaiting, setCardWaiting] = useState(false)
+  const cardTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(cardTimer.current), [])
 
   // The device's own undo; a reload that brings a new `undoableMove` takes over again.
   const [ownUndo, setOwnUndo] = useState<UndoableMove | null | undefined>(undefined)
@@ -149,9 +155,10 @@ export function FightTable({
     scene,
     canMove,
   )
-  const cardTokenId = shownCard?.kind === 'token' ? shownCard.token.id : null
+  const settledCard = cardWaiting ? null : shownCard
+  const cardTokenId = settledCard?.kind === 'token' ? settledCard.token.id : null
   const pickerToken = picking ? shown.tokens.find((token) => token.id === picking) : undefined
-  const covered = shownCard ? cardSize : null
+  const covered = settledCard ? cardSize : null
   const inset = covered
     ? wide
       ? { right: covered.width + PANEL_GAP }
@@ -272,6 +279,12 @@ export function FightTable({
     )
     setControls(result.controls)
     setCard(result.card)
+    const opens = !shownCard && (result.card !== null || result.controls.mode !== 'idle')
+    if (opens) {
+      clearTimeout(cardTimer.current)
+      setCardWaiting(true)
+      cardTimer.current = setTimeout(() => setCardWaiting(false), DOUBLE_TAP_MS)
+    }
     const hint =
       result.hint === 'invalidTarget'
         ? t.invalidTarget
@@ -293,6 +306,8 @@ export function FightTable({
       heldConfirm.current = null
       dropPending(held.intent.tokenId)
     }
+    clearTimeout(cardTimer.current)
+    setCardWaiting(false)
     const before = beforeTap.current
     beforeTap.current = null
     if (!before) return
@@ -458,42 +473,46 @@ export function FightTable({
         )}
 
         {shownCard && (
-          <TokenCard
-            shown={shownCard}
-            board={board}
-            userId={me.id}
-            controls={current}
-            selected={selected}
-            wide={wide}
-            folded={folded}
-            onFoldedChange={setFolded}
-            onClose={closeCard}
-            onConfirm={confirm}
-            onCancel={cancel}
-            live={{ running, connected }}
-            canMove={canMove}
-            onPickRow={(token) => {
-              const picked = pickRow(current, token, shownCard.cell, {
-                canMove,
-                enabled: running && connected,
-              })
-              setControls(picked.controls)
-              setCard(picked.card)
-              setNotice(null)
-            }}
-            onAddStatus={(token) => setPicking(token.id)}
-            onShow={(token) => pingTarget({ cell: { x: token.x, y: token.y }, tokenId: token.id })}
-            onRemoveToken={(token) => void removeToken(token)}
-            onRemoveStatus={(token, statusId) =>
-              void statusFromCard(() => table.removeStatus({ tokenId: token.id, statusId }))
-            }
-            onSetLevel={(token, statusId, level) =>
-              void statusFromCard(() =>
-                table.setStatusLevel({ tokenId: token.id, statusId, level }),
-              )
-            }
-            onSize={setCardSize}
-          />
+          <div className="contents" style={cardWaiting ? { pointerEvents: 'none' } : undefined}>
+            <TokenCard
+              shown={shownCard}
+              board={board}
+              userId={me.id}
+              controls={current}
+              selected={selected}
+              wide={wide}
+              folded={folded}
+              onFoldedChange={setFolded}
+              onClose={closeCard}
+              onConfirm={confirm}
+              onCancel={cancel}
+              live={{ running, connected }}
+              canMove={canMove}
+              onPickRow={(token) => {
+                const picked = pickRow(current, token, shownCard.cell, {
+                  canMove,
+                  enabled: running && connected,
+                })
+                setControls(picked.controls)
+                setCard(picked.card)
+                setNotice(null)
+              }}
+              onAddStatus={(token) => setPicking(token.id)}
+              onShow={(token) =>
+                pingTarget({ cell: { x: token.x, y: token.y }, tokenId: token.id })
+              }
+              onRemoveToken={(token) => void removeToken(token)}
+              onRemoveStatus={(token, statusId) =>
+                void statusFromCard(() => table.removeStatus({ tokenId: token.id, statusId }))
+              }
+              onSetLevel={(token, statusId, level) =>
+                void statusFromCard(() =>
+                  table.setStatusLevel({ tokenId: token.id, statusId, level }),
+                )
+              }
+              onSize={setCardSize}
+            />
+          </div>
         )}
 
         {pickerToken && running && (
