@@ -4,6 +4,7 @@ import { ApiRequestError } from '../api/errors'
 import { useCampaign, useSession } from '../campaigns/queries'
 import { SessionControls, SessionDetailsForm } from '../campaigns/SessionControls'
 import { Badge, Button, ButtonLink, LoadError, Loading, PageTitle } from '../components/ui'
+import { DiceButton } from '../dice/DiceButton'
 import { EndEncounterButton } from '../encounters/EndEncounterButton'
 import { formatDate } from '../lib/dates'
 import { FightsPanel } from '../sessions/FightsPanel'
@@ -54,6 +55,9 @@ export function SessionPage() {
       <div className="flex flex-wrap items-center gap-3">
         <PageTitle>{s.title}</PageTitle>
         <Badge tone={s.status === 'active' ? 'candle' : 'dim'}>{de.sessionStatus[s.status]}</Badge>
+        <div className="ml-auto pt-4">
+          <DiceButton />
+        </div>
       </div>
       <p className="text-sm text-dim">
         {formatDate(s.date)} · {de.sessions.dmName(s.dmDisplayName)}

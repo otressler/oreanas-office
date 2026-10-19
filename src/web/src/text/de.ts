@@ -673,6 +673,49 @@ export const de = {
     vibrateHint: 'Gilt nur für dieses Gerät.',
   },
 
+  /** The dice tray (src/dice, knowledge/features/dice-tray.md). Dice are written W4 … W100. */
+  dice: {
+    open: 'Würfeln',
+    title: 'Würfel',
+    /** Under the dialog's title: the rolls stay on this device for now. */
+    localHint: 'Nur du siehst deine Würfe.',
+    tray: 'Würfelschale',
+    empty: 'Tipp unten auf einen Würfel, um ihn in die Schale zu legen.',
+    tapToRemove: 'Tipp auf einen Würfel in der Schale, um ihn herauszunehmen.',
+    limit: (max: number) => `Mehr als ${max} Würfel gehen nicht auf einmal.`,
+    picker: 'Würfel dazunehmen',
+    add: (die: string, inRoll: number) =>
+      `Einen ${die} dazunehmen${inRoll ? ` (${inRoll} im Wurf)` : ''}`,
+    die: (die: string, value: number | null, dropped: number | null) =>
+      `${die}, ${value == null ? 'noch nicht gewürfelt' : `zeigt ${value}${dropped != null ? `, verworfen ${dropped}` : ''}`}. Aus dem Wurf nehmen`,
+    modifier: 'Modifikator',
+    decrease: 'Modifikator verringern',
+    increase: 'Modifikator erhöhen',
+    modes: 'W20-Würfe',
+    modesHint: 'Gilt für die W20 im Wurf',
+    mode: { normal: 'Normal', advantage: 'Vorteil', disadvantage: 'Nachteil' },
+    withMode: { normal: '', advantage: 'mit Vorteil', disadvantage: 'mit Nachteil' },
+    rolledWith: {
+      normal: '',
+      advantage: 'Mit Vorteil gewürfelt',
+      disadvantage: 'Mit Nachteil gewürfelt',
+    },
+    clear: 'Leeren',
+    pickDice: 'Würfel wählen',
+    rolling: 'Wird gewürfelt …',
+    rollAgain: 'Noch mal würfeln',
+    roll: (count: number) => `${count} Würfel werfen`,
+    natural20: 'Natürliche 20',
+    natural1: 'Natürliche 1',
+    natural20And1: 'Natürliche 20 und natürliche 1',
+    announce: (notation: string, total: number, note: string) =>
+      `${notation}: Summe ${total}.${note ? ` ${note}.` : ''}`,
+    history: 'Letzte Würfe',
+    historyEmpty: 'Hier stehen deine letzten Würfe.',
+    again: 'Noch mal',
+    againLabel: (notation: string) => `${notation} noch mal würfeln`,
+  },
+
   /** The map editor's frame (src/editor). */
   editor: {
     /** Accessible name of the canvas; the name is the map's. */

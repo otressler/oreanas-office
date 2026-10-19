@@ -14,6 +14,7 @@ import { DOUBLE_TAP_MS } from '../board/gestures'
 import type { PingTarget } from '../board/pings'
 import { buildScene } from '../board/scene'
 import { Button } from '../components/ui'
+import { DiceButton } from '../dice/DiceButton'
 import { FightScreen } from '../encounters/FightScreen'
 import { useWideScreen } from '../lib/useWideScreen'
 import { canRemoveStatus } from '../statuses/rules'
@@ -424,12 +425,11 @@ export function FightTable({
       title={board.name}
       status={table.status && <ConnectionIndicator status={table.status} />}
       actions={
-        (dmActions || actions) && (
-          <>
-            {dmActions}
-            {actions}
-          </>
-        )
+        <>
+          <DiceButton compact />
+          {dmActions}
+          {actions}
+        </>
       }
     >
       <div className="relative flex min-h-0 flex-1 flex-col">
