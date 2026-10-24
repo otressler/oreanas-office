@@ -73,6 +73,11 @@ const ALL_CODES = {
   statusAlreadySet: true,
   levelInvalid: true,
   notYourStatus: true,
+  fogInvalid: true,
+  readOnlyConnection: true,
+  spawnInvalid: true,
+  notLocalMode: true,
+  notBuilt: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

@@ -30,6 +30,8 @@ export interface StatusPickerProps {
   onAdd: (statusId: string) => Promise<string | null>
   onRemove: (statusId: string) => Promise<string | null>
   onClose: () => void
+  /** A shared screen's picker lists every character's statuses (knowledge/features/shared-table.md). */
+  sharedScreen?: boolean
 }
 
 export function StatusPicker({
@@ -42,8 +44,9 @@ export function StatusPicker({
   onAdd,
   onRemove,
   onClose,
+  sharedScreen,
 }: StatusPickerProps) {
-  const picker = useStatusPicker(campaignId, encounterId)
+  const picker = useStatusPicker(campaignId, encounterId, sharedScreen)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

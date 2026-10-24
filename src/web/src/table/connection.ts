@@ -16,14 +16,18 @@
 // - others' move previews are reported as they come and dropped with the connection;
 //   the server sends the ones still shown when the device joins again;
 // - pings, arrows, status changes and removed or restored tokens are passed on as they
-//   come (stage 9); pings and arrows are best effort, like previews.
+//   come (stage 9); pings and arrows are best effort, like previews;
+// - fog changes, revealed and hidden creatures and spawned creatures are passed on as they
+//   come (stage 10); ReloadBoard (what this device may see changed) joins again and reloads.
 // The connection factory is injected, so tests run without a server.
 import type { HubConnection } from '@microsoft/signalr'
 import type {
   AddStatusRequest,
   ApiErrorCode,
   ArrowDrawnEvent,
+  ChangeFogRequest,
   DrawArrowRequest,
+  FogChangedEvent,
   HubResult,
   MovePreviewClearedEvent,
   MovePreviewEvent,
@@ -31,12 +35,19 @@ import type {
   MoveTokenRequest,
   PingRequest,
   PingedEvent,
+  PresenceChangedEvent,
   RemoveStatusRequest,
   SetStatusLevelRequest,
+  SetTokensHiddenRequest,
+  SpawnCreaturesRequest,
+  SpawnResult,
   StatusResult,
+  TokenHiddenEvent,
   TokenMovedEvent,
   TokenRemovedEvent,
   TokenRestoredEvent,
+  TokenRevealedEvent,
+  TokensAddedEvent,
   TokenStatusesChangedEvent,
 } from '../api/types'
 import { invokeHub, onHubEvent } from './hub'
@@ -90,6 +101,19 @@ export interface TableConnectionOptions {
   onStatusesChanged?: (change: TokenStatusesChangedEvent) => void
   onTokenRemoved?: (removed: TokenRemovedEvent) => void
   onTokenRestored?: (restored: TokenRestoredEvent) => void
+  /**
+   * Runs on the fresh connection just before JoinEncounter; an error code stops the join like
+   * JoinEncounter's own. The spectator and shared screens call WatchSession here
+   * (knowledge/features/spectator-view.md).
+   */
+  beforeJoin?: (connection: HubConnection) => Promise<ApiErrorCode | null>
+  /** Who is connected to the fight changed (knowledge/features/shared-table.md). */
+  onPresenceChanged?: (presence: PresenceChangedEvent) => void
+  /** Fog changed (stage 10). */
+  onFogChanged?: (changed: FogChangedEvent) => void
+  onTokenRevealed?: (revealed: TokenRevealedEvent) => void
+  onTokenHidden?: (hidden: TokenHiddenEvent) => void
+  onTokensAdded?: (added: TokensAddedEvent) => void
 }
 
 /** A move or undo while the table isn't connected; moves are never queued. */
@@ -119,6 +143,11 @@ export class TableConnection {
 
   get status(): TableStatus {
     return this.state
+  }
+
+  /** The SignalR connection while joined to the encounter, for screens that call the hub themselves. */
+  get hubConnection(): HubConnection | null {
+    return this.state === 'connected' ? this.connection : null
   }
 
   start(): void {
@@ -202,6 +231,24 @@ export class TableConnection {
 
   restoreToken(tokenId: string): Promise<HubResult> {
     return this.call((connection) => invokeHub(connection, 'RestoreToken', tokenId))
+  }
+
+  /** Session DM only (stage 10). Everything below rejects with NotConnectedError unless connected. */
+  changeFog(request: ChangeFogRequest): Promise<HubResult> {
+    return this.call((connection) => invokeHub(connection, 'ChangeFog', request))
+  }
+
+  setTokensHidden(request: SetTokensHiddenRequest): Promise<HubResult> {
+    return this.call((connection) => invokeHub(connection, 'SetTokensHidden', request))
+  }
+
+  spawnCreatures(request: SpawnCreaturesRequest): Promise<SpawnResult> {
+    return this.call((connection) => invokeHub(connection, 'SpawnCreatures', request))
+  }
+
+  /** Takes back the latest fog change, reveal or spawn. */
+  undoChange(): Promise<HubResult> {
+    return this.call((connection) => invokeHub(connection, 'UndoChange', this.options.encounterId))
   }
 
   private call<T>(send: (connection: HubConnection) => Promise<T>): Promise<T> {
@@ -288,6 +335,35 @@ export class TableConnection {
     onHubEvent(connection, 'TokenRestored', (restored) => {
       if (!stale()) this.options.onTokenRestored?.(restored)
     })
+    onHubEvent(connection, 'PresenceChanged', (presence) => {
+      if (!stale()) this.options.onPresenceChanged?.(presence)
+    })
+    onHubEvent(connection, 'FogChanged', (changed) => {
+      if (!stale()) this.options.onFogChanged?.(changed)
+    })
+    onHubEvent(connection, 'TokenRevealed', (revealed) => {
+      if (!stale()) this.options.onTokenRevealed?.(revealed)
+    })
+    onHubEvent(connection, 'TokenHidden', (hidden) => {
+      if (!stale()) this.options.onTokenHidden?.(hidden)
+    })
+    onHubEvent(connection, 'TokensAdded', (added) => {
+      if (!stale()) this.options.onTokensAdded?.(added)
+    })
+    // What this device may see changed (a hand-over): join again, then reload the board.
+    onHubEvent(connection, 'ReloadBoard', () => {
+      if (stale()) return
+      invokeHub(connection, 'JoinEncounter', encounterId).then(
+        (result) => {
+          if (stale()) return
+          if (result.error) this.options.onRejected(result.error)
+          else this.options.onJoined()
+        },
+        () => {
+          // A lost connection shows up through onclose.
+        },
+      )
+    })
     onHubEvent(connection, 'IdleTimeout', () => {
       if (stale()) return
       this.halt()
@@ -301,7 +377,9 @@ export class TableConnection {
     try {
       await connection.start()
       if (stale()) return
-      error = (await invokeHub(connection, 'JoinEncounter', encounterId)).error
+      error = (await this.options.beforeJoin?.(connection)) ?? null
+      if (stale()) return
+      error ??= (await invokeHub(connection, 'JoinEncounter', encounterId)).error
     } catch {
       if (!stale()) this.lost(true)
       return

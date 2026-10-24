@@ -1281,6 +1281,12 @@ export const de = {
     levelInvalid: 'Die Stufe geht von 1 bis 6.',
     notYourStatus:
       'Diesen Zustand hat jemand anderes gesetzt. Entfernen kann ihn nur die Person oder die Spielleitung.',
+    fogInvalid:
+      'Mit dem Nebel stimmt etwas nicht: Felder außerhalb der Karte, oder der Kampf hat keinen Nebel.',
+    readOnlyConnection: 'Dieser Bildschirm schaut nur zu.',
+    spawnInvalid: 'Diese Kreaturen lassen sich nicht erscheinen lassen.',
+    notLocalMode: 'Ein gemeinsamer Bildschirm geht nur in der Spielweise „Gemeinsamer Bildschirm“.',
+    notBuilt: 'Das gibt es noch nicht.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */
@@ -1661,6 +1667,8 @@ export const de = {
     appliedBy: (name: string) => `von ${name}`,
     /** Someone who isn't (any more) in the campaign. */
     someone: 'jemandem',
+    /** Who put a status on when it came from the shared screen: "von Tisch". */
+    table: 'Tisch',
     /** The status picker on the token card (knowledge/features/statuses.md, "What the picker shows"). */
     picker: {
       title: (label: string) => `Zustand für ${label}`,
@@ -1776,6 +1784,250 @@ export const de = {
     restoreRow: (label: string) => `${label} zurückholen`,
     /** When a token was taken off, e.g. "um 20:15". */
     removedAt: (time: string) => `um ${time}`,
+  },
+
+  /** Fog of war and creature spawn (fog frontend lane). */
+  fog: {
+    /** Tapping a hidden cell as a player: no terrain, no height. */
+    unexplored: 'Unerkundet',
+    /** The closed-eye mark's accessible name. */
+    hiddenMark: 'Verborgen',
+    needsConnection: 'Dafür braucht es eine Verbindung zum Tisch.',
+
+    /** The session DM's board: fog mode, previews, the confirm bar. */
+    board: {
+      fogButton: 'Nebel',
+      playerView: 'Spieleransicht',
+      /** Shown while "Spieleransicht" is on. */
+      playerViewNote: 'So sehen die Spielenden den Tisch. Es wird nichts gesendet.',
+      toolsLabel: 'Nebelwerkzeuge',
+      tools: { area: 'Bereich', brush: 'Pinsel', rect: 'Rechteck' },
+      reveal: 'Aufdecken',
+      hide: 'Verdecken',
+      directionLabel: 'Felder',
+      hints: {
+        area: 'Tippe auf ein Feld, um einen Bereich zu wählen.',
+        brush: 'Tippe auf die Felder, die du ändern willst.',
+        rectFirst: 'Tippe auf die erste Ecke.',
+        rectSecond: 'Tippe auf die gegenüberliegende Ecke.',
+      },
+      noArea: 'Auf diesem Feld liegt kein Bereich.',
+      chooseArea: 'Welcher Bereich?',
+      /** "12 Felder aufdecken?" / "1 Feld verdecken?" */
+      confirmReveal: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} aufdecken?`,
+      confirmHide: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} verdecken?`,
+      nothingToChange: 'Diese Felder sind schon so.',
+      cancel: 'Abbrechen',
+      undo: 'Rückgängig',
+      /** The undo bar after a change, e.g. "12 Felder aufgedeckt". */
+      revealed: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} aufgedeckt`,
+      hidden: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} verdeckt`,
+      failed: 'Die Änderung ist nicht angekommen. Versuch es bitte noch einmal.',
+      undoFailed: 'Das Rückgängigmachen ist nicht angekommen. Versuch es bitte noch einmal.',
+    },
+
+    /** The token card's buttons for a creature. */
+    token: {
+      reveal: 'Aufdecken',
+      hide: 'Verbergen',
+      revealAllHere: 'Alle verborgenen hier',
+      /** A note on a hidden creature's card. */
+      hiddenNote: 'Verborgen: Nur du siehst diese Kreatur.',
+      /** The undo bar, e.g. "Goblin aufgedeckt". */
+      revealed: (label: string) => `${label} aufgedeckt`,
+      hidden: (label: string) => `${label} verborgen`,
+      revealedMany: (count: number) => `${count} Kreaturen aufgedeckt`,
+      failed: 'Das Aufdecken oder Verbergen ist nicht angekommen. Versuch es bitte noch einmal.',
+    },
+
+    /** "Kreatur hinzufügen": the picker, placing, the confirm bar (creature-spawn.md). */
+    spawn: {
+      button: 'Kreatur hinzufügen',
+      pickerTitle: 'Welche Kreatur?',
+      usedHere: 'In diesem Kampf',
+      others: 'Weitere Arten',
+      loading: 'Arten werden geladen…',
+      loadFailed: 'Die Arten konnten nicht geladen werden.',
+      empty: 'Diese Kampagne hat noch keine Kreaturenart.',
+      /** A type's button, e.g. "Goblin hinzufügen". */
+      pick: (name: string) => `${name} hinzufügen`,
+      newType: 'Neue Art',
+      newName: 'Name',
+      newSize: 'Größe',
+      newCreate: 'Anlegen',
+      newNameTaken: 'Diese Kampagne hat schon eine Art mit diesem Namen.',
+      newFailed: 'Die Art konnte nicht angelegt werden. Versuch es bitte noch einmal.',
+      close: 'Schließen',
+      /** While placing; `name` is the picked type. */
+      placing: (name: string) =>
+        `${name}: Tippe auf Felder, um Kreaturen zu platzieren. Tippe auf eine platzierte Kreatur, um sie wegzunehmen.`,
+      /** Chips of what is placed, e.g. "Goblin × 2". */
+      placed: (name: string, count: number) => `${name} × ${count}`,
+      otherType: 'Andere Art',
+      done: 'Fertig',
+      /** The confirm bar: "3 Kreaturen erscheinen lassen?" */
+      confirm: (count: number) =>
+        `${count} ${count === 1 ? 'Kreatur' : 'Kreaturen'} erscheinen lassen?`,
+      hidden: 'Verborgen',
+      appear: 'Erscheinen lassen',
+      cancel: 'Abbrechen',
+      back: 'Weiter platzieren',
+      /** The undo bar, e.g. "3 Kreaturen erschienen". */
+      appeared: (count: number) => `${count} ${count === 1 ? 'Kreatur' : 'Kreaturen'} erschienen`,
+      undo: 'Rückgängig',
+      failed: 'Die Kreaturen sind nicht angekommen. Versuch es bitte noch einmal.',
+    },
+
+    /** The map editor, encounter mode. */
+    editor: {
+      tool: 'Nebel',
+      /** The panel's heading for areas. */
+      areas: 'Bereiche',
+      turnOn: 'Nebel einschalten',
+      turnOnHelp:
+        'Mit Nebel ist die ganze Karte für die Spielenden verdeckt. Danach deckst du auf, was sie zuerst sehen sollen.',
+      turnOff: 'Nebel ausschalten',
+      on: 'Nebel an',
+      shapes: { brush: 'Pinsel', rect: 'Rechteck', fill: 'Füllen' },
+      shapesLabel: 'Werkzeug',
+      reveal: 'Aufdecken',
+      hide: 'Verdecken',
+      modeLabel: 'Wirkung',
+      revealAll: 'Alles aufdecken',
+      hideAll: 'Alles verdecken',
+      counts: (hidden: number, total: number) => `${hidden} von ${total} Feldern verdeckt`,
+      help: 'Ziehen oder Klicken verdeckt oder deckt auf. Verdeckte Felder siehst du schraffiert; die Spielenden sehen dort nichts.',
+      /** The cells chosen for a new area or a redraw. */
+      selectCells: 'Felder wählen',
+      selectCellsHelp:
+        'Schalte „Felder wählen“ ein und male mit dem Pinsel oder Rechteck die Felder eines Bereichs, statt Nebel zu ändern.',
+      selectionCount: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} gewählt`,
+      clearSelection: 'Auswahl aufheben',
+      createArea: 'Bereich anlegen',
+      areaName: 'Name des Bereichs',
+      areaNameInvalid: 'Der Name braucht 1 bis 40 Zeichen.',
+      noAreas: 'Noch kein Bereich.',
+      areaCells: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'}`,
+      rename: 'Umbenennen',
+      redraw: 'Neu zeichnen',
+      delete: 'Löschen',
+      renameLabel: (name: string) => `${name} umbenennen`,
+      redrawLabel: (name: string) => `${name} mit der Auswahl neu zeichnen`,
+      deleteLabel: (name: string) => `${name} löschen`,
+      showLabel: (name: string) => `${name} auf der Karte zeigen`,
+      /** The creature panel's switch and the placement option. */
+      hiddenSwitch: 'Verborgen',
+      hiddenHelp: 'Nur du siehst diese Kreatur, bis du sie am Tisch aufdeckst.',
+      placeHidden: 'Verborgen platzieren',
+      placeHiddenHelp: 'Neue Kreaturen werden verborgen hingestellt.',
+      /** The Prüfung note: an entrance lies entirely in the fog. */
+      checksTitle: 'Prüfung',
+      entranceInFog: (label: string) => `${label} liegt ganz im Nebel.`,
+      entranceInFogHint: 'Meist beginnen die Charaktere dort. Die Begegnung kann trotzdem starten.',
+      /** An entrance without a label. */
+      entrance: 'Ein Eingang',
+      /** Unnumbered creatures in an encounter with fog. */
+      numbersNote: 'Mit Nebel bekommen Kreaturen ihre Nummer erst, wenn die Spielenden sie sehen.',
+    },
+  },
+
+  /** The spectator screen and the join page (spectator lane). */
+  spectator: {
+    /** Accessible name of the screen. */
+    screen: 'Zuschaueransicht',
+    connecting: 'Verbinde mit dem Tisch …',
+    reconnecting: 'Die Verbindung ist weg. Ich versuche es wieder …',
+    offline: 'Kein Netz. Sobald es wieder da ist, geht es weiter.',
+    paused: 'Pausiert. Tippe auf den Bildschirm, um fortzufahren.',
+    idle: 'Pausiert, weil länger nichts los war. Tippe auf den Bildschirm, um fortzufahren.',
+    denied: 'Du hast keinen Zugang zu dieser Sitzung.',
+    deniedHint: 'Scanne den QR-Code der Sitzung noch einmal oder gib den Beitrittscode ein.',
+    toJoin: 'Zum Beitreten',
+    toHome: 'Zur Startseite',
+    notStarted: 'Noch nicht gestartet',
+    notStartedHint:
+      'Der Kampf erscheint hier von selbst, sobald die Spielleitung die Sitzung startet.',
+    ended: 'Sitzung beendet',
+    endedHint: 'Wird die Sitzung fortgesetzt, tippe auf den Bildschirm.',
+    waiting: 'Der nächste Kampf beginnt gleich',
+    sessionDate: (date: string) => `Sitzung vom ${date}`,
+    scanToJoin: 'Scannen, um mitzuspielen oder zuzuschauen',
+    qrLabel: 'QR-Code zum Beitreten',
+    characters: 'Die Helden',
+    noCharacters: 'Noch keine Helden in dieser Kampagne.',
+    /** Accessible name of a portrait, e.g. "Thorin". */
+    portrait: (name: string) => `Bild von ${name}`,
+    menu: 'Menü',
+    menuLabel: 'Menü der Zuschaueransicht',
+    fit: 'Ganze Karte',
+    fullscreen: 'Vollbild',
+    exitFullscreen: 'Vollbild beenden',
+    leave: 'Zuschaueransicht verlassen',
+    boardLoadFailed: 'Die Karte konnte nicht geladen werden.',
+    retry: 'Noch einmal versuchen',
+    /** Session page: a member turns this device into the session's screen. */
+    open: 'Als Zuschauer öffnen',
+    openHint: 'Dieses Gerät zeigt den Kampf für alle am Tisch und kann nichts verändern.',
+    invite: 'Zuschauer einladen',
+    inviteTitle: 'Zuschauer einladen',
+    inviteHint:
+      'Wer den QR-Code scannt oder den Link öffnet, kann mitspielen oder nur zuschauen. Zuschauer sehen nur diese Sitzung.',
+    inviteLink: 'Link zur Sitzung',
+    inviteCode: 'Beitrittscode der Kampagne',
+    inviteShare: 'Zuschauer einladen',
+    close: 'Schließen',
+    /** The join page. */
+    joinTitle: 'Beitreten',
+    joinLoading: 'Suche die Kampagne …',
+    joinInvalid: 'Diesen Beitrittscode gibt es nicht (mehr).',
+    joinInvalidHint: 'Frag deine Spielleitung nach einem neuen Code oder QR-Code.',
+    joinIntro: (campaign: string) => `Du wurdest zu „${campaign}“ eingeladen.`,
+    joinMember: 'Du bist in dieser Kampagne schon dabei.',
+    play: 'Mitspielen',
+    playHint: 'Du wirst Mitglied der Kampagne und spielst mit deinem eigenen Gerät.',
+    watch: 'Nur zuschauen',
+    watchHint: 'Du siehst nur den Kampf dieser Sitzung und kannst nichts verändern.',
+    pickSession: 'Welche Sitzung?',
+    sessionRunning: 'läuft',
+    sessionPlanned: 'geplant',
+    noSessions: 'Zurzeit gibt es keine geplante oder laufende Sitzung zum Zuschauen.',
+    /** The home page's join form: the same choice, for people who only want to watch. */
+    joinFormWatch: 'Zuschauen …',
+  },
+
+  /** Who is here and local mode (shared table lane). */
+  sharedTable: {
+    /** The shared screen's name on pings, arrows and in the row of avatars. */
+    tableName: 'Tisch',
+    /** The row of avatars along the top of the board (knowledge/features/shared-table.md, "Who's here"). */
+    presence: {
+      label: 'Wer am Tisch ist',
+      connected: 'verbunden',
+      notConnected: 'nicht verbunden',
+      /** The avatar's accessible name, e.g. "Eli, verbunden". */
+      person: (name: string, connected: boolean) =>
+        `${name}, ${connected ? 'verbunden' : 'nicht verbunden'}`,
+      /** A person whose name the board doesn't list. */
+      unknown: 'Jemand',
+    },
+    /** The play mode on the session page ("Spielweise"). */
+    playMode: {
+      title: 'Spielweise',
+      byod: 'Eigene Geräte',
+      local: 'Gemeinsamer Bildschirm',
+      byodHint: 'Jede und jeder spielt am eigenen Gerät.',
+      localHint: 'Ein Bildschirm in der Mitte des Tisches bewegt alle Figuren.',
+      /** Shown to everyone but the session DM: the mode, which they can't change. */
+      readOnly: (mode: string) => `Spielweise: ${mode}`,
+      failed: 'Die Spielweise konnte nicht geändert werden.',
+    },
+    /** On the session page while the session is in local mode. */
+    openScreen: 'Gemeinsamen Bildschirm öffnen',
+    /** The shared screen's own controls. */
+    screen: {
+      /** The board is read-only again after the session DM switched back. */
+      watchingOnly: 'Der Bildschirm zeigt nur noch zu.',
+    },
   },
 
   /** Failures without an error code. */

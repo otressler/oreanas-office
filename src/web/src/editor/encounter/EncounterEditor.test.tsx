@@ -49,7 +49,7 @@ describe('encounter mode', () => {
     const header = screen.getByLabelText(t.encounterName).closest('header')!
     expect(header).toHaveTextContent(de.encounterStatus.draft)
     expect(header).toHaveTextContent(de.encounters.creatures(0))
-    expect(toolNames()).toEqual([t.tools.place, t.tools.select, t.title])
+    expect(toolNames()).toEqual([t.tools.place, t.tools.select, de.fog.editor.tool, t.title])
     // The map can't change: no preview switch, no terrain tools.
     expect(screen.queryByRole('button', { name: de.editor.preview })).not.toBeInTheDocument()
     // "Bereit" and starting are the panel of the "Begegnung" entry.

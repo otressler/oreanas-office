@@ -40,3 +40,7 @@ Every move is recorded as `{ tokenId, from, to, byUserId, at, version }`, positi
 # Later
 
 Statuses and removing tokens come in stage 9 ([statuses](/features/statuses.md), [status](/domain/status.md), [removing tokens](/features/removing-tokens.md)), the hidden flag in stage 10 ([fog of war](/features/fog-of-war.md)). HP is in the [backlog](/backlog.md).
+
+# As built (stage 10)
+
+The label is stored as `number` and `label` (the DM's own name, empty for numbered creatures); `CreatureLabels` shows "Goblin 3" or the name. The migration split existing labels. The sync format still sends one string.

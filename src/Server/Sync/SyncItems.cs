@@ -24,7 +24,7 @@ internal static class SyncItems
             .ToListAsync(cancellationToken);
         var encounters = await db.Encounters.AsNoTracking()
             .Where(e => e.CampaignId == campaignId && ids.Contains(e.Id))
-            .Include(e => e.Tokens.Where(t => t.Kind == TokenKind.Creature))
+            .Include(e => e.Tokens.Where(t => t.Kind == TokenKind.Creature)).ThenInclude(t => t.CreatureType)
             .ToListAsync(cancellationToken);
 
         var userIds = types.Select(t => t.UpdatedByUserId)
@@ -97,8 +97,9 @@ internal static class SyncItems
                     .Where(t => t.Kind == TokenKind.Creature)
                     .OrderBy(t => t.CreatedAt)
                     .ThenBy(t => t.Id)
-                    .Select(t => new SyncCreatureToken(t.Id, t.CreatureTypeId!.Value, t.Label ?? "", t.X, t.Y, t.Size)),
+                    .Select(t => new SyncCreatureToken(t.Id, t.CreatureTypeId!.Value, CreatureLabels.Display(t.CreatureType!.Name, t.Number, t.Label), t.X, t.Y, t.Size, t.Hidden)),
             ],
             encounter.SessionId,
-            encounter.MapCopy));
+            encounter.MapCopy,
+            encounter.Fog));
 }

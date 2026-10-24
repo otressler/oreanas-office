@@ -20,4 +20,8 @@ public static class Policies
 
     // Only the session's DM: run encounters (stage 3 on).
     public const string SessionDm = nameof(SessionDm);
+
+    // A member of the session's campaign, or a session spectator of that session: reads the
+    // spectator screen's data. Reads the `sessionId` route value (SessionWatcherHandler).
+    public const string SessionWatcher = nameof(SessionWatcher);
 }

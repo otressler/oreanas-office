@@ -84,8 +84,9 @@ test('a DM prepares an encounter with goblins offline, and it survives a reload'
   const name = page.getByLabel('Name der Begegnung')
   await expect(name).toHaveValue('Hinterhalt')
   await expect(page.getByRole('heading', { name: 'Karte: Hinterhalt' })).toBeVisible()
+  // Platzieren, Auswählen, Nebel and Begegnung.
   await expect(page.getByRole('navigation', { name: 'Werkzeuge' }).getByRole('button')).toHaveCount(
-    3,
+    4,
   )
   await expect(page.getByText('0 Kreaturen')).toBeVisible()
 

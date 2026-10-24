@@ -55,13 +55,14 @@ export function isPushableRecord(
 }
 
 function pushTokens(encounter: LocalEncounter): SyncCreatureToken[] {
-  return encounter.tokens.map(({ id, creatureTypeId, label, x, y, size }) => ({
+  return encounter.tokens.map(({ id, creatureTypeId, label, x, y, size, hidden = false }) => ({
     id,
     creatureTypeId,
     label,
     x,
     y,
     size,
+    hidden,
   }))
 }
 
@@ -129,6 +130,7 @@ export function recordPushItem(kind: ItemKind, record: ItemRecord): SyncPushItem
           archivedAt: r.archivedAt,
           tokens: pushTokens(r),
           sessionId: r.sessionId,
+          fog: r.fog ?? null,
         },
       }
     }
@@ -184,6 +186,7 @@ export function recordFromServer(item: SyncServerItem, existing?: ItemRecord): I
       tokens: d.tokens.map((token) => ({ ...token })),
       sessionId: d.sessionId,
       mapCopy: d.mapCopy,
+      fog: d.fog ?? null,
       recordVersion: LOCAL_ENCOUNTER_RECORD_VERSION,
     }
   }
@@ -264,6 +267,7 @@ function comparable(
         status: d.status,
         archivedAt: time(d.archivedAt),
         tokens: byKey(d.tokens, (t) => t.id),
+        fog: d.fog ?? null,
       })
     }
   }

@@ -377,6 +377,15 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             elevations.Add(elevation);
         }
 
+        if (data.Fog is { } pushedFog && FogCells.Check(pushedFog, map.Width, map.Height) is { } fogField)
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.FogInvalid, fogField)), false);
+        }
+
+        var typeNames = await db.CreatureTypes.AsNoTracking()
+            .Where(t => t.CampaignId == item.CampaignId)
+            .ToDictionaryAsync(t => t.Id, t => t.Name, cancellationToken);
+
         var now = time.GetUtcNow();
         var encounter = existing ?? db.Encounters.Add(new Encounter
         {
@@ -392,6 +401,7 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
         encounter.BattleMapId = data.BattleMapId;
         encounter.Status = data.Status;
         encounter.ArchivedAt = data.ArchivedAt;
+        encounter.Fog = data.Fog is { } fog ? FogCells.Normalize(fog) : null;
         encounter.UpdatedAt = now;
         encounter.UpdatedByUserId = userId;
         if (existing is not null)
@@ -416,7 +426,8 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             }
 
             token.CreatureTypeId = pushed.CreatureTypeId;
-            token.Label = pushed.Label.Trim();
+            (token.Number, token.Label) = CreatureLabels.Split(typeNames[pushed.CreatureTypeId], pushed.Label);
+            token.Hidden = pushed.Hidden;
             token.Size = pushed.Size;
             token.X = pushed.X;
             token.Y = pushed.Y;

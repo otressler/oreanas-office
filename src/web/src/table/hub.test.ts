@@ -19,6 +19,11 @@ const hubMethods = {
   SetStatusLevel: true,
   RemoveToken: true,
   RestoreToken: true,
+  WatchSession: true,
+  ChangeFog: true,
+  SetTokensHidden: true,
+  SpawnCreatures: true,
+  UndoChange: true,
 } satisfies Record<keyof TableHubCalls, true>
 
 const clientMethods = {
@@ -32,6 +37,15 @@ const clientMethods = {
   TokenStatusesChanged: true,
   TokenRemoved: true,
   TokenRestored: true,
+  EncounterStarted: true,
+  SessionEnded: true,
+  PlayModeChanged: true,
+  PresenceChanged: true,
+  FogChanged: true,
+  TokenRevealed: true,
+  TokenHidden: true,
+  TokensAdded: true,
+  ReloadBoard: true,
 } satisfies Record<keyof TableClientEvents, true>
 
 describe('table hub contract', () => {

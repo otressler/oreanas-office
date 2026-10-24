@@ -16,9 +16,16 @@ public static class TableExtensions
         builder.Services.AddScoped<TableStatuses>();
         builder.Services.AddScoped<TableRemovals>();
         builder.Services.AddScoped<TablePings>();
+        builder.Services.AddScoped<TableFanOut>();
+        builder.Services.AddScoped<TableFog>();
+        builder.Services.AddScoped<TableSpawns>();
         builder.Services.AddSingleton<TablePingLimiter>();
         builder.Services.AddSingleton<TableActivity>();
         builder.Services.AddSingleton<TablePreviews>();
+        builder.Services.AddSingleton<TableConnections>();
+        builder.Services.AddSingleton<TableBroadcaster>();
+        builder.Services.AddSingleton<TablePresence>();
+        builder.Services.AddSingleton<TableScreenKeepAlive>();
         builder.Services.AddSingleton<TableActivityFilter>();
         if (!BuildTime.IsGeneratingOpenApiDocument)
         {
@@ -53,4 +60,8 @@ public sealed class TableOptions
 
     // How often idle connections are looked for; in memory only, never the database.
     public TimeSpan IdleCheckInterval { get; set; } = TimeSpan.FromMinutes(1);
+
+    // How long a person who lost their last connection still shows as connected in the
+    // row of avatars (knowledge/features/shared-table.md, "Who's here").
+    public TimeSpan PresenceGrace { get; set; } = TimeSpan.FromSeconds(10);
 }

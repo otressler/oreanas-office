@@ -6,6 +6,7 @@ import { AdminPage } from './pages/AdminPage'
 import { CampaignPage } from './pages/CampaignPage'
 import { HomePage } from './pages/HomePage'
 import { InvitePage } from './pages/InvitePage'
+import { JoinPage } from './pages/JoinPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PasswordResetPage } from './pages/PasswordResetPage'
 import { ProfilePage } from './pages/ProfilePage'
@@ -16,6 +17,24 @@ import { ServerGateOutlet } from './server/ServerGate'
 
 // German paths: people see and share them (invite and reset links).
 export const routes: RouteObject[] = [
+  // Full-screen pages without the header (stage 10): the spectator screen and the join page
+  // the QR code opens. They sign in like every other page.
+  {
+    element: <ServerGateOutlet />,
+    children: [
+      {
+        element: <RequireAuth />,
+        children: [
+          {
+            path: 'kampagnen/:campaignId/sitzungen/:sessionId/zuschauen',
+            lazy: async () => ({
+              Component: (await import('./spectator/SpectatorPage')).SpectatorPage,
+            }),
+          },
+        ],
+      },
+    ],
+  },
   {
     element: <Layout />,
     children: [
@@ -30,6 +49,7 @@ export const routes: RouteObject[] = [
             children: [
               { index: true, element: <HomePage /> },
               { path: 'profil', element: <ProfilePage /> },
+              { path: 'beitreten/:joinCode', element: <JoinPage /> },
               { path: 'kampagnen/:campaignId', element: <CampaignPage /> },
               { path: 'kampagnen/:campaignId/sitzungen/:sessionId', element: <SessionPage /> },
               // The board pages load on demand: Konva alone would double the app shell.

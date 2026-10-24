@@ -7,6 +7,7 @@
 import { backgroundTool } from './background'
 import { creatureTools, EncounterMenu, encounterTool } from './encounter'
 import { ChecksStatus, featureTools } from './features'
+import { fogTool } from './fog'
 import { descriptionTool, sceneHeaderItems, sceneStatusItems } from './scene'
 import { SyncStatusItem } from '../sync'
 import { resizeTool, terrainTools } from './terrain'
@@ -25,7 +26,7 @@ export const editorTools: EditorTool[] = [
 ].sort((a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group))
 
 /** The tools of encounter mode; a read-only encounter has only the encounter itself. */
-export const encounterModeTools: EditorTool[] = [...creatureTools, encounterTool]
+export const encounterModeTools: EditorTool[] = [...creatureTools, fogTool, encounterTool]
 export const readOnlyEncounterTools: EditorTool[] = [encounterTool]
 
 /** Shown in every mode of the editor: the sync status. */

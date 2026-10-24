@@ -51,7 +51,7 @@ public static class StatusViews
             .Where(s => tokenIds.Contains(s.TokenId))
             .OrderBy(s => s.AppliedAt)
             .ThenBy(s => s.StatusId)
-            .Select(s => new { s.TokenId, Status = new BoardTokenStatus(s.StatusId, s.Level, s.AppliedByUserId, s.AppliedAt) })
+            .Select(s => new { s.TokenId, Status = new BoardTokenStatus(s.StatusId, s.Level, s.AppliedByUserId, s.AppliedAt, s.FromSharedScreen) })
             .ToListAsync(cancellationToken);
         return rows.ToLookup(r => r.TokenId, r => r.Status);
     }

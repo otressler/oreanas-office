@@ -7,6 +7,7 @@ const status = (id: string, level: number | null = null): BoardTokenStatus => ({
   level,
   appliedByUserId: 'u',
   appliedAt: '2026-10-16T10:00:00Z',
+  fromSharedScreen: false,
 })
 
 const statuses = (n: number) => Array.from({ length: n }, (_, i) => status(`s${i}`))

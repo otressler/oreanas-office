@@ -1,5 +1,7 @@
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Encounters;
+using OreanasOffice.Server.Maps;
+using OreanasOffice.Server.Sessions;
 using OreanasOffice.Server.Statuses;
 
 namespace OreanasOffice.Server.Table;
@@ -84,6 +86,40 @@ public interface ITableHub
     // caller included. Errors: TokenNotFound (also when not removed), EncounterNotActive,
     // NotSessionDm.
     Task<HubResult> RestoreToken(Guid tokenId);
+
+    // --- Stage 10: spectators, shared screens, fog and spawning ---
+
+    // Makes the connection a screen of one session (knowledge/features/spectator-view.md):
+    // a spectator screen, or with SharedScreen a shared screen
+    // (knowledge/features/shared-table.md). Call it before JoinEncounter; a connection that
+    // never calls it is a player. Joins the session's group, so the screen hears
+    // EncounterStarted, EncounterEnded, SessionEnded and PlayModeChanged. Members of the
+    // campaign and session spectators may watch; only members may open a shared screen, and
+    // only while the session is in local mode. A spectator or shared screen is always in the
+    // players' group, whoever is signed in. Errors: TokenNotFound (no access to the session),
+    // NotLocalMode.
+    Task<WatchResult> WatchSession(WatchSessionRequest request);
+
+    // Session DM only (from a player connection). Hides or reveals cells of the encounter's
+    // fog; saved with FogVersion + 1 and an EncounterChange, then FogChanged to each group
+    // built for it (knowledge/features/fog-of-war.md). Errors: TokenNotFound,
+    // EncounterNotActive, NotSessionDm, FogInvalid (cells outside the map, or no fog).
+    Task<HubResult> ChangeFog(ChangeFogRequest request);
+
+    // Session DM only. Reveals or hides creatures: TokenRevealed or TokenHidden per token,
+    // numbering creatures at first sight. Errors: TokenNotFound, EncounterNotActive,
+    // NotSessionDm.
+    Task<HubResult> SetTokensHidden(SetTokensHiddenRequest request);
+
+    // Session DM only (knowledge/features/creature-spawn.md). Saves all creatures in one
+    // step, then TokensAdded to each group with the ones it may see. Errors: TokenNotFound,
+    // EncounterNotActive, NotSessionDm, SpawnInvalid, TargetInvalid.
+    Task<SpawnResult> SpawnCreatures(SpawnCreaturesRequest request);
+
+    // Session DM only. Takes back the session DM's latest fog change, reveal or spawn in the
+    // encounter while it isn't undone. Errors: TokenNotFound, EncounterNotActive,
+    // NotSessionDm, NothingToUndo.
+    Task<HubResult> UndoChange(Guid encounterId);
 }
 
 // What the server sends to devices.
@@ -120,6 +156,38 @@ public interface ITableClient
 
     // A removed token is back, with its statuses; devices fade it in.
     Task TokenRestored(TokenRestoredEvent restored);
+
+    // --- Stage 10 ---
+
+    // Session group: the session DM started a fight; screens join it by themselves.
+    Task EncounterStarted(EncounterStartedEvent started);
+
+    // Session group: the session ended; screens show "Sitzung beendet" and disconnect.
+    Task SessionEnded(Guid sessionId);
+
+    // Session group: the session DM changed the play mode. Nothing reloads.
+    Task PlayModeChanged(PlayModeChangedEvent changed);
+
+    // Both groups of the encounter: who is connected changed (after the 10-second grace).
+    Task PresenceChanged(PresenceChangedEvent presence);
+
+    // Fog changed. Built per group: the DM gets the plain change, players get the layout of
+    // newly revealed cells and the creatures that appear or disappear.
+    Task FogChanged(FogChangedEvent changed);
+
+    // A creature became visible to players, or its flags changed for the DM. Players get the
+    // whole token, as if it were added; the DM gets the token with Hidden false.
+    Task TokenRevealed(TokenRevealedEvent revealed);
+
+    // A creature was hidden again. Players get only the id.
+    Task TokenHidden(TokenHiddenEvent hidden);
+
+    // Spawned creatures: players only those they may see, the DM all.
+    Task TokensAdded(TokensAddedEvent added);
+
+    // What a device may see changed under it (a hand-over of the session DM): leave the
+    // groups with JoinEncounter again and reload the board.
+    Task ReloadBoard(Guid encounterId);
 }
 
 // The top-left cell the token should stand on.
@@ -159,10 +227,12 @@ public record PingRequest(Guid EncounterId, BoardCell? Cell, Guid? TokenId);
 // From exactly one of FromCell and FromTokenId, to a cell.
 public record DrawArrowRequest(Guid EncounterId, BoardCell? FromCell, Guid? FromTokenId, BoardCell To);
 
-// Color: "#rrggbb", set by the server (BoardPerson.PingColor of UserId).
-public record PingedEvent(Guid EncounterId, Guid UserId, string Color, BoardCell? Cell, Guid? TokenId);
+// Color: "#rrggbb", set by the server (BoardPerson.PingColor of UserId). FromSharedScreen: sent
+// from a shared screen, in white and named "Tisch" (knowledge/features/shared-table.md).
+public record PingedEvent(Guid EncounterId, Guid UserId, string Color, BoardCell? Cell, Guid? TokenId, bool FromSharedScreen);
 
-public record ArrowDrawnEvent(Guid EncounterId, Guid UserId, string Color, BoardCell? FromCell, Guid? FromTokenId, BoardCell To);
+public record ArrowDrawnEvent(
+    Guid EncounterId, Guid UserId, string Color, BoardCell? FromCell, Guid? FromTokenId, BoardCell To, bool FromSharedScreen);
 
 // Level: only for statuses with levels, 1 to 6; null means 1.
 public record AddStatusRequest(Guid TokenId, Guid StatusId, int? Level);
@@ -186,3 +256,67 @@ public record TokenRemovedEvent(Guid EncounterId, Guid TokenId, Guid ByUserId, D
 
 // Token: as on the board, back on the cell it left, with its statuses and their definitions.
 public record TokenRestoredEvent(Guid EncounterId, BoardToken Token, List<StatusDefinitionView> Definitions);
+
+// --- Stage 10 ---
+
+// Session: what a screen needs before and between fights. Characters: the campaign's, for
+// the waiting state (name and portrait).
+public record WatchSessionRequest(Guid SessionId, bool SharedScreen);
+
+public record WatchedSession(
+    Guid SessionId,
+    Guid CampaignId,
+    string Title,
+    DateOnly Date,
+    SessionStatus Status,
+    PlayMode PlayMode,
+    Guid? ActiveEncounterId,
+    List<WatchedCharacter> Characters);
+
+public record WatchedCharacter(string Name, string? ImageUrl, string? Color, int ColorIndex);
+
+// Mode is what the connection became; Session is null with an Error.
+public record WatchResult(ApiErrorCode? Error, ConnectionMode Mode, WatchedSession? Session);
+
+public record EncounterStartedEvent(Guid SessionId, Guid EncounterId);
+
+public record PlayModeChangedEvent(Guid SessionId, PlayMode PlayMode);
+
+public record PresenceChangedEvent(Guid EncounterId, PresenceState Presence);
+
+// Reveal: true uncovers the cells, false covers them. Cells: the cells that changed.
+public record ChangeFogRequest(Guid EncounterId, List<BoardCell> Cells, bool Reveal);
+
+// Version: FogVersion after the change. Cells and Reveal as requested. Players only:
+// RevealedLayout holds the newly revealed cells, features and entrances (whole features,
+// revealed entrance cells), Appeared the creatures now visible and Disappeared the ids of
+// those that stopped being visible. The DM's event has those empty, and Numbered lists the
+// creatures that just got their number (knowledge/features/fog-of-war.md, "Creature numbers").
+public record FogChangedEvent(
+    Guid EncounterId,
+    int Version,
+    bool Reveal,
+    List<BoardCell> Cells,
+    MapLayout? RevealedLayout,
+    List<BoardToken> Appeared,
+    List<Guid> Disappeared,
+    List<TokenNumber> Numbered);
+
+public record TokenNumber(Guid TokenId, int Number, string Label);
+
+public record SetTokensHiddenRequest(Guid EncounterId, List<Guid> TokenIds, bool Hidden);
+
+// Token: as the receiving group may know it, with the label numbered if it just became visible.
+public record TokenRevealedEvent(Guid EncounterId, BoardToken Token);
+
+public record TokenHiddenEvent(Guid EncounterId, Guid TokenId);
+
+public record SpawnCreaturesRequest(Guid EncounterId, List<SpawnedCreature> Creatures, bool Hidden);
+
+// The top-left cell of the new token.
+public record SpawnedCreature(Guid CreatureTypeId, int X, int Y);
+
+// TokenIds: the new tokens, for the undo bar. Null with an Error.
+public record SpawnResult(ApiErrorCode? Error, List<Guid>? TokenIds);
+
+public record TokensAddedEvent(Guid EncounterId, List<BoardToken> Tokens);

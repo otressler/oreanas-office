@@ -1311,7 +1311,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/campaigns/{campaignId}/encounters/{encounterId}/board": {
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/play-mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetPlayModeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessionResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/join/{joinCode}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1321,6 +1372,202 @@ export interface paths {
         get: {
             parameters: {
                 query?: never;
+                header?: never;
+                path: {
+                    joinCode: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JoinLookupResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/join/{joinCode}/spectate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    joinCode: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SpectateSessionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SpectateSessionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{sessionId}/spectate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WatchedSession"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{sessionId}/spectate/board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoardStateResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/encounters/{encounterId}/board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    view?: string;
+                    sharedScreen?: boolean;
+                };
                 header?: never;
                 path: {
                     campaignId: string;
@@ -2538,7 +2785,9 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    sharedScreen?: boolean;
+                };
                 header?: never;
                 path: {
                     campaignId: string;
@@ -2750,7 +2999,7 @@ export interface components {
             field?: null | string;
         };
         /** @enum {unknown} */
-        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus";
+        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "notBuilt";
         ArrowDrawnEvent: {
             /** Format: uuid */
             encounterId: string;
@@ -2761,6 +3010,7 @@ export interface components {
             /** Format: uuid */
             fromTokenId: null | string;
             to: components["schemas"]["BoardCell"];
+            fromSharedScreen: boolean;
         };
         /** @enum {unknown} */
         AssetFailure: "rejected" | "error" | null;
@@ -2825,6 +3075,10 @@ export interface components {
             removedTokens: components["schemas"]["BoardToken"][];
             statuses: components["schemas"]["StatusDefinitionView"][];
             people: components["schemas"]["BoardPerson"][];
+            viewer: components["schemas"]["BoardViewer"];
+            fog: null | components["schemas"]["FogView"];
+            playMode: components["schemas"]["PlayMode"];
+            presence: components["schemas"]["PresenceState"];
         };
         BoardToken: {
             /** Format: uuid */
@@ -2853,6 +3107,8 @@ export interface components {
             statuses: components["schemas"]["BoardTokenStatus"][];
             /** Format: date-time */
             removedAt?: null | string;
+            /** @default false */
+            hidden: boolean;
         };
         BoardTokenStatus: {
             /** Format: uuid */
@@ -2863,7 +3119,10 @@ export interface components {
             appliedByUserId: string;
             /** Format: date-time */
             appliedAt: string;
+            fromSharedScreen: boolean;
         };
+        /** @enum {unknown} */
+        BoardViewer: "dm" | "player";
         CampaignResponse: {
             /** Format: uuid */
             id: string;
@@ -2884,6 +3143,12 @@ export interface components {
             name: string;
             myRole: components["schemas"]["CampaignRole"];
             activeSession: null | components["schemas"]["ActiveSessionSummary"];
+        };
+        ChangeFogRequest: {
+            /** Format: uuid */
+            encounterId: string;
+            cells: components["schemas"]["BoardCell"][];
+            reveal: boolean;
         };
         ChangeSessionDmRequest: {
             /** Format: uuid */
@@ -2966,6 +3231,12 @@ export interface components {
             height: number;
             layout: components["schemas"]["MapLayout"];
         };
+        EncounterStartedEvent: {
+            /** Format: uuid */
+            sessionId: string;
+            /** Format: uuid */
+            encounterId: string;
+        };
         /** @enum {unknown} */
         EncounterStatus: "draft" | "ready" | "active" | "ended";
         EncounterSummaryResponse: {
@@ -2993,6 +3264,33 @@ export interface components {
         };
         /** @enum {unknown} */
         EntranceKind: "entrance" | "exit" | "both";
+        FogArea: {
+            id: string;
+            name: string;
+            cells: number[][];
+        };
+        FogChangedEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: int32 */
+            version: number;
+            reveal: boolean;
+            cells: components["schemas"]["BoardCell"][];
+            revealedLayout: components["schemas"]["MapLayout"] | null;
+            appeared: components["schemas"]["BoardToken"][];
+            disappeared: string[];
+            numbered: components["schemas"]["TokenNumber"][];
+        };
+        FogDocument: {
+            hiddenCells: number[][];
+            areas: components["schemas"]["FogArea"][];
+        };
+        FogView: {
+            /** Format: int32 */
+            version: number;
+            hiddenCells: components["schemas"]["BoardCell"][];
+            areas: components["schemas"]["FogArea"][];
+        };
         GenerateBackgroundRequest: {
             /** Format: int32 */
             mapVersion: number;
@@ -3011,7 +3309,7 @@ export interface components {
         };
         HubResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "notBuilt" | null;
         };
         ImageBudgetResponse: {
             /** Format: double */
@@ -3060,11 +3358,26 @@ export interface components {
             /** Format: date-time */
             expiresAt: null | string;
         };
+        JoinableSession: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** Format: date */
+            date: string;
+            status: components["schemas"]["SessionStatus"];
+        };
         JoinCampaignRequest: {
             code: string;
         };
         JoinCodeResponse: {
             joinCode: string;
+        };
+        JoinLookupResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            campaignName: string;
+            isMember: boolean;
+            sessions: components["schemas"]["JoinableSession"][];
         };
         LayoutCell: {
             /** Format: int32 */
@@ -3250,7 +3563,7 @@ export interface components {
         };
         MoveResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "notBuilt" | null;
             move: components["schemas"]["TokenMovedEvent"] | null;
         };
         MoveTokenRequest: {
@@ -3278,6 +3591,7 @@ export interface components {
             cell: components["schemas"]["BoardCell"] | null;
             /** Format: uuid */
             tokenId: null | string;
+            fromSharedScreen: boolean;
         };
         PingRequest: {
             /** Format: uuid */
@@ -3285,6 +3599,29 @@ export interface components {
             cell: components["schemas"]["BoardCell"] | null;
             /** Format: uuid */
             tokenId: null | string;
+        };
+        /** @enum {unknown} */
+        PlayMode: "byod" | "local";
+        PlayModeChangedEvent: {
+            /** Format: uuid */
+            sessionId: string;
+            /** @enum {unknown} */
+            playMode: "byod" | "local";
+        };
+        PresenceChangedEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            presence: components["schemas"]["PresenceState"];
+        };
+        PresenceState: {
+            people: components["schemas"]["PresentPerson"][];
+            sharedScreen: boolean;
+        };
+        PresentPerson: {
+            /** Format: uuid */
+            userId: string;
+            connected: boolean;
+            isSessionDm: boolean;
         };
         RegisterRequest: {
             inviteToken: string;
@@ -3326,9 +3663,13 @@ export interface components {
             activeEncounter: null | components["schemas"]["ActiveEncounterSummary"];
             interruptedEncounter: null | components["schemas"]["ActiveEncounterSummary"];
             encounters: components["schemas"]["EncounterSummaryResponse"][];
+            playMode: components["schemas"]["PlayMode"];
         };
         /** @enum {unknown} */
         SessionStatus: "planned" | "active" | "ended";
+        SetPlayModeRequest: {
+            playMode: components["schemas"]["PlayMode"];
+        };
         SetStatusLevelRequest: {
             /** Format: uuid */
             tokenId: string;
@@ -3339,6 +3680,42 @@ export interface components {
         };
         SetStatusListRequest: {
             statusIds: string[];
+        };
+        SetTokensHiddenRequest: {
+            /** Format: uuid */
+            encounterId: string;
+            tokenIds: string[];
+            hidden: boolean;
+        };
+        SpawnCreaturesRequest: {
+            /** Format: uuid */
+            encounterId: string;
+            creatures: components["schemas"]["SpawnedCreature"][];
+            hidden: boolean;
+        };
+        SpawnedCreature: {
+            /** Format: uuid */
+            creatureTypeId: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+        };
+        SpawnResult: {
+            /** @enum {unknown} */
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "notBuilt" | null;
+            tokenIds: null | string[];
+        };
+        SpectateSessionRequest: {
+            /** Format: uuid */
+            sessionId: string;
+        };
+        SpectateSessionResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            /** Format: uuid */
+            sessionId: string;
+            isMember: boolean;
         };
         StartEncounterRequest: {
             characters: components["schemas"]["CharacterPlacement"][];
@@ -3376,7 +3753,7 @@ export interface components {
         };
         StatusResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "notBuilt" | null;
             change: components["schemas"]["TokenStatusesChangedEvent"] | null;
         };
         StoreMapResponse: {
@@ -3405,6 +3782,8 @@ export interface components {
             /** Format: int32 */
             y: number;
             size: components["schemas"]["CreatureSize"];
+            /** @default false */
+            hidden: boolean;
         };
         SyncCreatureTypeData: {
             name: string;
@@ -3424,6 +3803,7 @@ export interface components {
             tokens: components["schemas"]["SyncCreatureToken"][];
             /** Format: uuid */
             sessionId: string;
+            fog?: null | components["schemas"]["FogDocument"];
         };
         SyncEncounterServerData: {
             name: string;
@@ -3436,6 +3816,7 @@ export interface components {
             /** Format: uuid */
             sessionId: string;
             mapCopy: null | components["schemas"]["EncounterMapCopy"];
+            fog?: null | components["schemas"]["FogDocument"];
         };
         SyncFetchRequest: {
             ids: string[];
@@ -3531,11 +3912,17 @@ export interface components {
             sessions: components["schemas"]["SyncSession"][];
         };
         /** @enum {string} */
-        TableClientMethod: "ArrowDrawn" | "EncounterEnded" | "IdleTimeout" | "MovePreviewCleared" | "MovePreviewed" | "Pinged" | "TokenMoved" | "TokenRemoved" | "TokenRestored" | "TokenStatusesChanged";
+        TableClientMethod: "ArrowDrawn" | "EncounterEnded" | "EncounterStarted" | "FogChanged" | "IdleTimeout" | "MovePreviewCleared" | "MovePreviewed" | "Pinged" | "PlayModeChanged" | "PresenceChanged" | "ReloadBoard" | "SessionEnded" | "TokenHidden" | "TokenMoved" | "TokenRemoved" | "TokenRestored" | "TokenRevealed" | "TokenStatusesChanged" | "TokensAdded";
         /** @enum {string} */
-        TableHubMethod: "AddStatus" | "ClearPreview" | "DrawArrow" | "JoinEncounter" | "MarkActive" | "MoveToken" | "Ping" | "PreviewMove" | "RemoveStatus" | "RemoveToken" | "RestoreToken" | "SetStatusLevel" | "UndoMove";
+        TableHubMethod: "AddStatus" | "ChangeFog" | "ClearPreview" | "DrawArrow" | "JoinEncounter" | "MarkActive" | "MoveToken" | "Ping" | "PreviewMove" | "RemoveStatus" | "RemoveToken" | "RestoreToken" | "SetStatusLevel" | "SetTokensHidden" | "SpawnCreatures" | "UndoChange" | "UndoMove" | "WatchSession";
         /** @enum {unknown} */
         Terrain: "void" | "floor" | "difficult" | "water" | "wall";
+        TokenHiddenEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            /** Format: uuid */
+            tokenId: string;
+        };
         TokenImage: {
             /** Format: uuid */
             id: string;
@@ -3578,6 +3965,13 @@ export interface components {
             byUserId: string;
             undo: boolean;
         };
+        TokenNumber: {
+            /** Format: uuid */
+            tokenId: string;
+            /** Format: int32 */
+            number: number;
+            label: string;
+        };
         TokenRemovedEvent: {
             /** Format: uuid */
             encounterId: string;
@@ -3593,6 +3987,16 @@ export interface components {
             encounterId: string;
             token: components["schemas"]["BoardToken"];
             definitions: components["schemas"]["StatusDefinitionView"][];
+        };
+        TokenRevealedEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            token: components["schemas"]["BoardToken"];
+        };
+        TokensAddedEvent: {
+            /** Format: uuid */
+            encounterId: string;
+            tokens: components["schemas"]["BoardToken"][];
         };
         TokenStatusesChangedEvent: {
             /** Format: uuid */
@@ -3623,6 +4027,39 @@ export interface components {
             email: string;
             hasPassword: boolean;
             hasGoogle: boolean;
+        };
+        WatchedCharacter: {
+            name: string;
+            imageUrl: null | string;
+            color: null | string;
+            /** Format: int32 */
+            colorIndex: number;
+        };
+        WatchedSession: {
+            /** Format: uuid */
+            sessionId: string;
+            /** Format: uuid */
+            campaignId: string;
+            title: string;
+            /** Format: date */
+            date: string;
+            status: components["schemas"]["SessionStatus"];
+            playMode: components["schemas"]["PlayMode"];
+            /** Format: uuid */
+            activeEncounterId: null | string;
+            characters: components["schemas"]["WatchedCharacter"][];
+        };
+        WatchResult: {
+            /** @enum {unknown} */
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "notBuilt" | null;
+            /** @enum {unknown} */
+            mode: "player" | "spectator" | "sharedScreen";
+            session: components["schemas"]["WatchedSession"] | null;
+        };
+        WatchSessionRequest: {
+            /** Format: uuid */
+            sessionId: string;
+            sharedScreen: boolean;
         };
     };
     responses: never;

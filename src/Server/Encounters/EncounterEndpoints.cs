@@ -91,9 +91,46 @@ public static class EncounterEndpoints
     // members for any encounter (the setup screen draws a Ready one). 404 otherwise, so
     // players can't tell a prepared encounter exists.
     private static async Task<Results<Ok<BoardStateResponse>, NotFound>> GetBoard(
-        Guid campaignId, Guid encounterId, ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken)
+        Guid campaignId,
+        Guid encounterId,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        TablePresence presence,
+        CancellationToken cancellationToken,
+        [FromQuery] string? view = null,
+        [FromQuery] bool sharedScreen = false)
     {
         var userId = user.GetUserId();
+        var asPlayer = string.Equals(view, "player", StringComparison.OrdinalIgnoreCase);
+        var board = await LoadBoardAsync(
+            db,
+            presence,
+            campaignId,
+            encounterId,
+            userId,
+            asPlayer,
+            () => db.IsCampaignDmAsync(campaignId, userId, cancellationToken),
+            cancellationToken,
+            sharedScreen);
+        return board is null ? TypedResults.NotFound() : TypedResults.Ok(board);
+    }
+
+    // The board as `userId` gets it: the session DM's full board, or the players' filtered
+    // one (TableVisibility.ForPlayers) for everyone else and whenever `asPlayer` asks for it.
+    // Null for an unknown encounter, and for one that isn't active unless mayViewInactive
+    // says yes (`dm` members see prepared ones). The caller has checked access to the
+    // campaign or session. Also used by the spectator endpoints.
+    internal static async Task<BoardStateResponse?> LoadBoardAsync(
+        AppDbContext db,
+        TablePresence presence,
+        Guid campaignId,
+        Guid encounterId,
+        Guid userId,
+        bool asPlayer,
+        Func<Task<bool>> mayViewInactive,
+        CancellationToken cancellationToken,
+        bool sharedScreen = false)
+    {
         var encounter = await db.Encounters
             .Where(e => e.Id == encounterId && e.CampaignId == campaignId)
             .Select(e => new
@@ -103,6 +140,9 @@ public static class EncounterEndpoints
                 e.Name,
                 e.Status,
                 SessionDmUserId = (Guid?)e.Session.DmUserId,
+                e.Session.PlayMode,
+                e.Fog,
+                e.FogVersion,
                 e.MapCopy,
                 SavedBackgroundAssetId = e.BackgroundAssetId,
                 MapBackgroundAssetId = e.BattleMap.BackgroundAssetId,
@@ -113,14 +153,17 @@ public static class EncounterEndpoints
         // An active encounter always belongs to the active session: starting needs an
         // active session, and ending the session ends its encounter.
         if (encounter is null
-            || (encounter.Status != EncounterStatus.Active && !await db.IsCampaignDmAsync(campaignId, userId, cancellationToken)))
+            || (encounter.Status != EncounterStatus.Active && !await mayViewInactive()))
         {
-            return TypedResults.NotFound();
+            return null;
         }
 
         // Removed tokens stay off the board; only the session DM of the running fight gets
         // them, newest first, for "Vom Feld genommen" (knowledge/features/removing-tokens.md).
-        var isSessionDm = encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId;
+        // ?view=player asks for the players' board whoever is signed in: spectator and shared
+        // screens do, so the session DM's tablet never gets hidden things
+        // (knowledge/features/spectator-view.md). Asking for less is always allowed.
+        var isSessionDm = !asPlayer && encounter.Status == EncounterStatus.Active && encounter.SessionDmUserId == userId;
         var (tokens, characters) = await BoardTokens.LoadAsync(db, campaignId, db.Tokens.Where(t => t.EncounterId == encounterId), cancellationToken);
         var onBoard = tokens.Where(t => t.RemovedAt is null).ToList();
         List<BoardToken> removed = isSessionDm
@@ -129,8 +172,11 @@ public static class EncounterEndpoints
         var statuses = await StatusViews.ForIdsAsync(
             db, onBoard.Concat(removed).SelectMany(t => t.Statuses).Select(s => s.StatusId), cancellationToken);
         var people = await TablePeople.LoadAsync(db, campaignId, encounter.SessionDmUserId, characters, cancellationToken);
+        // ?sharedScreen=true: the board of a shared screen in local mode, whose undo is the last
+        // move made from a shared screen (knowledge/features/shared-table.md, "Undo").
+        var screen = TablePermissions.Effective(sharedScreen ? ConnectionMode.SharedScreen : ConnectionMode.Player, encounter.PlayMode);
         var undoable = encounter.Status == EncounterStatus.Active
-            ? await TableMoves.UndoableMoveAsync(db, encounterId, userId, encounter.SessionDmUserId, cancellationToken)
+            ? await TableMoves.UndoableMoveAsync(db, encounterId, userId, encounter.SessionDmUserId, cancellationToken, screen)
             : null;
 
         // The map as it was when the fight started, once it has; the battle map itself
@@ -162,8 +208,19 @@ public static class EncounterEndpoints
             undoable,
             removed,
             statuses,
-            people);
-        return TypedResults.Ok(board);
+            people,
+            BoardViewer.Dm,
+            encounter.Fog is { } fog
+                ? new FogView(
+                    encounter.FogVersion,
+                    [.. fog.HiddenCells.Select(c => new BoardCell(c[0], c[1]))],
+                    fog.Areas)
+                : null,
+            encounter.PlayMode,
+            presence.Snapshot(encounterId, encounter.SessionDmUserId, characters.Select(c => c.OwnerUserId), people.Select(p => p.UserId)));
+
+        // Players, and anyone who asked for the players' view, get the filtered board.
+        return isSessionDm ? board : TableVisibility.ForPlayers(board with { UndoableMove = asPlayer && screen != ConnectionMode.SharedScreen ? null : board.UndoableMove });
     }
 
     // Ready → active in its session, creating one character token per placement in the
@@ -179,11 +236,12 @@ public static class EncounterEndpoints
         StartEncounterRequest request,
         AppDbContext db,
         TimeProvider time,
+        [FromServices] TableBroadcaster table,
         CancellationToken cancellationToken)
     {
         var encounter = await db.Encounters
             .Where(e => e.Id == encounterId && e.CampaignId == campaignId && e.SessionId == sessionId)
-            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, e.BattleMap.BackgroundAssetId })
+            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, e.BattleMap.BackgroundAssetId, e.Fog })
             .SingleOrDefaultAsync(cancellationToken);
         if (encounter is null)
         {
@@ -324,6 +382,9 @@ public static class EncounterEndpoints
                 }
             }
 
+            // With fog, numbers follow what players see at the start (fog-of-war.md).
+            CreatureNumbers.NumberAtStart(creatures, encounter.Fog);
+
             db.Tokens.AddRange(tokens);
             await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
@@ -334,6 +395,7 @@ public static class EncounterEndpoints
             return TypedResults.Conflict(raced);
         }
 
+        await table.EncounterStartedAsync(sessionId, encounterId);
         return TypedResults.Ok(await Summaries(db.Encounters.Where(e => e.Id == encounterId)).SingleAsync(cancellationToken));
     }
 
@@ -346,7 +408,7 @@ public static class EncounterEndpoints
         Guid encounterId,
         AppDbContext db,
         TimeProvider time,
-        [FromServices] IHubContext<TableHub, ITableClient> table,
+        [FromServices] TableBroadcaster table,
         CancellationToken cancellationToken)
     {
         var status = await db.Encounters
@@ -366,7 +428,7 @@ public static class EncounterEndpoints
         if (status == EncounterStatus.Active
             && await EndActiveAsync(db.Encounters.Where(e => e.Id == encounterId), time.GetUtcNow(), cancellationToken) > 0)
         {
-            await table.Clients.Group(TableHub.GroupName(encounterId)).EncounterEnded(encounterId);
+            await table.EncounterEndedAsync(sessionId, encounterId);
         }
 
         return TypedResults.Ok(await Summaries(db.Encounters.Where(e => e.Id == encounterId)).SingleAsync(cancellationToken));

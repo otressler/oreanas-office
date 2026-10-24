@@ -386,6 +386,13 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<DateTimeOffset?>("EndedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("Fog")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("FogJson");
+
+                    b.Property<int>("FogVersion")
+                        .HasColumnType("int");
+
                     b.Property<string>("MapCopy")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("MapCopyJson");
@@ -434,6 +441,44 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.ToTable("Encounters");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.EncounterChange", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("UndoneAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ByUserId");
+
+                    b.HasIndex("EncounterId", "Id");
+
+                    b.ToTable("EncounterChanges");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Encounters.Token", b =>
                 {
                     b.Property<Guid>("Id")
@@ -467,6 +512,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<string>("Label")
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
+
+                    b.Property<int?>("Number")
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("RemovedAt")
                         .HasColumnType("datetimeoffset");
@@ -726,6 +774,11 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid?>("InterruptedEncounterId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("PlayMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -750,6 +803,24 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasIndex("CampaignId", "Date");
 
                     b.ToTable("Sessions", (string)null);
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionSpectator", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("SessionId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SessionSpectators");
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusDefinition", b =>
@@ -1000,6 +1071,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid>("AppliedByUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("FromSharedScreen")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("Level")
                         .HasColumnType("int");
 
@@ -1032,6 +1106,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<decimal>("FromElevation")
                         .HasPrecision(6, 1)
                         .HasColumnType("decimal(6,1)");
+
+                    b.Property<bool>("FromSharedScreen")
+                        .HasColumnType("bit");
 
                     b.Property<int>("FromX")
                         .HasColumnType("int");
@@ -1200,6 +1277,15 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Session");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.EncounterChange", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("ByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Encounters.Token", b =>
                 {
                     b.HasOne("OreanasOffice.Server.Characters.Character", "Character")
@@ -1285,6 +1371,23 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Campaign");
 
                     b.Navigation("Dm");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionSpectator", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Sessions.GameSession", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusDefinition", b =>

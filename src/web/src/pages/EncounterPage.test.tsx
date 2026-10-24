@@ -32,6 +32,7 @@ const hero: BoardToken = {
   imageUrl: null,
   color: null,
   statuses: [],
+  hidden: false,
 }
 
 function runningBoard(fields: Partial<BoardState> = {}): BoardState {

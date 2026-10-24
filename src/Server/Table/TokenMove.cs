@@ -42,6 +42,10 @@ public class TokenMove
 
     public DateTimeOffset? UndoneAt { get; set; }
 
+    // Made from a shared screen in local mode; decides whose undo it is
+    // (knowledge/features/shared-table.md, "Who did it").
+    public bool FromSharedScreen { get; set; }
+
     public Token Token { get; set; } = null!;
 }
 

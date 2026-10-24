@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import type { BrowserContext, Request, Route } from '@playwright/test'
 import type { components } from '../src/api/schema.js'
+import { fogView } from './mockFog.ts'
 
 type S = components['schemas']
 type ErrorCode = S['ApiErrorCode']
@@ -64,6 +65,8 @@ interface Session {
   createdByUserId: string
   /** The fight that ending the session cut off; continuing brings it back. */
   interruptedEncounterId: string | null
+  /** "Spielweise"; byod when unset. */
+  playMode?: S['PlayMode']
 }
 
 interface CreatureType {
@@ -87,6 +90,8 @@ interface Token {
   statuses?: S['BoardTokenStatus'][]
   /** Stage 9: set while the token is off the board (knowledge/features/removing-tokens.md). */
   removedAt?: string | null
+  /** Stage 10: only the session DM sees a hidden creature (fog.ts holds the rest of fog). */
+  hidden?: boolean
 }
 
 /**
@@ -165,6 +170,8 @@ interface Encounter {
   map: S['BoardMap']
   tokens: Token[]
   createdAt: string
+  /** Who is connected, as the board lists it; nobody when unset (shared-table specs set it). */
+  presence?: S['PresenceState']
 }
 
 /** Reads one of the app's sample maps (src/samples/maps), e.g. "gorge-crossing". */
@@ -1128,6 +1135,16 @@ export class MockBackend {
       }
       return [404]
     }
+    if ((params = match(`${base}/sessions/:sessionId/play-mode`)) && method === 'PUT') {
+      const session = this.sessions.find(
+        (s) => s.id === params!.sessionId && s.campaignId === campaign.id,
+      )
+      if (!session) return [404]
+      if (session.dmUserId !== me.id) return [403]
+      if (session.status === 'ended') return error('sessionEnded', undefined, 409)
+      session.playMode = body.playMode === 'local' ? 'local' : 'byod'
+      return [200, this.sessionResponse(session, campaign, me.id)]
+    }
     if ((params = match(`${base}/sessions/:sessionId/:action`))) {
       const session = this.sessions.find(
         (s) => s.id === params!.sessionId && s.campaignId === campaign.id,
@@ -1387,7 +1404,8 @@ export class MockBackend {
     const used = new Set(
       [...onBoard, ...removed].flatMap((t) => (t.statuses ?? []).map((s) => s.statusId)),
     )
-    return {
+    // Stage 10: for an encounter with fog (mockFog.ts) the view is filtered per viewer.
+    return fogView(encounter, isSessionDm, {
       encounterId: encounter.id,
       campaignId: encounter.campaignId,
       sessionId: encounter.sessionId,
@@ -1400,7 +1418,11 @@ export class MockBackend {
       removedTokens: removed.map((token) => this.boardToken(encounter, token)),
       statuses: this.statusDefinitions.filter((s) => used.has(s.id)).map((s) => this.statusView(s)),
       people: this.boardPeople(encounter),
-    }
+      viewer: 'dm',
+      fog: null,
+      playMode: session?.playMode ?? 'byod',
+      presence: encounter.presence ?? { people: [], sharedScreen: false },
+    })
   }
 
   /** A token as the board shows it: size, owner, ring, picture and statuses. */
@@ -1417,6 +1439,7 @@ export class MockBackend {
       imageUrl: this.pickedTokenImageUrl(token.characterId ?? token.creatureTypeId),
       color: character?.color ?? null,
       statuses: [...(statuses ?? [])],
+      hidden: token.hidden ?? false,
       ...(removedAt ? { removedAt } : {}),
     }
   }
@@ -1631,7 +1654,13 @@ export class MockBackend {
     const status = this.statusDefinitions.find((s) => s.libraryKey === libraryKey)!
     token.statuses = [
       ...(token.statuses ?? []),
-      { statusId: status.id, level, appliedByUserId: userId, appliedAt: new Date().toISOString() },
+      {
+        statusId: status.id,
+        level,
+        appliedByUserId: userId,
+        appliedAt: new Date().toISOString(),
+        fromSharedScreen: false,
+      },
     ]
   }
 
@@ -1700,6 +1729,7 @@ export class MockBackend {
         level: status.hasLevels ? (level ?? 1) : null,
         appliedByUserId: userId!,
         appliedAt: new Date().toISOString(),
+        fromSharedScreen: false,
       },
     ]
     return this.statusesChanged(encounter, token)
@@ -1969,6 +1999,7 @@ export class MockBackend {
       activeEncounter: this.activeEncounterSummary(session),
       interruptedEncounter: interrupted ? { id: interrupted.id, name: interrupted.name } : null,
       encounters: memberOf(campaign, userId)?.role === 'dm' ? this.sessionEncounters(session) : [],
+      playMode: session.playMode ?? 'byod',
     }
   }
 
