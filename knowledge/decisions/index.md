@@ -14,7 +14,7 @@
 - [Image budget](image-budget.md) - Up to $20 a month for all image generation, at high quality
 - [Image generation approach](image-generation-approach.md) - The grid is the source of truth; AI paints from a colour-coded guide image
 - [Image model](image-model.md) - gpt-image-2.5-sunburst on Microsoft Foundry, chosen over Flare for fewer artifacts in the guide's colours
-- [Legal notice](legal-notice.md) - Impressum at /impressum, its details baked in from CI build variables so the address stays out of the public repo
+- [Legal notice](legal-notice.md) - Impressum at /impressum and privacy policy at /datenschutz, the owner's details baked in from CI build variables so the address stays out of the public repo
 
 # Proposed
 

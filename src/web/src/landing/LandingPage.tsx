@@ -733,7 +733,7 @@ function Footer() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-6">
         <Wordmark />
         <p className="text-sm text-dim">{t.footer}</p>
-        <div className="flex gap-4 sm:ml-auto">
+        <div className="flex flex-wrap gap-x-4 sm:ml-auto">
           <Link
             to="/fahrplan"
             className="flex min-h-11 items-center text-sm text-dim hover:text-parchment"
@@ -752,7 +752,14 @@ function Footer() {
           >
             {de.imprint.link}
           </Link>
+          <Link
+            to="/datenschutz"
+            className="flex min-h-11 items-center text-sm text-dim hover:text-parchment"
+          >
+            {de.privacy.link}
+          </Link>
         </div>
+        <p className="w-full text-xs text-dim">{t.unofficial}</p>
       </div>
     </footer>
   )

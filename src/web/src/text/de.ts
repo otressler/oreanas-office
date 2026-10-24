@@ -360,6 +360,109 @@ export const de = {
     },
   },
 
+  /**
+   * The privacy policy (GDPR Art. 13). Each section's body is a list of paragraphs; a
+   * nested list is a bullet list. Keep it in step with knowledge/decisions/legal-notice.md.
+   */
+  privacy: {
+    title: 'Datenschutzerklärung',
+    link: 'Datenschutz',
+    intro:
+      "Hier steht, welche Daten Oreana's Office verarbeitet, wozu und wie lange. Die App ist ein privates Hobbyprojekt für eine Runde unter Freunden: ohne Werbung, ohne Tracking, ohne Analyse-Werkzeuge. Daten werden nicht verkauft und nicht für andere Zwecke genutzt.",
+    asOf: 'Stand: 24. Oktober 2026',
+    controller: {
+      title: 'Verantwortlich',
+      body: 'Für Fragen zum Datenschutz und um deine Rechte geltend zu machen, schreib an diese E-Mail-Adresse.',
+      imprint: 'Alle Angaben stehen auch im Impressum.',
+    },
+    sections: [
+      {
+        title: 'Hosting und Server-Protokolle',
+        body: [
+          'Die App läuft bei Microsoft Azure: die Anwendung in einem Rechenzentrum in den Niederlanden, Datenbank, Dateien und Protokolle in Frankfurt am Main. Microsoft verarbeitet die Daten als Auftragsverarbeiter nach Art. 28 DSGVO, auf Grundlage seiner Datenschutzbedingungen für Onlinedienste (Data Protection Addendum).',
+          'Beim Aufruf der App verarbeitet der Server technisch notwendig deine IP-Adresse, die aufgerufene Adresse und den Zeitpunkt, um die Seite auszuliefern. Die App legt keine Zugriffsprotokolle an. Sie protokolliert nur Warnungen und Fehler, und diese Protokolle werden nach 30 Tagen gelöscht.',
+          'Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Das berechtigte Interesse ist ein sicherer und funktionierender Betrieb.',
+        ],
+      },
+      {
+        title: 'Konto und Anmeldung',
+        body: [
+          'Ein Konto gibt es nur mit einer Einladung. Dafür speichert die App:',
+          [
+            'deine E-Mail-Adresse und deinen Anzeigenamen,',
+            'dein Passwort, falls du eines festlegst, nur als sicheren Hash und nie im Klartext,',
+            'wann du dich registriert hast und ob dein Konto mit Google verknüpft ist.',
+          ],
+          'Ohne E-Mail-Adresse kann die App kein Konto anlegen. Die Daten bleiben gespeichert, bis dein Konto gelöscht wird. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO: Sie sind nötig, damit du die App nutzen kannst.',
+        ],
+      },
+      {
+        title: 'Anmelden mit Google',
+        body: [
+          'Wenn du „Mit Google anmelden“ wählst, leitet dich die App zu Google weiter. Nach der Anmeldung übermittelt Google deine E-Mail-Adresse, ob Google sie bestätigt hat, deinen Namen und eine Kennung deines Google-Kontos. Der Name dient nur als Vorschlag für deinen Anzeigenamen; ein Profilbild übernimmt die App nicht.',
+          'Anbieter ist Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. Dabei können Daten an Google LLC in den USA gehen, die nach dem EU-US Data Privacy Framework zertifiziert ist. Für die Anmeldung bei Google gilt zusätzlich die Datenschutzerklärung von Google. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO. Die Anmeldung mit Google ist freiwillig; ein Konto mit Passwort geht genauso.',
+        ],
+      },
+      {
+        title: 'Was du in der App anlegst',
+        body: [
+          'Kampagnen, Charaktere, Karten, Begegnungen, Sitzungen, Kreaturen und Bilder speichert der Server, damit alle in der Runde sie sehen und bespielen können. Sehen können sie nur Mitglieder der jeweiligen Kampagne.',
+          'Hochgeladene Bilder speichert der Server neu ab und entfernt dabei Metadaten wie den Aufnahmeort. Lade Fotos von anderen Menschen nur mit deren Einverständnis hoch.',
+          'Die Inhalte bleiben gespeichert, solange es die Kampagne gibt. Bilder bewahrt die App als Versionen auf, auch wenn ein anderes ausgewählt ist. Auf Anfrage per E-Mail werden sie gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.',
+        ],
+      },
+      {
+        title: 'Bilder mit KI',
+        body: [
+          'Karten-Hintergründe, Kreatur-Icons und Charakter-Porträts malt ein Bildmodell bei Microsoft Foundry (Microsoft Azure). Dafür gehen an Microsoft:',
+          [
+            'die Beschreibung, die du dazu schreibst, etwa Szene, Stimmung und Licht oder Name und Aussehen,',
+            'bei Karten eine Skizze des Rasters,',
+            'beim Umgestalten eines Porträts das hochgeladene Bild.',
+          ],
+          'Microsoft verarbeitet diese Daten als Auftragsverarbeiter und nutzt sie nicht zum Training von Modellen. Das Bildmodell ist weltweit bereitgestellt („Global“). Eine Anfrage kann deshalb in einem Rechenzentrum außerhalb der EU verarbeitet werden, zum Beispiel in den USA. Dauerhaft gespeichert wird dort nichts. Für solche Übermittlungen gelten die EU-Standardvertragsklauseln aus Microsofts Datenschutzbedingungen, und Microsoft ist nach dem EU-US Data Privacy Framework zertifiziert.',
+          'Hält Microsofts Missbrauchsschutz eine Anfrage für möglicherweise missbräuchlich, kann Microsoft sie in der EU (Schweden) speichern und von eigenen Beschäftigten im Europäischen Wirtschaftsraum prüfen lassen. Schreib deshalb keine persönlichen Daten in die Beschreibungen. Die fertigen Bilder speichert die App wie andere Inhalte. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.',
+        ],
+      },
+      {
+        title: 'Cookies und Speicher im Browser',
+        body: [
+          'Die App setzt ein einziges eigenes Cookie, „oreana.auth“. Es hält dich angemeldet, gilt bis zu 180 Tage, verlängert sich bei Benutzung und wird beim Abmelden gelöscht. Während einer Anmeldung mit Google kommen kurzlebige Cookies dazu, die die Anmeldung vor Missbrauch schützen.',
+          'Im Speicher deines Browsers (Local Storage, IndexedDB und Cache) legt die App ab, was sie auf deinem Gerät braucht:',
+          [
+            'wer zuletzt auf diesem Gerät angemeldet war, damit die Karten auch offline aufgehen,',
+            'Karten und Änderungen, die noch nicht mit dem Server abgeglichen sind,',
+            'deine letzten Würfe und Einstellungen wie das Vibrieren,',
+            'die App selbst und schon geladene Bilder, damit sie schnell und offline startet.',
+          ],
+          'Diese Daten bleiben auf deinem Gerät und gehen nur an den Server, wenn du sie abgleichst. Du kannst sie jederzeit in den Einstellungen deines Browsers löschen.',
+          'All das ist für die App unbedingt erforderlich und braucht deshalb keine Einwilligung (§ 25 Abs. 2 Nr. 2 TDDDG). Cookies für Tracking oder Werbung gibt es nicht.',
+        ],
+      },
+      {
+        title: 'Keine weiteren Dienste',
+        body: [
+          'Schriften und alle anderen Dateien kommen vom eigenen Server. Die App bindet keine Inhalte von Dritten ein, nutzt keine Analyse-Werkzeuge und verschickt keine E-Mails. Eine automatisierte Entscheidungsfindung oder ein Profiling findet nicht statt.',
+        ],
+      },
+      {
+        title: 'Deine Rechte',
+        body: [
+          'Du hast das Recht auf:',
+          [
+            'Auskunft über deine gespeicherten Daten (Art. 15 DSGVO),',
+            'Berichtigung falscher Daten (Art. 16 DSGVO),',
+            'Löschung (Art. 17 DSGVO) und Einschränkung der Verarbeitung (Art. 18 DSGVO),',
+            'Datenübertragbarkeit (Art. 20 DSGVO),',
+            'Widerspruch gegen die Verarbeitung auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (Art. 21 DSGVO).',
+          ],
+          'Schreib dafür einfach eine E-Mail an die Adresse oben. Wenn du dein Konto löschen möchtest, werden dein Konto und deine Inhalte gelöscht.',
+          'Du kannst dich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77 DSGVO), zum Beispiel bei der in deinem Bundesland.',
+        ],
+      },
+    ],
+  },
+
   landing: {
     navLabel: 'Bereiche der Seite',
     signIn: 'Anmelden',
@@ -501,6 +604,8 @@ export const de = {
       body: 'Registrieren geht nur mit einem Einladungslink. Frag deine Spielleitung danach, oder melde dich an, wenn du schon ein Konto hast.',
     },
     footer: 'Gebaut für eine Runde unter Freunden.',
+    unofficial:
+      'Inoffizielles Fan-Projekt, nicht mit Wizards of the Coast verbunden. Dungeons & Dragons und D&D sind Marken von Wizards of the Coast LLC.',
   },
 
   roles: {

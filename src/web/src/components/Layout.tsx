@@ -27,7 +27,7 @@ export function Layout() {
         <Outlet />
       </main>
       <footer className="border-t border-line pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto flex max-w-3xl gap-4 px-4">
+        <div className="mx-auto flex max-w-3xl flex-wrap gap-x-4 px-4">
           <Link
             to="/fahrplan"
             className="flex min-h-11 items-center text-sm text-dim hover:text-parchment"
@@ -39,6 +39,12 @@ export function Layout() {
             className="flex min-h-11 items-center text-sm text-dim hover:text-parchment"
           >
             {de.imprint.link}
+          </Link>
+          <Link
+            to="/datenschutz"
+            className="flex min-h-11 items-center text-sm text-dim hover:text-parchment"
+          >
+            {de.privacy.link}
           </Link>
         </div>
       </footer>
