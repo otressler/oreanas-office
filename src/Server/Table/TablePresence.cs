@@ -78,12 +78,13 @@ public sealed class TablePresence(
             && !connections.InEncounter(encounterId).Any(c => c.Mode == ConnectionMode.Player && c.UserId == userId))
         {
             var key = (encounterId, userId);
+            var left = time.GetUtcNow();
             lock (_lock)
             {
-                _gone[key] = time.GetUtcNow();
+                _gone[key] = left;
             }
 
-            var timer = time.CreateTimer(_ => _ = GraceOverAsync(encounterId), null, Grace, Timeout.InfiniteTimeSpan);
+            var timer = time.CreateTimer(_ => _ = GraceOverAsync(key, left), null, Grace, Timeout.InfiniteTimeSpan);
             if (_timers.TryGetValue(key, out var older))
             {
                 older.Dispose();
@@ -119,10 +120,23 @@ public sealed class TablePresence(
         await broadcaster.Everyone(encounterId).PresenceChanged(changed);
     }
 
-    private async Task GraceOverAsync(Guid encounterId)
+    private async Task GraceOverAsync((Guid EncounterId, Guid UserId) key, DateTimeOffset left)
     {
+        var encounterId = key.EncounterId;
         try
         {
+            // The timer runs on a coarser clock than GetUtcNow and can fire a few milliseconds
+            // before the grace has passed by the wall clock, so the timer ends the grace itself
+            // instead of leaving it to the comparison in Compute. A later disconnect of the same
+            // person replaced the entry and has its own timer.
+            lock (_lock)
+            {
+                if (_gone.TryGetValue(key, out var at) && at == left)
+                {
+                    _gone.Remove(key);
+                }
+            }
+
             await ChangedAsync(encounterId);
             if (connections.InEncounter(encounterId).Count == 0)
             {
@@ -145,6 +159,10 @@ public sealed class TablePresence(
             foreach (var key in _gone.Keys.Where(k => k.EncounterId == encounterId).ToList())
             {
                 _gone.Remove(key);
+            }
+
+            foreach (var key in _timers.Keys.Where(k => k.EncounterId == encounterId).ToList())
+            {
                 if (_timers.TryRemove(key, out var timer))
                 {
                     timer.Dispose();
