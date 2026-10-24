@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CampaignSummary } from '../api/types'
 import { ids, smallBoard } from '../encounters/testing'
+import { rememberUser } from '../offline/identity'
 import { json, mockApi, renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
 
@@ -25,7 +26,9 @@ function campaign(id: string, fight: { id: string; name: string } | null): Campa
   }
 }
 
+/** A device this user signed in on before, so home opens their campaigns. */
 function api(campaigns: CampaignSummary[]) {
+  rememberUser(testUser)
   mockApi({
     'GET /api/auth/me': json(200, testUser),
     'GET /api/campaigns': () => json(200, campaigns),

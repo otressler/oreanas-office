@@ -21,3 +21,7 @@
 - [Fog of war](fog-of-war.md) - The DM hides map areas and creatures, prepares them before the fight and reveals them during play
 - [Spectator view](spectator-view.md) - A tablet in the middle of the table that joins a session and follows its fights by itself, as players see them
 - [Shared table](shared-table.md) - Who's here on the board, and local mode, where the screen in the middle moves every character
+
+# Around the app
+
+- [Landing page](landing-page.md) - Public page at /willkommen showing what the app does; home sends devices nobody has signed in on there without waking the server

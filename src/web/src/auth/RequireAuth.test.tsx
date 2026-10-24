@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { json, mockApi, renderApp, testUser } from '../test/api'
+import { rememberUser } from '../offline/identity'
 import { de } from '../text/de'
 
 const CAMPAIGN_ID = '11111111-1111-1111-1111-111111111111'
@@ -21,7 +22,9 @@ describe('RequireAuth', () => {
     )
   })
 
-  it('sends a signed-out user from home to the plain sign-in page', async () => {
+  it('sends a user whose sign-in ended from home to the plain sign-in page', async () => {
+    // Signed in here before, so home asks the server instead of showing the landing page.
+    rememberUser(testUser)
     mockApi({
       'GET /api/auth/me': () => json(401),
       'GET /api/auth/options': () => json(200, { googleEnabled: false }),
@@ -33,6 +36,7 @@ describe('RequireAuth', () => {
   })
 
   it('shows the page and the name in the header when signed in', async () => {
+    rememberUser(testUser)
     mockApi({
       'GET /api/auth/me': () => json(200, testUser),
       'GET /api/campaigns': () => json(200, []),
@@ -47,6 +51,7 @@ describe('RequireAuth', () => {
   })
 
   it('goes to sign-in when a request finds the sign-in expired', async () => {
+    rememberUser(testUser)
     mockApi({
       'GET /api/auth/me': () => json(200, testUser),
       'GET /api/auth/options': () => json(200, { googleEnabled: false }),

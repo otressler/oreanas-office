@@ -336,10 +336,28 @@ export class MockBackend {
     return this.signedIn.get(context) ?? null
   }
 
-  /** Answers /api/** for this context (pages and service worker). */
-  async attach(context: BrowserContext) {
+  /**
+   * Answers /api/** for this context (pages and service worker). The context counts as
+   * a device someone signed in on before, so `/` asks the server instead of showing the
+   * landing page; `newDevice` leaves it a fresh device (src/landing/WelcomeNewDevices.tsx).
+   */
+  async attach(context: BrowserContext, { newDevice = false }: { newDevice?: boolean } = {}) {
     if (!this.signedIn.has(context)) this.signedIn.set(context, null)
     await context.route('**/api/**', (route) => this.handle(context, route))
+    if (newDevice) return
+    // Only once per context: the app replaces this with GET /api/auth/me's answer and
+    // clears it on sign-out, which later page loads must see. Tests often sign in after
+    // attaching, so a placeholder stands in when nobody is signed in yet.
+    const id = this.signedIn.get(context)
+    const user = id ? this.users.find((u) => u.id === id) : undefined
+    const remembered = user
+      ? meResponse(user)
+      : { id: 'e2e-device', displayName: 'Testgerät', email: '', isAdmin: false }
+    await context.addInitScript((me) => {
+      if (localStorage.getItem('e2e.deviceSeeded')) return
+      localStorage.setItem('e2e.deviceSeeded', '1')
+      localStorage.setItem('oreana.lastUser', JSON.stringify(me))
+    }, remembered)
   }
 
   // ---- Request handling -----------------------------------------------------

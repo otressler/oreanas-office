@@ -158,9 +158,14 @@ gh variable set AZURE_SUBSCRIPTION_ID --body (az account show --query id --outpu
 gh variable set AZURE_RESOURCE_GROUP  --body rg-ot-oreanasoffice-prod-001
 gh variable set AZURE_CONTAINER_APP   --body oreanas-office
 gh variable set DEPLOY_ENABLED        --body true
+# The Impressum (knowledge/decisions/legal-notice.md). The deploy job stops while one is missing.
+gh variable set IMPRINT_NAME          --body 'Vorname Nachname'
+gh variable set IMPRINT_STREET        --body 'Straße Hausnummer'
+gh variable set IMPRINT_CITY          --body 'PLZ Ort'
+gh variable set IMPRINT_EMAIL         --body 'kontakt@example.org'
 ```
 
-Or set them in GitHub under Settings → Secrets and variables → Actions → Variables. None of them are secret. The next push to `main` builds the image, pushes it to `ghcr.io/otressler/oreanas-office` (tagged with the commit SHA and `latest`) and switches the app to it. To pause deployments, set `DEPLOY_ENABLED` to `false`.
+Or set them in GitHub under Settings → Secrets and variables → Actions → Variables. None of them are secret: the Impressum shows its values on the public site anyway. The next push to `main` builds the image, pushes it to `ghcr.io/otressler/oreanas-office` (tagged with the commit SHA and `latest`) and switches the app to it. To pause deployments, set `DEPLOY_ENABLED` to `false`.
 
 ### 8. Custom domain
 

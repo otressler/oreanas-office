@@ -1,0 +1,90 @@
+/*
+ * The landing page's few effects that Tailwind classes don't cover. Colours come from
+ * the app's theme (src/index.css), so the page stays in the table palette.
+ */
+
+/* Buttons with pointed ends. The outline is a second, 1 px smaller copy of the shape. */
+.landing-chevron {
+  clip-path: polygon(
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 50%,
+    calc(100% - 14px) 100%,
+    14px 100%,
+    0 50%
+  );
+}
+
+/* Embers rising out of the hero picture. */
+.landing-ember {
+  animation: landing-ember-rise var(--duration) linear var(--delay) infinite;
+  opacity: 0;
+}
+
+@keyframes landing-ember-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--drift), -75vh, 0) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Smoke banks that drift slowly over the lower edge of a picture. */
+.landing-smoke {
+  background:
+    radial-gradient(40% 60% at 20% 70%, rgb(20 22 27 / 0.95), transparent 70%),
+    radial-gradient(35% 55% at 55% 85%, rgb(20 22 27 / 0.9), transparent 70%),
+    radial-gradient(45% 60% at 85% 75%, rgb(20 22 27 / 0.95), transparent 70%),
+    radial-gradient(30% 40% at 40% 55%, rgb(169 163 151 / 0.08), transparent 70%),
+    radial-gradient(30% 40% at 75% 60%, rgb(169 163 151 / 0.06), transparent 70%);
+  animation: landing-smoke-drift 30s ease-in-out infinite alternate;
+}
+
+@keyframes landing-smoke-drift {
+  from {
+    transform: translateX(-3%);
+  }
+  to {
+    transform: translateX(3%);
+  }
+}
+
+/* The art switches with a short fade. */
+.landing-fade-in {
+  animation: landing-fade-in 400ms ease-out;
+}
+
+@keyframes landing-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The medallion row scrolls sideways without a visible scrollbar. */
+.landing-no-scrollbar {
+  scrollbar-width: none;
+}
+.landing-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-ember {
+    display: none;
+  }
+  .landing-smoke,
+  .landing-fade-in {
+    animation: none;
+  }
+}

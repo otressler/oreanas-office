@@ -160,8 +160,8 @@ export const de = {
 
   /** The stages of knowledge/implementation-plan.md, told for the people at the table. */
   roadmap: {
-    title: 'Fahrplan',
-    link: 'Fahrplan',
+    title: 'Roadmap',
+    link: 'Roadmap',
     intro:
       "So wächst Oreana's Office, Stufe für Stufe. Termine gibt es keine: Eine Stufe ist fertig, wenn sie am echten Tisch funktioniert.",
     stage: (number: number) => `Stufe ${number}`,
@@ -339,6 +339,168 @@ export const de = {
         },
       ],
     },
+  },
+
+  /** The Impressum. The provider's details come from the build (ImprintPage.tsx). */
+  imprint: {
+    title: 'Impressum',
+    link: 'Impressum',
+    legalBasis: 'Angaben gemäß § 5 DDG und § 18 Abs. 1 MStV',
+    provider: 'Anbieter',
+    contact: 'Kontakt',
+    email: 'E-Mail:',
+    missing: 'In dieser Version der App fehlen die Angaben zum Anbieter.',
+    project: {
+      title: 'Über dieses Projekt',
+      body: "Oreana's Office ist ein privates Hobbyprojekt ohne kommerzielle Absicht. Die App ist nicht für die Allgemeinheit bestimmt: Ein Konto gibt es nur mit einer Einladung, für eine private D&D-Runde unter Freunden.",
+    },
+    trademarks: {
+      title: 'Marken',
+      body: 'Kein offizielles Produkt von Wizards of the Coast und nicht mit Wizards of the Coast verbunden. Dungeons & Dragons und D&D sind Marken von Wizards of the Coast LLC.',
+    },
+  },
+
+  landing: {
+    navLabel: 'Bereiche der Seite',
+    signIn: 'Anmelden',
+    roadmap: 'Roadmap',
+    hero: {
+      kicker: 'Digitale D&D Battlemaps',
+      tagline: 'Dein digitaler Dungeon Crawl Companion',
+      body: 'Deine Spielleiter*in plant und erstellt die Encounter für deine nächste Session. Du und deine Party können deine Charakter auf dem eigenen Gerät steuern. Nie wieder zu kleine Kästchen für eure Figuren.',
+      howItWorks: "So geht's",
+      inviteOnly: 'Dies ist eine private App für D&D Abenteuer und nicht für die Allgemeinheit bestimmt. Zum Registrieren benötigst du eine Einladung vom Admin',
+      worksOnLabel: 'Spiel so wie du willst',
+      worksOn: ['Handy', 'Tablet', 'Laptop', 'Spectator Device', 'Zentraler Bildschirm'],
+      scroll: 'Weiter',
+    },
+    steps: {
+      nav: "So geht's",
+      kicker: 'Bring deine Ideen auf den Tisch',
+      title: 'Encounter erstellen',
+      tabsLabel: '',
+      detailsLabel: '',
+      items: [
+        {
+          key: 'sketch',
+          name: 'Skizzieren',
+          lead: 'Erstelle eine grobe Version deiner Karte.',
+          body: 'Die Spielleitung erstellt eine neue Karte und malt Boden, Wände, Wasser und schwieriges Gelände hinein. Danach folgen Objekte, Ein- und Ausgänge und Terrain. Dafür musst du nicht einmal Online sein. Funktioniert also sogar beim Zugfahren.',
+          details: [
+            '(Fast) so viel Platz wie du brauchst - bis zu 40x40 Felder.',
+            'Objektkatalog für so viele Details wie du willst.',
+            'Intuitiver Mapeditor für einfache und schnelle Bearbeitung.',
+            'Kreaturen platzieren und Überraschungen planen.',
+          ],
+        },
+        {
+          key: 'paint',
+          name: 'Malen lassen',
+          lead: 'Oreana zaubert aus der Skizze eine Karte.',
+          body: 'Basierend auf deiner Skizze erstellt die App einen Hintergrund, Feld für Feld passend zum Raster. Szenerie und Vibe folgen dabei deiner Vision. „Mehr Nebel in der Schlucht“? Kein Problem. Änderungswünsche einfach eingeben.',
+          details: [
+            'Erzeuge mehrere Varianten und wähle die beste.',
+            'Erwecke Kreaturen mit Bildern zum Leben.',
+            'Lass deine Party mit Porträts glänzen.',
+            'Kein Geld mehr für Illustrationen? Kein Problem, geht auch ohne.',
+          ],
+        },
+        {
+          key: 'play',
+          name: 'Spielen',
+          lead: 'Lass die Party auf deine Karten los.',
+          body: 'Die Spieler können Züge auf ihrem eigenen Gerät ausführen. Figur antippen, Ziel wählen, bestätigen: Jeder sieht den Zug sofort. Die Spielleitung zieht die Monster. Auf Wunsch bringt Oreana euch sogar eure Würfel mit.',
+          details: [
+            'Alle können Züge auf ihrem eigenen Gerät ausführen.',
+            'Teile deine Pläne mit allen, auch wenn ihr nicht an einem Tisch sitzt.',
+            'Lass deine Gegner bluten - und zeige es allen mit Statusmarkern.',
+            'Zu wenig W6? Keine Sorge, wir haben genug Würfel parat.',
+          ],
+        },
+      ],
+    },
+    map: {
+      nav: 'Die Karte',
+      kicker: 'Erwecke deine Karte zum Leben',
+      title: 'Karte verschönern',
+      body: 'Links deine Skizze, wie du sie im Editor erstellst. Rechts das Bild, das daraus gemalt wurde. Zieh den Regler und vergleiche.',
+      note: 'Das Bild ist nur Schmuck: Wege, Wände und Terrain kommen immer aus dem Raster. Ohne Bild bleibt die gezeichnete Karte, und der Kampf ist trotzdem spielbar.',
+      before: 'Skizziert',
+      after: 'Gemalt',
+      slider: 'Vergleich zwischen gezeichneter und gemalter Karte',
+      beforeAlt:
+        'Die skizzierte Karte einer fast verlassenen Gruft: graue Böden, dunkle Wände und blaues Wasser im Raster.',
+      afterAlt:
+        'Dieselbe Gruft als gemaltes Bild: feuchte Steinplatten, schwarzes Wasser, Fackeln und ein Altar mit Kerzen.',
+      caption: 'Alte Gruft · 24\u00a0×\u00a016 Felder · 36\u00a0×\u00a024\u00a0m',
+    },
+    creatures: {
+      nav: 'Kreaturen',
+      kicker: 'Nie wieder generische Tokens',
+      title: 'Feindbilder erschaffen',
+      intro:
+        'Jede Kreaturenart bekommt ein gemaltes Symbol. So können die Spieler sie sofort erkennen und unterscheiden, auch wenn sie nicht am Tisch sitzen. Über den Verlauf einer Kampagne wächst dein Bestiarium.',
+      pickLabel: 'Kreatur wählen',
+      size: 'Größe',
+      speed: 'Bewegung',
+      token: 'Auf dem Feld',
+      onBoard: 'Im Kampf',
+      picture: 'Bild',
+      pictureText: 'Gemalt auf Wunsch, im Stil des ganzen Bestiariums.',
+      items: [
+        {
+          key: 'goblin',
+          name: 'Goblin-Boss',
+          epithet: 'Anführer der Bande',
+          body: 'Seinen Platz an der Spitze hat er sich mit dem Messer erkämpft, und er verteidigt ihn bis aufs Blut. Wo er hinzeigt, stürmt die Bande hin. Er selbst bleibt lieber in der zweiten Reihe.',
+          size: 'Klein · 1 Feld',
+          speed: '6 Felder · 9 m',
+          onBoard: 'Goblin-Boss, Goblin 1, Goblin 2\u00a0… Die Nummern zählt die App von selbst.',
+        },
+        {
+          key: 'owlbear',
+          name: 'Eulenbär',
+          epithet: 'Schrecken des Waldes',
+          body: 'Halb Bär, halb Eule und durch und durch schlechte Laune. Sein Schrei hallt nachts durch den Wald, und wer ihn hört, hat meist nur noch Zeit für einen letzten Zug.',
+          size: 'Groß · 2 × 2 Felder',
+          speed: '8 Felder · 12 m',
+          onBoard: 'Belegt vier Felder - ein gefiederter Koloss.',
+        },
+        {
+          key: 'lich',
+          name: 'Lich',
+          epithet: 'Herr der Gruft',
+          body: 'Er hat den Tod überlistet und wartet seitdem tief unten in seiner Gruft. Seine Geduld ist endlos, und seine Macht ist es beinahe auch.',
+          size: 'Mittelgroß · 1 Feld',
+          speed: '6 Felder · 9 m',
+          onBoard: 'Verängstigt, Vergiftet, Verhext: Zustände hängen als Symbole an der Figur.',
+        },
+      ],
+    },
+    table: {
+      nav: 'Am Tisch',
+      kicker: "Oreana's Office",
+      title: 'Am Tisch',
+      previous: 'Zurück',
+      next: 'Weiter',
+      items: [
+        { key: 'live', title: 'Live', text: 'Jeder Zug sofort auf allen Handys.' },
+        { key: 'distance', title: 'In Metern', text: 'Wie weit ein Zug war, auf 1,5 m genau.' },
+        { key: 'ping', title: 'Zeigen', text: 'Doppeltippen leuchtet auf allen Bildschirmen.' },
+        { key: 'arrow', title: 'Pfeile', text: 'Zeigen, wohin es als Nächstes geht.' },
+        { key: 'status', title: 'Zustände', text: 'Liegend, vergiftet, verhext, mit Symbol.' },
+        { key: 'card', title: 'Figurenkarte', text: 'Ein Tipp zeigt Bild, Name und Zustände.' },
+        { key: 'dice', title: 'Würfelschale', text: 'Würfeln, ohne den Kampf zu verlassen.' },
+        { key: 'undo', title: 'Rückgängig', text: 'Den eigenen letzten Zug zurücknehmen.' },
+        { key: 'offline', title: 'Offline', text: 'Karten bauen, ganz ohne Internet.' },
+        { key: 'install', title: 'Als App', text: 'Auf dem Handy installieren.' },
+      ],
+    },
+    finale: {
+      title: 'Die Runde wartet!',
+      body: 'Registrieren geht nur mit einem Einladungslink. Frag deine Spielleitung danach, oder melde dich an, wenn du schon ein Konto hast.',
+    },
+    footer: 'Gebaut für eine Runde unter Freunden.',
   },
 
   roles: {

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import type { Campaign, JoinLookupResponse } from '../api/types'
 import { ids, session } from '../encounters/testing'
+import { rememberUser } from '../offline/identity'
 import { json, mockApi, renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
 import { cleanJoinCode, defaultSession } from './joinCode'
@@ -123,6 +124,8 @@ describe('the join page', { timeout: 40_000 }, () => {
 
 describe('the home page’s join form', () => {
   it('reaches the same choice, and still joins directly', async () => {
+    // A device the user signed in on before, so home opens instead of the landing page.
+    rememberUser(testUser)
     mockApi({
       'GET /api/auth/me': json(200, testUser),
       'GET /api/campaigns': json(200, []),

@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { loadEnv } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
@@ -10,8 +11,22 @@ const TABLE_COLOR = '#14161b'
 // real-backend Playwright mode points it elsewhere; `vite preview` uses the same proxy.
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:5080'
 
+// The Impressum's details (src/pages/ImprintPage.tsx) are baked into the build from
+// IMPRINT_* in the environment (CI's repository variables, the Dockerfile's build args) or
+// the repository's .env, so they never enter the repository. Unit tests leave them out.
+function imprintDefines(mode: string) {
+  if (mode === 'test') return {}
+  const env = loadEnv(mode, `${import.meta.dirname}/../..`, 'IMPRINT_')
+  return Object.fromEntries(
+    Object.entries(env)
+      .filter(([, value]) => value.trim() !== '')
+      .map(([key, value]) => [`import.meta.env.VITE_${key}`, JSON.stringify(value.trim())]),
+  )
+}
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  define: imprintDefines(mode),
   plugins: [
     react(),
     tailwindcss(),
@@ -85,5 +100,6 @@ export default defineConfig({
     // full parallel run on a laptop they can take longer than the default 5 s.
     testTimeout: 15_000,
     unstubGlobals: true,
+    unstubEnvs: true,
   },
-})
+}))

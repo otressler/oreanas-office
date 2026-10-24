@@ -7,7 +7,7 @@ import { vi } from 'vitest'
 import { createQueryClient } from '../api/queryClient'
 import type { Me } from '../api/types'
 import { routes } from '../routes'
-import { useServerStatus } from '../server/serverStatus'
+import { useServerStatus, type ServerStatus } from '../server/serverStatus'
 
 export interface ApiCall {
   method: string
@@ -70,9 +70,9 @@ export const testUser: Me = {
   hasGoogle: false,
 }
 
-/** Renders the app's routes at `path`, as if the server were awake. */
-export function renderApp(path: string) {
-  useServerStatus.setState({ status: 'ready' })
+/** Renders the app's routes at `path`, as if the server were awake unless `status` says otherwise. */
+export function renderApp(path: string, { status = 'ready' }: { status?: ServerStatus } = {}) {
+  useServerStatus.setState({ status })
   const queryClient = createQueryClient()
   queryClient.setDefaultOptions({ queries: { retry: false } })
   const router = createMemoryRouter(routes, { initialEntries: [path] })
