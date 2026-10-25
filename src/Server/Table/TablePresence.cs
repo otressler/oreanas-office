@@ -182,7 +182,13 @@ public sealed class TablePresence(
             {
                 e.CampaignId,
                 DmUserId = (Guid?)e.Session.DmUserId,
-                Owners = e.Tokens.Where(t => t.CharacterId != null).Select(t => t.Character!.OwnerUserId).Distinct().ToList(),
+                // Who plays each character in this session (CharacterPlayers). Repeats are
+                // dropped by the roster's set: EF can't translate Distinct over this.
+                Owners = e.Tokens
+                    .Where(t => t.CharacterId != null)
+                    .Select(t => t.Character!.SessionPlayers.Where(p => p.SessionId == e.SessionId).Select(p => (Guid?)p.UserId).FirstOrDefault()
+                        ?? t.Character!.OwnerUserId)
+                    .ToList(),
             })
             .SingleOrDefaultAsync(cancellationToken);
         if (encounter is null)

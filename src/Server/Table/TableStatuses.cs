@@ -170,7 +170,7 @@ public sealed class TableStatuses(AppDbContext db, TimeProvider time)
                     t.Encounter.CampaignId,
                     (Guid?)t.Encounter.Session.DmUserId,
                     t.Kind,
-                    (Guid?)t.Character!.OwnerUserId,
+                    t.Character!.SessionPlayers.Where(p => p.SessionId == t.Encounter.SessionId).Select(p => (Guid?)p.UserId).FirstOrDefault() ?? (Guid?)t.Character!.OwnerUserId,
                     ConnectionMode.Player),
                 IsMember = db.CampaignMembers.Any(m => m.CampaignId == t.Encounter.CampaignId && m.UserId == userId),
                 t.Encounter.Status,

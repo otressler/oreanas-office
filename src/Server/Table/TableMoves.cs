@@ -143,7 +143,8 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
                 t.Encounter.Status,
                 SessionDmUserId = (Guid?)t.Encounter.Session.DmUserId,
                 t.Encounter.Session.PlayMode,
-                OwnerUserId = (Guid?)t.Character!.OwnerUserId,
+                // Who plays the character in this session (CharacterPlayers).
+                OwnerUserId = t.Character!.SessionPlayers.Where(p => p.SessionId == t.Encounter.SessionId).Select(p => (Guid?)p.UserId).FirstOrDefault() ?? (Guid?)t.Character!.OwnerUserId,
                 t.Encounter.MapCopy,
                 t.Encounter.BattleMap.Width,
                 t.Encounter.BattleMap.Height,
@@ -301,7 +302,11 @@ public sealed class TableMoves(AppDbContext db, TimeProvider time)
             .Where(m => m.EncounterId == encounterId
                 && (shared ? m.FromSharedScreen : m.ByUserId == userId && !m.FromSharedScreen))
             .OrderByDescending(m => m.Id)
-            .Select(m => new LatestTokenMove(m, m.Token, (Guid?)m.Token.Character!.OwnerUserId));
+            .Select(m => new LatestTokenMove(
+                m,
+                m.Token,
+                m.Token.Character!.SessionPlayers.Where(p => p.SessionId == m.Token.Encounter.SessionId).Select(p => (Guid?)p.UserId).FirstOrDefault()
+                    ?? (Guid?)m.Token.Character!.OwnerUserId));
     }
 
     private IQueryable<EncounterAccess> Encounter(Guid encounterId, Guid userId) =>

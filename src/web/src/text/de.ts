@@ -365,6 +365,10 @@ export const de = {
     name: 'Name',
     size: 'Größe',
     owner: (name: string) => `Gehört ${name}`,
+    /** The DM's field for whom a character belongs to (knowledge/domain/character.md). */
+    ownerField: 'Gehört',
+    ownerHint:
+      'Wem der Charakter gehört, der spielt ihn. Für eine einzelne Sitzung kann ihre Spielleitung ihn jemand anderem geben.',
     editTitle: (name: string) => `${name} bearbeiten`,
     appearance: 'Aussehen',
     appearanceHint: 'Kurze Beschreibung, aus der ein Porträt gemalt werden kann.',
@@ -457,6 +461,17 @@ export const de = {
   /** /kampagnen/:id/sitzungen/:sessionId (knowledge/features/session-planning.md). */
   sessionPage: {
     back: 'Zur Kampagne',
+    /** Who plays which character in this session (knowledge/domain/session.md). */
+    players: {
+      title: 'Wer spielt wen',
+      help: 'Fehlt jemand, gib den Charakter für diese Sitzung jemand anderem. Danach spielt ihn wieder, wem er gehört.',
+      playedBy: (name: string) => `Gespielt von ${name}`,
+      /** Shown when the session DM handed the character to someone else. */
+      handedOver: (owner: string) => `Nur in dieser Sitzung, sonst ${owner}`,
+      field: (character: string) => `Wer spielt ${character}?`,
+      /** The option that gives the character back to its owner. */
+      ownerOption: (owner: string) => `${owner} (wie in der Kampagne)`,
+    },
     /** Links back to the session page, e.g. from the import and the setup screen. */
     toSession: 'Zur Sitzung',
     notFoundTitle: 'Diese Sitzung gibt es hier nicht',
@@ -1226,6 +1241,7 @@ export const de = {
     notSessionDm: 'Die Kämpfe einer Sitzung plant nur ihre Spielleitung.',
     sessionInvalid: 'Diese Sitzung gibt es in der Kampagne nicht (mehr).',
     colorInvalid: 'Ein Farbcode ist # und sechs Zeichen aus 0–9 und a–f, etwa #4da3ff.',
+    notAMember: 'Diese Person gehört nicht zur Kampagne.',
     textTooLong: 'Ein Text in der Datei ist zu lang.',
     mapSizeInvalid: 'Eine Karte ist 1 bis 40 Felder breit und hoch.',
     layoutVersionUnsupported: 'Diese Kartendatei stammt aus einer neueren Version der App.',

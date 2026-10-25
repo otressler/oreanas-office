@@ -1,15 +1,23 @@
 import { useId, useState } from 'react'
-import type { Character } from '../api/types'
+import type { Campaign, Character } from '../api/types'
+import { useCurrentUser } from '../auth/auth'
 import { ringColor } from '../board/palette'
 import { Button, LoadError, Loading, Panel } from '../components/ui'
 import { StatusListEditor } from '../statuses/StatusListEditor'
 import { de } from '../text/de'
 import { TokenPicture } from '../tokenImages/TokenPicture'
-import { CharacterForm } from './CharacterForm'
+import { CharacterForm, type OwnerChoice } from './CharacterForm'
 import { useCharacters } from './queries'
 
-/** The campaign's characters; players edit their own, `dm` members any (`canEdit`). */
-export function CharactersPanel({ campaignId }: { campaignId: string }) {
+/**
+ * The campaign's characters; players edit their own, `dm` members any (`canEdit`) and also
+ * pick whom each belongs to.
+ */
+export function CharactersPanel({ campaign }: { campaign: Campaign }) {
+  const campaignId = campaign.id
+  const me = useCurrentUser()
+  const owners: OwnerChoice | undefined =
+    campaign.myRole === 'dm' ? { members: campaign.members, me: me.id } : undefined
   const characters = useCharacters(campaignId)
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -25,7 +33,9 @@ export function CharactersPanel({ campaignId }: { campaignId: string }) {
         )
       }
     >
-      {adding && <CharacterForm campaignId={campaignId} onDone={() => setAdding(false)} />}
+      {adding && (
+        <CharacterForm campaignId={campaignId} owners={owners} onDone={() => setAdding(false)} />
+      )}
       {characters.isPending ? (
         <Loading />
       ) : characters.isError ? (
@@ -40,6 +50,7 @@ export function CharactersPanel({ campaignId }: { campaignId: string }) {
                 <CharacterForm
                   campaignId={campaignId}
                   character={character}
+                  owners={owners}
                   onDone={() => setEditingId(null)}
                 />
               </li>

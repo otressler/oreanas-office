@@ -215,7 +215,14 @@ public static class StatusEndpoints
                 SessionDmUserId = (Guid?)e.Session.DmUserId,
                 Characters = e.Tokens
                     .Where(t => t.Kind == TokenKind.Character && t.RemovedAt == null)
-                    .Select(t => new { Id = t.CharacterId!.Value, t.Character!.Name, t.Character.OwnerUserId })
+                    // OwnerUserId: who plays the character in this session (CharacterPlayers).
+                    .Select(t => new
+                    {
+                        Id = t.CharacterId!.Value,
+                        t.Character!.Name,
+                        OwnerUserId = t.Character.SessionPlayers.Where(p => p.SessionId == e.SessionId).Select(p => (Guid?)p.UserId).FirstOrDefault()
+                            ?? t.Character.OwnerUserId,
+                    })
                     .ToList(),
             })
             .SingleOrDefaultAsync(cancellationToken);

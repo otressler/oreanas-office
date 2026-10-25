@@ -44,7 +44,7 @@ export function CampaignPage() {
       </div>
       <SessionsPanel campaign={campaign.data} />
       {campaign.data.myRole === 'dm' && <CampaignMapsLink campaignId={campaign.data.id} />}
-      <CharactersPanel campaignId={campaign.data.id} />
+      <CharactersPanel campaign={campaign.data} />
       {campaign.data.myRole === 'dm' && <DmStatusListPanel campaignId={campaign.data.id} />}
       <MembersPanel campaign={campaign.data} />
     </div>

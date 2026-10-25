@@ -68,7 +68,14 @@ public sealed class TablePings(AppDbContext db)
                     .Where(c => c.CampaignId == e.CampaignId)
                     .OrderBy(c => c.CreatedAt)
                     .ThenBy(c => c.Id)
-                    .Select(c => new { c.OwnerUserId, c.Color, InFight = e.Tokens.Any(t => t.CharacterId == c.Id) })
+                    // Who plays the character in this session (CharacterPlayers).
+                    .Select(c => new
+                    {
+                        OwnerUserId = c.SessionPlayers.Where(p => p.SessionId == e.SessionId).Select(p => (Guid?)p.UserId).FirstOrDefault()
+                            ?? c.OwnerUserId,
+                        c.Color,
+                        InFight = e.Tokens.Any(t => t.CharacterId == c.Id),
+                    })
                     .ToList(),
             })
             .SingleOrDefaultAsync();

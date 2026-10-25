@@ -41,6 +41,9 @@ public class GameSession
     public AppUser Dm { get; set; } = null!;
 
     public List<Encounter> Encounters { get; } = [];
+
+    // Characters someone other than their owner plays in this session.
+    public List<SessionCharacterPlayer> CharacterPlayers { get; } = [];
 }
 
 // Byod: everyone plays on their own device. Local: any member may also open a shared screen

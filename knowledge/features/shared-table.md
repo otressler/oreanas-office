@@ -23,7 +23,7 @@ Proposals in this concept that the project owner hasn't confirmed yet are marked
 **What it shows** (question 28)
 
 - A row of small round avatars along the top edge of the board, on every device in the fight, the spectator screen included.
-- **Who is in the row**: the session DM, the owner of every character in the fight, and anyone else connected to the fight, such as a `dm` member who only watches. Each person appears once, however many devices they use.
+- **Who is in the row**: the session DM, whoever plays each character in the fight ([character](/domain/character.md), "Who plays it"), and anyone else connected to the fight, such as a `dm` member who only watches. Each person appears once, however many devices they use.
 - **Connected or not**: an avatar is drawn full when at least one of the person's devices is connected to the fight, and greyed out when none is. Phones close their connection when the app goes to the background ([realtime sync](/decisions/realtime-sync.md)), so a locked phone shows as not connected. That is honest: the person won't see a ping until they look again.
 - **The avatar** is the portrait of the person's character in the fight in its ring colour, as on the token; with several characters, the one added to the campaign first, as for [ping colours](/features/pings-and-arrows.md). The session DM gets a gold ring; someone without a character in the fight gets their initial in white.
 - **The shared screen** counts as its own avatar, a table icon, while at least one spectator screen is connected to the session. Its account doesn't count as a person through it, as the [spectator view](/features/spectator-view.md) says.

@@ -12,7 +12,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | id | |
-| `ownerUserId` | → [User](/domain/user.md) | Only the owner (and the DM) can move this character's token |
+| `ownerUserId` | → [User](/domain/user.md) | A member of the campaign. Its player, unless the session DM hands it to someone else for one session (see Who plays it) |
 | `campaignId` | → [Campaign](/domain/campaign.md) | Characters are campaign-specific |
 | `name` | string | |
 | `size` | enum | See [creature size](/rules/creature-size.md); usually Medium or Small |
@@ -24,7 +24,17 @@ Later (stage 9): a status list, the list of statuses its player picks from ([sta
 
 # Permissions
 
-A player creates and edits their own characters, colour included. Every `dm` member of the campaign can edit any character in it ([campaign member](/domain/campaign-member.md)). Whoever can edit a character can also upload, generate and pick its portrait; generating counts against the site-wide [image budget](/decisions/image-budget.md).
+A player creates and edits their own characters, colour included. Every `dm` member of the campaign can edit any character in it ([campaign member](/domain/campaign-member.md)), and gives characters to members: they pick the owner when creating a character ("Gehört") and change it later, to any member of the campaign in either role. Players can't give their characters away. Whoever can edit a character can also upload, generate and pick its portrait; generating counts against the site-wide [image budget](/decisions/image-budget.md).
+
+# Who plays it
+
+Added on 2026-10-24 at the project owner's request ("assign characters to players in a campaign and override that in a session"). Draft: the split below is Claude's proposal and still needs the project owner's yes.
+
+- **In the campaign**, the owner plays the character.
+- **In a session**, the session DM can hand it to another member for that session only, for example when its player is absent ([session](/domain/session.md), "Who plays which character"). Without that, the owner plays it.
+- **Playing** is what a player does with a character at the table: moving and undoing its moves, putting statuses on it and picking from its status list, it being drawn on top for them, "Meine Figur", their place in "who's here", and their ping colour. Wherever the spec says a player's own characters or a character's owner at the table, it means who plays it in that session.
+- **Editing** stays with the owner and `dm` members, also in a session where someone else plays it: name, size, appearance, colour, portrait and status list.
+- A running fight with the character reloads its boards when its player changes, so the change applies at once.
 
 # Notes
 

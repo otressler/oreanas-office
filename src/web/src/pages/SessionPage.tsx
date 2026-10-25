@@ -9,6 +9,7 @@ import { EndEncounterButton } from '../encounters/EndEncounterButton'
 import { formatDate } from '../lib/dates'
 import { FightsPanel } from '../sessions/FightsPanel'
 import { fightPath } from '../sessions/paths'
+import { SessionPlayersPanel } from '../sessions/SessionPlayersPanel'
 import { SessionTableControls } from '../sharedTable/SessionTableControls'
 import { SessionSpectatorControls } from '../spectator/SessionSpectatorControls'
 import { de } from '../text/de'
@@ -114,6 +115,8 @@ export function SessionPage() {
           <p className="mt-4 text-dim">{s.status === 'ended' ? t.playerEnded : t.playerHint}</p>
         )
       )}
+
+      <SessionPlayersPanel campaign={campaign.data} session={s} />
     </div>
   )
 }

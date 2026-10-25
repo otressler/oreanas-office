@@ -38,6 +38,8 @@ public enum ApiErrorCode
     SessionInvalid,
     // ColorInvalid: a character's ring colour isn't "#rrggbb".
     ColorInvalid,
+    // NotAMember: a character was given to someone who isn't a member of the campaign.
+    NotAMember,
 
     // Map imports. Field is the JSON path of the offending entry, e.g. "layout.cells[12]".
     TextTooLong,
