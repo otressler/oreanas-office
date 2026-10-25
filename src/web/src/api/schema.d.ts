@@ -2101,6 +2101,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/campaigns/{campaignId}/maps/{mapId}/backgrounds/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    mapId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MapBackground"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/campaigns/{campaignId}/maps/{mapId}/background": {
         parameters: {
             query?: never;
@@ -3083,18 +3143,34 @@ export interface components {
         AuthOptionsResponse: {
             googleEnabled: boolean;
         };
+        BackgroundPlacement: {
+            /** Format: uuid */
+            assetId: string;
+            /** Format: double */
+            x: number;
+            /** Format: double */
+            y: number;
+            /** Format: double */
+            width: number;
+            /** Format: double */
+            height: number;
+            /** Format: double */
+            rotation: number;
+        };
         BoardBackground: {
             /** Format: uuid */
             assetId: string;
             url: string;
-            /** Format: int32 */
+            /** Format: double */
             x: number;
-            /** Format: int32 */
+            /** Format: double */
             y: number;
-            /** Format: int32 */
+            /** Format: double */
             width: number;
-            /** Format: int32 */
+            /** Format: double */
             height: number;
+            /** Format: double */
+            rotation: number;
         };
         BoardCell: {
             /** Format: int32 */
@@ -3112,6 +3188,7 @@ export interface components {
             height: number;
             layout: components["schemas"]["MapLayout"];
             background: null | components["schemas"]["BoardBackground"];
+            grid?: components["schemas"]["MapGridStyle"];
         };
         BoardPerson: {
             /** Format: uuid */
@@ -3291,6 +3368,8 @@ export interface components {
             /** Format: int32 */
             height: number;
             layout: components["schemas"]["MapLayout"];
+            placement?: null | components["schemas"]["BackgroundPlacement"];
+            grid?: components["schemas"]["MapGridStyle"];
         };
         EncounterStartedEvent: {
             /** Format: uuid */
@@ -3571,18 +3650,19 @@ export interface components {
             /** Format: uuid */
             mapId: string;
             status: components["schemas"]["AssetStatus"];
+            origin: components["schemas"]["AssetOrigin"];
             url: null | string;
             /** Format: int32 */
             gridWidth: number;
             /** Format: int32 */
             gridHeight: number;
-            /** Format: int32 */
+            /** Format: double */
             x: number;
-            /** Format: int32 */
+            /** Format: double */
             y: number;
-            /** Format: int32 */
+            /** Format: double */
             width: number;
-            /** Format: int32 */
+            /** Format: double */
             height: number;
             outdated: boolean;
             layoutChanged: boolean;
@@ -3601,6 +3681,11 @@ export interface components {
             versions: components["schemas"]["MapBackground"][];
             budget: components["schemas"]["ImageBudgetResponse"];
         };
+        /**
+         * @default normal
+         * @enum {unknown}
+         */
+        MapGridStyle: "normal" | "faint" | "hidden";
         MapLayout: {
             /** Format: int32 */
             schemaVersion: number;
@@ -3962,6 +4047,8 @@ export interface components {
             archivedAt: null | string;
             /** Format: uuid */
             copiedFromMapId: null | string;
+            backgroundPlacement?: null | components["schemas"]["BackgroundPlacement"];
+            gridStyle?: components["schemas"]["MapGridStyle"];
         };
         /** @enum {unknown} */
         SyncOutcome: "created" | "saved" | "conflict" | "rejected";

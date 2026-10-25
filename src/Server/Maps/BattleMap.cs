@@ -57,6 +57,13 @@ public class BattleMap
     // with offline edits. No foreign key: a store copy points to another campaign's asset.
     public Guid? BackgroundAssetId { get; set; }
 
+    // The DM's adjustment of the picked background, part of the sync item. Applies only
+    // while its AssetId is the picked one (BackgroundPlacement).
+    public BackgroundPlacement? BackgroundPlacement { get; set; }
+
+    // How the grid is drawn over the picture; part of the sync item.
+    public MapGridStyle GridStyle { get; set; }
+
     public Campaign Campaign { get; set; } = null!;
 }
 
@@ -83,6 +90,11 @@ internal sealed class BattleMapConfiguration : IEntityTypeConfiguration<BattleMa
                     layout => JsonSerializer.Serialize(layout, LayoutJson).GetHashCode(),
                     layout => JsonSerializer.Deserialize<MapLayout>(JsonSerializer.Serialize(layout, LayoutJson), LayoutJson)!))
             .HasColumnName("LayoutJson");
+        map.Property(m => m.BackgroundPlacement)
+            .HasConversion(
+                placement => JsonSerializer.Serialize(placement, LayoutJson),
+                json => JsonSerializer.Deserialize<BackgroundPlacement>(json, LayoutJson))
+            .HasColumnName("BackgroundPlacementJson");
         map.Property(m => m.Version).IsConcurrencyToken();
         map.HasOne<AppUser>().WithMany().HasForeignKey(m => m.UpdatedByUserId).OnDelete(DeleteBehavior.Restrict);
         map.HasIndex(m => new { m.CampaignId, m.CopiedFromMapId });

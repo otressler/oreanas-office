@@ -148,7 +148,8 @@ public static class EncounterEndpoints
                 e.MapCopy,
                 SavedBackgroundAssetId = e.BackgroundAssetId,
                 MapBackgroundAssetId = e.BattleMap.BackgroundAssetId,
-                Map = new BoardMap(e.BattleMap.Id, e.BattleMap.Name, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, null),
+                MapPlacement = e.BattleMap.BackgroundPlacement,
+                Map = new BoardMap(e.BattleMap.Id, e.BattleMap.Name, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, null, e.BattleMap.GridStyle),
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -191,12 +192,13 @@ public static class EncounterEndpoints
                 Width = copy.Width,
                 Height = copy.Height,
                 Layout = copy.Layout,
-                Background = await MapBackgrounds.BoardAsync(db, encounter.SavedBackgroundAssetId, null, cancellationToken),
+                Grid = copy.Grid,
+                Background = await MapBackgrounds.BoardAsync(db, encounter.SavedBackgroundAssetId, null, copy.Placement, cancellationToken),
             }
             : encounter.Map with
             {
                 Background = await MapBackgrounds.BoardAsync(
-                    db, encounter.MapBackgroundAssetId, (encounter.Map.Width, encounter.Map.Height), cancellationToken),
+                    db, encounter.MapBackgroundAssetId, (encounter.Map.Width, encounter.Map.Height), encounter.MapPlacement, cancellationToken),
             };
         var board = new BoardStateResponse(
             encounter.Id,
@@ -245,7 +247,7 @@ public static class EncounterEndpoints
     {
         var encounter = await db.Encounters
             .Where(e => e.Id == encounterId && e.CampaignId == campaignId && e.SessionId == sessionId)
-            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, e.BattleMap.BackgroundAssetId, e.Fog })
+            .Select(e => new { e.Status, e.ArchivedAt, e.Version, e.BattleMap.Width, e.BattleMap.Height, e.BattleMap.Layout, e.BattleMap.BackgroundAssetId, e.BattleMap.BackgroundPlacement, e.BattleMap.GridStyle, e.Fog })
             .SingleOrDefaultAsync(cancellationToken);
         if (encounter is null)
         {
@@ -355,7 +357,7 @@ public static class EncounterEndpoints
                         set => set
                             .SetProperty(e => e.Status, EncounterStatus.Active)
                             .SetProperty(e => e.StartedAt, now)
-                            .SetProperty(e => e.MapCopy, new EncounterMapCopy(encounter.Width, encounter.Height, encounter.Layout))
+                            .SetProperty(e => e.MapCopy, new EncounterMapCopy(encounter.Width, encounter.Height, encounter.Layout, encounter.BackgroundPlacement, encounter.GridStyle))
                             .SetProperty(e => e.BackgroundAssetId, background == null ? null : background.Id)
                             .SetProperty(e => e.Version, e => e.Version + 1)
                             .SetProperty(e => e.UpdatedAt, now),

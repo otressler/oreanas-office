@@ -7,6 +7,7 @@
 // step. Layouts are small (at most 40 × 40 cells), so undo keeps whole snapshots.
 import { createContext, useContext } from 'react'
 import { createStore, useStore, type StoreApi } from 'zustand'
+import type { MapBackground } from '../api/types'
 import type { GridPoint } from '../board/geometry'
 import type { EditorMap } from './model'
 
@@ -22,6 +23,11 @@ export type Overlay =
   | { kind: 'rect'; x: number; y: number; w: number; h: number; style: OverlayStyle }
   /** Short texts centred in cells, e.g. elevations; drawn only when cells are large enough. */
   | { kind: 'labels'; items: readonly { x: number; y: number; text: string }[] }
+  /**
+   * Drawn by the tool itself in world units, e.g. the background's handles; called on every
+   * redraw of the overlay, so it may read the store as it is then.
+   */
+  | { kind: 'custom'; draw: (ctx: CanvasRenderingContext2D, cssScale: number) => void }
 
 /** How many steps undo goes back. */
 export const UNDO_LIMIT = 200
@@ -37,6 +43,13 @@ export interface EditorState {
   toolId: string
   selection: Selection | null
   overlay: readonly Overlay[]
+  /**
+   * The picked background version the map shows (done, fitting the map), from the
+   * "Hintergrund" query; null without one, offline, or outside map mode. Not part of undo.
+   */
+  background: MapBackground | null
+  /** The background layer is drawn under the layout (a per-device view setting). */
+  backgroundVisible: boolean
 
   /** One undo step. A change that returns the same map does nothing. */
   apply(change: (doc: EditorMap) => EditorMap): void
@@ -52,9 +65,30 @@ export interface EditorState {
   setTool(toolId: string): void
   select(selection: Selection | null): void
   setOverlay(overlay: readonly Overlay[]): void
+  setBackground(background: MapBackground | null): void
+  setBackgroundVisible(visible: boolean): void
 }
 
 export type EditorStore = StoreApi<EditorState>
+
+const BACKGROUND_VISIBLE_KEY = 'oreanas-office:editor-background-visible'
+
+/** The remembered background toggle; shown unless this device switched it off. */
+function readBackgroundVisible(): boolean {
+  try {
+    return globalThis.localStorage?.getItem(BACKGROUND_VISIBLE_KEY) !== 'false'
+  } catch {
+    return true
+  }
+}
+
+function rememberBackgroundVisible(visible: boolean) {
+  try {
+    globalThis.localStorage?.setItem(BACKGROUND_VISIBLE_KEY, String(visible))
+  } catch {
+    // Private windows may refuse storage; the toggle then lasts only this visit.
+  }
+}
 
 export function createEditorStore(doc: EditorMap, toolId: string): EditorStore {
   return createStore<EditorState>()((set, get) => {
@@ -75,6 +109,8 @@ export function createEditorStore(doc: EditorMap, toolId: string): EditorStore {
       toolId,
       selection: null,
       overlay: [],
+      background: null,
+      backgroundVisible: readBackgroundVisible(),
 
       apply(change) {
         const state = get()
@@ -168,6 +204,15 @@ export function createEditorStore(doc: EditorMap, toolId: string): EditorStore {
 
       setOverlay(overlay) {
         set({ overlay })
+      },
+
+      setBackground(background) {
+        set({ background })
+      },
+
+      setBackgroundVisible(visible) {
+        rememberBackgroundVisible(visible)
+        set({ backgroundVisible: visible })
       },
     }
   })

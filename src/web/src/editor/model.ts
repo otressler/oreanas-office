@@ -1,7 +1,7 @@
 // The map editor's data (knowledge/features/dm-map-editor.md, domain/battle-map.md).
 // The editor works on an EditorMap; the browser keeps it as a LocalMap with the
 // fields stage 6 sync needs (knowledge/decisions/offline-prep-pwa.md, "Versions and IDs").
-import type { MapLayout } from '../api/types'
+import type { BackgroundPlacement, MapGridStyle, MapLayout } from '../api/types'
 import type { SyncState } from '../offline/sync'
 
 export type { SyncState }
@@ -17,6 +17,13 @@ export interface EditorMap {
   scene: string
   vibe: string
   lighting: string
+  /**
+   * Where the DM moved, scaled and turned the picked background; used only while its
+   * assetId is the picked version. Records from before uploads leave it out (null).
+   */
+  backgroundPlacement?: BackgroundPlacement | null
+  /** How the grid is drawn over a background picture; left out means 'normal'. */
+  gridStyle?: MapGridStyle
 }
 
 /** A battle map kept in the browser (IndexedDB). */
@@ -56,13 +63,17 @@ export function emptyMap(name: string, width: number, height: number): EditorMap
     scene: '',
     vibe: '',
     lighting: '',
+    backgroundPlacement: null,
+    gridStyle: 'normal',
   }
 }
 
 /** The editable part of a stored map. */
 export function editorMapOf(map: LocalMap): EditorMap {
   const { name, width, height, layout, scene, vibe, lighting } = map
-  return { name, width, height, layout, scene, vibe, lighting }
+  const backgroundPlacement = map.backgroundPlacement ?? null
+  const gridStyle = map.gridStyle ?? 'normal'
+  return { name, width, height, layout, scene, vibe, lighting, backgroundPlacement, gridStyle }
 }
 
 /** Ids for features and entrances: short, unique within the layout ("f3", "e2"). */

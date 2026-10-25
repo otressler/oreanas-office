@@ -102,13 +102,21 @@ public record UndoableMove(Guid TokenId, int Version);
 
 // Background: the picture to draw under the grid, null for the plain rendering. For an
 // active or ended encounter the one saved when it started, otherwise the map's picked
-// background while it fits the map's size.
-public record BoardMap(Guid Id, string Name, int Width, int Height, MapLayout Layout, BoardBackground? Background);
+// background while it fits the map's size. Grid: how the grid is drawn over the picture.
+public record BoardMap(
+    Guid Id,
+    string Name,
+    int Width,
+    int Height,
+    MapLayout Layout,
+    BoardBackground? Background,
+    MapGridStyle Grid = MapGridStyle.Normal);
 
-// Url: /api/assets/{id}, cacheable for good. X, Y, Width, Height: where the picture lies
-// in cells, relative to the map's top-left cell (Asset.FrameX…). Padding of a map wider
-// than 3:1 lies outside the map.
-public record BoardBackground(Guid AssetId, string Url, int X, int Y, int Width, int Height);
+// Url: /api/assets/{id}, cacheable for good. X, Y, Width, Height: where the unturned picture
+// lies in cells, relative to the map's top-left cell (the DM's BackgroundPlacement, or the
+// asset's frame). Rotation: degrees clockwise around the picture's centre. Padding of a map
+// wider than 3:1 lies outside the map.
+public record BoardBackground(Guid AssetId, string Url, double X, double Y, double Width, double Height, double Rotation);
 
 // Label: the character's name or the creature's label. OwnerUserId: the character's
 // owner, null for creatures. ColorIndex: characters get a fixed ring colour by the

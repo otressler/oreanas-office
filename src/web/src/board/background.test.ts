@@ -85,10 +85,30 @@ describe('frame math', () => {
     const image = {} as CanvasImageSource
     drawPicture(ctx, image, { x: 0, y: -3, width: 30, height: 10 }, 30, 4)
     expect(named('rect')[0]!.args).toEqual([0, 0, 30 * CELL, 4 * CELL])
-    expect(named('drawImage')[0]!.args).toEqual([image, 0, -3 * CELL, 30 * CELL, 10 * CELL])
+    // Drawn around its centre, so a turn turns it in place.
+    expect(named('translate')[0]!.args).toEqual([15 * CELL, 2 * CELL])
+    expect(named('rotate')).toHaveLength(0)
+    expect(named('drawImage')[0]!.args).toEqual([
+      image,
+      -15 * CELL,
+      -5 * CELL,
+      30 * CELL,
+      10 * CELL,
+    ])
     const order = calls.map((c) => c.name)
     expect(order.indexOf('clip')).toBeLessThan(order.indexOf('drawImage'))
     expect(order.at(-1)).toBe('restore')
+  })
+
+  it('turns the picture around its centre, and draws it whole without the clip', () => {
+    const { ctx, named } = recordingContext()
+    const image = {} as CanvasImageSource
+    drawPicture(ctx, image, { x: 1, y: 1, width: 4, height: 2, rotation: 90 }, 6, 4, {
+      clip: false,
+    })
+    expect(named('clip')).toHaveLength(0)
+    expect(named('translate')[0]!.args).toEqual([3 * CELL, 2 * CELL])
+    expect(named('rotate')[0]!.args[0]).toBeCloseTo(Math.PI / 2)
   })
 })
 

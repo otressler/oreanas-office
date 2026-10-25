@@ -415,7 +415,7 @@ public static class TokenImageEndpoints
     // The accepted types are only described in the OpenAPI document, not set as Accepts
     // metadata: routing would answer any other type with the /api fallback's 404, where the
     // app needs UploadInvalid.
-    private static RouteHandlerBuilder AcceptsRawPicture(this RouteHandlerBuilder endpoint) =>
+    internal static RouteHandlerBuilder AcceptsRawPicture(this RouteHandlerBuilder endpoint) =>
         endpoint.AddOpenApiOperationTransformer((operation, _, _) =>
         {
             operation.RequestBody = new OpenApiRequestBody
@@ -494,7 +494,7 @@ public static class TokenImageEndpoints
     }
 
     // Reads at most maxBytes; null when the body is longer.
-    private static async Task<byte[]?> ReadBodyAsync(HttpRequest request, int maxBytes, CancellationToken cancellationToken)
+    internal static async Task<byte[]?> ReadBodyAsync(HttpRequest request, int maxBytes, CancellationToken cancellationToken)
     {
         // Kestrel's own limit (30 MB by default) mustn't cut in below the setting.
         if (request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>() is { IsReadOnly: false } limit

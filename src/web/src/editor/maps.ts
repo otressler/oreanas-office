@@ -54,11 +54,12 @@ export async function saveMap(db: OfflineDb, id: string, map: EditorMap): Promis
 export async function duplicateMap(db: OfflineDb, id: string, name: string): Promise<LocalMap> {
   const source = await db.maps.get(id)
   if (!source) throw new Error(`Map ${id} not found`)
-  const { name: _, width, height, layout, scene, vibe, lighting } = source
+  // The picked background stays with the server's map, so its placement stays behind too.
+  const { name: _, width, height, layout, scene, vibe, lighting, gridStyle = 'normal' } = source
   return createMap(
     db,
     source.campaignId,
-    { name, width, height, layout, scene, vibe, lighting },
+    { name, width, height, layout, scene, vibe, lighting, backgroundPlacement: null, gridStyle },
     id,
   )
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Encounters;
+using OreanasOffice.Server.Maps;
 
 namespace OreanasOffice.Server.Images;
 
@@ -16,19 +17,21 @@ public static class MapBackgrounds
     public static MapBackground ToView(Asset asset, int mapWidth, int mapHeight, string mapFingerprint)
     {
         var outdated = !Fits(asset, mapWidth, mapHeight);
+        var frame = Frame(asset);
         return new MapBackground(
             asset.Id,
             asset.OwnerId,
             asset.Status,
+            asset.Origin,
             asset.Status == AssetStatus.Done ? Url(asset.Id) : null,
             asset.GridWidth ?? 0,
             asset.GridHeight ?? 0,
-            asset.FrameX ?? 0,
-            asset.FrameY ?? 0,
-            asset.FrameWidth ?? asset.GridWidth ?? 0,
-            asset.FrameHeight ?? asset.GridHeight ?? 0,
+            frame.X,
+            frame.Y,
+            frame.Width,
+            frame.Height,
             outdated,
-            !outdated && asset.LayoutHash != mapFingerprint,
+            !outdated && asset.Origin == AssetOrigin.Generated && asset.LayoutHash != mapFingerprint,
             asset.Status == AssetStatus.Failed ? asset.Failure : null,
             asset.CreatedAt,
             asset.FinishedAt,
@@ -36,9 +39,29 @@ public static class MapBackgrounds
             asset.Instruction);
     }
 
-    // Made for the map's current size.
+    // Made for the map's current size. An upload fits every size: it isn't painted to the
+    // layout, and the DM places it by hand (knowledge/domain/battle-map.md, "Background image").
     public static bool Fits(Asset asset, int mapWidth, int mapHeight) =>
-        asset.GridWidth == mapWidth && asset.GridHeight == mapHeight;
+        asset.Origin == AssetOrigin.Uploaded || (asset.GridWidth == mapWidth && asset.GridHeight == mapHeight);
+
+    // Where the picture lies before the DM moves it, in cells. Generated: its frame. Uploaded:
+    // as large as fits into the map it was uploaded for, centred, keeping its aspect.
+    public static (double X, double Y, double Width, double Height) Frame(Asset asset)
+    {
+        if (asset.Origin == AssetOrigin.Uploaded)
+        {
+            double mapWidth = asset.GridWidth ?? 1;
+            double mapHeight = asset.GridHeight ?? 1;
+            double pixelWidth = asset.PixelWidth ?? 1;
+            double pixelHeight = asset.PixelHeight ?? 1;
+            var scale = Math.Min(mapWidth / pixelWidth, mapHeight / pixelHeight);
+            var width = pixelWidth * scale;
+            var height = pixelHeight * scale;
+            return ((mapWidth - width) / 2, (mapHeight - height) / 2, width, height);
+        }
+
+        return (asset.FrameX ?? 0, asset.FrameY ?? 0, asset.FrameWidth ?? asset.GridWidth ?? 0, asset.FrameHeight ?? asset.GridHeight ?? 0);
+    }
 
     // A background that may be shown on a map of this size, or saved by a copy or an
     // encounter: a finished map background made for this size. Size null: any size, for an
@@ -56,18 +79,28 @@ public static class MapBackgrounds
         return asset is not null && (size is not { } s || Fits(asset, s.Width, s.Height)) ? asset : null;
     }
 
-    // What the board draws under the grid, or null for the plain rendering.
+    // What the board draws under the grid, or null for the plain rendering: the picture at
+    // the DM's placement while that was made for it, else at its frame.
     public static async Task<BoardBackground?> BoardAsync(
-        AppDbContext db, Guid? assetId, (int Width, int Height)? size, CancellationToken cancellationToken) =>
-        await UsableAsync(db, assetId, size, cancellationToken) is { } asset
-            ? new BoardBackground(
-                asset.Id,
-                Url(asset.Id),
-                asset.FrameX ?? 0,
-                asset.FrameY ?? 0,
-                asset.FrameWidth ?? asset.GridWidth ?? 0,
-                asset.FrameHeight ?? asset.GridHeight ?? 0)
-            : null;
+        AppDbContext db,
+        Guid? assetId,
+        (int Width, int Height)? size,
+        BackgroundPlacement? placement,
+        CancellationToken cancellationToken)
+    {
+        if (await UsableAsync(db, assetId, size, cancellationToken) is not { } asset)
+        {
+            return null;
+        }
+
+        if (placement is not null && placement.AssetId == asset.Id && placement.IsValid())
+        {
+            return new BoardBackground(asset.Id, Url(asset.Id), placement.X, placement.Y, placement.Width, placement.Height, placement.Rotation);
+        }
+
+        var frame = Frame(asset);
+        return new BoardBackground(asset.Id, Url(asset.Id), frame.X, frame.Y, frame.Width, frame.Height, 0);
+    }
 
     // The first moment of the current calendar month in UTC.
     public static DateTimeOffset MonthStart(DateTimeOffset now)

@@ -289,6 +289,16 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             return (Reject(item, new ApiError(ApiErrorCode.LayoutInvalid)) with { Problems = problems }, false);
         }
 
+        if (data.BackgroundPlacement is { } placement && !placement.IsValid())
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.LayoutInvalid, "backgroundPlacement")), false);
+        }
+
+        if (!Enum.IsDefined(data.GridStyle))
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.LayoutInvalid, "gridStyle")), false);
+        }
+
         var now = time.GetUtcNow();
         var map = existing ?? db.BattleMaps.Add(new BattleMap
         {
@@ -310,6 +320,8 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
         map.Vibe = (data.Vibe ?? "").Trim();
         map.Lighting = (data.Lighting ?? "").Trim();
         map.ArchivedAt = data.ArchivedAt;
+        map.BackgroundPlacement = data.BackgroundPlacement;
+        map.GridStyle = data.GridStyle;
         map.UpdatedAt = now;
         map.UpdatedByUserId = userId;
         if (existing is not null)

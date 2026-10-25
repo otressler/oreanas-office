@@ -76,6 +76,7 @@ export function previewBoard(
       height: doc.height,
       layout: doc.layout,
       background,
+      grid: doc.gridStyle ?? 'normal',
     },
     tokens,
     isSessionDm: false,

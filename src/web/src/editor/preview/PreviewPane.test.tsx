@@ -138,6 +138,7 @@ describe('PreviewPane in the editor', () => {
         y: 0,
         width: 20,
         height: 12,
+        rotation: 0,
       }),
     )
   })

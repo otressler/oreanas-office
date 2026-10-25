@@ -14,6 +14,7 @@ import { resizeTool, terrainTools } from './terrain'
 import type { EditorTool, ToolGroup } from './tools'
 
 export { PreviewPane } from './preview'
+export { BackgroundSource } from './background'
 
 const GROUP_ORDER: ToolGroup[] = ['terrain', 'elevation', 'features', 'entrances', 'map']
 

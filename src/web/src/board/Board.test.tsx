@@ -36,7 +36,15 @@ describe('Board', () => {
       ...gorge,
       map: {
         ...gorge.map,
-        background: { assetId: 'a', url: '/api/assets/a', x: 0, y: 0, width: 20, height: 12 },
+        background: {
+          assetId: 'a',
+          url: '/api/assets/a',
+          x: 0,
+          y: 0,
+          width: 20,
+          height: 12,
+          rotation: 0,
+        },
       },
     }
     const { rerender } = render(<Board board={gorge} />)

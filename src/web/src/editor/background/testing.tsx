@@ -120,6 +120,7 @@ export function version(fields: Partial<MapBackground> = {}): MapBackground {
   return {
     id,
     mapId: 'map',
+    origin: 'generated',
     status,
     url: status === 'done' ? `/api/assets/${id}` : null,
     gridWidth: 10,

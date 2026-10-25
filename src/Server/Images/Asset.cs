@@ -66,6 +66,12 @@ public class Asset
 
     public int? FrameHeight { get; set; }
 
+    // Uploaded map backgrounds: the stored picture's size in pixels, so its first frame keeps
+    // the picture's aspect (MapBackgrounds.Frame).
+    public int? PixelWidth { get; set; }
+
+    public int? PixelHeight { get; set; }
+
     // Map backgrounds: LayoutFingerprint of the map when the job was queued, so the editor
     // can say the layout changed since the image was made.
     public string? LayoutHash { get; set; }

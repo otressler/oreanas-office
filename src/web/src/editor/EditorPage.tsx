@@ -47,6 +47,7 @@ import { getMap } from './maps'
 import { editorPath, mapListPath } from './paths'
 import { editorMapOf, type LocalMap } from './model'
 import {
+  BackgroundSource,
   DEFAULT_TOOL_ID,
   editorHeaderItems,
   editorTools,
@@ -336,6 +337,8 @@ function EditorFrame({
           </aside>
         </div>
       )}
+      {/* Map mode draws the picked background under the layout. */}
+      {!encounter && <BackgroundSource campaignId={campaignId} mapId={mapId} />}
       <StatusBar
         hover={mode === 'edit' ? hover : null}
         status={status}

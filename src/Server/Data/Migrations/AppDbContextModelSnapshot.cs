@@ -660,6 +660,12 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("PixelHeight")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PixelWidth")
+                        .HasColumnType("int");
+
                     b.Property<string>("Prompt")
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
@@ -709,6 +715,10 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid?>("BackgroundAssetId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("BackgroundPlacement")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("BackgroundPlacementJson");
+
                     b.Property<Guid>("CampaignId")
                         .HasColumnType("uniqueidentifier");
 
@@ -717,6 +727,11 @@ namespace OreanasOffice.Server.Data.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("GridStyle")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Height")
                         .HasColumnType("int");

@@ -42,6 +42,8 @@ public record SyncCreatureTypeData(
     int InitiativeModifier = 0,
     bool InitiativeAdvantage = false);
 
+// BackgroundPlacement and GridStyle: the DM's adjustment of the picked background and how
+// the grid is drawn over it (knowledge/domain/battle-map.md); older devices leave them out.
 public record SyncMapData(
     string Name,
     int Width,
@@ -51,7 +53,9 @@ public record SyncMapData(
     string Vibe,
     string Lighting,
     DateTimeOffset? ArchivedAt,
-    Guid? CopiedFromMapId);
+    Guid? CopiedFromMapId,
+    BackgroundPlacement? BackgroundPlacement = null,
+    MapGridStyle GridStyle = MapGridStyle.Normal);
 
 // Status: a device pushes only Draft or Ready. SessionId: the session the fight is planned
 // for; a different one moves it (knowledge/domain/session.md).
