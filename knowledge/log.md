@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-10-25
+- **Dev accounts without Google**: At the project owner's request, `scripts/dev-user.ps1` creates local accounts on the development backend (default `oreana@dev.local`, password `dev-passwort`), so `dev.ps1` can be used without setting up Google or an admin. It takes an invite from `/api/testing/invites`, which until now existed only in the E2E environment and is now also mapped in Development, never in production, and registers through the normal endpoint. Dev accounts are never admin. Updated [auth](/decisions/auth.md) and the project's `CLAUDE.md`.
 - **Creature icon uploads**: At the project owner's request, `dm` members can upload a picture as a creature type's icon, through the same crop step and server checks as character portraits. It becomes a picked version at once and leaves the type's sync version alone; archived types may still get one. Restyling stays for portraits only, because its prompt is written for people. Built on `feature/creature-icon-upload`. Updated [token icons](/features/token-icons.md) and [creature type](/domain/creature-type.md).
 
 ## 2026-10-24
