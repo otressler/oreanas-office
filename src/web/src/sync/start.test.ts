@@ -2,7 +2,15 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { offlineDb, type OfflineDb } from '../offline/db'
 import { de } from '../text/de'
 import { syncThenStart } from './start'
-import { CAMPAIGN, fakeServer, seedCampaign, seedEncounter, seedMap, serverMap } from './testing'
+import {
+  CAMPAIGN,
+  NO_CARD,
+  fakeServer,
+  seedCampaign,
+  seedEncounter,
+  seedMap,
+  serverMap,
+} from './testing'
 import { resetSyncState } from './state'
 import type { FakeServer } from './testing'
 
@@ -13,7 +21,9 @@ beforeEach(async () => {
   resetSyncState()
   db = offlineDb('user-1')
   server = fakeServer()
-  server.campaigns = [{ id: CAMPAIGN, name: 'Die Rabenküste', myRole: 'dm', activeSession: null }]
+  server.campaigns = [
+    { id: CAMPAIGN, name: 'Die Rabenküste', myRole: 'dm', activeSession: null, ...NO_CARD },
+  ]
   await seedCampaign(db)
 })
 

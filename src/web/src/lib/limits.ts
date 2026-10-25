@@ -5,6 +5,8 @@ export const limits = {
   displayName: 40,
   /** Campaign.NameMaxLength */
   campaignName: 80,
+  /** Campaign.DescriptionMaxLength */
+  campaignDescription: 300,
   /** Character.NameMaxLength */
   characterName: 40,
   /** GameSession.TitleMaxLength */

@@ -3,18 +3,6 @@
  * the app's theme (src/index.css), so the page stays in the table palette.
  */
 
-/* Buttons with pointed ends. The outline is a second, 1 px smaller copy of the shape. */
-.landing-chevron {
-  clip-path: polygon(
-    14px 0,
-    calc(100% - 14px) 0,
-    100% 50%,
-    calc(100% - 14px) 100%,
-    14px 100%,
-    0 50%
-  );
-}
-
 /* Embers rising out of the hero picture. */
 .landing-ember {
   animation: landing-ember-rise var(--duration) linear var(--delay) infinite;

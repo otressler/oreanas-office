@@ -12,8 +12,8 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:45:10Z }
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | id | |
-| `kind` | enum `map-background` \| `token-icon` | |
-| `ownerType`, `ownerId` | string, id | The [battle map](/domain/battle-map.md), [creature type](/domain/creature-type.md) or [character](/domain/character.md) it belongs to |
+| `kind` | enum `map-background` \| `token-icon` \| `campaign-cover` | |
+| `ownerType`, `ownerId` | string, id | The [battle map](/domain/battle-map.md), [creature type](/domain/creature-type.md), [character](/domain/character.md), custom [status](/domain/status.md) or [campaign](/domain/campaign.md) it belongs to |
 | `origin` | enum `generated` \| `uploaded` | |
 | `prompt` | text, nullable | The full prompt sent to the model |
 | `sourceAssetId` | → Asset, nullable | For a portrait restyled from an upload: the uploaded version sent to the model as the reference |
@@ -34,5 +34,7 @@ A map copied from the store points to the same background asset as its source, s
 A map can also get uploaded backgrounds: already `done` when saved, with no prompt or cost, stored as WebP ([AI map generation](/features/ai-map-generation.md), "Uploads").
 
 A creature type and a character also collect versions: generated, uploaded (already `done` when saved, with no prompt or cost) and restyled from an upload. `CreatureType.iconAssetId` and `Character.tokenAssetId` point to the picked one ([token icons](/features/token-icons.md)).
+
+A campaign collects cover versions the same way, as `campaign-cover` assets: 3:2, opaque, kept as a 1200 × 800 WebP. `Campaign.coverAssetId` points to the picked one ([campaign overview](/features/campaign-overview.md)).
 
 No job is ever queued automatically. A person starts every generation and confirms it first ([image budget](/decisions/image-budget.md)).

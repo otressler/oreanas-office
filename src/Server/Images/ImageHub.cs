@@ -28,9 +28,10 @@ public interface IImageHub
     // portraits (knowledge/features/token-icons.md), while one of its jobs is queued or
     // running. Creature types: `dm` members only. Characters: the owner and `dm` members.
     // Custom statuses (knowledge/features/statuses.md): whoever may edit the character it
-    // was made for, or `dm` members for one made in a DM status list.
+    // was made for, or `dm` members for one made in a DM status list. Campaign covers
+    // (knowledge/domain/campaign.md): `dm` members, with the campaign's own id as ownerId.
     // Errors: NotADm (not allowed), ItemNotFound (no such creature type, character or custom
-    // status in the campaign, or OwnerType BattleMap).
+    // status in the campaign, a campaign id other than campaignId, or OwnerType BattleMap).
     Task<HubResult> WatchTokenImages(Guid campaignId, AssetOwnerType ownerType, Guid ownerId);
 }
 
@@ -131,6 +132,19 @@ public sealed class ImageHub(AppDbContext db) : Hub<IImageHubClient>, IImageHub
                 if (!allowed)
                 {
                     return new HubResult(ApiErrorCode.NotADm);
+                }
+
+                break;
+
+            case AssetOwnerType.Campaign:
+                if (!isDm)
+                {
+                    return new HubResult(ApiErrorCode.NotADm);
+                }
+
+                if (ownerId != campaignId)
+                {
+                    return new HubResult(ApiErrorCode.ItemNotFound);
                 }
 
                 break;

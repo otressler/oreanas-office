@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent } from 'react'
-import { Diamond } from './ornaments'
+import { Diamond } from '../components/ornaments'
 
 interface Picture {
   src: string

@@ -12,7 +12,9 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | id | |
-| `name` | string | |
+| `name` | string | Up to 80 characters; `dm` members can rename the campaign |
+| `description` | text, nullable | Up to 300 characters, written by `dm` members, for the campaign's card on home; feeds the cover prompt ([campaign overview](/features/campaign-overview.md)) |
+| `coverAssetId` | → [Asset](/domain/asset.md), nullable | The picked cover: generated or uploaded, a 3:2 picture. Null shows the app's default cover |
 | `defaultDmUserId` | → [User](/domain/user.md) | New sessions start with this DM |
 | `activeSessionId` | → [Session](/domain/session.md), nullable | At most one active session. Not stored as a column: it is the session with `status: active`, and a unique index in the database allows at most one per campaign |
 | `joinCode` | string, empty until the first sync | Players join with it ([auth decision](/decisions/auth.md)). Six characters without look-alikes (no 0/O, 1/I); any `dm` member can replace it with a new one, which makes the old one stop working |
@@ -25,6 +27,10 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:13:07Z }
 - [Characters](/domain/character.md)
 - [Creature types](/domain/creature-type.md) (the campaign's bestiary)
 - [Battle maps](/domain/battle-map.md)
+
+# Cover
+
+Covers are kept as versions like a character's portraits: generated from the name and description (only with a description) or uploaded through a 3:2 crop step, newest picked. Only `dm` members see, generate, upload and pick them; every member sees the picked one ([campaign overview](/features/campaign-overview.md)).
 
 # Offline
 

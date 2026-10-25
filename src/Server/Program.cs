@@ -55,6 +55,7 @@ app.MapSyncEndpoints();
 app.MapMapStoreEndpoints();
 app.MapImageEndpoints();
 app.MapTokenImageEndpoints();
+app.MapCampaignCoverEndpoints();
 app.MapStatusEndpoints();
 app.MapTableHub();
 app.MapImageHub();

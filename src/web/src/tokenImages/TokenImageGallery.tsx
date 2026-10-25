@@ -1,6 +1,6 @@
-// The gallery of a creature type's icons, a character's portraits or a custom status's
-// icons (knowledge/features/token-icons.md, statuses.md): the picked image in the token's
-// ring, the versions with their state, picking one or none, generating after a confirm,
+// The gallery of a creature type's icons, a character's portraits, a custom status's icons
+// or a campaign's covers (knowledge/features/token-icons.md, statuses.md,
+// knowledge/domain/campaign.md): the picked image in the token's ring (or as a cover), the versions with their state, picking one or none, generating after a confirm,
 // uploading through the crop step (characters and creature types) and restyling an upload
 // (characters). It follows running jobs over the image hub only while one is queued or
 // running. Everything needs a connection; offline it says so instead.
@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, type ReactNode } from 'react'
 import { errorMessage } from '../api/errors'
 import type { GenerateTokenImageRequest, TokenImage, TokenImages } from '../api/types'
+import { CampaignCover } from '../campaigns/CampaignCover'
 import { Badge, Button, ErrorAlert } from '../components/ui'
 import { budgetBlock, formatUsd } from '../editor/background/backgrounds'
 import { useOnline } from '../editor/encounter/useOnline'
@@ -15,7 +16,7 @@ import { formatDateTime } from '../lib/dates'
 import { de } from '../text/de'
 import { ConfirmDialog, type TokenJob } from './ConfirmDialog'
 import { createTokenImageConnection } from './createConnection'
-import { CropDialog } from './CropDialog'
+import { CropDialog, type CropShape } from './CropDialog'
 import {
   canPickImage,
   generateTokenImage,
@@ -44,6 +45,7 @@ const JOBS: Record<TokenImageOwner['type'], TokenJob> = {
   character: 'portrait',
   creatureType: 'icon',
   status: 'statusIcon',
+  campaign: 'cover',
 }
 
 /** What a job needs from the owner's form first: the request, or why nothing was sent. */
@@ -70,6 +72,10 @@ export interface TokenImageGalleryProps {
   restyles?: boolean
   /** What "Ohne Bild" means for this owner; the token's letter by default. */
   noneHint?: string
+  /** What to change after the model refused a picture; the appearance by default. */
+  rejectedHint?: string
+  /** Campaigns: pictures are 3:2 covers instead of tokens. */
+  shape?: CropShape
 }
 
 export function TokenImageGallery(props: TokenImageGalleryProps) {
@@ -93,6 +99,8 @@ function OnlineGallery({
   uploads = false,
   restyles = false,
   noneHint = t.noneHint,
+  rejectedHint = t.rejected,
+  shape = 'token',
 }: TokenImageGalleryProps) {
   const queryClient = useQueryClient()
   const query = useTokenImages(campaignId, owner, true)
@@ -186,14 +194,23 @@ function OnlineGallery({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <TokenPicture
-          url={picked?.url}
-          label={name}
-          ring={ring}
-          alt={t.pickedAlt(name)}
-          className="h-20 w-20 text-3xl"
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        {shape === 'cover' ? (
+          <CampaignCover
+            url={picked?.url}
+            alt={t.pickedAlt(name)}
+            sizes="240px"
+            className="aspect-[3/2] w-60 rounded-lg border border-line"
+          />
+        ) : (
+          <TokenPicture
+            url={picked?.url}
+            label={name}
+            ring={ring}
+            alt={t.pickedAlt(name)}
+            className="h-20 w-20 text-3xl"
+          />
+        )}
         <div className="flex min-w-0 flex-col items-start gap-2">
           <Button
             variant="primary"
@@ -266,6 +283,8 @@ function OnlineGallery({
                   version={version}
                   name={name}
                   ring={ring}
+                  shape={shape}
+                  rejectedHint={rejectedHint}
                   picked={version.id === pickedId}
                   pickBusy={pick.isPending}
                   onPick={() => pick.mutate(version.id)}
@@ -310,6 +329,7 @@ function OnlineGallery({
         <CropDialog
           file={cropping}
           ring={ring}
+          shape={shape}
           onConfirm={upload}
           onClose={() => setCropping(null)}
         />
@@ -322,6 +342,8 @@ function Version({
   version,
   name,
   ring,
+  shape,
+  rejectedHint,
   picked,
   pickBusy,
   onPick,
@@ -330,6 +352,8 @@ function Version({
   version: TokenImage
   name: string
   ring: string
+  shape: CropShape
+  rejectedHint: string
   picked: boolean
   pickBusy: boolean
   onPick: () => void
@@ -342,7 +366,14 @@ function Version({
       aria-label={t.versionAlt(time)}
       className={`flex items-start gap-3 rounded-lg border p-2 ${picked ? 'border-candle' : 'border-line'}`}
     >
-      {done ? (
+      {done && shape === 'cover' ? (
+        <CampaignCover
+          url={version.url}
+          alt={t.versionAlt(time)}
+          sizes="72px"
+          className="aspect-[3/2] w-18 shrink-0 rounded"
+        />
+      ) : done ? (
         <TokenPicture
           url={version.url}
           label={name}
@@ -353,7 +384,9 @@ function Version({
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-line text-xs text-dim"
+          className={`flex h-12 shrink-0 items-center justify-center border-2 border-dashed border-line text-xs text-dim ${
+            shape === 'cover' ? 'w-18 rounded' : 'w-12 rounded-full'
+          }`}
         >
           {version.status === 'failed' ? '!' : '…'}
         </span>
@@ -367,7 +400,7 @@ function Version({
         </div>
         {version.status === 'failed' && (
           <p className="text-xs text-red-300">
-            {version.failure === 'rejected' ? t.rejected : t.failed}
+            {version.failure === 'rejected' ? rejectedHint : t.failed}
           </p>
         )}
         {(done && !picked) || restyle ? (

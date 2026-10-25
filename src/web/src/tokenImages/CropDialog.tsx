@@ -1,7 +1,8 @@
 // The crop step before a portrait upload (knowledge/features/token-icons.md): the picture
 // inside the token circle; drag to move it, pinch, the wheel or the slider to zoom. The
 // picture always covers the circle (crop.ts). On confirm the chosen square is drawn at
-// 1024 × 1024 and handed over as a JPEG.
+// 1024 × 1024 and handed over as a JPEG. A campaign cover (knowledge/domain/campaign.md)
+// gets a 3:2 frame instead and is drawn at 1536 × 1024.
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { errorMessage } from '../api/errors'
 import { GestureTracker, wheelZoomFactor, type PointerSample } from '../board/gestures'
@@ -12,7 +13,7 @@ import { de } from '../text/de'
 import {
   MAX_ZOOM,
   MIN_ZOOM,
-  cropSquare,
+  cropRect,
   cropToBlob,
   initialCrop,
   panCrop,
@@ -24,6 +25,14 @@ import {
 } from './crop'
 
 const t = de.tokenImages.crop
+
+/** What the frame is: a token's circle, or a cover's 3:2 rectangle. */
+export type CropShape = 'token' | 'cover'
+
+const SHAPES: Record<CropShape, { aspect: number; output: PictureSize }> = {
+  token: { aspect: 1, output: { width: 1024, height: 1024 } },
+  cover: { aspect: 3 / 2, output: { width: 1536, height: 1024 } },
+}
 
 type Picture =
   | { state: 'opening' }
@@ -61,12 +70,14 @@ function usePicture(file: Blob): Picture {
 export function CropDialog({
   file,
   ring,
+  shape = 'token',
   onConfirm,
   onClose,
 }: {
   file: Blob
-  /** The token's ring colour, drawn around the circle. */
+  /** The token's ring colour, drawn around the circle (or the cover's frame). */
   ring: string
+  shape?: CropShape
   /** Gets the cropped JPEG; a rejection is shown in the dialog. */
   onConfirm: (picture: Blob) => Promise<void>
   onClose: () => void
@@ -76,7 +87,8 @@ export function CropDialog({
   const [error, setError] = useState<string | null>(null)
   const [view, setView] = useState<CropView | null>(null)
   const size = picture.state === 'ready' ? picture.size : null
-  const current = size ? (view ?? initialCrop(size)) : null
+  const { aspect, output } = SHAPES[shape]
+  const current = size ? (view ?? initialCrop(size, aspect)) : null
 
   async function confirm() {
     if (picture.state !== 'ready' || !current) return
@@ -84,7 +96,7 @@ export function CropDialog({
     setError(null)
     let blob: Blob
     try {
-      blob = await cropToBlob(picture.image, cropSquare(picture.size, current))
+      blob = await cropToBlob(picture.image, cropRect(picture.size, current), output)
     } catch {
       setError(t.failed)
       setBusy(false)
@@ -111,6 +123,7 @@ export function CropDialog({
             size={picture.size}
             view={current}
             ring={ring}
+            shape={shape}
             onChange={setView}
           />
           <label className="flex max-w-xs flex-col gap-1 text-sm text-dim">
@@ -142,18 +155,23 @@ export function CropDialog({
   )
 }
 
-/** The square box with the picture behind a circular window in the ring colour. */
+/**
+ * The box with the picture behind a window in the ring colour: a circle in a square box, or
+ * a cover's whole 3:2 box.
+ */
 function CropBox({
   image,
   size,
   view,
   ring,
+  shape,
   onChange,
 }: {
   image: HTMLImageElement
   size: PictureSize
   view: CropView
   ring: string
+  shape: CropShape
   onChange: (view: CropView) => void
 }) {
   const boxRef = useRef<HTMLDivElement>(null)
@@ -255,7 +273,9 @@ function CropBox({
     <div
       ref={boxRef}
       data-testid="crop-box"
-      className="relative aspect-square w-full max-w-80 cursor-grab touch-none overflow-hidden rounded-lg bg-table select-none active:cursor-grabbing"
+      className={`relative w-full cursor-grab touch-none overflow-hidden rounded-lg bg-table select-none active:cursor-grabbing ${
+        shape === 'cover' ? 'aspect-[3/2] max-w-[30rem]' : 'aspect-square max-w-80'
+      }`}
     >
       <img
         src={image.src}
@@ -267,7 +287,7 @@ function CropBox({
       {/* Darkens what lies outside the token circle; the ring shows the token's colour. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-full border-4"
+        className={`pointer-events-none absolute inset-0 border-4 ${shape === 'cover' ? 'rounded-lg' : 'rounded-full'}`}
         style={{ borderColor: ring, boxShadow: '0 0 0 100vmax rgba(10, 11, 14, 0.6)' }}
       />
     </div>

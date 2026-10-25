@@ -1,6 +1,6 @@
 import type { RouteObject } from 'react-router'
 import { RequireAdmin, RequireAuth } from './auth/RequireAuth'
-import { Layout } from './components/Layout'
+import { Layout, type LayoutHandle } from './components/Layout'
 import { WelcomeNewDevices } from './landing/WelcomeNewDevices'
 import { RequireLocalUser } from './offline/RequireLocalUser'
 import { AdminPage } from './pages/AdminPage'
@@ -61,7 +61,11 @@ export const routes: RouteObject[] = [
               {
                 element: <RequireAuth />,
                 children: [
-                  { index: true, element: <HomePage /> },
+                  {
+                    index: true,
+                    element: <HomePage />,
+                    handle: { wide: true } satisfies LayoutHandle,
+                  },
                   { path: 'profil', element: <ProfilePage /> },
                   { path: 'beitreten/:joinCode', element: <JoinPage /> },
                   { path: 'kampagnen/:campaignId', element: <CampaignPage /> },

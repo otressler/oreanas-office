@@ -34,6 +34,8 @@ function campaign(myRole: Campaign['myRole']): Campaign {
     joinCode: myRole === 'dm' ? 'KX7PQ2' : null,
     activeSessionId: ids.session,
     members: [],
+    description: null,
+    coverUrl: null,
   }
 }
 

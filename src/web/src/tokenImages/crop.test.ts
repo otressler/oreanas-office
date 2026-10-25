@@ -1,11 +1,11 @@
-// The crop step's math: the square stays inside the picture at every pan and zoom, a zoom
-// keeps the point under the fingers, and the upload is the square on screen.
+// The crop step's math: the frame stays inside the picture at every pan and zoom, a zoom
+// keeps the point under the fingers, and the upload is the frame on screen.
 import { describe, expect, it } from 'vitest'
 import {
   MAX_ZOOM,
   clampCrop,
+  cropRect,
   cropSide,
-  cropSquare,
   initialCrop,
   panCrop,
   pictureLayout,
@@ -16,6 +16,13 @@ import {
 // A landscape phone photo, shown in a 300 px box.
 const photo = { width: 4000, height: 3000 }
 const BOX = 300
+
+/** A token's square frame as x, y and its edge. */
+const cropSquare = (...args: Parameters<typeof cropRect>) => {
+  const { x, y, width, height } = cropRect(...args)
+  expect(height).toBeCloseTo(width)
+  return { x, y, side: width }
+}
 
 const inside = (square: { x: number; y: number; side: number }) => {
   expect(square.x).toBeGreaterThanOrEqual(0)
@@ -94,5 +101,34 @@ describe('crop', () => {
       y: 840,
       side: 1080,
     })
+  })
+
+  it('keeps a cover frame at its aspect', () => {
+    // A 3:2 cover from the landscape photo: the whole width fits, then it pans down.
+    const view = initialCrop(photo, 1.5)
+    const rect = cropRect(photo, view)
+    expect([rect.x, rect.y, rect.width, rect.height].map(Math.round)).toEqual([0, 167, 4000, 2667])
+    // The box is 300 × 200: the picture shows 300 × 225, a little cut off at top and bottom.
+    expect(pictureLayout(photo, view, BOX)).toEqual({
+      left: 0,
+      top: -12.5,
+      width: 300,
+      height: 225,
+    })
+    const panned = cropRect(photo, panCrop(photo, view, 0, -5000, BOX))
+    expect(panned.y + panned.height).toBeCloseTo(photo.height)
+    // Zoomed in, a point under the fingers stays put on both axes.
+    const point = { x: 30, y: 180 }
+    const zoomed = zoomCrop(photo, view, 3, point, BOX)
+    const at = (l: ReturnType<typeof pictureLayout>) => ({
+      x: (point.x - l.left) / (l.width / photo.width),
+      y: (point.y - l.top) / (l.height / photo.height),
+    })
+    expect(at(pictureLayout(photo, zoomed, BOX)).x).toBeCloseTo(
+      at(pictureLayout(photo, view, BOX)).x,
+    )
+    expect(at(pictureLayout(photo, zoomed, BOX)).y).toBeCloseTo(
+      at(pictureLayout(photo, view, BOX)).y,
+    )
   })
 })

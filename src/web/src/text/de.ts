@@ -145,15 +145,27 @@ export const de = {
   },
 
   home: {
+    kicker: 'Am Tisch',
     title: 'Deine Kampagnen',
     empty:
       'Du bist noch in keiner Kampagne. Tritt mit dem Code deiner Spielleitung bei oder leg selbst eine an.',
     activeSession: 'Läuft gerade',
+    /** The card's characters, for screen readers. */
+    characters: 'Charaktere',
+    noCharacters: 'Noch keine Charaktere',
+    /** Characters left out of a full card's row, e.g. "+3". */
+    moreCharacters: (count: number) => `+${count}`,
+    moreCharactersLabel: (count: number) =>
+      count === 1 ? 'und ein weiterer Charakter' : `und ${count} weitere Charaktere`,
+    newKicker: 'Neues Abenteuer',
+    newTitle: 'Beitreten oder selbst leiten',
     joinTitle: 'Kampagne beitreten',
+    joinBody: 'Deine Spielleitung hat schon einen Tisch gedeckt? Mit ihrem Code bist du dabei.',
     joinCode: 'Beitrittscode',
     joinHint: 'Sechs Zeichen, die dir deine Spielleitung gibt.',
     join: 'Beitreten',
     createTitle: 'Neue Kampagne',
+    createBody: 'Leg eine eigene Kampagne an, lade deine Runde ein und bau die ersten Kämpfe.',
     createName: 'Name der Kampagne',
     createHint: 'Du wirst ihre Spielleitung.',
   },
@@ -624,6 +636,24 @@ export const de = {
     joinCodeShareTitle: (name: string) => `Beitrittscode für ${name}`,
     replaceJoinCode: 'Neuen Code erstellen',
     replaceJoinCodeNote: 'Der alte Code funktioniert danach nicht mehr.',
+    /** The `dm` members' panel for the home page's card (knowledge/domain/campaign.md). */
+    cardTitle: 'Titelbild und Beschreibung',
+    name: 'Name',
+    description: 'Beschreibung',
+    descriptionHint:
+      'Ein, zwei Sätze für die Karte auf der Startseite, höchstens 300 Zeichen. Daraus wird auch das Titelbild gemalt.',
+    saving: 'Die Änderungen an der Kampagne werden gespeichert…',
+    edit: 'Bearbeiten',
+    coverTitle: 'Titelbild',
+    generateCover: 'Titelbild erzeugen',
+    regenerateCover: 'Neues Titelbild erzeugen',
+    coverNeedsDescription:
+      'Schreib erst eine Beschreibung und speichere sie, dann kann ein Titelbild erzeugt werden.',
+    coverNoneHint: 'Ohne eigenes Titelbild zeigt die Karte auf der Startseite ein Standardbild.',
+    coverRejected:
+      'Das Bildmodell hat dieses Bild abgelehnt. Versuch es mit einer anderen Beschreibung.',
+    /** The cover's alt text, e.g. "Titelbild von Die Rabenküste". */
+    coverAlt: (name: string) => `Titelbild von ${name}`,
   },
 
   characters: {
@@ -1590,6 +1620,9 @@ export const de = {
     imageNotFound: 'Dieses Bild gibt es hier nicht mehr.',
     uploadInvalid: 'Das Bild lässt sich nicht lesen. Nimm ein JPEG-, PNG- oder WebP-Bild.',
     uploadTooLarge: 'Das Bild ist zu groß. Nimm ein kleineres.',
+    descriptionInvalid: 'Die Beschreibung darf höchstens 300 Zeichen lang sein.',
+    descriptionMissing:
+      'Schreib erst eine Beschreibung der Kampagne, dann kann ein Titelbild erzeugt werden.',
     statusNotFound: 'Diesen Zustand gibt es hier nicht (mehr).',
     statusAlreadySet: 'Die Figur hat diesen Zustand schon.',
     levelInvalid: 'Die Stufe geht von 1 bis 6.',
@@ -1852,6 +1885,9 @@ export const de = {
     confirm: {
       iconTitle: 'Symbol erzeugen?',
       portraitTitle: 'Porträt erzeugen?',
+      coverTitle: 'Titelbild erzeugen?',
+      coverFrom:
+        'Das Bildmodell malt das Titelbild aus dem Namen und der Beschreibung der Kampagne.',
       restyleTitle: 'Im Token-Stil umwandeln?',
       iconFrom:
         'Das Bildmodell malt das Symbol aus dem Namen und dem Aussehen. Die Kreaturenart wird zuerst synchronisiert, denn der Server malt nach seiner Kopie.',
