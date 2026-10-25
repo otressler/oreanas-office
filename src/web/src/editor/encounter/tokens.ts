@@ -2,7 +2,13 @@
 // domain/token.md, "label"): where creatures may stand, how labels number themselves and
 // when an encounter may be marked ready. Every change is a function from one
 // EncounterDoc to the next, like the map editor's.
-import type { BoardToken, CreatureSize, EncounterStatus, FogDocument } from '../../api/types'
+import type {
+  BoardToken,
+  CreatureSize,
+  EncounterStatus,
+  FogDocument,
+  InitiativeRollMode,
+} from '../../api/types'
 import {
   buildGrid,
   fitsAt,
@@ -191,34 +197,33 @@ export function setTokenHidden(doc: EncounterDoc, id: string, hidden: boolean): 
 }
 
 /**
- * Gives a creature its own initiative modifier or advantage, or (null) hands it back to its
+ * Gives a creature its own initiative modifier or roll mode, or (null) hands it back to its
  * type's (knowledge/features/initiative.md). Null fields are left out of the record.
  */
 export function setTokenInitiative(
   doc: EncounterDoc,
   id: string,
-  change: { modifier?: number | null; advantage?: boolean | null },
+  change: { modifier?: number | null; mode?: InitiativeRollMode | null },
 ): EncounterDoc {
   const token = doc.tokens.find((item) => item.id === id)
   if (!token) return doc
   const modifier =
     'modifier' in change ? (change.modifier ?? null) : (token.initiativeModifier ?? null)
-  const advantage =
-    'advantage' in change ? (change.advantage ?? null) : (token.initiativeAdvantage ?? null)
+  const mode = 'mode' in change ? (change.mode ?? null) : (token.initiativeRollMode ?? null)
   if (
     modifier === (token.initiativeModifier ?? null) &&
-    advantage === (token.initiativeAdvantage ?? null)
+    mode === (token.initiativeRollMode ?? null)
   )
     return doc
   return {
     ...doc,
     tokens: doc.tokens.map((item) => {
       if (item.id !== id) return item
-      const { initiativeModifier: _m, initiativeAdvantage: _a, ...rest } = item
+      const { initiativeModifier: _m, initiativeRollMode: _a, ...rest } = item
       return {
         ...rest,
         ...(modifier !== null && { initiativeModifier: modifier }),
-        ...(advantage !== null && { initiativeAdvantage: advantage }),
+        ...(mode !== null && { initiativeRollMode: mode }),
       }
     }),
   }

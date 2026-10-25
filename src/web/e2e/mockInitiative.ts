@@ -41,12 +41,18 @@ export function initiativeCall(
       entries: [
         ...onBoard
           .filter((t) => t.kind === 'character')
-          .map((t) => ({ tokenId: t.id, value: null, modifier: 0, advantage: false, rolls: [] })),
+          .map((t) => ({
+            tokenId: t.id,
+            value: null,
+            modifier: 0,
+            mode: 'normal' as const,
+            rolls: [],
+          })),
         ...creatures.map((t, index) => ({
           tokenId: t.id,
           value: mockRoll(index),
           modifier: 0,
-          advantage: false,
+          mode: 'normal' as const,
           rolls: [mockRoll(index)],
         })),
       ],

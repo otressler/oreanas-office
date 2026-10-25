@@ -73,7 +73,9 @@ test('a player rolls from the fight screen and finds the dice again', async ({ p
   await page.keyboard.press('Escape')
   await expect(tray).toBeHidden()
   await page.getByRole('button', { name: text.open }).click()
-  await expect(dialog(page).getByRole('button', { name: text.rollAgain, exact: true })).toBeVisible()
+  await expect(
+    dialog(page).getByRole('button', { name: text.rollAgain, exact: true }),
+  ).toBeVisible()
 })
 
 test('the DM opens the dice tray from the session page', async ({ page }) => {

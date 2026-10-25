@@ -8,7 +8,14 @@ import { useCreatureTypes } from '../../bestiary/creatureTypes'
 import { useSessions } from '../../campaigns/queries'
 import { Badge, Button } from '../../components/ui'
 import { inputClass } from '../../components/styles'
-import { formatModifier, MODIFIER_MAX, MODIFIER_MIN, parseWhole } from '../../initiative/initiative'
+import type { InitiativeRollMode } from '../../api/types'
+import {
+  formatModifier,
+  MODIFIER_MAX,
+  MODIFIER_MIN,
+  parseWhole,
+  ROLL_MODES,
+} from '../../initiative/initiative'
 import { useLocalUser } from '../../offline/localUser'
 import type { LocalCreatureToken, LocalCreatureType } from '../../offline/model'
 import { syncThenStart } from '../../sync'
@@ -129,7 +136,7 @@ export function SelectCreaturePanel() {
 }
 
 /**
- * The creature's own initiative modifier and advantage (knowledge/features/initiative.md):
+ * The creature's own initiative modifier and roll mode (knowledge/features/initiative.md):
  * empty and "Wie die Art" take the type's. The modifier is kept while the field is valid.
  */
 function InitiativeFields({
@@ -143,14 +150,14 @@ function InitiativeFields({
 }) {
   const store = useEncounterStore()
   const modifierId = useId()
-  const advantageId = useId()
+  const modeId = useId()
   const own = token.initiativeModifier ?? null
   const [text, setText] = useState(own === null ? '' : String(own))
   const parsed = text.trim() === '' ? null : parseWhole(text, MODIFIER_MIN, MODIFIER_MAX)
   const invalid = text.trim() !== '' && parsed === null
   const typeModifier = type?.initiativeModifier ?? 0
-  const typeAdvantage = type?.initiativeAdvantage ?? false
-  const advantage = token.initiativeAdvantage ?? null
+  const typeMode = type?.initiativeRollMode ?? 'normal'
+  const mode = token.initiativeRollMode ?? null
 
   function changeModifier(value: string) {
     setText(value)
@@ -185,26 +192,29 @@ function InitiativeFields({
         </p>
       </div>
       <div className="flex flex-col gap-1">
-        <label htmlFor={advantageId} className="text-sm text-dim">
-          {t.initiativeAdvantage}
+        <label htmlFor={modeId} className="text-sm text-dim">
+          {t.initiativeRollMode}
         </label>
         <select
-          id={advantageId}
+          id={modeId}
           className={inputClass}
-          value={advantage === null ? 'type' : advantage ? 'yes' : 'no'}
+          value={mode ?? 'type'}
           disabled={disabled}
           onChange={(event) => {
             const value = event.target.value
             store.getState().apply((doc) =>
               setTokenInitiative(doc, token.id, {
-                advantage: value === 'type' ? null : value === 'yes',
+                mode: value === 'type' ? null : (value as InitiativeRollMode),
               }),
             )
           }}
         >
-          <option value="type">{t.advantageFromType(typeAdvantage)}</option>
-          <option value="yes">{t.advantageYes}</option>
-          <option value="no">{t.advantageNo}</option>
+          <option value="type">{t.rollModeFromType(de.dice.mode[typeMode])}</option>
+          {ROLL_MODES.map((value) => (
+            <option key={value} value={value}>
+              {de.dice.mode[value]}
+            </option>
+          ))}
         </select>
       </div>
     </div>

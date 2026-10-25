@@ -33,9 +33,9 @@ public sealed class TableInitiative(TableFog fog, AppDbContext db)
                     t.Kind,
                     t.CreatedAt,
                     t.InitiativeModifier,
-                    t.InitiativeAdvantage,
+                    t.InitiativeRollMode,
                     TypeModifier = t.CreatureType != null ? t.CreatureType.InitiativeModifier : 0,
-                    TypeAdvantage = t.CreatureType != null && t.CreatureType.InitiativeAdvantage,
+                    TypeMode = t.CreatureType != null ? t.CreatureType.InitiativeRollMode : InitiativeRollMode.Normal,
                 })
                 .ToListAsync())
             .OrderBy(t => t.Kind == TokenKind.Character ? 0 : 1)
@@ -43,9 +43,9 @@ public sealed class TableInitiative(TableFog fog, AppDbContext db)
             .ThenBy(t => t.Id);
         return (null, [
             .. tokens.Select(t => t.Kind == TokenKind.Character
-                ? new InitiativeEntry(t.Id, null, 0, false, [])
+                ? new InitiativeEntry(t.Id, null, 0, InitiativeRollMode.Normal, [])
                 : InitiativeRules.Roll(
-                    t.Id, t.InitiativeModifier ?? t.TypeModifier, t.InitiativeAdvantage ?? t.TypeAdvantage, InitiativeRules.RollD20)),
+                    t.Id, t.InitiativeModifier ?? t.TypeModifier, t.InitiativeRollMode ?? t.TypeMode, InitiativeRules.RollD20)),
         ]);
     }
 
@@ -82,11 +82,11 @@ public sealed class TableInitiative(TableFog fog, AppDbContext db)
             return Task.FromResult<ApiErrorCode?>(null);
         });
 
-    // Spawned creatures roll with their type's modifier and advantage and join a list that is
+    // Spawned creatures roll with their type's modifier and roll mode and join a list that is
     // on, each before the first entry with a lower value (TableSpawns, same SaveChanges). The
     // tokens must be new: a spawn has no overrides. Null while initiative is off.
     public static InitiativeChangedEvent? AddSpawned(
-        Encounter encounter, IEnumerable<Token> spawned, IReadOnlyDictionary<Guid, (int Modifier, bool Advantage)> types, Func<int> d20)
+        Encounter encounter, IEnumerable<Token> spawned, IReadOnlyDictionary<Guid, (int Modifier, InitiativeRollMode Mode)> types, Func<int> d20)
     {
         if (encounter.Initiative is not { } initiative)
         {
@@ -96,8 +96,8 @@ public sealed class TableInitiative(TableFog fog, AppDbContext db)
         var entries = initiative.Entries;
         foreach (var token in spawned)
         {
-            var (modifier, advantage) = types[token.CreatureTypeId!.Value];
-            entries = InitiativeRules.Insert(entries, InitiativeRules.Roll(token.Id, modifier, advantage, d20));
+            var (modifier, mode) = types[token.CreatureTypeId!.Value];
+            entries = InitiativeRules.Insert(entries, InitiativeRules.Roll(token.Id, modifier, mode, d20));
         }
 
         encounter.Initiative = new InitiativeDocument(entries);

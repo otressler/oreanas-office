@@ -1,22 +1,30 @@
 // The initiative setup screen (knowledge/features/initiative.md, "Setup"): the session DM
 // types in the values the players rolled, and checks or changes the creatures' rolls,
-// modifiers and advantage. The server rolled the creatures; "Neu würfeln" rolls again here.
-// Saving sorts the list by value and replaces the saved one.
+// modifiers and roll mode (normal, advantage, disadvantage). The server rolled the
+// creatures; "Neu würfeln" rolls again here. Saving sorts the list by value and replaces
+// the saved one.
 import { useEffect, useState } from 'react'
-import type { BoardToken, InitiativeEntry, InitiativeRollResult } from '../api/types'
+import type {
+  BoardToken,
+  InitiativeEntry,
+  InitiativeRollMode,
+  InitiativeRollResult,
+} from '../api/types'
 import { inputClass } from '../components/styles'
 import { Badge, Button, ErrorAlert } from '../components/ui'
 import { Modal } from '../sync/Modal'
 import { de } from '../text/de'
 import {
   MODIFIER_MAX,
+  ROLL_MODES,
+  countingRoll,
   MODIFIER_MIN,
   VALUE_MAX,
   VALUE_MIN,
   parseWhole,
   reroll,
   rollD20,
-  setAdvantage,
+  setRollMode,
   setModifier,
   setupEntries,
   setValue,
@@ -209,49 +217,64 @@ function CreatureRow({
           onChange={(value) => onChange((e) => setModifier(e, value ?? 0))}
         />
       </span>
-      <label className="flex min-h-11 items-center gap-2 text-sm text-parchment">
-        <input
-          type="checkbox"
-          checked={entry.advantage}
-          aria-label={t.advantageOf(token.label)}
-          onChange={(event) => onChange((e) => setAdvantage(e, event.target.checked, d20))}
+      {/* Roll mode, roll, value and "neu würfeln" wrap onto a phone's next line together. */}
+      <span className="ml-auto flex items-center gap-2">
+        <span className="block w-28 shrink-0">
+          <select
+            aria-label={t.rollModeOf(token.label)}
+            value={entry.mode}
+            className={inputClass}
+            onChange={(event) =>
+              onChange((e) => setRollMode(e, event.target.value as InitiativeRollMode, d20))
+            }
+          >
+            {ROLL_MODES.map((mode) => (
+              <option key={mode} value={mode}>
+                {de.dice.mode[mode]}
+              </option>
+            ))}
+          </select>
+        </span>
+        <Rolls entry={entry} />
+        <NumberField
+          label={t.valueOf(token.label)}
+          value={entry.value}
+          min={VALUE_MIN}
+          max={VALUE_MAX}
+          onChange={(value) => onChange((e) => setValue(e, value))}
         />
-        {t.advantage}
-      </label>
-      <Rolls entry={entry} />
-      <NumberField
-        label={t.valueOf(token.label)}
-        value={entry.value}
-        min={VALUE_MIN}
-        max={VALUE_MAX}
-        onChange={(value) => onChange((e) => setValue(e, value))}
-      />
-      <Button
-        variant="quiet"
-        aria-label={t.rerollOf(token.label)}
-        title={t.rerollOf(token.label)}
-        onClick={() => onChange((e) => reroll(e, d20))}
-      >
-        <RerollIcon />
-      </Button>
+        <Button
+          variant="quiet"
+          className="px-2"
+          aria-label={t.rerollOf(token.label)}
+          title={t.rerollOf(token.label)}
+          onClick={() => onChange((e) => reroll(e, d20))}
+        >
+          <RerollIcon />
+        </Button>
+      </span>
     </li>
   )
 }
 
-/** "W20: 14", with advantage "W20: 14 7" with the lower one struck through, or "eingetragen". */
+/**
+ * "W20: 14"; with advantage or disadvantage "W20: 14 7" with the d20 that doesn't count struck
+ * through; or "eingetragen".
+ */
 function Rolls({ entry }: { entry: InitiativeEntry }) {
   if (entry.rolls.length === 0)
-    return <span className="w-24 text-sm text-dim italic">{t.typed}</span>
-  const best = Math.max(...entry.rolls)
-  const dropped = entry.rolls.length > 1 ? entry.rolls.indexOf(Math.min(...entry.rolls)) : -1
+    return <span className="min-w-16 text-sm text-dim italic">{t.typed}</span>
+  const counting = countingRoll(entry.rolls, entry.mode)
+  const kept = entry.rolls.indexOf(counting)
+  const dropped = entry.rolls.length > 1 ? (kept === 0 ? 1 : 0) : -1
   return (
-    <span className="flex w-24 items-center gap-1 text-sm text-dim" data-testid="rolls">
+    <span className="flex min-w-16 items-center gap-1 text-sm text-dim" data-testid="rolls">
       {t.d20}
       {entry.rolls.map((roll, index) => (
         <span
           key={index}
           className={
-            index === dropped && roll !== best ? 'line-through opacity-60' : 'text-parchment'
+            index === dropped && roll !== counting ? 'line-through opacity-60' : 'text-parchment'
           }
         >
           {roll}

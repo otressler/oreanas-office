@@ -168,7 +168,11 @@ export function CharacterForm({
             campaignId={campaignId}
             owner={{ type: 'character', id: character.id }}
             name={character.name}
-            ring={ringColor({ kind: 'character', colorIndex: character.colorIndex, color: pickedColor })}
+            ring={ringColor({
+              kind: 'character',
+              colorIndex: character.colorIndex,
+              color: pickedColor,
+            })}
             generateLabel={t.portrait.generate}
             regenerateLabel={t.portrait.regenerate}
             generateHint={appearance.trim() ? null : t.portrait.needsAppearance}

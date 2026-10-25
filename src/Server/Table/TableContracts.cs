@@ -125,7 +125,7 @@ public interface ITableHub
 
     // Session DM only (from a player connection). A fresh roll for the setup screen, not
     // saved: an entry per token on the board, characters without a value, creatures rolled
-    // with their own modifier and advantage or their type's. Errors: TokenNotFound,
+    // with their own modifier and roll mode or their type's. Errors: TokenNotFound,
     // EncounterNotActive, NotSessionDm.
     Task<InitiativeRollResult> RollInitiative(Guid encounterId);
 

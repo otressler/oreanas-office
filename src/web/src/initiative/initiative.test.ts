@@ -8,7 +8,7 @@ import {
   newerInitiative,
   parseWhole,
   reroll,
-  setAdvantage,
+  setRollMode,
   setModifier,
   setValue,
   setupEntries,
@@ -20,7 +20,7 @@ const entry = (tokenId: string, value: number | null, fields: Partial<Initiative
   tokenId,
   value,
   modifier: 0,
-  advantage: false,
+  mode: 'normal' as const,
   rolls: [],
   ...fields,
 })
@@ -99,13 +99,23 @@ describe('the setup screen', () => {
   it('keeps a creature’s value with its d20s and modifier, and a typed value replaces the roll', () => {
     const rolled = entry('gob', 14, { modifier: 2, rolls: [12] })
     expect(setModifier(rolled, -1)).toMatchObject({ value: 11, modifier: -1 })
-    expect(setAdvantage(rolled, true, dice(17))).toMatchObject({ value: 19, rolls: [12, 17] })
-    expect(setAdvantage(setAdvantage(rolled, true, dice(17)), false, dice())).toMatchObject({
+    // Advantage and disadvantage add a d20 and keep the higher or the lower; back to normal
+    // keeps the first.
+    const advantage = setRollMode(rolled, 'advantage', dice(17))
+    expect(advantage).toMatchObject({ value: 19, rolls: [12, 17] })
+    expect(setRollMode(advantage, 'disadvantage', dice())).toMatchObject({
+      mode: 'disadvantage',
       value: 14,
-      rolls: [12],
+      rolls: [12, 17],
     })
-    expect(reroll({ ...rolled, advantage: true }, dice(3, 8))).toMatchObject({
+    expect(setRollMode(rolled, 'disadvantage', dice(5))).toMatchObject({ value: 7, rolls: [12, 5] })
+    expect(setRollMode(advantage, 'normal', dice())).toMatchObject({ value: 14, rolls: [12] })
+    expect(reroll({ ...rolled, mode: 'advantage' }, dice(3, 8))).toMatchObject({
       value: 10,
+      rolls: [3, 8],
+    })
+    expect(reroll({ ...rolled, mode: 'disadvantage' }, dice(3, 8))).toMatchObject({
+      value: 5,
       rolls: [3, 8],
     })
     const typed = setValue(rolled, 18)

@@ -234,6 +234,11 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "size")), false);
         }
 
+        if (!Enum.IsDefined(data.InitiativeRollMode))
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "initiativeRollMode")), false);
+        }
+
         if (data.InitiativeModifier is < InitiativeRules.ModifierMin or > InitiativeRules.ModifierMax)
         {
             return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "initiativeModifier")), false);
@@ -262,7 +267,7 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
         type.Appearance = appearance;
         type.Notes = notes;
         type.InitiativeModifier = data.InitiativeModifier;
-        type.InitiativeAdvantage = data.InitiativeAdvantage;
+        type.InitiativeRollMode = data.InitiativeRollMode;
         type.ArchivedAt = data.ArchivedAt;
         type.UpdatedAt = now;
         type.UpdatedByUserId = userId;
@@ -436,7 +441,7 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             (token.Number, token.Label) = CreatureLabels.Split(typeNames[pushed.CreatureTypeId], pushed.Label);
             token.Hidden = pushed.Hidden;
             token.InitiativeModifier = pushed.InitiativeModifier;
-            token.InitiativeAdvantage = pushed.InitiativeAdvantage;
+            token.InitiativeRollMode = pushed.InitiativeRollMode;
             token.Size = pushed.Size;
             token.X = pushed.X;
             token.Y = pushed.Y;
@@ -500,7 +505,8 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
                 || usedElsewhere.Contains(token.Id)
                 || (token.Label ?? "").Trim().Length is 0 or > Token.LabelMaxLength
                 || !Enum.IsDefined(token.Size)
-                || token.InitiativeModifier is < InitiativeRules.ModifierMin or > InitiativeRules.ModifierMax)
+                || token.InitiativeModifier is < InitiativeRules.ModifierMin or > InitiativeRules.ModifierMax
+                || token.InitiativeRollMode is { } mode && !Enum.IsDefined(mode))
             {
                 return Reject(item, new ApiError(ApiErrorCode.TokenInvalid, field));
             }

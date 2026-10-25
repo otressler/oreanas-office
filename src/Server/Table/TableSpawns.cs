@@ -45,7 +45,7 @@ public sealed class TableSpawns(TableFog fog, AppDbContext db, TimeProvider time
             var typeIds = creatures.Select(c => c.CreatureTypeId).Distinct().ToList();
             var types = await db.CreatureTypes.AsNoTracking()
                 .Where(t => t.CampaignId == encounter.CampaignId && typeIds.Contains(t.Id))
-                .ToDictionaryAsync(t => t.Id, t => new { t.Size, t.InitiativeModifier, t.InitiativeAdvantage });
+                .ToDictionaryAsync(t => t.Id, t => new { t.Size, t.InitiativeModifier, t.InitiativeRollMode });
             if (types.Count != typeIds.Count)
             {
                 return (ApiErrorCode.SpawnInvalid, null, null);
@@ -85,7 +85,7 @@ public sealed class TableSpawns(TableFog fog, AppDbContext db, TimeProvider time
             var initiative = TableInitiative.AddSpawned(
                 encounter,
                 tokens,
-                types.ToDictionary(t => t.Key, t => (t.Value.InitiativeModifier, t.Value.InitiativeAdvantage)),
+                types.ToDictionary(t => t.Key, t => (t.Value.InitiativeModifier, t.Value.InitiativeRollMode)),
                 InitiativeRules.RollD20);
             db.Tokens.AddRange(tokens);
             db.EncounterChanges.Add(new EncounterChange

@@ -220,11 +220,13 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid?>("IconAssetId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("InitiativeAdvantage")
-                        .HasColumnType("bit");
-
                     b.Property<int>("InitiativeModifier")
                         .HasColumnType("int");
+
+                    b.Property<string>("InitiativeRollMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -518,11 +520,12 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<bool>("Hidden")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("InitiativeAdvantage")
-                        .HasColumnType("bit");
-
                     b.Property<int?>("InitiativeModifier")
                         .HasColumnType("int");
+
+                    b.Property<string>("InitiativeRollMode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Kind")
                         .IsRequired()

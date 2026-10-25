@@ -28,10 +28,7 @@ describe('LandingPage', () => {
     const signIn = screen.getAllByRole('link', { name: t.signIn })
     expect(signIn.length).toBeGreaterThan(1)
     for (const link of signIn) expect(link).toHaveAttribute('href', '/anmelden')
-    expect(screen.getAllByRole('link', { name: t.roadmap })[0]).toHaveAttribute(
-      'href',
-      '/fahrplan',
-    )
+    expect(screen.getAllByRole('link', { name: t.roadmap })[0]).toHaveAttribute('href', '/fahrplan')
     expect(screen.getByText(t.hero.inviteOnly)).toBeInTheDocument()
   })
 

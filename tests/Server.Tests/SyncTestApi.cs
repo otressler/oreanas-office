@@ -26,14 +26,14 @@ public static class SyncTestApi
         string notes = "feige",
         DateTimeOffset? archivedAt = null,
         int initiativeModifier = 0,
-        bool initiativeAdvantage = false) =>
+        InitiativeRollMode initiativeRollMode = InitiativeRollMode.Normal) =>
         new(
             id ?? Guid.NewGuid(),
             SyncItemKind.CreatureType,
             campaignId,
             baseVersion,
             null,
-            new SyncCreatureTypeData(name, size, appearance, notes, archivedAt, initiativeModifier, initiativeAdvantage),
+            new SyncCreatureTypeData(name, size, appearance, notes, archivedAt, initiativeModifier, initiativeRollMode),
             null,
             null);
 

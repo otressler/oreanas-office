@@ -7,6 +7,7 @@ import type {
   BoardToken,
   InitiativeChangedEvent,
   InitiativeEntry,
+  InitiativeRollMode,
   InitiativeView,
 } from '../api/types'
 import { rollDie } from '../dice/notation'
@@ -16,6 +17,9 @@ export const MODIFIER_MIN = -10
 export const MODIFIER_MAX = 20
 export const VALUE_MIN = -20
 export const VALUE_MAX = 99
+
+/** Normal, advantage, disadvantage: the order the screens offer them in. */
+export const ROLL_MODES: readonly InitiativeRollMode[] = ['normal', 'advantage', 'disadvantage']
 
 export type D20 = () => number
 
@@ -86,34 +90,47 @@ export function moveEntry(
 
 // ---- The setup screen ----------------------------------------------------------------
 
-/** The d20 that counts: the higher one with advantage. */
-function best(rolls: readonly number[]): number {
-  return Math.max(...rolls)
+/** The d20 that counts: the lower one with disadvantage, else the higher. */
+export function countingRoll(rolls: readonly number[], mode: InitiativeRollMode): number {
+  return mode === 'disadvantage' ? Math.min(...rolls) : Math.max(...rolls)
 }
 
 /** A creature's value follows its d20s; a typed value has none and stays. */
 function withRolls(entry: InitiativeEntry, rolls: number[]): InitiativeEntry {
-  return { ...entry, rolls, value: rolls.length > 0 ? best(rolls) + entry.modifier : entry.value }
+  return {
+    ...entry,
+    rolls,
+    value: rolls.length > 0 ? countingRoll(rolls, entry.mode) + entry.modifier : entry.value,
+  }
 }
 
 export function setModifier(entry: InitiativeEntry, modifier: number): InitiativeEntry {
   return withRolls({ ...entry, modifier }, entry.rolls)
 }
 
-/** Advantage adds a second d20, and taking it away keeps the first. */
-export function setAdvantage(
+/**
+ * Advantage and disadvantage add a second d20, which stays when switching between them;
+ * back to normal keeps the first.
+ */
+export function setRollMode(
   entry: InitiativeEntry,
-  advantage: boolean,
+  mode: InitiativeRollMode,
   d20: D20,
 ): InitiativeEntry {
-  if (entry.advantage === advantage) return entry
+  if (entry.mode === mode) return entry
   const rolls =
-    entry.rolls.length === 0 ? [] : advantage ? [entry.rolls[0]!, d20()] : entry.rolls.slice(0, 1)
-  return withRolls({ ...entry, advantage }, rolls)
+    entry.rolls.length === 0
+      ? []
+      : mode === 'normal'
+        ? entry.rolls.slice(0, 1)
+        : entry.rolls.length === 1
+          ? [entry.rolls[0]!, d20()]
+          : entry.rolls
+  return withRolls({ ...entry, mode }, rolls)
 }
 
 export function reroll(entry: InitiativeEntry, d20: D20): InitiativeEntry {
-  return withRolls(entry, entry.advantage ? [d20(), d20()] : [d20()])
+  return withRolls(entry, entry.mode === 'normal' ? [d20()] : [d20(), d20()])
 }
 
 /** A value typed in replaces the roll. */
@@ -146,7 +163,7 @@ export function setupEntries(
           tokenId: token.id,
           value: null,
           modifier: 0,
-          advantage: false,
+          mode: 'normal',
           rolls: [],
         },
     ),

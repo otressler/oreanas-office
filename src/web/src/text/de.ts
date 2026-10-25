@@ -1725,7 +1725,7 @@ export const de = {
     initiativeModifier: 'Initiative-Modifikator',
     initiativeModifierHint:
       'Wird zum W20 addiert, von −10 bis +20. Jede Kreatur auf einer Karte kann ihren eigenen haben.',
-    initiativeAdvantage: 'Vorteil bei Initiative',
+    initiativeRollMode: 'Initiative-Wurf',
     create: 'Anlegen',
     save: 'Speichern',
     cancel: 'Abbrechen',
@@ -1888,10 +1888,9 @@ export const de = {
     initiativeFromType: (modifier: string) => `Wie die Art (${modifier})`,
     initiativeModifierHint: 'Leer lassen für den Wert der Kreaturenart.',
     initiativeModifierInvalid: 'Eine ganze Zahl von −10 bis +20, oder leer.',
-    initiativeAdvantage: 'Vorteil bei Initiative',
-    advantageFromType: (has: boolean) => `Wie die Art (${has ? 'Vorteil' : 'kein Vorteil'})`,
-    advantageYes: 'Vorteil',
-    advantageNo: 'Kein Vorteil',
+    initiativeRollMode: 'Initiative-Wurf',
+    /** The empty choice, e.g. "Wie die Art (Vorteil)". */
+    rollModeFromType: (mode: string) => `Wie die Art (${mode})`,
     type: 'Art',
     size: 'Größe',
     position: 'Feld',
@@ -2330,7 +2329,7 @@ export const de = {
     creatures: 'Kreaturen',
     /** Column headings of the creature rows. */
     modifier: 'Mod.',
-    advantage: 'Vorteil',
+    rollMode: 'Wurfart',
     rolls: 'Wurf',
     /** Before a creature's d20s, e.g. "W20: 14 7". */
     d20: 'W20:',
@@ -2338,7 +2337,7 @@ export const de = {
     /** Accessible names of a row's fields, e.g. "Initiative von Thorin". */
     valueOf: (label: string) => `Initiative von ${label}`,
     modifierOf: (label: string) => `Modifikator von ${label}`,
-    advantageOf: (label: string) => `Vorteil für ${label}`,
+    rollModeOf: (label: string) => `Wurfart für ${label}`,
     rerollOf: (label: string) => `${label} neu würfeln`,
     rerollAll: 'Alle Kreaturen neu würfeln',
     /** A value typed in by hand, without a roll behind it. */

@@ -124,7 +124,7 @@ export function fogFight({ fog = true } = {}): FogFight {
         notes: '',
         archivedAt: null,
         initiativeModifier: 0,
-        initiativeAdvantage: false,
+        initiativeRollMode: 'normal',
       },
     })
   }

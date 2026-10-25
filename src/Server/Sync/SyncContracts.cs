@@ -31,7 +31,7 @@ public enum SyncOutcome
 // The data of each kind, as a device pushes it and the server sends it back.
 public record SyncCampaignData(string Name);
 
-// InitiativeModifier and InitiativeAdvantage: what the type's creatures roll initiative with
+// InitiativeModifier and InitiativeRollMode: what the type's creatures roll initiative with
 // (knowledge/features/initiative.md); older devices leave them out.
 public record SyncCreatureTypeData(
     string Name,
@@ -40,7 +40,7 @@ public record SyncCreatureTypeData(
     string Notes,
     DateTimeOffset? ArchivedAt,
     int InitiativeModifier = 0,
-    bool InitiativeAdvantage = false);
+    InitiativeRollMode InitiativeRollMode = InitiativeRollMode.Normal);
 
 public record SyncMapData(
     string Name,
@@ -66,7 +66,7 @@ public record SyncEncounterData(
 
 // Elevation is not pushed: the server takes the highest elevation under the footprint.
 // Hidden: only the session DM sees it until revealed (knowledge/features/fog-of-war.md).
-// InitiativeModifier and InitiativeAdvantage: this creature's own; null takes the type's
+// InitiativeModifier and InitiativeRollMode: this creature's own; null takes the type's
 // (knowledge/features/initiative.md).
 public record SyncCreatureToken(
     Guid Id,
@@ -77,7 +77,7 @@ public record SyncCreatureToken(
     CreatureSize Size,
     bool Hidden = false,
     int? InitiativeModifier = null,
-    bool? InitiativeAdvantage = null);
+    InitiativeRollMode? InitiativeRollMode = null);
 
 // What the server sends back for an encounter: the pushed fields plus the server-only ones.
 public record SyncEncounterServerData(

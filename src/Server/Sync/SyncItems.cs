@@ -59,7 +59,7 @@ internal static class SyncItems
         updatedBy,
         null,
         new SyncCreatureTypeData(
-            type.Name, type.Size, type.Appearance, type.Notes, type.ArchivedAt, type.InitiativeModifier, type.InitiativeAdvantage),
+            type.Name, type.Size, type.Appearance, type.Notes, type.ArchivedAt, type.InitiativeModifier, type.InitiativeRollMode),
         null,
         null);
 
@@ -107,7 +107,7 @@ internal static class SyncItems
                         t.Size,
                         t.Hidden,
                         t.InitiativeModifier,
-                        t.InitiativeAdvantage)),
+                        t.InitiativeRollMode)),
             ],
             encounter.SessionId,
             encounter.MapCopy,

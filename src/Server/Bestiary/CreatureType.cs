@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OreanasOffice.Server.Accounts;
 using OreanasOffice.Server.Campaigns;
+using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Rules;
 
 namespace OreanasOffice.Server.Bestiary;
@@ -26,12 +27,12 @@ public class CreatureType
 
     public string Notes { get; set; } = "";
 
-    // Added to the d20 when the type's creatures roll initiative, with a second d20 kept
-    // when Advantage is set (knowledge/features/initiative.md). A placed token can override
-    // both.
+    // Added to the d20 when the type's creatures roll initiative; with advantage or
+    // disadvantage they roll two and keep the higher or the lower
+    // (knowledge/features/initiative.md). A placed token can override both.
     public int InitiativeModifier { get; set; }
 
-    public bool InitiativeAdvantage { get; set; }
+    public InitiativeRollMode InitiativeRollMode { get; set; }
 
     // The picked icon version (knowledge/features/token-icons.md): a Done TokenIcon asset
     // owned by this type, or null for the letter. Online only and not part of the sync

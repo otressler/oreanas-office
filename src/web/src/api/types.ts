@@ -140,6 +140,7 @@ export type SpawnResult = Schemas['SpawnResult']
 export type TokensAddedEvent = Schemas['TokensAddedEvent']
 // The initiative list (knowledge/features/initiative.md).
 export type InitiativeEntry = Schemas['InitiativeEntry']
+export type InitiativeRollMode = Schemas['InitiativeRollMode']
 export type InitiativeView = Schemas['InitiativeView']
 export type SetInitiativeRequest = Schemas['SetInitiativeRequest']
 export type InitiativeChangedEvent = Schemas['InitiativeChangedEvent']

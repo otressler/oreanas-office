@@ -16,7 +16,7 @@ const input = (name: string, extra: Partial<CreatureTypeInput> = {}): CreatureTy
   appearance: '',
   notes: '',
   initiativeModifier: 0,
-  initiativeAdvantage: false,
+  initiativeRollMode: 'normal',
   ...extra,
 })
 
@@ -41,11 +41,11 @@ describe('creature types', () => {
     const result = await createCreatureType(
       db(),
       'c1',
-      input('Ork', { initiativeModifier: -1, initiativeAdvantage: true }),
+      input('Ork', { initiativeModifier: -1, initiativeRollMode: 'disadvantage' }),
     )
     expect(result.ok && result.type).toMatchObject({
       initiativeModifier: -1,
-      initiativeAdvantage: true,
+      initiativeRollMode: 'disadvantage',
     })
     for (const initiativeModifier of [21, -11, 1.5, Number.NaN]) {
       expect(checkCreatureType(input('Wolf', { initiativeModifier }), [])).toEqual([

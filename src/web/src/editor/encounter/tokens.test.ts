@@ -274,11 +274,11 @@ describe('hidden creatures', () => {
     expect(setTokenInitiative(doc, 't1', { modifier: null })).toBe(doc)
     expect(setTokenInitiative(doc, 'missing', { modifier: 2 })).toBe(doc)
     const own = setTokenInitiative(doc, 't1', { modifier: 4 })
-    const both = setTokenInitiative(own, 't1', { advantage: false })
-    expect(both.tokens[0]).toMatchObject({ initiativeModifier: 4, initiativeAdvantage: false })
-    const back = setTokenInitiative(both, 't1', { modifier: null, advantage: null })
+    const both = setTokenInitiative(own, 't1', { mode: 'normal' })
+    expect(both.tokens[0]).toMatchObject({ initiativeModifier: 4, initiativeRollMode: 'normal' })
+    const back = setTokenInitiative(both, 't1', { modifier: null, mode: null })
     expect(back.tokens[0]).not.toHaveProperty('initiativeModifier')
-    expect(back.tokens[0]).not.toHaveProperty('initiativeAdvantage')
+    expect(back.tokens[0]).not.toHaveProperty('initiativeRollMode')
   })
 
   it('draws a hidden token as hidden (see-through with the eye mark)', () => {
