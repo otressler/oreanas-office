@@ -30,6 +30,8 @@ A battle map can have several background assets: every "regenerate" adds one. `B
 
 A map copied from the store points to the same background asset as its source, so `ownerId` stays the map it was generated for. Regenerating on the copy makes a new asset owned by the copy ([battle map](/domain/battle-map.md)).
 
+Deleting a map deletes the files of its background assets that nothing else shows, and clears their `blobName`. The rows stay, so `ownerId` may name a map that no longer exists: they keep what each image cost for the monthly [image budget](/decisions/image-budget.md) ([battle map](/domain/battle-map.md), "Deleting").
+
 A creature type and a character also collect versions: generated, uploaded (already `done` when saved, with no prompt or cost) and restyled from an upload. `CreatureType.iconAssetId` and `Character.tokenAssetId` point to the picked one ([token icons](/features/token-icons.md)).
 
 No job is ever queued automatically. A person starts every generation and confirms it first ([image budget](/decisions/image-budget.md)).

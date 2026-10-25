@@ -37,7 +37,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T21:55:33Z }
 
 - The session DM prepares the session's encounters: adds them, places creatures, marks them ready, archives them and moves them to another session they run. Other `dm` members see them read-only. Prepared encounters are visible only to `dm` members.
 - Maps stay campaign-wide: any `dm` member edits them ([battle map](/domain/battle-map.md)), which changes every draft and ready encounter on them.
-- Encounters are never deleted. The session DM archives one and can bring it back. An archived encounter can't be started.
+- The session DM archives an encounter and can bring it back. An archived encounter can't be started. Encounters aren't deleted one by one; deleting an archived map deletes its draft and ready encounters with it, and a map that an active or ended encounter uses can't be deleted ([battle map](/domain/battle-map.md), "Deleting").
 - **When the map changes:** draft and ready encounters use the current map. The editor marks creatures that now stand where they may not, and the encounter can't be marked ready or started until they're moved. Active and ended encounters keep their own copy of the layout and background.
 - Only the session DM starts and ends an encounter ([session](/domain/session.md)).
 - A session has at most one active encounter. Like the active session, it isn't stored as a column: it is the encounter with `status: active`, and a unique index allows at most one per session.

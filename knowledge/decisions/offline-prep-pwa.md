@@ -58,7 +58,7 @@ A conflict always concerns one whole item.
 
 - The creature tokens of a draft or ready encounter are part of the encounter. They have no move history yet, so the server replaces the encounter's token set on each push; token IDs stay the same.
 - Active and ended encounters belong to the server. Devices pull them and show them read-only, but never push them.
-- Not pushed, online only: characters, sessions (pulled read-only), members, campaign changes other than creating, live tokens and moves, and images.
+- Not pushed, online only: characters, sessions (pulled read-only), members, campaign changes other than creating, live tokens and moves, images, and deleting an archived map that the server has (added 2026-10-24, [battle map](/domain/battle-map.md), "Deleting").
 
 ## Versions and IDs
 
@@ -107,6 +107,7 @@ A rejected item stays on the device, marked "Nicht synchronisiert" with the reas
 
 - **Creature type names** are unique per campaign, ignoring case. If a pushed type's name is taken, the dialog offers to use the existing type (the local tokens switch to it) or to rename the local one.
 - **Archived references:** a new encounter that uses a map or creature type archived meanwhile is accepted. Archiving only stops offering it for picking.
+- **Deleted maps:** deleting runs on the server under the sync lock, after the map's own changes are pushed; the device then drops the map and its encounters. Other devices drop them at the next pull as items that vanished, or keep them with a warning if they have local changes; pushing such a map is rejected as unknown, and pushing an encounter on it as using a map outside the campaign.
 - **Campaigns created offline:** the server creates the campaign with its client ID, makes the join code and adds the creator as `dm` member and default DM. Its items follow in the same push.
 - **Store and import** run on the server; a pull follows immediately, so the copy shows up in the editor.
 - **Session changed meanwhile:** a pushed encounter whose session ended, or whose DM is now someone else, is rejected with the reason. The DM can move it to another session they run, or take the server version.

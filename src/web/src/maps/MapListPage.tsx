@@ -1,7 +1,7 @@
 // /kampagnen/:campaignId/karten — the campaign's maps in this browser
 // (knowledge/features/dm-map-editor.md, requirement 11; knowledge/domain/battle-map.md,
-// "Map list, archive and store"). Works offline and never asks the server. Maps are
-// archived and brought back, never deleted. On small screens the list is read-only.
+// "Map list, archive and store"). Works offline and never asks the server, except to
+// delete an archived map the server has ("Deleting"). On small screens the list is read-only.
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -27,6 +27,7 @@ import { useLocalUser } from '../offline/localUser'
 import { de } from '../text/de'
 import { checkLayout } from '../editor/validation'
 import { SyncStatusView, useOnline } from '../sync'
+import { DeleteMapDialog } from './DeleteMapDialog'
 import { MapStoreDialog } from './MapStoreDialog'
 import { MapFileError, parseMapFile } from './mapFile'
 import { copyName, parseSize } from './fields'
@@ -45,6 +46,7 @@ export function MapListPage() {
   const campaign = useCampaignCopy(db, campaignId)
   const maps = useLiveQuery(() => listMaps(db, campaignId), [db, campaignId])
   const [outcome, setOutcome] = useState<Outcome>(null)
+  const [deleting, setDeleting] = useState<LocalMap | null>(null)
 
   if (campaign === undefined || maps === undefined) return <Loading />
   if (campaign === null) {
@@ -154,9 +156,23 @@ export function MapListPage() {
             {archived.map((map) => (
               <MapRow key={map.id} map={map}>
                 {actions && (
-                  <ActionButton label={t.restoreMap(map.name)} onClick={() => actions.restore(map)}>
-                    {t.restore}
-                  </ActionButton>
+                  <>
+                    <ActionButton
+                      label={t.restoreMap(map.name)}
+                      onClick={() => actions.restore(map)}
+                    >
+                      {t.restore}
+                    </ActionButton>
+                    <Button
+                      aria-label={t.deleteMap(map.name)}
+                      onClick={() => {
+                        setOutcome(null)
+                        setDeleting(map)
+                      }}
+                    >
+                      {t.delete}
+                    </Button>
+                  </>
                 )}
               </MapRow>
             ))}
@@ -174,6 +190,17 @@ export function MapListPage() {
           />
           <ImportPanel campaignId={campaignId} onDone={(result) => setOutcome(result)} />
         </>
+      )}
+
+      {deleting && (
+        <DeleteMapDialog
+          map={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={() => {
+            setDeleting(null)
+            setOutcome({ note: t.deleted(deleting.name) })
+          }}
+        />
       )}
     </div>
   )

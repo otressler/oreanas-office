@@ -233,6 +233,21 @@ export class FakeServer {
       this.store = this.store.filter((map) => map.id !== offered.id)
       return json(200, copy)
     }
+    match = /^\/api\/campaigns\/([^/]+)\/maps\/([^/]+)$/.exec(call.path)
+    if (match && call.method === 'DELETE') {
+      const [, campaignId, mapId] = match
+      const map = this.items.get(mapId!)
+      if (map?.kind !== 'battleMap' || map.campaignId !== campaignId) return json(404)
+      if (!map.map?.archivedAt) return json(409, { code: 'mapNotArchived' })
+      const encounters = [...this.items.values()].filter(
+        (item) => item.encounter?.battleMapId === mapId,
+      )
+      const played = (item: SyncServerItem) =>
+        item.encounter?.status === 'active' || item.encounter?.status === 'ended'
+      if (encounters.some(played)) return json(409, { code: 'mapPlayed' })
+      for (const item of [map, ...encounters]) this.items.delete(item.id)
+      return json(204)
+    }
     return json(404)
   }
 }

@@ -1,5 +1,6 @@
 // Battle maps in the browser (knowledge/domain/battle-map.md, "Map list, archive and
-// store"). Every change marks the map as not synced; nothing is ever deleted.
+// store"). Every change marks the map as not synced. Deleting needs the server, so it is in
+// the sync client (deleteMap).
 import type { OfflineDb } from '../offline/db'
 import { markChanged, newSyncState } from '../offline/sync'
 import { LOCAL_MAP_RECORD_VERSION, type EditorMap, type LocalMap } from './model'

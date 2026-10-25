@@ -24,7 +24,7 @@ Decided by the project owner on 2026-10-14:
 
 # How the app keeps to it
 
-- The server records the cost of each generated image and adds up the current calendar month (UTC).
+- The server records the cost of each generated image and adds up the current calendar month (UTC). Deleting a map removes its image files but keeps their asset rows, so the month's total doesn't drop ([battle map](/domain/battle-map.md), "Deleting").
 - Once the month's total reaches $20, new jobs are refused with a German message, and the board keeps the images it has. The plain rendering keeps every fight playable ([AI map generation](/features/ai-map-generation.md)).
 - The limit is a setting, not a constant in code.
 
