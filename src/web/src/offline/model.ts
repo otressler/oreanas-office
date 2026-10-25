@@ -16,6 +16,10 @@ export interface LocalCreatureType {
   size: CreatureSize
   appearance: string
   notes: string
+  /** What the type's creatures roll initiative with (knowledge/features/initiative.md). Absent means 0. */
+  initiativeModifier?: number
+  /** Absent means false. */
+  initiativeAdvantage?: boolean
   archivedAt: string | null
   createdAt: string
   updatedAt: string
@@ -36,6 +40,9 @@ export interface LocalCreatureToken {
   size: CreatureSize
   /** Only the session DM sees it until revealed (fog of war). Absent means false. */
   hidden?: boolean
+  /** This creature's own initiative modifier and advantage; absent or null takes the type's. */
+  initiativeModifier?: number | null
+  initiativeAdvantage?: boolean | null
 }
 
 export interface LocalEncounter {

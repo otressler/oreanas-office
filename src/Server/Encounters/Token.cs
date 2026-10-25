@@ -46,6 +46,12 @@ public class Token
     // creatures. Label then holds only the DM's own name (knowledge/domain/token.md).
     public int? Number { get; set; }
 
+    // A creature's own initiative modifier and advantage; null takes the creature type's
+    // (knowledge/features/initiative.md). Always null for characters, whose players roll.
+    public int? InitiativeModifier { get; set; }
+
+    public bool? InitiativeAdvantage { get; set; }
+
     // Counts moves and undos, starting at 0 when placed. Devices keep the position with
     // the higher version; saving a move requires the version it read (last move wins,
     // but two moves never interleave). See knowledge/decisions/realtime-sync.md.

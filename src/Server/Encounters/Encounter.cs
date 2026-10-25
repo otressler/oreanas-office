@@ -63,6 +63,13 @@ public class Encounter
 
     public int FogVersion { get; set; }
 
+    // knowledge/features/initiative.md: null while the session DM hasn't switched initiative
+    // on for this fight. InitiativeVersion is raised by every change, and devices keep the
+    // list with the higher version, like FogVersion.
+    public InitiativeDocument? Initiative { get; set; }
+
+    public int InitiativeVersion { get; set; }
+
     public Campaign Campaign { get; set; } = null!;
 
     public BattleMap BattleMap { get; set; } = null!;
@@ -113,6 +120,18 @@ internal sealed class EncounterConfiguration : IEntityTypeConfiguration<Encounte
                     fog => JsonSerializer.Serialize(fog, LayoutJson).GetHashCode(),
                     fog => JsonSerializer.Deserialize<FogDocument>(JsonSerializer.Serialize(fog, LayoutJson), LayoutJson)))
             .HasColumnName("FogJson");
+        encounter.Property(e => e.Initiative)
+            .HasConversion(
+                initiative => JsonSerializer.Serialize(initiative, LayoutJson),
+                json => JsonSerializer.Deserialize<InitiativeDocument>(json, LayoutJson),
+                new ValueComparer<InitiativeDocument?>(
+                    (a, b) => JsonSerializer.Serialize(a, LayoutJson) == JsonSerializer.Serialize(b, LayoutJson),
+                    initiative => JsonSerializer.Serialize(initiative, LayoutJson).GetHashCode(),
+                    initiative => JsonSerializer.Deserialize<InitiativeDocument>(JsonSerializer.Serialize(initiative, LayoutJson), LayoutJson)))
+            .HasColumnName("InitiativeJson");
+
+        // A spawn slots its creatures into the list while the DM may be saving a new order.
+        encounter.Property(e => e.InitiativeVersion).IsConcurrencyToken();
         encounter.HasOne(e => e.Campaign).WithMany().HasForeignKey(e => e.CampaignId).OnDelete(DeleteBehavior.Cascade);
 
         // SQL Server allows one cascade path per row: the campaign already deletes its

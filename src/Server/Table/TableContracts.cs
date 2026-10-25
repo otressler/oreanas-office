@@ -120,6 +120,24 @@ public interface ITableHub
     // encounter while it isn't undone. Errors: TokenNotFound, EncounterNotActive,
     // NotSessionDm, NothingToUndo.
     Task<HubResult> UndoChange(Guid encounterId);
+
+    // --- Initiative (knowledge/features/initiative.md) ---
+
+    // Session DM only (from a player connection). A fresh roll for the setup screen, not
+    // saved: an entry per token on the board, characters without a value, creatures rolled
+    // with their own modifier and advantage or their type's. Errors: TokenNotFound,
+    // EncounterNotActive, NotSessionDm.
+    Task<InitiativeRollResult> RollInitiative(Guid encounterId);
+
+    // Session DM only. Switches initiative on with these entries in this order, or replaces
+    // the list (a new order, new values); saved with InitiativeVersion + 1, then
+    // InitiativeChanged to the session DM's group, the caller included. Players never hear of
+    // it. Errors: TokenNotFound, EncounterNotActive, NotSessionDm, InitiativeInvalid.
+    Task<InitiativeResult> SetInitiative(SetInitiativeRequest request);
+
+    // Session DM only. Switches initiative off for the fight: the list is gone. Errors as
+    // RollInitiative.
+    Task<InitiativeResult> ClearInitiative(Guid encounterId);
 }
 
 // What the server sends to devices.
@@ -188,6 +206,10 @@ public interface ITableClient
     // What a device may see changed under it (a hand-over of the session DM): leave the
     // groups with JoinEncounter again and reload the board.
     Task ReloadBoard(Guid encounterId);
+
+    // The session DM's group only: the initiative list changed (SetInitiative,
+    // ClearInitiative, or creatures spawned into it). Devices keep the higher version.
+    Task InitiativeChanged(InitiativeChangedEvent changed);
 }
 
 // The top-left cell the token should stand on.
@@ -320,3 +342,16 @@ public record SpawnedCreature(Guid CreatureTypeId, int X, int Y);
 public record SpawnResult(ApiErrorCode? Error, List<Guid>? TokenIds);
 
 public record TokensAddedEvent(Guid EncounterId, List<BoardToken> Tokens);
+
+// --- Initiative ---
+
+// Entries: the whole list in turn order.
+public record SetInitiativeRequest(Guid EncounterId, List<InitiativeEntry> Entries);
+
+public record InitiativeChangedEvent(Guid EncounterId, InitiativeView Initiative);
+
+// Change is the event sent to the group on success, null with an Error.
+public record InitiativeResult(ApiErrorCode? Error, InitiativeChangedEvent? Change);
+
+// Entries: characters first, then creatures, each in the order they were placed. Null with an Error.
+public record InitiativeRollResult(ApiErrorCode? Error, List<InitiativeEntry>? Entries);

@@ -472,7 +472,8 @@ export const de = {
       tagline: 'Dein digitaler Dungeon Crawl Companion',
       body: 'Deine Spielleiter*in plant und erstellt die Encounter für deine nächste Session. Du und deine Party können deine Charakter auf dem eigenen Gerät steuern. Nie wieder zu kleine Kästchen für eure Figuren.',
       howItWorks: "So geht's",
-      inviteOnly: 'Dies ist eine private App für D&D Abenteuer und nicht für die Allgemeinheit bestimmt. Zum Registrieren benötigst du eine Einladung vom Admin',
+      inviteOnly:
+        'Dies ist eine private App für D&D Abenteuer und nicht für die Allgemeinheit bestimmt. Zum Registrieren benötigst du eine Einladung vom Admin',
       worksOnLabel: 'Spiel so wie du willst',
       worksOn: ['Handy', 'Tablet', 'Laptop', 'Spectator Device', 'Zentraler Bildschirm'],
       scroll: 'Weiter',
@@ -1553,6 +1554,8 @@ export const de = {
     readOnlyConnection: 'Dieser Bildschirm schaut nur zu.',
     spawnInvalid: 'Diese Kreaturen lassen sich nicht erscheinen lassen.',
     notLocalMode: 'Ein gemeinsamer Bildschirm geht nur in der Spielweise „Gemeinsamer Bildschirm“.',
+    initiativeInvalid:
+      'Mit der Initiative stimmt etwas nicht: ein Wert außerhalb des Erlaubten, oder eine Figur, die nicht zum Kampf gehört.',
     notBuilt: 'Das gibt es noch nicht.',
   } satisfies Record<ApiErrorCode, string>,
 
@@ -1718,6 +1721,11 @@ export const de = {
     appearanceHint: 'Kurze Beschreibung, aus der das Symbol gemalt wird.',
     notes: 'Notizen der Spielleitung',
     notesHint: 'Nur für die Spielleitung sichtbar.',
+    /** What the type's creatures roll initiative with (knowledge/features/initiative.md). */
+    initiativeModifier: 'Initiative-Modifikator',
+    initiativeModifierHint:
+      'Wird zum W20 addiert, von −10 bis +20. Jede Kreatur auf einer Karte kann ihren eigenen haben.',
+    initiativeAdvantage: 'Vorteil bei Initiative',
     create: 'Anlegen',
     save: 'Speichern',
     cancel: 'Abbrechen',
@@ -1734,6 +1742,7 @@ export const de = {
       nameTaken: 'Diese Kampagne hat schon eine Kreaturenart mit diesem Namen.',
       appearanceTooLong: 'Das Aussehen darf höchstens 500 Zeichen haben.',
       notesTooLong: 'Die Notizen dürfen höchstens 2000 Zeichen haben.',
+      initiativeInvalid: 'Der Initiative-Modifikator ist eine ganze Zahl von −10 bis +20.',
     } satisfies Record<import('../bestiary/creatureTypes').CreatureTypeProblem, string>,
     /** The icon part of an existing type's form (knowledge/features/token-icons.md). */
     icon: {
@@ -1873,6 +1882,16 @@ export const de = {
     selectKeys: 'Entf entfernt die Kreatur, Esc hebt die Auswahl auf.',
     label: 'Bezeichnung',
     labelInvalid: 'Die Bezeichnung braucht 1 bis 40 Zeichen.',
+    /** This creature's own initiative, over its type's (knowledge/features/initiative.md). */
+    initiativeModifier: 'Initiative-Modifikator',
+    /** The field's placeholder while empty, e.g. "Wie die Art (+2)". */
+    initiativeFromType: (modifier: string) => `Wie die Art (${modifier})`,
+    initiativeModifierHint: 'Leer lassen für den Wert der Kreaturenart.',
+    initiativeModifierInvalid: 'Eine ganze Zahl von −10 bis +20, oder leer.',
+    initiativeAdvantage: 'Vorteil bei Initiative',
+    advantageFromType: (has: boolean) => `Wie die Art (${has ? 'Vorteil' : 'kein Vorteil'})`,
+    advantageYes: 'Vorteil',
+    advantageNo: 'Kein Vorteil',
     type: 'Art',
     size: 'Größe',
     position: 'Feld',
@@ -2295,6 +2314,63 @@ export const de = {
       /** The board is read-only again after the session DM switched back. */
       watchingOnly: 'Der Bildschirm zeigt nur noch zu.',
     },
+  },
+
+  /** The session DM's initiative list (knowledge/features/initiative.md). */
+  initiative: {
+    /** The top bar's button before initiative is on. */
+    roll: 'Initiative würfeln',
+    /** The top bar's button that shows or hides the list once it is on. */
+    show: 'Initiative',
+    setupTitle: 'Initiative würfeln',
+    editTitle: 'Initiative bearbeiten',
+    setupHint:
+      'Die Spieler würfeln selbst und sagen dir ihre Werte. Die Kreaturen sind schon gewürfelt; du kannst alles ändern. Gespeichert wird nach Wert sortiert.',
+    characters: 'Charaktere',
+    creatures: 'Kreaturen',
+    /** Column headings of the creature rows. */
+    modifier: 'Mod.',
+    advantage: 'Vorteil',
+    rolls: 'Wurf',
+    /** Before a creature's d20s, e.g. "W20: 14 7". */
+    d20: 'W20:',
+    value: 'Initiative',
+    /** Accessible names of a row's fields, e.g. "Initiative von Thorin". */
+    valueOf: (label: string) => `Initiative von ${label}`,
+    modifierOf: (label: string) => `Modifikator von ${label}`,
+    advantageOf: (label: string) => `Vorteil für ${label}`,
+    rerollOf: (label: string) => `${label} neu würfeln`,
+    rerollAll: 'Alle Kreaturen neu würfeln',
+    /** A value typed in by hand, without a roll behind it. */
+    typed: 'eingetragen',
+    hidden: 'verborgen',
+    rolling: 'Die Kreaturen würfeln…',
+    save: 'Übernehmen',
+    cancel: 'Abbrechen',
+    /** The panel over the board. */
+    listTitle: 'Initiative',
+    collapse: 'Initiative einklappen',
+    expand: 'Initiative ausklappen',
+    edit: 'Bearbeiten',
+    end: 'Beenden',
+    endQuestion: 'Initiative für diesen Kampf beenden?',
+    endConfirm: 'Ja, beenden',
+    /** A row without a value yet. */
+    noValue: '–',
+    empty: 'Niemand steht in der Liste.',
+    /** The row's accessible name, e.g. "Goblin 2 auswählen, Initiative 14". */
+    select: (label: string, value: number | null) =>
+      value === null
+        ? `${label} auswählen, ohne Initiative`
+        : `${label} auswählen, Initiative ${value}`,
+    /** The drag handle's accessible name, e.g. "Goblin 2 verschieben". */
+    handle: (label: string) => `${label} verschieben`,
+    handleHint: 'Ziehen, oder mit den Pfeiltasten hoch und runter.',
+    /** Read out after a move, e.g. "Goblin 2 ist jetzt an Stelle 3." */
+    moved: (label: string, position: number) => `${label} ist jetzt an Stelle ${position}.`,
+    needsConnection: 'Dafür braucht es eine Verbindung zum Tisch.',
+    saveFailed: 'Die Initiative konnte nicht gespeichert werden.',
+    rollFailed: 'Das Würfeln hat nicht geklappt.',
   },
 
   /** Failures without an error code. */

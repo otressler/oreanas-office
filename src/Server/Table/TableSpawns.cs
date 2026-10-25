@@ -45,7 +45,7 @@ public sealed class TableSpawns(TableFog fog, AppDbContext db, TimeProvider time
             var typeIds = creatures.Select(c => c.CreatureTypeId).Distinct().ToList();
             var types = await db.CreatureTypes.AsNoTracking()
                 .Where(t => t.CampaignId == encounter.CampaignId && typeIds.Contains(t.Id))
-                .ToDictionaryAsync(t => t.Id, t => t.Size);
+                .ToDictionaryAsync(t => t.Id, t => new { t.Size, t.InitiativeModifier, t.InitiativeAdvantage });
             if (types.Count != typeIds.Count)
             {
                 return (ApiErrorCode.SpawnInvalid, null, null);
@@ -56,7 +56,7 @@ public sealed class TableSpawns(TableFog fog, AppDbContext db, TimeProvider time
             for (var i = 0; i < creatures.Count; i++)
             {
                 var (typeId, x, y) = (creatures[i].CreatureTypeId, creatures[i].X, creatures[i].Y);
-                var size = types[typeId];
+                var size = types[typeId].Size;
                 if (!Maps.MapGrid.FootprintCells(size, x, y).All(cell => fight.Grid.Walkable(cell.X, cell.Y)))
                 {
                     return (ApiErrorCode.TargetInvalid, null, null);
@@ -81,6 +81,12 @@ public sealed class TableSpawns(TableFog fog, AppDbContext db, TimeProvider time
             var hiddenCells = FogCells.Set(encounter.Fog);
             var visible = tokens.Where(t => Visible(hiddenCells, t)).ToList();
             await CreatureNumbers.NumberAsync(db, encounter.Id, visible);
+            // With initiative on, the creatures roll and join the list (knowledge/features/initiative.md).
+            var initiative = TableInitiative.AddSpawned(
+                encounter,
+                tokens,
+                types.ToDictionary(t => t.Key, t => (t.Value.InitiativeModifier, t.Value.InitiativeAdvantage)),
+                InitiativeRules.RollD20);
             db.Tokens.AddRange(tokens);
             db.EncounterChanges.Add(new EncounterChange
             {
@@ -104,6 +110,11 @@ public sealed class TableSpawns(TableFog fog, AppDbContext db, TimeProvider time
             var added = ids.Select(id => board[id]).ToList();
             var outcome = new ChangeOutcome(encounter.Id, new Delivery(), []);
             outcome.Delivery.Dm.Add(client => client.TokensAdded(new TokensAddedEvent(encounter.Id, added)));
+            if (initiative is not null)
+            {
+                outcome.Delivery.Dm.Add(client => client.InitiativeChanged(initiative));
+            }
+
             var forPlayers = added.Where(t => TableVisibility.TokenVisible(hiddenCells, t)).ToList();
             if (forPlayers.Count > 0)
             {

@@ -3072,6 +3072,7 @@
           "readOnlyConnection",
           "spawnInvalid",
           "notLocalMode",
+          "initiativeInvalid",
           "notBuilt"
         ]
       },
@@ -3374,6 +3375,16 @@
           },
           "presence": {
             "$ref": "#/components/schemas/PresenceState"
+          },
+          "initiative": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/InitiativeView"
+              }
+            ]
           }
         }
       },
@@ -4293,6 +4304,7 @@
               "readOnlyConnection",
               "spawnInvalid",
               "notLocalMode",
+              "initiativeInvalid",
               "notBuilt",
               null
             ]
@@ -4431,6 +4443,282 @@
             "items": {
               "$ref": "#/components/schemas/ImportCreature"
             }
+          }
+        }
+      },
+      "InitiativeChangedEvent": {
+        "required": [
+          "encounterId",
+          "initiative"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "initiative": {
+            "$ref": "#/components/schemas/InitiativeView"
+          }
+        }
+      },
+      "InitiativeEntry": {
+        "required": [
+          "tokenId",
+          "value",
+          "modifier",
+          "advantage",
+          "rolls"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "value": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "modifier": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "advantage": {
+            "type": "boolean"
+          },
+          "rolls": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        }
+      },
+      "InitiativeResult": {
+        "required": [
+          "error",
+          "change"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "notBuilt",
+              null
+            ]
+          },
+          "change": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/InitiativeChangedEvent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "InitiativeRollResult": {
+        "required": [
+          "error",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "notBuilt",
+              null
+            ]
+          },
+          "entries": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InitiativeEntry"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "InitiativeView": {
+        "required": [
+          "version",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "entries": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InitiativeEntry"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -5332,6 +5620,7 @@
               "readOnlyConnection",
               "spawnInvalid",
               "notLocalMode",
+              "initiativeInvalid",
               "notBuilt",
               null
             ]
@@ -5717,6 +6006,25 @@
           "ended"
         ]
       },
+      "SetInitiativeRequest": {
+        "required": [
+          "encounterId",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InitiativeEntry"
+            }
+          }
+        }
+      },
       "SetPlayModeRequest": {
         "required": [
           "playMode"
@@ -5914,6 +6222,7 @@
               "readOnlyConnection",
               "spawnInvalid",
               "notLocalMode",
+              "initiativeInvalid",
               "notBuilt",
               null
             ]
@@ -6190,6 +6499,7 @@
               "readOnlyConnection",
               "spawnInvalid",
               "notLocalMode",
+              "initiativeInvalid",
               "notBuilt",
               null
             ]
@@ -6291,6 +6601,19 @@
           "hidden": {
             "type": "boolean",
             "default": false
+          },
+          "initiativeModifier": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "initiativeAdvantage": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -6322,6 +6645,15 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "initiativeModifier": {
+            "type": "integer",
+            "format": "int32",
+            "default": 0
+          },
+          "initiativeAdvantage": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -6861,6 +7193,7 @@
           "EncounterStarted",
           "FogChanged",
           "IdleTimeout",
+          "InitiativeChanged",
           "MovePreviewCleared",
           "MovePreviewed",
           "Pinged",
@@ -6882,6 +7215,7 @@
         "enum": [
           "AddStatus",
           "ChangeFog",
+          "ClearInitiative",
           "ClearPreview",
           "DrawArrow",
           "JoinEncounter",
@@ -6892,6 +7226,8 @@
           "RemoveStatus",
           "RemoveToken",
           "RestoreToken",
+          "RollInitiative",
+          "SetInitiative",
           "SetStatusLevel",
           "SetTokensHidden",
           "SpawnCreatures",
@@ -7442,6 +7778,7 @@
               "readOnlyConnection",
               "spawnInvalid",
               "notLocalMode",
+              "initiativeInvalid",
               "notBuilt",
               null
             ]

@@ -15,6 +15,7 @@ import {
   setArchived,
   setReady,
   setTokenHidden,
+  setTokenInitiative,
   toBoardToken,
   encounterDocOf,
   type EncounterDoc,
@@ -266,6 +267,18 @@ describe('hidden creatures', () => {
     expect(setTokenHidden(hidden, 't1', true)).toBe(hidden)
     const shown = setTokenHidden(hidden, 't1', false)
     expect(shown.tokens[0]).not.toHaveProperty('hidden')
+  })
+
+  it('gives a creature its own initiative and hands it back to its type', () => {
+    const doc = placeToken(empty(), goblin, { x: 0, y: 0 }, 't1')
+    expect(setTokenInitiative(doc, 't1', { modifier: null })).toBe(doc)
+    expect(setTokenInitiative(doc, 'missing', { modifier: 2 })).toBe(doc)
+    const own = setTokenInitiative(doc, 't1', { modifier: 4 })
+    const both = setTokenInitiative(own, 't1', { advantage: false })
+    expect(both.tokens[0]).toMatchObject({ initiativeModifier: 4, initiativeAdvantage: false })
+    const back = setTokenInitiative(both, 't1', { modifier: null, advantage: null })
+    expect(back.tokens[0]).not.toHaveProperty('initiativeModifier')
+    expect(back.tokens[0]).not.toHaveProperty('initiativeAdvantage')
   })
 
   it('draws a hidden token as hidden (see-through with the eye mark)', () => {

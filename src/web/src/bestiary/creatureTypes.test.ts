@@ -15,6 +15,8 @@ const input = (name: string, extra: Partial<CreatureTypeInput> = {}): CreatureTy
   size: 'small',
   appearance: '',
   notes: '',
+  initiativeModifier: 0,
+  initiativeAdvantage: false,
   ...extra,
 })
 
@@ -33,6 +35,24 @@ describe('creature types', () => {
     })
     expect(result.type.id).toMatch(/^[0-9a-f-]{36}$/)
     expect(await db().creatureTypes.get(result.type.id)).toEqual(result.type)
+  })
+
+  it('keeps the initiative modifier and advantage, and checks the modifier', async () => {
+    const result = await createCreatureType(
+      db(),
+      'c1',
+      input('Ork', { initiativeModifier: -1, initiativeAdvantage: true }),
+    )
+    expect(result.ok && result.type).toMatchObject({
+      initiativeModifier: -1,
+      initiativeAdvantage: true,
+    })
+    for (const initiativeModifier of [21, -11, 1.5, Number.NaN]) {
+      expect(checkCreatureType(input('Wolf', { initiativeModifier }), [])).toEqual([
+        'initiativeInvalid',
+      ])
+    }
+    expect(checkCreatureType(input('Wolf', { initiativeModifier: 20 }), [])).toEqual([])
   })
 
   it('lists a campaign’s types by name, archived ones included', async () => {

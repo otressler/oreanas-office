@@ -14,6 +14,9 @@ import type {
   EncounterStartedEvent,
   FogChangedEvent,
   HubResult,
+  InitiativeChangedEvent,
+  InitiativeResult,
+  InitiativeRollResult,
   MovePreviewClearedEvent,
   MovePreviewEvent,
   MoveResult,
@@ -23,6 +26,7 @@ import type {
   PlayModeChangedEvent,
   PresenceChangedEvent,
   RemoveStatusRequest,
+  SetInitiativeRequest,
   SetStatusLevelRequest,
   SetTokensHiddenRequest,
   SpawnCreaturesRequest,
@@ -94,6 +98,15 @@ export interface TableHubCalls {
   SpawnCreatures: { args: [request: SpawnCreaturesRequest]; result: SpawnResult }
   /** Session DM only. Takes back the latest fog change, reveal or spawn. Errors: ..., nothingToUndo. */
   UndoChange: { args: [encounterId: string]; result: HubResult }
+  /**
+   * Session DM only (knowledge/features/initiative.md). A fresh roll for the setup screen, not
+   * saved. Errors: tokenNotFound, encounterNotActive, notSessionDm.
+   */
+  RollInitiative: { args: [encounterId: string]; result: InitiativeRollResult }
+  /** Session DM only. Saves the whole list in this order. Errors: ..., initiativeInvalid. */
+  SetInitiative: { args: [request: SetInitiativeRequest]; result: InitiativeResult }
+  /** Session DM only. Switches initiative off for the fight. */
+  ClearInitiative: { args: [encounterId: string]; result: InitiativeResult }
 }
 
 /** Server → device messages and their arguments. */
@@ -136,6 +149,8 @@ export interface TableClientEvents {
   TokensAdded: [added: TokensAddedEvent]
   /** What this device may see changed (a hand-over): JoinEncounter again and reload the board. */
   ReloadBoard: [encounterId: string]
+  /** The session DM's group only: the initiative list changed; keep the higher version. */
+  InitiativeChanged: [changed: InitiativeChangedEvent]
 }
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false

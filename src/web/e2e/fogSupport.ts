@@ -123,6 +123,8 @@ export function fogFight({ fog = true } = {}): FogFight {
         appearance: '',
         notes: '',
         archivedAt: null,
+        initiativeModifier: 0,
+        initiativeAdvantage: false,
       },
     })
   }

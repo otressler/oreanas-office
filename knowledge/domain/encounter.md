@@ -21,6 +21,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T21:55:33Z }
 | `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The map's picked background, saved together with `layout` when the encounter starts. Picking another version on the map later doesn't change a running or ended fight. Empty when the map had no usable background |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the encounter |
 | `fog`, `fogVersion` | JSON document, nullable; int | Later: hidden cells and named areas ([fog of war](/features/fog-of-war.md)) |
+| `initiative`, `initiativeVersion` | JSON document, nullable; int | The session DM's initiative list in turn order, null while off; the version is raised by every change ([initiative](/features/initiative.md)) |
 
 # Contains
 

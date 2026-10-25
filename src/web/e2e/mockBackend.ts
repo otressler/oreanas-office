@@ -172,6 +172,8 @@ interface Encounter {
   createdAt: string
   /** Who is connected, as the board lists it; nobody when unset (shared-table specs set it). */
   presence?: S['PresenceState']
+  /** The session DM's initiative list (mockInitiative.ts); off when unset. */
+  initiative?: S['InitiativeView']
 }
 
 /** Reads one of the app's sample maps (src/samples/maps), e.g. "gorge-crossing". */
@@ -1440,6 +1442,7 @@ export class MockBackend {
       fog: null,
       playMode: session?.playMode ?? 'byod',
       presence: encounter.presence ?? { people: [], sharedScreen: false },
+      initiative: isSessionDm ? (encounter.initiative ?? { version: 0, entries: null }) : null,
     })
   }
 

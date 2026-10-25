@@ -18,7 +18,8 @@
 // - pings, arrows, status changes and removed or restored tokens are passed on as they
 //   come (stage 9); pings and arrows are best effort, like previews;
 // - fog changes, revealed and hidden creatures and spawned creatures are passed on as they
-//   come (stage 10); ReloadBoard (what this device may see changed) joins again and reloads.
+//   come (stage 10); ReloadBoard (what this device may see changed) joins again and reloads;
+// - initiative changes reach the session DM's devices only (knowledge/features/initiative.md).
 // The connection factory is injected, so tests run without a server.
 import type { HubConnection } from '@microsoft/signalr'
 import type {
@@ -29,6 +30,9 @@ import type {
   DrawArrowRequest,
   FogChangedEvent,
   HubResult,
+  InitiativeChangedEvent,
+  InitiativeResult,
+  InitiativeRollResult,
   MovePreviewClearedEvent,
   MovePreviewEvent,
   MoveResult,
@@ -37,6 +41,7 @@ import type {
   PingedEvent,
   PresenceChangedEvent,
   RemoveStatusRequest,
+  SetInitiativeRequest,
   SetStatusLevelRequest,
   SetTokensHiddenRequest,
   SpawnCreaturesRequest,
@@ -114,6 +119,8 @@ export interface TableConnectionOptions {
   onTokenRevealed?: (revealed: TokenRevealedEvent) => void
   onTokenHidden?: (hidden: TokenHiddenEvent) => void
   onTokensAdded?: (added: TokensAddedEvent) => void
+  /** The initiative list changed (the session DM's devices only). */
+  onInitiativeChanged?: (changed: InitiativeChangedEvent) => void
 }
 
 /** A move or undo while the table isn't connected; moves are never queued. */
@@ -251,6 +258,23 @@ export class TableConnection {
     return this.call((connection) => invokeHub(connection, 'UndoChange', this.options.encounterId))
   }
 
+  /** Session DM only: the initiative list (knowledge/features/initiative.md). */
+  rollInitiative(): Promise<InitiativeRollResult> {
+    return this.call((connection) =>
+      invokeHub(connection, 'RollInitiative', this.options.encounterId),
+    )
+  }
+
+  setInitiative(request: SetInitiativeRequest): Promise<InitiativeResult> {
+    return this.call((connection) => invokeHub(connection, 'SetInitiative', request))
+  }
+
+  clearInitiative(): Promise<InitiativeResult> {
+    return this.call((connection) =>
+      invokeHub(connection, 'ClearInitiative', this.options.encounterId),
+    )
+  }
+
   private call<T>(send: (connection: HubConnection) => Promise<T>): Promise<T> {
     const connection = this.activeConnection()
     if (!connection) return Promise.reject(new NotConnectedError())
@@ -349,6 +373,9 @@ export class TableConnection {
     })
     onHubEvent(connection, 'TokensAdded', (added) => {
       if (!stale()) this.options.onTokensAdded?.(added)
+    })
+    onHubEvent(connection, 'InitiativeChanged', (changed) => {
+      if (!stale()) this.options.onInitiativeChanged?.(changed)
     })
     // What this device may see changed (a hand-over): join again, then reload the board.
     onHubEvent(connection, 'ReloadBoard', () => {

@@ -190,6 +190,40 @@ export function setTokenHidden(doc: EncounterDoc, id: string, hidden: boolean): 
   }
 }
 
+/**
+ * Gives a creature its own initiative modifier or advantage, or (null) hands it back to its
+ * type's (knowledge/features/initiative.md). Null fields are left out of the record.
+ */
+export function setTokenInitiative(
+  doc: EncounterDoc,
+  id: string,
+  change: { modifier?: number | null; advantage?: boolean | null },
+): EncounterDoc {
+  const token = doc.tokens.find((item) => item.id === id)
+  if (!token) return doc
+  const modifier =
+    'modifier' in change ? (change.modifier ?? null) : (token.initiativeModifier ?? null)
+  const advantage =
+    'advantage' in change ? (change.advantage ?? null) : (token.initiativeAdvantage ?? null)
+  if (
+    modifier === (token.initiativeModifier ?? null) &&
+    advantage === (token.initiativeAdvantage ?? null)
+  )
+    return doc
+  return {
+    ...doc,
+    tokens: doc.tokens.map((item) => {
+      if (item.id !== id) return item
+      const { initiativeModifier: _m, initiativeAdvantage: _a, ...rest } = item
+      return {
+        ...rest,
+        ...(modifier !== null && { initiativeModifier: modifier }),
+        ...(advantage !== null && { initiativeAdvantage: advantage }),
+      }
+    }),
+  }
+}
+
 export function renameEncounter(doc: EncounterDoc, name: string): EncounterDoc {
   const clean = cleanEncounterName(name)
   return clean === null || clean === doc.name ? doc : { ...doc, name: clean }
