@@ -27,7 +27,7 @@ Let the DM build a fight quickly. This is not a full level editor: the DM places
 8. Start [AI map generation](/features/ai-map-generation.md), compare versions and pick a background.
 9. Save as an [encounter](/domain/encounter.md) in a planned session. The editor's "Neue Begegnung" asks which of the user's planned or running sessions it goes in ([session planning](/features/session-planning.md)).
 10. Work offline: everything except image generation works without a connection and syncs on demand ([offline prep](/decisions/offline-prep-pwa.md)).
-11. A map list per campaign: open a map to edit it later, duplicate it to adjust a copy, archive it, or bring an archived map back. Maps are never deleted ([battle map](/domain/battle-map.md)).
+11. A map list per campaign: open a map to edit it later, duplicate it to adjust a copy, archive it, and bring an archived map back or delete it for good. Deleting takes the map's unplayed encounters along and isn't possible while a running or ended fight uses the map ([battle map](/domain/battle-map.md), "Deleting").
 12. A map store: add a copy of a map from another campaign ([battle map](/domain/battle-map.md)).
 13. Import and export of the map file stays as a tool. An import is created on the server and reaches the editor with the next sync ([battle map](/domain/battle-map.md)).
 

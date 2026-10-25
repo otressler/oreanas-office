@@ -58,6 +58,8 @@ const ALL_CODES = {
   encounterArchived: true,
   creaturesMisplaced: true,
   mapNotInStore: true,
+  mapNotArchived: true,
+  mapPlayed: true,
   imagesUnavailable: true,
   imageBudgetExhausted: true,
   generationRunning: true,

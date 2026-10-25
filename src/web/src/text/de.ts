@@ -420,7 +420,7 @@ export const de = {
         body: [
           'Kampagnen, Charaktere, Karten, Begegnungen, Sitzungen, Kreaturen und Bilder speichert der Server, damit alle in der Runde sie sehen und bespielen können. Sehen können sie nur Mitglieder der jeweiligen Kampagne.',
           'Hochgeladene Bilder speichert der Server neu ab und entfernt dabei Metadaten wie den Aufnahmeort. Lade Fotos von anderen Menschen nur mit deren Einverständnis hoch.',
-          'Die Inhalte bleiben gespeichert, solange es die Kampagne gibt. Bilder bewahrt die App als Versionen auf, auch wenn ein anderes ausgewählt ist. Auf Anfrage per E-Mail werden sie gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.',
+          'Die Inhalte bleiben gespeichert, solange es die Kampagne gibt. Bilder bewahrt die App als Versionen auf, auch wenn ein anderes ausgewählt ist. Löscht die Spielleitung eine archivierte Karte, löscht die App auch deren Hintergrundbilder, soweit keine andere Karte und kein Kampf sie noch zeigt. Auf Anfrage per E-Mail werden Bilder gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.',
         ],
       },
       {
@@ -1324,7 +1324,8 @@ export const de = {
     activeTitle: 'Karten',
     empty: 'Noch keine Karten. Lege eine neue an oder importiere eine Kartendatei.',
     archivedTitle: (count: number) => `Archiviert (${count})`,
-    archivedHint: 'Archivierte Karten werden nicht zum Auswählen angeboten. Gelöscht wird nichts.',
+    archivedHint:
+      'Archivierte Karten werden nicht zum Auswählen angeboten. Hier holst du sie zurück oder löschst sie endgültig.',
     /** Size in cells, then meters, e.g. "20 × 15 Felder (30 m × 22,5 m)". */
     size: (width: number, height: number, widthMeters: string, heightMeters: string) =>
       `${width} × ${height} Felder (${widthMeters} × ${heightMeters})`,
@@ -1348,6 +1349,28 @@ export const de = {
     duplicated: (name: string) => `„${name}“ ist angelegt.`,
     archived: (name: string) => `„${name}“ ist archiviert.`,
     restored: (name: string) => `„${name}“ ist zurück.`,
+    delete: 'Löschen',
+    deleteMap: (name: string) => `${name} löschen`,
+    deleted: (name: string) => `„${name}“ ist gelöscht.`,
+    /** The question before an archived map is deleted (knowledge/domain/battle-map.md, "Deleting"). */
+    deleteDialog: {
+      title: (name: string) => `„${name}“ löschen?`,
+      body: 'Die Karte wird endgültig gelöscht, auch auf deinen anderen Geräten und für die übrige Spielleitung. Das lässt sich nicht rückgängig machen.',
+      encounters: (count: number) =>
+        count === 1
+          ? 'Diese Begegnung ist noch nicht gespielt und wird mitgelöscht:'
+          : `Diese ${count} Begegnungen sind noch nicht gespielt und werden mitgelöscht:`,
+      /** A fight in the lists above, with the title of its session. */
+      inSession: (encounter: string, session: string) => `${encounter} (${session})`,
+      played:
+        'Diese Karte lässt sich nicht löschen, weil ein laufender oder beendeter Kampf sie verwendet:',
+      images:
+        'Ihre Hintergrundbilder werden mitgelöscht, außer eine Kopie aus dem Kartenspeicher oder ein gespielter Kampf zeigt sie noch.',
+      offline: 'Zum Löschen braucht es eine Verbindung zum Server.',
+      blocked:
+        'Die Karte hat Änderungen, die sich nicht synchronisieren lassen. Kläre das zuerst über „Sync“ und versuch es dann noch einmal.',
+      confirm: 'Endgültig löschen',
+    },
     actionFailed: 'Das hat auf diesem Gerät nicht geklappt. Versuch es bitte noch einmal.',
 
     newTitle: 'Neue Karte',
@@ -1620,6 +1643,9 @@ export const de = {
     creaturesMisplaced:
       'Eine Kreatur steht nicht gültig auf der Karte. Korrigiere die Aufstellung, bevor die Begegnung bereit ist oder startet.',
     mapNotInStore: 'Diese Karte wird im Kartenspeicher dieser Kampagne nicht angeboten.',
+    mapNotArchived: 'Nur archivierte Karten lassen sich löschen.',
+    mapPlayed:
+      'Diese Karte lässt sich nicht löschen, weil ein laufender oder beendeter Kampf sie verwendet.',
     imagesUnavailable:
       'Auf dem Server ist kein Bildmodell eingerichtet. Hintergründe können gerade nicht erzeugt werden.',
     imageBudgetExhausted:

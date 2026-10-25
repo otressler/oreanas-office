@@ -33,6 +33,8 @@ A map copied from the store points to the same background asset as its source, s
 
 A map can also get uploaded backgrounds: already `done` when saved, with no prompt or cost, stored as WebP ([AI map generation](/features/ai-map-generation.md), "Uploads").
 
+Deleting a map deletes the files of its background assets that nothing else shows, and clears their `blobName`. The rows stay, so `ownerId` may name a map that no longer exists: they keep what each image cost for the monthly [image budget](/decisions/image-budget.md) ([battle map](/domain/battle-map.md), "Deleting").
+
 A creature type and a character also collect versions: generated, uploaded (already `done` when saved, with no prompt or cost) and restyled from an upload. `CreatureType.iconAssetId` and `Character.tokenAssetId` point to the picked one ([token icons](/features/token-icons.md)).
 
 A campaign collects cover versions the same way, as `campaign-cover` assets: 3:2, opaque, kept as a 1200 × 800 WebP. `Campaign.coverAssetId` points to the picked one ([campaign overview](/features/campaign-overview.md)).

@@ -92,6 +92,12 @@ public enum ApiErrorCode
     // MapNotInStore: the map isn't offered in this campaign's store.
     MapNotInStore,
 
+    // Deleting a map (knowledge/domain/battle-map.md, "Deleting").
+    // MapNotArchived: only an archived map can be deleted.
+    MapNotArchived,
+    // MapPlayed: a running or ended encounter uses the map, so it stays.
+    MapPlayed,
+
     // Map backgrounds (knowledge/features/ai-map-generation.md).
     // ImagesUnavailable: the server has no image model configured.
     ImagesUnavailable,

@@ -44,7 +44,8 @@ public class Asset
 
     public string? Quality { get; set; }
 
-    // Where the image lies in the private "assets" blob container; set when Done.
+    // Where the image lies in the private "assets" blob container; set when Done. Cleared
+    // when its map is deleted and the image removed; the row stays for the monthly limit.
     public string? BlobName { get; set; }
 
     public string? ContentType { get; set; }

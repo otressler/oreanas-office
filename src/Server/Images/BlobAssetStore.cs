@@ -36,6 +36,18 @@ public sealed class BlobAssetStore(BlobServiceClient blobs) : IAssetStore
         }
     }
 
+    public async Task DeleteAsync(string blobName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _container.GetBlobClient(blobName).DeleteIfExistsAsync(cancellationToken: cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == StatusCodes.Status404NotFound)
+        {
+            // The container doesn't exist yet, so neither does the blob.
+        }
+    }
+
     private async Task EnsureContainerAsync(CancellationToken cancellationToken)
     {
         if (_created)

@@ -44,6 +44,51 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/maps/{mapId}": {
+      "delete": {
+        "tags": [
+          "Maps"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/assets/{assetId}": {
       "get": {
         "tags": [
@@ -3519,6 +3564,8 @@
           "encounterArchived",
           "creaturesMisplaced",
           "mapNotInStore",
+          "mapNotArchived",
+          "mapPlayed",
           "imagesUnavailable",
           "imageBudgetExhausted",
           "generationRunning",
@@ -4894,6 +4941,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -5172,6 +5221,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -5279,6 +5330,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -6238,6 +6291,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -6886,6 +6941,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -7166,6 +7223,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -8481,6 +8540,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -8550,6 +8611,9 @@
       "name": "Health"
     },
     {
+      "name": "Maps"
+    },
+    {
       "name": "Images"
     },
     {
@@ -8575,9 +8639,6 @@
     },
     {
       "name": "Sync"
-    },
-    {
-      "name": "Maps"
     },
     {
       "name": "Statuses"
