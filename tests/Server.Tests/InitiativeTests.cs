@@ -60,7 +60,8 @@ public sealed class InitiativeTests(AppFixture fixture) : IClassFixture<AppFixtu
 
         Assert.Null(rolled.Error);
         var entries = rolled.Entries!;
-        Assert.Equal([fight.Aria, fight.Thorin], entries.Take(2).Select(e => e.TokenId).Order());
+        // The characters come first, in no particular order between them.
+        Assert.Equal(new[] { fight.Aria, fight.Thorin }.Order(), entries.Take(2).Select(e => e.TokenId).Order());
         Assert.All(entries.Take(2), e => Assert.Equal((null, 0, false, 0), (e.Value, e.Modifier, e.Advantage, e.Rolls.Count)));
         var goblin = entries.Single(e => e.TokenId == fight.Goblin);
         Assert.Equal((2, false), (goblin.Modifier, goblin.Advantage));
