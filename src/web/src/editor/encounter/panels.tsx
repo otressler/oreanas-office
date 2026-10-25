@@ -8,7 +8,9 @@ import { useCreatureTypes } from '../../bestiary/creatureTypes'
 import { useSessions } from '../../campaigns/queries'
 import { Badge, Button } from '../../components/ui'
 import { inputClass } from '../../components/styles'
+import { formatModifier, MODIFIER_MAX, MODIFIER_MIN, parseWhole } from '../../initiative/initiative'
 import { useLocalUser } from '../../offline/localUser'
+import type { LocalCreatureToken, LocalCreatureType } from '../../offline/model'
 import { syncThenStart } from '../../sync'
 import { de } from '../../text/de'
 import { saveEncounter } from './encounters'
@@ -25,6 +27,7 @@ import {
   removeToken,
   renameToken,
   setTokenHidden,
+  setTokenInitiative,
   setArchived,
   setReady,
   LABEL_MAX,
@@ -99,6 +102,12 @@ export function SelectCreaturePanel() {
         {de.fog.editor.hiddenSwitch}
       </label>
       <Help>{de.fog.editor.hiddenHelp}</Help>
+      <InitiativeFields
+        key={`initiative-${token.id}`}
+        token={token}
+        type={type}
+        disabled={readOnly}
+      />
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
         <dt className="text-dim">{t.type}</dt>
         <dd>{type?.name ?? '…'}</dd>
@@ -115,6 +124,89 @@ export function SelectCreaturePanel() {
           </Button>
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * The creature's own initiative modifier and advantage (knowledge/features/initiative.md):
+ * empty and "Wie die Art" take the type's. The modifier is kept while the field is valid.
+ */
+function InitiativeFields({
+  token,
+  type,
+  disabled,
+}: {
+  token: LocalCreatureToken
+  type: LocalCreatureType | undefined
+  disabled: boolean
+}) {
+  const store = useEncounterStore()
+  const modifierId = useId()
+  const advantageId = useId()
+  const own = token.initiativeModifier ?? null
+  const [text, setText] = useState(own === null ? '' : String(own))
+  const parsed = text.trim() === '' ? null : parseWhole(text, MODIFIER_MIN, MODIFIER_MAX)
+  const invalid = text.trim() !== '' && parsed === null
+  const typeModifier = type?.initiativeModifier ?? 0
+  const typeAdvantage = type?.initiativeAdvantage ?? false
+  const advantage = token.initiativeAdvantage ?? null
+
+  function changeModifier(value: string) {
+    setText(value)
+    const next = value.trim() === '' ? null : parseWhole(value, MODIFIER_MIN, MODIFIER_MAX)
+    if (value.trim() === '' || next !== null)
+      store.getState().apply((doc) => setTokenInitiative(doc, token.id, { modifier: next }))
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
+        <label htmlFor={modifierId} className="text-sm text-dim">
+          {t.initiativeModifier}
+        </label>
+        <input
+          id={modifierId}
+          className={inputClass}
+          type="number"
+          inputMode="numeric"
+          min={MODIFIER_MIN}
+          max={MODIFIER_MAX}
+          step={1}
+          value={text}
+          placeholder={t.initiativeFromType(formatModifier(typeModifier))}
+          disabled={disabled}
+          aria-invalid={invalid || undefined}
+          aria-describedby={`${modifierId}-hint`}
+          onChange={(event) => changeModifier(event.target.value)}
+        />
+        <p id={`${modifierId}-hint`} className={`text-sm ${invalid ? 'text-red-300' : 'text-dim'}`}>
+          {invalid ? t.initiativeModifierInvalid : t.initiativeModifierHint}
+        </p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor={advantageId} className="text-sm text-dim">
+          {t.initiativeAdvantage}
+        </label>
+        <select
+          id={advantageId}
+          className={inputClass}
+          value={advantage === null ? 'type' : advantage ? 'yes' : 'no'}
+          disabled={disabled}
+          onChange={(event) => {
+            const value = event.target.value
+            store.getState().apply((doc) =>
+              setTokenInitiative(doc, token.id, {
+                advantage: value === 'type' ? null : value === 'yes',
+              }),
+            )
+          }}
+        >
+          <option value="type">{t.advantageFromType(typeAdvantage)}</option>
+          <option value="yes">{t.advantageYes}</option>
+          <option value="no">{t.advantageNo}</option>
+        </select>
+      </div>
     </div>
   )
 }

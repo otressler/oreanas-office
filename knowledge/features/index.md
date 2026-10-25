@@ -16,6 +16,7 @@
 - [Statuses](statuses.md) - The 15 conditions and custom statuses on tokens, picked from status lists on characters and DMs
 - [Removing tokens](removing-tokens.md) - The session DM takes a defeated or departed token off the board, with undo and a way back
 - [Player extras](player-extras.md) - "Meine Figur" brings the player's character into view, and the phone vibrates when a move is taken
+- [Initiative](initiative.md) - The session DM's optional initiative list per fight: players say their rolls, creatures roll with modifier and advantage, drag to reorder, tap to select
 - [Dice tray](dice-tray.md) - "Würfeln" on the fight screen and session page rolls W4 to W100 with a modifier and advantage, on the own device for now
 - [Creature spawn](creature-spawn.md) - The session DM adds unprepared creatures to a running fight, visible or hidden, after a confirm step
 - [Fog of war](fog-of-war.md) - The DM hides map areas and creatures, prepares them before the fight and reveals them during play

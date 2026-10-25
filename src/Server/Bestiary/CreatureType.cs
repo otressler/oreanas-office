@@ -26,6 +26,13 @@ public class CreatureType
 
     public string Notes { get; set; } = "";
 
+    // Added to the d20 when the type's creatures roll initiative, with a second d20 kept
+    // when Advantage is set (knowledge/features/initiative.md). A placed token can override
+    // both.
+    public int InitiativeModifier { get; set; }
+
+    public bool InitiativeAdvantage { get; set; }
+
     // The picked icon version (knowledge/features/token-icons.md): a Done TokenIcon asset
     // owned by this type, or null for the letter. Online only and not part of the sync
     // item, like BattleMap.BackgroundAssetId, so picking never conflicts with offline edits.

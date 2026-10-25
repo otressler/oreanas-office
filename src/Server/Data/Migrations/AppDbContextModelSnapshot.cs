@@ -220,6 +220,12 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid?>("IconAssetId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("InitiativeAdvantage")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("InitiativeModifier")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -393,6 +399,14 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<int>("FogVersion")
                         .HasColumnType("int");
 
+                    b.Property<string>("Initiative")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("InitiativeJson");
+
+                    b.Property<int>("InitiativeVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
                     b.Property<string>("MapCopy")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("MapCopyJson");
@@ -503,6 +517,12 @@ namespace OreanasOffice.Server.Data.Migrations
 
                     b.Property<bool>("Hidden")
                         .HasColumnType("bit");
+
+                    b.Property<bool?>("InitiativeAdvantage")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("InitiativeModifier")
+                        .HasColumnType("int");
 
                     b.Property<string>("Kind")
                         .IsRequired()

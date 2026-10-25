@@ -143,6 +143,8 @@ public static class EncounterEndpoints
                 e.Session.PlayMode,
                 e.Fog,
                 e.FogVersion,
+                e.Initiative,
+                e.InitiativeVersion,
                 e.MapCopy,
                 SavedBackgroundAssetId = e.BackgroundAssetId,
                 MapBackgroundAssetId = e.BattleMap.BackgroundAssetId,
@@ -217,7 +219,9 @@ public static class EncounterEndpoints
                     fog.Areas)
                 : null,
             encounter.PlayMode,
-            presence.Snapshot(encounterId, encounter.SessionDmUserId, characters.Select(c => c.OwnerUserId), people.Select(p => p.UserId)));
+            presence.Snapshot(encounterId, encounter.SessionDmUserId, characters.Select(c => c.OwnerUserId), people.Select(p => p.UserId)),
+            // The session DM's own tool (knowledge/features/initiative.md); ForPlayers drops it.
+            isSessionDm ? new InitiativeView(encounter.InitiativeVersion, encounter.Initiative?.Entries) : null);
 
         // Players, and anyone who asked for the players' view, get the filtered board.
         return isSessionDm ? board : TableVisibility.ForPlayers(board with { UndoableMove = asPlayer && screen != ConnectionMode.SharedScreen ? null : board.UndoableMove });

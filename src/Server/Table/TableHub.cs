@@ -17,7 +17,7 @@ namespace OreanasOffice.Server.Table;
 //
 // The hub is split by feature so lanes don't edit the same file: TableHub.Spectators.cs
 // (WatchSession), TableHub.Fog.cs (ChangeFog, SetTokensHidden, UndoChange) and
-// TableHub.Spawn.cs (SpawnCreatures). A spectator connection, or a shared screen outside
+// TableHub.Spawn.cs (SpawnCreatures) and TableHub.Initiative.cs (the initiative list). A spectator connection, or a shared screen outside
 // local mode, can only watch: its calls fail with ReadOnlyConnection.
 [Authorize]
 public sealed partial class TableHub(
@@ -32,7 +32,8 @@ public sealed partial class TableHub(
     TableBroadcaster broadcaster,
     TableFanOut fanOut,
     TableFog fog,
-    TableSpawns spawns) : Hub<ITableClient>, ITableHub
+    TableSpawns spawns,
+    TableInitiative initiative) : Hub<ITableClient>, ITableHub
 {
     public const string Path = "/hubs/table";
 

@@ -4,7 +4,8 @@
 // others are about to move tokens. Stage 9: pings and arrows from double taps, whose
 // first tap is taken back; haptic feedback on the mover's device; "Meine Figur"; the
 // token card with statuses (knowledge/features/token-card.md, statuses.md); and taking
-// tokens off the board with undo and a list to bring them back (removing-tokens.md).
+// tokens off the board with undo and a list to bring them back (removing-tokens.md). For the
+// session DM, the initiative list over the board (knowledge/features/initiative.md).
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { ApiErrorCode, BoardState, BoardToken, StatusResult, UndoableMove } from '../api/types'
 import { useCurrentUser } from '../auth/auth'
@@ -17,6 +18,7 @@ import { Button } from '../components/ui'
 import { DiceButton } from '../dice/DiceButton'
 import { FightScreen } from '../encounters/FightScreen'
 import { useDmFog } from '../fog/useDmFog'
+import { useInitiative } from '../initiative/useInitiative'
 import { useWideScreen } from '../lib/useWideScreen'
 import { PresenceRow } from '../sharedTable/PresenceRow'
 import { canRemoveStatus } from '../statuses/rules'
@@ -184,6 +186,18 @@ export function FightTable({
     : undefined
   const bottomOverlay = covered && !wide ? covered.height : 0
 
+  const initiative = useInitiative({
+    board,
+    tokens: seen.tokens,
+    table,
+    connected,
+    running,
+    hidden: dmFog.playerView,
+    selectedId: selected?.id ?? cardTokenId,
+    onSelect: selectFromList,
+    onError: (text) => setNotice({ kind: 'error', text }),
+  })
+
   // While this device is at the confirm step, the others see an arrow to the target.
   // A confirmed move clears it on the server; letting go or losing the connection here.
   const previewing = current.mode === 'preview' ? current : null
@@ -342,6 +356,16 @@ export function FightTable({
     if (intent) void send(intent)
   }
 
+  /** An entry of the initiative list: its token's card opens, and it is selected to move. */
+  function selectFromList(token: BoardToken) {
+    if (frozen) return
+    setNotice(null)
+    setCard({ kind: 'token', tokenId: token.id, cell: { x: token.x, y: token.y } })
+    setControls(
+      canMove(token) && running && connected ? { mode: 'selected', tokenId: token.id } : IDLE,
+    )
+  }
+
   const cancel = useCallback(() => {
     setControls(IDLE)
     setNotice(null)
@@ -431,6 +455,7 @@ export function FightTable({
 
   const dmActions = board.isSessionDm && running && (
     <>
+      {initiative.toolbar}
       {dmFog.toolbar}
       <RemovedTokensMenu
         tokens={board.removedTokens}
@@ -455,29 +480,41 @@ export function FightTable({
     >
       <div className="relative flex min-h-0 flex-1 flex-col">
         <PresenceRow presence={board.presence} people={board.people} tokens={board.tokens} />
-        <Board
-          board={dmFog.board}
-          fog={dmFog.fog}
-          highlight={dmFog.highlight}
-          faintTokenIds={dmFog.faintTokenIds}
-          onCellTap={(cell) => dmFog.tapCell(cell) || tap(cell)}
-          onTokenTap={(token, cell) => dmFog.tapToken(token, cell) || tap(cell, token)}
-          selectedTokenId={selected?.id ?? null}
-          ghost={
-            current.mode === 'preview' ? { tokenId: current.tokenId, ...current.target } : null
-          }
-          arrows={arrows}
-          slide
-          instantTokenIds={instant}
-          className="min-h-0 flex-1"
-          onTapTakenBack={takeBackTap}
-          onDoubleTap={pingTarget}
-          onArrow={drawArrow}
-          pings={pings.shown}
-          inset={inset}
-          keepInView={selected?.id ?? cardTokenId}
-          handleRef={boardHandle}
-        />
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <Board
+            board={dmFog.board}
+            fog={dmFog.fog}
+            highlight={dmFog.highlight}
+            faintTokenIds={dmFog.faintTokenIds}
+            onCellTap={(cell) => dmFog.tapCell(cell) || tap(cell)}
+            onTokenTap={(token, cell) => dmFog.tapToken(token, cell) || tap(cell, token)}
+            selectedTokenId={selected?.id ?? null}
+            ghost={
+              current.mode === 'preview' ? { tokenId: current.tokenId, ...current.target } : null
+            }
+            arrows={arrows}
+            slide
+            instantTokenIds={instant}
+            className="min-h-0 flex-1"
+            onTapTakenBack={takeBackTap}
+            onDoubleTap={pingTarget}
+            onArrow={drawArrow}
+            pings={pings.shown}
+            inset={inset}
+            keepInView={selected?.id ?? cardTokenId}
+            handleRef={boardHandle}
+          />
+
+          {initiative.panel && (
+            <div
+              // Above "Meine Figur" and "Rückgängig" in the bottom-left corner.
+              style={{ bottom: bottomOverlay + 120 }}
+              className="pointer-events-none absolute top-3 left-3 z-20 flex flex-col items-start"
+            >
+              {initiative.panel}
+            </div>
+          )}
+        </div>
 
         {notice && (
           <div
@@ -597,6 +634,8 @@ export function FightTable({
             onTimeout={hideJustRemoved}
           />
         )}
+
+        {initiative.dialog}
       </div>
     </FightScreen>
   )

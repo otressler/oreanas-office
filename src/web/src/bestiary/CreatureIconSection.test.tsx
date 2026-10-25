@@ -56,6 +56,8 @@ async function goblin(baseVersion: number): Promise<LocalCreatureType> {
     size: 'small',
     appearance: 'grün',
     notes: '',
+    initiativeModifier: 0,
+    initiativeAdvantage: false,
   })
   if (!created.ok) throw new Error('not created')
   const type = {

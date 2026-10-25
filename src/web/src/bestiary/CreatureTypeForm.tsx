@@ -1,5 +1,6 @@
-// The form for a creature type (knowledge/domain/creature-type.md): name, size, the
-// appearance that feeds the icon prompt, and the DM's notes. It writes to the browser; the
+// The form for a creature type (knowledge/domain/creature-type.md): name, size, initiative
+// (knowledge/features/initiative.md), the appearance that feeds the icon prompt, and the
+// DM's notes. It writes to the browser; the
 // name must be free in the campaign, ignoring case. An existing type also shows its icons
 // (CreatureIconSection), outside the form element.
 import { useId, useState, type FormEvent } from 'react'
@@ -7,6 +8,7 @@ import type { CreatureSize } from '../api/types'
 import { footprint } from '../board/geometry'
 import { Button, ErrorAlert, SelectField, TextField } from '../components/ui'
 import { inputClass } from '../components/styles'
+import { MODIFIER_MAX, MODIFIER_MIN } from '../initiative/initiative'
 import { useLocalUser } from '../offline/localUser'
 import type { LocalCreatureType } from '../offline/model'
 import { de } from '../text/de'
@@ -47,10 +49,19 @@ export function CreatureTypeForm({
   const [size, setSize] = useState<CreatureSize>(type?.size ?? 'medium')
   const [appearance, setAppearance] = useState(type?.appearance ?? '')
   const [notes, setNotes] = useState(type?.notes ?? '')
+  const [modifierText, setModifierText] = useState(String(type?.initiativeModifier ?? 0))
+  const [advantage, setAdvantage] = useState(type?.initiativeAdvantage ?? false)
   const [submitted, setSubmitted] = useState(false)
   const [failed, setFailed] = useState(false)
 
-  const input = { name, size, appearance, notes }
+  const input = {
+    name,
+    size,
+    appearance,
+    notes,
+    initiativeModifier: modifierText.trim() === '' ? Number.NaN : Number(modifierText),
+    initiativeAdvantage: advantage,
+  }
   const others = (types ?? []).filter((other) => other.id !== type?.id)
   const problems = checkCreatureType(input, others)
   // An empty name isn't an error before the DM tried to save.
@@ -82,7 +93,9 @@ export function CreatureTypeForm({
       name.trim() === type.name &&
       size === type.size &&
       appearance === type.appearance &&
-      notes === type.notes
+      notes === type.notes &&
+      input.initiativeModifier === (type.initiativeModifier ?? 0) &&
+      advantage === (type.initiativeAdvantage ?? false)
     if (unchanged) return true
     setSubmitted(true)
     if (problems.length > 0) return false
@@ -135,6 +148,31 @@ export function CreatureTypeForm({
             </option>
           ))}
         </SelectField>
+        <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+          <TextField
+            label={t.initiativeModifier}
+            type="number"
+            inputMode="numeric"
+            min={MODIFIER_MIN}
+            max={MODIFIER_MAX}
+            step={1}
+            value={modifierText}
+            className="w-40"
+            invalid={has('initiativeInvalid')}
+            onChange={(event) => setModifierText(event.target.value)}
+          />
+          <label className="flex min-h-11 items-center gap-2 text-sm text-parchment">
+            <input
+              type="checkbox"
+              checked={advantage}
+              onChange={(event) => setAdvantage(event.target.checked)}
+            />
+            {t.initiativeAdvantage}
+          </label>
+        </div>
+        <p className={`-mt-2 text-sm ${has('initiativeInvalid') ? 'text-red-300' : 'text-dim'}`}>
+          {has('initiativeInvalid') ? t.problems.initiativeInvalid : t.initiativeModifierHint}
+        </p>
         <TextArea
           label={t.appearance}
           value={appearance}

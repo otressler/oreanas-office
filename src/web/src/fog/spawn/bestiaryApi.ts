@@ -63,6 +63,8 @@ export async function createSpawnType(
           appearance: '',
           notes: '',
           archivedAt: null,
+          initiativeModifier: 0,
+          initiativeAdvantage: false,
         },
       },
     ],

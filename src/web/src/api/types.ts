@@ -138,6 +138,13 @@ export type SpawnCreaturesRequest = Schemas['SpawnCreaturesRequest']
 export type SpawnedCreature = Schemas['SpawnedCreature']
 export type SpawnResult = Schemas['SpawnResult']
 export type TokensAddedEvent = Schemas['TokensAddedEvent']
+// The initiative list (knowledge/features/initiative.md).
+export type InitiativeEntry = Schemas['InitiativeEntry']
+export type InitiativeView = Schemas['InitiativeView']
+export type SetInitiativeRequest = Schemas['SetInitiativeRequest']
+export type InitiativeChangedEvent = Schemas['InitiativeChangedEvent']
+export type InitiativeResult = Schemas['InitiativeResult']
+export type InitiativeRollResult = Schemas['InitiativeRollResult']
 // Spectator join page and spectate endpoints.
 export type JoinLookupResponse = Schemas['JoinLookupResponse']
 export type JoinableSession = Schemas['JoinableSession']

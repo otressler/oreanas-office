@@ -24,6 +24,9 @@ const hubMethods = {
   SetTokensHidden: true,
   SpawnCreatures: true,
   UndoChange: true,
+  RollInitiative: true,
+  SetInitiative: true,
+  ClearInitiative: true,
 } satisfies Record<keyof TableHubCalls, true>
 
 const clientMethods = {
@@ -46,6 +49,7 @@ const clientMethods = {
   TokenHidden: true,
   TokensAdded: true,
   ReloadBoard: true,
+  InitiativeChanged: true,
 } satisfies Record<keyof TableClientEvents, true>
 
 describe('table hub contract', () => {

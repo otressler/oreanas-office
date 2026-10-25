@@ -14,6 +14,11 @@ import type {
   DrawArrowRequest,
   FogChangedEvent,
   HubResult,
+  InitiativeChangedEvent,
+  InitiativeEntry,
+  InitiativeResult,
+  InitiativeRollResult,
+  InitiativeView,
   MoveResult,
   MoveTokenRequest,
   PingRequest,
@@ -27,6 +32,7 @@ import type {
   TokenStatusesChangedEvent,
 } from '../api/types'
 import { encounterKeys } from '../encounters/queries'
+import { applyInitiative, newerInitiative } from '../initiative/initiative'
 import { recheckServer } from '../server/serverStatus'
 import { NotConnectedError, TableConnection, type TableStatus } from './connection'
 import { createTableConnection } from './createConnection'
@@ -88,6 +94,17 @@ export interface Table {
   spawnCreatures: (request: Omit<SpawnCreaturesRequest, 'encounterId'>) => Promise<SpawnResult>
   /** Takes back the latest fog change, reveal or spawn. */
   undoChange: () => Promise<HubResult>
+
+  // ---- Initiative, for the session DM (knowledge/features/initiative.md) ----
+
+  /** The newest list seen from events and results; newerInitiative picks it over an older board. */
+  knownInitiative: InitiativeView | null
+  /** A fresh roll for the setup screen; nothing is saved. */
+  rollInitiative: () => Promise<InitiativeRollResult>
+  /** Saves the whole list; the result's change is already taken into the board. */
+  setInitiative: (entries: InitiativeEntry[]) => Promise<InitiativeResult>
+  /** Switches initiative off for the fight. */
+  clearInitiative: () => Promise<InitiativeResult>
 }
 
 /** Others' pings and arrows as they arrive; not kept anywhere, so the page keeps them. */
@@ -125,6 +142,7 @@ export function useTable(
   const [known, setKnown] = useState<KnownPositions>(() => new Map())
   const [previews, setPreviews] = useState<Previews>(NO_PREVIEWS)
   const [knownFog, setKnownFog] = useState<KnownFog | null>(null)
+  const [knownInitiative, setKnownInitiative] = useState<InitiativeView | null>(null)
   const connection = useRef<TableConnection | null>(null)
 
   const apply = useCallback(
@@ -162,6 +180,15 @@ export function useTable(
       if (next.fog) setKnownFog({ version: next.fog.version, hiddenCells: next.fog.hiddenCells })
     },
     [queryClient, campaignId, encounterId],
+  )
+
+  const takeInitiative = useCallback(
+    (changed: InitiativeChangedEvent) => {
+      if (changed.encounterId !== encounterId) return
+      setKnownInitiative((current) => newerInitiative(current, changed.initiative))
+      updateBoard((board) => applyInitiative(board, changed))
+    },
+    [encounterId, updateBoard],
   )
 
   const reload = useCallback(() => {
@@ -206,6 +233,7 @@ export function useTable(
       onTokenRevealed: (revealed) => updateBoard((board) => applyRevealed(board, revealed)),
       onTokenHidden: (hidden) => updateBoard((board) => applyTokenHidden(board, hidden)),
       onTokensAdded: (added) => updateBoard((board) => applyAdded(board, added)),
+      onInitiativeChanged: takeInitiative,
     })
     connection.current = table
     table.start()
@@ -214,7 +242,17 @@ export function useTable(
       if (connection.current === table) connection.current = null
       setStatus('connecting')
     }
-  }, [running, encounterId, apply, reload, takeStatuses, takeFog, updateBoard, isScreen])
+  }, [
+    running,
+    encounterId,
+    apply,
+    reload,
+    takeStatuses,
+    takeFog,
+    takeInitiative,
+    updateBoard,
+    isScreen,
+  ])
 
   const move = useCallback(
     (request: MoveTokenRequest) =>
@@ -289,6 +327,31 @@ export function useTable(
     [],
   )
 
+  const rollInitiative = useCallback(
+    () => connection.current?.rollInitiative() ?? Promise.reject(new NotConnectedError()),
+    [],
+  )
+  // The result's change goes into the board at once; its event may come a moment later.
+  const takeResult = useCallback(
+    (result: InitiativeResult) => {
+      if (result.change) takeInitiative(result.change)
+      return result
+    },
+    [takeInitiative],
+  )
+  const setInitiative = useCallback(
+    (entries: InitiativeEntry[]) =>
+      connection.current?.setInitiative({ encounterId, entries }).then(takeResult) ??
+      Promise.reject(new NotConnectedError()),
+    [encounterId, takeResult],
+  )
+  const clearInitiative = useCallback(
+    () =>
+      connection.current?.clearInitiative().then(takeResult) ??
+      Promise.reject(new NotConnectedError()),
+    [takeResult],
+  )
+
   return {
     status: running ? status : null,
     known,
@@ -312,5 +375,9 @@ export function useTable(
     setTokensHidden,
     spawnCreatures,
     undoChange,
+    knownInitiative,
+    rollInitiative,
+    setInitiative,
+    clearInitiative,
   }
 }

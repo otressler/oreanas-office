@@ -28,7 +28,8 @@ public static class TableVisibility
     // The board as players get it. Hidden creatures and removed tokens are gone, the layout
     // keeps only revealed cells and the cells under characters, a feature stays only when
     // one of its cells is revealed (then whole), entrances keep only revealed cells, and
-    // the fog lists hidden cells without areas. Statuses are cut to the visible tokens.
+    // the fog lists hidden cells without areas. Statuses are cut to the visible tokens. The
+    // initiative list is the session DM's alone (knowledge/features/initiative.md).
     public static BoardStateResponse ForPlayers(BoardStateResponse board)
     {
         var fog = FogSet(board.Fog);
@@ -44,6 +45,7 @@ public static class TableVisibility
             RemovedTokens = [],
             Statuses = [.. board.Statuses.Where(s => used.Contains(s.Id))],
             Fog = board.Fog is null ? null : board.Fog with { Areas = [] },
+            Initiative = null,
         };
     }
 

@@ -145,6 +145,9 @@ public enum ApiErrorCode
     SpawnInvalid,
     // NotLocalMode: a shared screen was asked for in a session that isn't in local mode.
     NotLocalMode,
+    // InitiativeInvalid: an initiative list names a token outside the encounter or twice, or
+    // a value, modifier or d20 is out of range (knowledge/features/initiative.md).
+    InitiativeInvalid,
     // NotBuilt: a hub method of stage 10 whose lane has not been built yet. Removed with the
     // last stub.
     NotBuilt,

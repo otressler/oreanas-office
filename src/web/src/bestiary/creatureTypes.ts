@@ -2,6 +2,7 @@
 // bestiary. Every change marks the type as not synced; nothing is ever deleted.
 import { useLiveQuery } from 'dexie-react-hooks'
 import type { CreatureSize } from '../api/types'
+import { MODIFIER_MAX, MODIFIER_MIN } from '../initiative/initiative'
 import type { OfflineDb } from '../offline/db'
 import { LOCAL_CREATURE_TYPE_RECORD_VERSION, type LocalCreatureType } from '../offline/model'
 import { markChanged, newSyncState } from '../offline/sync'
@@ -26,10 +27,18 @@ export interface CreatureTypeInput {
   size: CreatureSize
   appearance: string
   notes: string
+  /** A whole number from MODIFIER_MIN to MODIFIER_MAX (knowledge/features/initiative.md); NaN for what isn't one. */
+  initiativeModifier: number
+  initiativeAdvantage: boolean
 }
 
 export type CreatureTypeProblem =
-  'nameMissing' | 'nameTooLong' | 'nameTaken' | 'appearanceTooLong' | 'notesTooLong'
+  | 'nameMissing'
+  | 'nameTooLong'
+  | 'nameTaken'
+  | 'appearanceTooLong'
+  | 'notesTooLong'
+  | 'initiativeInvalid'
 
 export type CreatureTypeResult =
   { ok: true; type: LocalCreatureType } | { ok: false; problems: CreatureTypeProblem[] }
@@ -78,6 +87,9 @@ export function checkCreatureType(
   if (Array.from(input.appearance).length > CREATURE_APPEARANCE_MAX)
     problems.push('appearanceTooLong')
   if (Array.from(input.notes).length > CREATURE_NOTES_MAX) problems.push('notesTooLong')
+  const modifier = input.initiativeModifier
+  if (!Number.isInteger(modifier) || modifier < MODIFIER_MIN || modifier > MODIFIER_MAX)
+    problems.push('initiativeInvalid')
   return problems
 }
 
@@ -99,6 +111,8 @@ export async function createCreatureType(
       size: input.size,
       appearance: input.appearance,
       notes: input.notes,
+      initiativeModifier: input.initiativeModifier,
+      initiativeAdvantage: input.initiativeAdvantage,
       archivedAt: null,
       createdAt: time,
       updatedAt: time,
@@ -133,6 +147,8 @@ export async function saveCreatureType(
       size: input.size,
       appearance: input.appearance,
       notes: input.notes,
+      initiativeModifier: input.initiativeModifier,
+      initiativeAdvantage: input.initiativeAdvantage,
       updatedAt: now(),
       sync: markChanged(stored.sync),
     }

@@ -56,7 +56,14 @@ public record BoardStateResponse(
     BoardViewer Viewer,
     FogView? Fog,
     PlayMode PlayMode,
-    PresenceState Presence);
+    PresenceState Presence,
+    InitiativeView? Initiative = null);
+
+// The initiative list on the session DM's board (knowledge/features/initiative.md); null on
+// every other board. Version: InitiativeVersion; devices keep the list with the higher
+// version. Entries: in turn order, null while initiative is off. Entries of removed tokens
+// stay listed; devices leave them out until the token is back.
+public record InitiativeView(int Version, List<InitiativeEntry>? Entries);
 
 // Who the board was built for (knowledge/features/fog-of-war.md, "Keeping secrets on the
 // wire"). Dm: the session DM's own device, which sees everything. Player: everyone else, and

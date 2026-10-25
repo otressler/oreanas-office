@@ -18,6 +18,8 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `appearance` | text | Short visual description that feeds the icon prompt |
 | `iconAssetId` | → [Asset](/domain/asset.md), nullable | The picked icon version. Generating or uploading adds versions to pick from ([token icons](/features/token-icons.md)) |
 | `notes` | text | DM-only notes |
+| `initiativeModifier` | int | Added to the d20 when its creatures roll initiative, −10 to +20, default 0 ([initiative](/features/initiative.md)) |
+| `initiativeAdvantage` | bool | Its creatures roll initiative with advantage, default false |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the type. Archived types can't be picked for new tokens; placed tokens keep them. Types are never deleted and can be brought back |
 
 # Notes

@@ -234,6 +234,11 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "size")), false);
         }
 
+        if (data.InitiativeModifier is < InitiativeRules.ModifierMin or > InitiativeRules.ModifierMax)
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "initiativeModifier")), false);
+        }
+
         // The database collation ignores case, which is what makes names unique per campaign.
         var taken = await db.CreatureTypes
             .Where(t => t.CampaignId == item.CampaignId && t.Name == name && t.Id != item.Id)
@@ -256,6 +261,8 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
         type.Size = data.Size;
         type.Appearance = appearance;
         type.Notes = notes;
+        type.InitiativeModifier = data.InitiativeModifier;
+        type.InitiativeAdvantage = data.InitiativeAdvantage;
         type.ArchivedAt = data.ArchivedAt;
         type.UpdatedAt = now;
         type.UpdatedByUserId = userId;
@@ -428,6 +435,8 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             token.CreatureTypeId = pushed.CreatureTypeId;
             (token.Number, token.Label) = CreatureLabels.Split(typeNames[pushed.CreatureTypeId], pushed.Label);
             token.Hidden = pushed.Hidden;
+            token.InitiativeModifier = pushed.InitiativeModifier;
+            token.InitiativeAdvantage = pushed.InitiativeAdvantage;
             token.Size = pushed.Size;
             token.X = pushed.X;
             token.Y = pushed.Y;
@@ -490,7 +499,8 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
                 || !seen.Add(token.Id)
                 || usedElsewhere.Contains(token.Id)
                 || (token.Label ?? "").Trim().Length is 0 or > Token.LabelMaxLength
-                || !Enum.IsDefined(token.Size))
+                || !Enum.IsDefined(token.Size)
+                || token.InitiativeModifier is < InitiativeRules.ModifierMin or > InitiativeRules.ModifierMax)
             {
                 return Reject(item, new ApiError(ApiErrorCode.TokenInvalid, field));
             }

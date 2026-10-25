@@ -12,6 +12,7 @@ import type { BrowserContext, WebSocketRoute } from '@playwright/test'
 import type { components } from '../src/api/schema.js'
 import type { MockBackend } from './mockBackend.ts'
 import { fogCall } from './mockFog.ts'
+import { initiativeCall } from './mockInitiative.ts'
 
 type S = components['schemas']
 
@@ -197,6 +198,12 @@ export class MockHub {
       case 'SpawnCreatures':
       case 'UndoChange':
         result = fogCall(this.backend, this, userId, message.target, args)
+        break
+      // ---- The session DM's initiative list: mockInitiative.ts ----
+      case 'RollInitiative':
+      case 'SetInitiative':
+      case 'ClearInitiative':
+        result = initiativeCall(this.backend, this, userId, message.target, args)
         break
       default:
         throw new Error(`Unknown hub method ${message.target}`)

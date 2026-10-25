@@ -77,6 +77,7 @@ const ALL_CODES = {
   readOnlyConnection: true,
   spawnInvalid: true,
   notLocalMode: true,
+  initiativeInvalid: true,
   notBuilt: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 

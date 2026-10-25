@@ -58,7 +58,8 @@ internal static class SyncItems
         type.UpdatedAt,
         updatedBy,
         null,
-        new SyncCreatureTypeData(type.Name, type.Size, type.Appearance, type.Notes, type.ArchivedAt),
+        new SyncCreatureTypeData(
+            type.Name, type.Size, type.Appearance, type.Notes, type.ArchivedAt, type.InitiativeModifier, type.InitiativeAdvantage),
         null,
         null);
 
@@ -97,7 +98,16 @@ internal static class SyncItems
                     .Where(t => t.Kind == TokenKind.Creature)
                     .OrderBy(t => t.CreatedAt)
                     .ThenBy(t => t.Id)
-                    .Select(t => new SyncCreatureToken(t.Id, t.CreatureTypeId!.Value, CreatureLabels.Display(t.CreatureType!.Name, t.Number, t.Label), t.X, t.Y, t.Size, t.Hidden)),
+                    .Select(t => new SyncCreatureToken(
+                        t.Id,
+                        t.CreatureTypeId!.Value,
+                        CreatureLabels.Display(t.CreatureType!.Name, t.Number, t.Label),
+                        t.X,
+                        t.Y,
+                        t.Size,
+                        t.Hidden,
+                        t.InitiativeModifier,
+                        t.InitiativeAdvantage)),
             ],
             encounter.SessionId,
             encounter.MapCopy,

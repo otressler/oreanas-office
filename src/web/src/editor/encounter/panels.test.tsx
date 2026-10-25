@@ -54,6 +54,8 @@ describe('placement panel', () => {
       size: 'small',
       appearance: '',
       notes: '',
+      initiativeModifier: 0,
+      initiativeAdvantage: false,
     })
     renderInEncounter(<PlacePanel />)
     await user.click(await screen.findByRole('button', { name: b.newType }))
@@ -70,12 +72,16 @@ describe('placement panel', () => {
       size: 'medium',
       appearance: '',
       notes: '',
+      initiativeModifier: 0,
+      initiativeAdvantage: false,
     })
     await createCreatureType(dbOf(), CAMPAIGN_ID, {
       name: 'Ork',
       size: 'large',
       appearance: '',
       notes: '',
+      initiativeModifier: 0,
+      initiativeAdvantage: false,
     })
     renderInEncounter(<PlacePanel />)
     const ork = await screen.findByRole('button', { name: b.pick('Ork') })
@@ -103,6 +109,8 @@ describe('placement panel', () => {
       size: 'medium',
       appearance: '',
       notes: '',
+      initiativeModifier: 0,
+      initiativeAdvantage: false,
     })
     renderInEncounter(<PlacePanel />)
     await user.click(await screen.findByRole('button', { name: b.pick('Wolf') }))

@@ -55,15 +55,29 @@ export function isPushableRecord(
 }
 
 function pushTokens(encounter: LocalEncounter): SyncCreatureToken[] {
-  return encounter.tokens.map(({ id, creatureTypeId, label, x, y, size, hidden = false }) => ({
-    id,
-    creatureTypeId,
-    label,
-    x,
-    y,
-    size,
-    hidden,
-  }))
+  return encounter.tokens.map(
+    ({
+      id,
+      creatureTypeId,
+      label,
+      x,
+      y,
+      size,
+      hidden = false,
+      initiativeModifier = null,
+      initiativeAdvantage = null,
+    }) => ({
+      id,
+      creatureTypeId,
+      label,
+      x,
+      y,
+      size,
+      hidden,
+      initiativeModifier,
+      initiativeAdvantage,
+    }),
+  )
 }
 
 const empty = { campaign: null, creatureType: null, map: null, encounter: null }
@@ -96,6 +110,8 @@ export function recordPushItem(kind: ItemKind, record: ItemRecord): SyncPushItem
           appearance: r.appearance,
           notes: r.notes,
           archivedAt: r.archivedAt,
+          initiativeModifier: r.initiativeModifier ?? 0,
+          initiativeAdvantage: r.initiativeAdvantage ?? false,
         },
       }
     }
@@ -155,6 +171,9 @@ export function recordFromServer(item: SyncServerItem, existing?: ItemRecord): I
       size: d.size,
       appearance: d.appearance,
       notes: d.notes,
+      // Absent from servers older than the initiative list.
+      initiativeModifier: d.initiativeModifier ?? 0,
+      initiativeAdvantage: d.initiativeAdvantage ?? false,
       archivedAt: d.archivedAt,
       recordVersion: LOCAL_CREATURE_TYPE_RECORD_VERSION,
     }
