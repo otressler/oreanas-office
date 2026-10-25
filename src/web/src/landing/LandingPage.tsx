@@ -1,4 +1,3 @@
-import '@fontsource-variable/cinzel'
 import './landing.css'
 import {
   useId,
@@ -13,7 +12,7 @@ import { UpdatePrompt } from '../components/UpdatePrompt'
 import { de } from '../text/de'
 import { CompareSlider } from './CompareSlider'
 import { LineIcon, type IconName } from './icons'
-import { BowArrow, ChevronLink, Diamond, Frame, Kicker, Rule } from './ornaments'
+import { BowArrow, ChevronLink, Diamond, Frame, Kicker, Rule } from '../components/ornaments'
 
 const t = de.landing
 

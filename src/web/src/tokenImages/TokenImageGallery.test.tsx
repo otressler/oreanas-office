@@ -258,3 +258,40 @@ describe('the image hub', () => {
     await waitFor(() => expect(fakeImages.hub.open).toHaveLength(0))
   })
 })
+
+describe('campaign covers', () => {
+  it('lists, picks and generates through the cover endpoints, shown as a 3:2 picture', async () => {
+    const cover = tokenImage({ ownerType: 'campaign', ownerId: 'c1' })
+    list = tokenImagesOf([cover], { pickedAssetId: cover.id })
+    calls = mockApi({
+      'GET /api/campaigns/:c/covers': () => json(200, list),
+      'POST /api/campaigns/:c/covers': () =>
+        json(202, tokenImage({ ownerType: 'campaign', ownerId: 'c1', status: 'queued' })),
+      'PUT /api/campaigns/:c/cover': () => json(204),
+    })
+    renderGallery({
+      owner: { type: 'campaign', id: 'c1' },
+      name: 'Die Rabenküste',
+      shape: 'cover',
+      generateLabel: 'Titelbild erzeugen',
+      regenerateLabel: 'Neues Titelbild erzeugen',
+      restyles: false,
+    })
+
+    // The default cover stands in until the list arrives.
+    const picked = screen.getByRole('img', { name: t.pickedAlt('Die Rabenküste') })
+    await waitFor(() => expect(picked).toHaveAttribute('src', cover.url))
+    expect(picked).toHaveClass('aspect-[3/2]')
+
+    await userEvent.click(screen.getByRole('button', { name: t.pickNone }))
+    await waitFor(() => expect(puts()).toHaveLength(1))
+    expect(puts()[0]!.path).toBe('/api/campaigns/c1/cover')
+    expect(puts()[0]!.body).toEqual({ assetId: null })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Neues Titelbild erzeugen' }))
+    const dialog = screen.getByRole('dialog', { name: t.confirm.coverTitle })
+    await userEvent.click(within(dialog).getByRole('button', { name: t.confirm.ok }))
+    await waitFor(() => expect(posts()).toHaveLength(1))
+    expect(posts()[0]!.path).toBe('/api/campaigns/c1/covers')
+  })
+})

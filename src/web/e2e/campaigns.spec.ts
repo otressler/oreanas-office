@@ -23,6 +23,11 @@ function panel(page: Page, title: string) {
   return page.getByRole('region', { name: title })
 }
 
+/** A campaign's card on home: the whole card, not just the link on its name. */
+function campaignCard(page: Page, name: string) {
+  return page.getByRole('article').filter({ has: page.getByRole('link', { name }) })
+}
+
 test('creates a campaign and becomes its DM', async ({ page }) => {
   await createCampaign(page, 'Die Rabenküste')
 
@@ -31,7 +36,7 @@ test('creates a campaign and becomes its DM', async ({ page }) => {
   await expect(page.getByLabel(text.joinCode)).toHaveValue(campaign.joinCode)
 
   await page.getByRole('link', { name: 'Alle Kampagnen' }).click()
-  const card = page.getByRole('link', { name: /Die Rabenküste/ })
+  const card = campaignCard(page, 'Die Rabenküste')
   await expect(card).toContainText(text.roleDm)
 })
 
@@ -92,8 +97,25 @@ test('creates a session and makes it active', async ({ page }) => {
   // The landing page shows the running session.
   await page.getByRole('link', { name: 'Zur Kampagne' }).click()
   await page.getByRole('link', { name: 'Alle Kampagnen' }).click()
-  const card = page.getByRole('link', { name: /Die Rabenküste/ })
+  const card = campaignCard(page, 'Die Rabenküste')
   await expect(card).toContainText(text.activeSessionLabel)
   await expect(card).toContainText('Sitzung 1 – Die Hängebrücke')
   await expect(card).toContainText('Spielleitung: Mira')
+})
+
+test('a DM describes the campaign, and its card on home shows the description', async ({
+  page,
+}) => {
+  await createCampaign(page, 'Die Rabenküste')
+
+  const editor = panel(page, 'Titelbild und Beschreibung')
+  await editor.getByRole('button', { name: 'Bearbeiten' }).click()
+  await editor.getByLabel('Beschreibung').fill('Schmugglerbuchten und ein grünes Leuchtfeuer.')
+  await editor.getByRole('button', { name: 'Speichern' }).click()
+  await expect(page.getByText('Schmugglerbuchten und ein grünes Leuchtfeuer.')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Alle Kampagnen' }).click()
+  const card = campaignCard(page, 'Die Rabenküste')
+  await expect(card).toContainText('Schmugglerbuchten und ein grünes Leuchtfeuer.')
+  await expect(card.locator('img')).toHaveAttribute('src', '/home/cover-default-1536.webp')
 })

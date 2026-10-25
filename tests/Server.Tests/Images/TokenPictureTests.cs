@@ -43,6 +43,18 @@ public sealed class TokenPictureTests
     }
 
     [Fact]
+    public void A_cover_is_the_middle_of_the_picture_at_the_cover_size()
+    {
+        // A square left-red, right-blue picture: the 3:2 cover cuts off top and bottom only.
+        var webp = TokenPicture.FromUpload(SplitJpeg(400, 400), 300, 200, MaxPixels);
+
+        using var bitmap = Decode(webp!);
+        Assert.Equal((300, 200), (bitmap.Width, bitmap.Height));
+        AssertRed(bitmap.GetPixel(60, 100));
+        AssertBlue(bitmap.GetPixel(240, 100));
+    }
+
+    [Fact]
     public void A_small_upload_is_scaled_up_to_the_token_size()
     {
         var webp = TokenPicture.FromUpload(OpaquePng(60, 40), Size, MaxPixels);
@@ -113,7 +125,7 @@ public sealed class TokenPictureTests
     [Fact]
     public void The_models_transparent_png_becomes_a_square_webp_with_alpha()
     {
-        var webp = TokenPicture.FromModel(TransparentPng(1024, 1024), Size);
+        var webp = TokenPicture.FromModel(TransparentPng(1024, 1024), Size, Size);
 
         using var bitmap = Decode(webp);
         Assert.Equal((Size, Size), (bitmap.Width, bitmap.Height));
@@ -124,8 +136,8 @@ public sealed class TokenPictureTests
     [Fact]
     public void A_model_answer_that_isnt_a_picture_throws()
     {
-        Assert.Throws<InvalidOperationException>(() => TokenPicture.FromModel([], Size));
-        Assert.Throws<InvalidOperationException>(() => TokenPicture.FromModel([1, 2, 3], Size));
+        Assert.Throws<InvalidOperationException>(() => TokenPicture.FromModel([], Size, Size));
+        Assert.Throws<InvalidOperationException>(() => TokenPicture.FromModel([1, 2, 3], Size, Size));
     }
 
     [Fact]

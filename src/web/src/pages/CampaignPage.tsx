@@ -1,4 +1,7 @@
 import { Link, useParams } from 'react-router'
+import type { Campaign } from '../api/types'
+import { CampaignCardPanel } from '../campaigns/CampaignCardPanel'
+import { CampaignCover } from '../campaigns/CampaignCover'
 import { useLocalCampaign } from '../campaigns/localCampaigns'
 import { CharactersPanel } from '../campaigns/CharactersPanel'
 import { MembersPanel } from '../campaigns/MembersPanel'
@@ -38,16 +41,43 @@ export function CampaignPage() {
         <span aria-hidden="true">← </span>
         {de.campaign.back}
       </Link>
-      <div className="flex flex-wrap items-center gap-3">
-        <PageTitle>{campaign.data.name}</PageTitle>
-        <Badge>{de.roles[campaign.data.myRole]}</Badge>
-      </div>
+      <CampaignHeader campaign={campaign.data} />
       <SessionsPanel campaign={campaign.data} />
       {campaign.data.myRole === 'dm' && <CampaignMapsLink campaignId={campaign.data.id} />}
       <CharactersPanel campaign={campaign.data} />
       {campaign.data.myRole === 'dm' && <DmStatusListPanel campaignId={campaign.data.id} />}
+      {campaign.data.myRole === 'dm' && <CampaignCardPanel campaign={campaign.data} />}
       <MembersPanel campaign={campaign.data} />
     </div>
+  )
+}
+
+/** The cover with the name over it, as on the home page's card, and the description. */
+function CampaignHeader({ campaign }: { campaign: Campaign }) {
+  return (
+    <header className="mt-4 flex flex-col gap-3">
+      <div className="relative overflow-hidden rounded-sm border border-candle/25">
+        <CampaignCover
+          url={campaign.coverUrl}
+          alt=""
+          sizes="(min-width: 768px) 736px, 100vw"
+          className="aspect-[3/1] w-full sm:aspect-[4/1]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-table via-table/50 to-transparent"
+        />
+        <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end gap-3 px-4 pb-3">
+          <h1 className="font-display text-2xl font-semibold text-parchment drop-shadow-[0_2px_8px_rgb(0_0_0/0.9)] sm:text-3xl">
+            {campaign.name}
+          </h1>
+          <span className="mb-1">
+            <Badge>{de.roles[campaign.myRole]}</Badge>
+          </span>
+        </div>
+      </div>
+      {campaign.description && <p className="text-parchment/85">{campaign.description}</p>}
+    </header>
   )
 }
 

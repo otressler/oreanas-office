@@ -32,7 +32,7 @@ The footer links to the roadmap, the sign-in page and the Impressum ([legal noti
 
 # Look
 
-The app's palette (table, panel, parchment, candle gold) with ornaments drawn in SVG and CSS: double gold frames with fanned corners, rules with a diamond, and buttons with pointed ends. Headings use Cinzel, self-hosted from `@fontsource-variable/cinzel` (Google's font CDN would send visitors' addresses to Google). The page is laid out for phones first, and drifting embers and smoke stop with reduced motion.
+The app's palette (table, panel, parchment, candle gold) with ornaments drawn in SVG and CSS (since 2026-10-25 shared with the app in `components/ornaments.tsx`, see [campaign overview](/features/campaign-overview.md)): double gold frames with fanned corners, rules with a diamond, and buttons with pointed ends. Headings use Cinzel, self-hosted from `@fontsource-variable/cinzel` (Google's font CDN would send visitors' addresses to Google). The page is laid out for phones first, and drifting embers and smoke stop with reduced motion.
 
 # Pictures
 

@@ -70,6 +70,8 @@ const ALL_CODES = {
   imageNotFound: true,
   uploadInvalid: true,
   uploadTooLarge: true,
+  descriptionInvalid: true,
+  descriptionMissing: true,
   statusNotFound: true,
   statusAlreadySet: true,
   levelInvalid: true,

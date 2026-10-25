@@ -126,6 +126,12 @@ public enum ApiErrorCode
     // UploadTooLarge: the body is larger than ImageOptions.UploadMaxBytes.
     UploadTooLarge,
 
+    // Campaign descriptions and covers (knowledge/domain/campaign.md).
+    // DescriptionInvalid: a campaign description longer than Campaign.DescriptionMaxLength.
+    DescriptionInvalid,
+    // DescriptionMissing: a cover is generated from the campaign's description, which is empty.
+    DescriptionMissing,
+
     // Statuses (knowledge/features/statuses.md).
     // StatusNotFound: no library status or custom status of this campaign with this id.
     StatusNotFound,

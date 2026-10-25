@@ -3,9 +3,11 @@ using OreanasOffice.Server.Data;
 
 namespace OreanasOffice.Server.Images;
 
-// Shared rules for token icons and portraits (knowledge/features/token-icons.md) and the
-// icons of custom statuses (knowledge/features/statuses.md): how a version looks to the
-// app, where its picture lies, and the owner's pick.
+// Shared rules for token icons and portraits (knowledge/features/token-icons.md), the
+// icons of custom statuses (knowledge/features/statuses.md) and campaign covers
+// (knowledge/domain/campaign.md): how a version looks to the app, where its picture lies,
+// and the owner's pick. Covers are another kind of asset with the same versions, jobs and
+// picking, so they share the token images' contracts.
 public static class TokenImages
 {
     public static TokenImage ToView(Asset asset) => new(
@@ -20,13 +22,23 @@ public static class TokenImages
         asset.CreatedAt,
         asset.FinishedAt);
 
-    // tokens/creature-type/{ownerId}/{assetId}.webp, tokens/character/… or tokens/status/….
+    // tokens/creature-type/{ownerId}/{assetId}.webp, tokens/character/… or tokens/status/…;
+    // covers/campaign/{campaignId}/{assetId}.webp.
     public static string BlobName(AssetOwnerType ownerType, Guid ownerId, Guid assetId) =>
-        $"tokens/{Folder(ownerType)}/{ownerId}/{assetId}.webp";
+        ownerType == AssetOwnerType.Campaign
+            ? $"covers/campaign/{ownerId}/{assetId}.webp"
+            : $"tokens/{Folder(ownerType)}/{ownerId}/{assetId}.webp";
+
+    // A campaign's versions are covers; everyone else's are token icons.
+    public static AssetKind KindOf(AssetOwnerType ownerType) =>
+        ownerType == AssetOwnerType.Campaign ? AssetKind.CampaignCover : AssetKind.TokenIcon;
 
     // The owner's versions: generated, uploaded and restyled.
-    public static IQueryable<Asset> VersionsOf(AppDbContext db, AssetOwnerType ownerType, Guid ownerId) =>
-        db.Assets.Where(a => a.Kind == AssetKind.TokenIcon && a.OwnerType == ownerType && a.OwnerId == ownerId);
+    public static IQueryable<Asset> VersionsOf(AppDbContext db, AssetOwnerType ownerType, Guid ownerId)
+    {
+        var kind = KindOf(ownerType);
+        return db.Assets.Where(a => a.Kind == kind && a.OwnerType == ownerType && a.OwnerId == ownerId);
+    }
 
     // Newest first, with the pick and what the month has used.
     public static async Task<TokenImagesResponse> ListAsync(
@@ -57,9 +69,9 @@ public static class TokenImages
         VersionsOf(db, ownerType, ownerId).AsNoTracking()
             .SingleOrDefaultAsync(a => a.Id == assetId && a.Status == AssetStatus.Done, cancellationToken);
 
-    // Sets CreatureType.IconAssetId, Character.TokenAssetId or StatusDefinition.IconAssetId.
-    // Not part of the creature type's sync item: its Version and UpdatedAt stay as they are.
-    // False when the owner is gone.
+    // Sets CreatureType.IconAssetId, Character.TokenAssetId, StatusDefinition.IconAssetId or
+    // Campaign.CoverAssetId. Not part of the creature type's sync item: its Version and
+    // UpdatedAt stay as they are. False when the owner is gone.
     public static async Task<bool> PickAsync(
         AppDbContext db, AssetOwnerType ownerType, Guid ownerId, Guid? assetId, CancellationToken cancellationToken)
     {
@@ -74,7 +86,10 @@ public static class TokenImages
             AssetOwnerType.Status => await db.StatusDefinitions
                 .Where(s => s.Id == ownerId)
                 .ExecuteUpdateAsync(set => set.SetProperty(s => s.IconAssetId, assetId), cancellationToken),
-            _ => throw new ArgumentOutOfRangeException(nameof(ownerType), ownerType, "Only creature types, characters and statuses have token images."),
+            AssetOwnerType.Campaign => await db.Campaigns
+                .Where(c => c.Id == ownerId)
+                .ExecuteUpdateAsync(set => set.SetProperty(c => c.CoverAssetId, assetId), cancellationToken),
+            _ => throw new ArgumentOutOfRangeException(nameof(ownerType), ownerType, "Only creature types, characters, statuses and campaigns have pictures to pick."),
         };
         return updated > 0;
     }

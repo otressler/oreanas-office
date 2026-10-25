@@ -15,8 +15,21 @@
   --color-candle-strong: #f0c46e;
 
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  /* Engraved capitals for the landing page's headings; loaded there only (src/landing). */
+  /* Engraved capitals for headings, as on the landing page (@fontsource-variable/cinzel). */
   --font-display: 'Cinzel Variable', Georgia, 'Times New Roman', serif;
+}
+
+/* Buttons with pointed ends (components/ornaments.tsx). The outline is a second, 1 px
+   smaller copy of the shape. */
+.chevron-shape {
+  clip-path: polygon(
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 50%,
+    calc(100% - 14px) 100%,
+    14px 100%,
+    0 50%
+  );
 }
 
 @layer base {

@@ -34,6 +34,8 @@ interface Campaign {
   defaultDmUserId: string
   joinCode: string
   members: { userId: string; role: S['CampaignRole']; joinedAt: string }[]
+  /** Cover uploads and generation aren't mocked: always the default picture. */
+  description?: string | null
 }
 
 interface Character {
@@ -1019,6 +1021,16 @@ export class MockBackend {
     if (statusReply) return statusReply
 
     if (path === base && method === 'GET') return [200, this.campaignResponse(campaign, me.id)]
+    if (path === base && method === 'PUT') {
+      if (!isDm) return [403]
+      const name = String(body.name ?? '').trim()
+      if (!name) return error('nameInvalid', 'name')
+      const description = String(body.description ?? '').trim()
+      if (description.length > 300) return error('descriptionInvalid', 'description')
+      campaign.name = name
+      campaign.description = description || null
+      return [200, this.campaignResponse(campaign, me.id)]
+    }
     if (path === `${base}/join-code` && method === 'POST') {
       if (!isDm) return [403]
       campaign.joinCode = this.newJoinCode()
@@ -1968,6 +1980,8 @@ export class MockBackend {
       joinCode: myRole === 'dm' ? campaign.joinCode : null,
       activeSessionId: this.activeSession(campaign)?.id ?? null,
       members: campaign.members.map((m) => this.memberResponse(m)),
+      description: campaign.description ?? null,
+      coverUrl: null,
     }
   }
 
@@ -1987,6 +2001,19 @@ export class MockBackend {
             activeEncounter: this.activeEncounterSummary(active),
           }
         : null,
+      description: campaign.description ?? null,
+      coverUrl: null,
+      characters: this.characters
+        .filter((c) => c.campaignId === campaign.id)
+        .map((c, colorIndex) => ({
+          id: c.id,
+          name: c.name,
+          colorIndex,
+          color: c.color,
+          portraitUrl: this.pickedTokenImageUrl(c.id),
+          mine: c.ownerUserId === userId,
+        }))
+        .sort((a, b) => Number(b.mine) - Number(a.mine)),
     }
   }
 

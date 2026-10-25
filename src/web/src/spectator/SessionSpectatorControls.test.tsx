@@ -18,6 +18,8 @@ const campaign = (joinCode: string | null): Campaign => ({
   joinCode,
   activeSessionId: ids.session,
   members: [],
+  description: null,
+  coverUrl: null,
 })
 
 function show(joinCode: string | null, status: 'active' | 'ended' = 'active') {

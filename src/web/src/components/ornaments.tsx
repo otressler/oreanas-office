@@ -1,6 +1,7 @@
-// Gold line ornaments for the landing page: frames with corner fans, rules with a
-// diamond, buttons with pointed ends. Drawn in SVG and CSS, so they stay sharp at any size.
-import type { ReactNode } from 'react'
+// Gold line ornaments from the landing page, also used in the app: frames with corner fans,
+// rules with a diamond, buttons with pointed ends. Drawn in SVG and CSS, so they stay sharp
+// at any size.
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Link } from 'react-router'
 
 export function Diamond({ className = '' }: { className?: string }) {
@@ -138,23 +139,15 @@ const chevronColours: Record<ChevronVariant, { edge: string; fill: string; text:
   },
 }
 
-/** A link styled as a button with pointed ends and a diamond above and below. */
-export function ChevronLink({
-  children,
-  variant = 'dark',
-  small = false,
-  className = '',
-  ...target
-}: { children: ReactNode; variant?: ChevronVariant; small?: boolean; className?: string } & (
-  { to: string } | { href: string }
-)) {
+/** The pointed shape with its outline, the two diamonds and the label. */
+function ChevronInner({ children, variant }: { children: ReactNode; variant: ChevronVariant }) {
   const colours = chevronColours[variant]
-  const inner = (
+  return (
     <>
-      <span aria-hidden="true" className={`landing-chevron absolute inset-0 ${colours.edge}`} />
+      <span aria-hidden="true" className={`chevron-shape absolute inset-0 ${colours.edge}`} />
       <span
         aria-hidden="true"
-        className={`landing-chevron absolute inset-px transition-colors ${colours.fill}`}
+        className={`chevron-shape absolute inset-px transition-colors ${colours.fill}`}
       />
       <Diamond className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-candle-strong" />
       <Diamond className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-candle-strong" />
@@ -165,8 +158,25 @@ export function ChevronLink({
       </span>
     </>
   )
+}
+
+function chevronClass(small: boolean, className: string) {
   const size = small ? 'min-h-11 px-7' : 'min-h-12 px-10'
-  const classes = `group relative inline-flex items-center justify-center ${size} ${className}`
+  return `group relative inline-flex items-center justify-center ${size} ${className}`
+}
+
+/** A link styled as a button with pointed ends and a diamond above and below. */
+export function ChevronLink({
+  children,
+  variant = 'dark',
+  small = false,
+  className = '',
+  ...target
+}: { children: ReactNode; variant?: ChevronVariant; small?: boolean; className?: string } & (
+  { to: string } | { href: string }
+)) {
+  const inner = <ChevronInner variant={variant}>{children}</ChevronInner>
+  const classes = chevronClass(small, className)
   return 'to' in target ? (
     <Link to={target.to} className={classes}>
       {inner}
@@ -175,6 +185,34 @@ export function ChevronLink({
     <a href={target.href} className={classes}>
       {inner}
     </a>
+  )
+}
+
+/** A button with pointed ends, like ChevronLink; `busy` as on the app's Button. */
+export function ChevronButton({
+  children,
+  variant = 'dark',
+  small = false,
+  busy = false,
+  className = '',
+  type = 'button',
+  disabled,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ChevronVariant
+  small?: boolean
+  busy?: boolean
+}) {
+  return (
+    <button
+      type={type}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
+      className={chevronClass(small, `disabled:opacity-60 ${className}`)}
+      {...props}
+    >
+      <ChevronInner variant={variant}>{children}</ChevronInner>
+    </button>
   )
 }
 

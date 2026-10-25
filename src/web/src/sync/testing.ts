@@ -23,6 +23,9 @@ import {
 import { newSyncState, pulledSyncState } from '../offline/sync'
 import { json, testUser } from '../test/api'
 
+/** A campaign summary's card fields: no description, the default cover, no characters. */
+export const NO_CARD = { description: null, coverUrl: null, characters: [] }
+
 export const CAMPAIGN = 'c0000000-0000-0000-0000-000000000001'
 export const SESSION = '50000000-0000-0000-0000-000000000001'
 const TIME = '2026-10-14T10:00:00.000Z'
@@ -130,6 +133,7 @@ export class FakeServer {
           name: item.campaign!.name.trim(),
           myRole: 'dm',
           activeSession: null,
+          ...NO_CARD,
         })
       }
       const server = this.serverItem(item, 1)

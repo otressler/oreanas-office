@@ -588,6 +588,54 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "Campaigns"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCampaignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/campaigns/{campaignId}/join-code": {
@@ -2657,6 +2705,193 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/covers": {
+      "get": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImagesResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/covers/upload": {
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/cover": {
+      "put": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/statuses": {
       "get": {
         "tags": [
@@ -3296,6 +3531,8 @@
           "imageNotFound",
           "uploadInvalid",
           "uploadTooLarge",
+          "descriptionInvalid",
+          "descriptionMissing",
           "statusNotFound",
           "statusAlreadySet",
           "levelInvalid",
@@ -3374,7 +3611,8 @@
           "battleMap",
           "creatureType",
           "character",
-          "status"
+          "status",
+          "campaign"
         ]
       },
       "AssetStatus": {
@@ -3813,6 +4051,45 @@
           "player"
         ]
       },
+      "CampaignCharacterSummary": {
+        "required": [
+          "id",
+          "name",
+          "colorIndex",
+          "color",
+          "portraitUrl",
+          "mine"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "colorIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "color": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "portraitUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mine": {
+            "type": "boolean"
+          }
+        }
+      },
       "CampaignResponse": {
         "required": [
           "id",
@@ -3821,7 +4098,9 @@
           "myRole",
           "joinCode",
           "activeSessionId",
-          "members"
+          "members",
+          "description",
+          "coverUrl"
         ],
         "type": "object",
         "properties": {
@@ -3857,6 +4136,18 @@
             "items": {
               "$ref": "#/components/schemas/MemberResponse"
             }
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "coverUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3871,7 +4162,10 @@
           "id",
           "name",
           "myRole",
-          "activeSession"
+          "activeSession",
+          "description",
+          "coverUrl",
+          "characters"
         ],
         "type": "object",
         "properties": {
@@ -3894,6 +4188,24 @@
                 "$ref": "#/components/schemas/ActiveSessionSummary"
               }
             ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "coverUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "characters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CampaignCharacterSummary"
+            }
           }
         }
       },
@@ -4594,6 +4906,8 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",
@@ -4870,6 +5184,8 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",
@@ -4968,6 +5284,8 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",
@@ -5925,6 +6243,8 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",
@@ -6571,6 +6891,8 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",
@@ -6849,6 +7171,8 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",
@@ -7934,6 +8258,23 @@
           }
         }
       },
+      "UpdateCampaignRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "UpdateProfileRequest": {
         "required": [
           "displayName"
@@ -8142,6 +8483,8 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",

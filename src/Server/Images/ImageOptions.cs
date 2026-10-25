@@ -62,6 +62,25 @@ public sealed class ImageOptions
     public string TokenStyle { get; set; } =
         "Painterly fantasy illustration, strong silhouette, rich but not neon colours, soft rim light, readable at small size.";
 
+    // Campaign covers (knowledge/domain/campaign.md): the model paints a 3:2 picture at
+    // CoverRequestWidth × CoverRequestHeight; the server keeps a CoverWidth × CoverHeight
+    // WebP, enough for a card about 600 CSS pixels wide on a sharp screen. Uploads are
+    // cropped to the same size.
+    public string CoverQuality { get; set; } = "high";
+
+    public int CoverRequestWidth { get; set; } = 1536;
+
+    public int CoverRequestHeight { get; set; } = 1024;
+
+    public int CoverWidth { get; set; } = 1200;
+
+    public int CoverHeight { get; set; } = 800;
+
+    // The style block of every cover, word for word, in the look of the landing page's
+    // pictures (.claude/skills/image-assets/references/prompts.md, "Campaign cover").
+    public string CoverStyle { get; set; } =
+        "Dark fantasy digital painting in the manner of cinematic role-playing game key art: deep near-black shadows, warm candle-gold and ember-red light, painterly brush texture, dramatic rim light, drifting smoke.";
+
     // Uploaded portraits: the largest request body accepted, and the largest edge in pixels
     // the server decodes. The app crops and shrinks a photo before uploading it.
     public int UploadMaxBytes { get; set; } = 10 * 1024 * 1024;

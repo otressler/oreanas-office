@@ -387,14 +387,14 @@ public static class TokenImageEndpoints
             var asset = new Asset
             {
                 Id = Guid.NewGuid(),
-                Kind = AssetKind.TokenIcon,
+                Kind = TokenImages.KindOf(ownerType),
                 OwnerType = ownerType,
                 OwnerId = ownerId,
                 CampaignId = result.CampaignId,
                 Origin = AssetOrigin.Generated,
                 Status = AssetStatus.Queued,
                 Model = settings.Deployment,
-                Quality = settings.TokenQuality,
+                Quality = ownerType == AssetOwnerType.Campaign ? settings.CoverQuality : settings.TokenQuality,
                 SourceAssetId = sourceAssetId,
                 CreatedAt = now,
                 CreatedByUserId = userId,
@@ -430,8 +430,10 @@ public static class TokenImageEndpoints
 
     // Checks an uploaded picture and stores it as a new Done version of the owner, picked at
     // once: the version, or why not (UploadInvalid, UploadTooLarge). The pick goes through
-    // TokenImages.PickAsync, so a creature type's sync version stays as it is.
-    private static async Task<(TokenImage? Image, ApiErrorCode? Error)> UploadAsync(
+    // TokenImages.PickAsync, so a creature type's sync version stays as it is. A campaign's
+    // upload becomes a cover of ImageOptions.CoverWidth × CoverHeight, everyone else's a
+    // square of TokenPixels.
+    internal static async Task<(TokenImage? Image, ApiErrorCode? Error)> UploadAsync(
         HttpRequest request,
         AppDbContext db,
         ImageOptions settings,
@@ -461,8 +463,11 @@ public static class TokenImageEndpoints
         }
 
         // The bytes must be the picture the Content-Type says.
+        var (width, height) = ownerType == AssetOwnerType.Campaign
+            ? (settings.CoverWidth, settings.CoverHeight)
+            : (settings.TokenPixels, settings.TokenPixels);
         var picture = TokenPicture.Identify(body) == declared
-            ? TokenPicture.FromUpload(body, settings.TokenPixels, settings.UploadMaxPixels)
+            ? TokenPicture.FromUpload(body, width, height, settings.UploadMaxPixels)
             : null;
         if (picture is null)
         {
@@ -473,7 +478,7 @@ public static class TokenImageEndpoints
         var asset = new Asset
         {
             Id = Guid.NewGuid(),
-            Kind = AssetKind.TokenIcon,
+            Kind = TokenImages.KindOf(ownerType),
             OwnerType = ownerType,
             OwnerId = ownerId,
             CampaignId = campaignId,

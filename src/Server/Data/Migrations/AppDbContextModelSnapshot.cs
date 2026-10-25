@@ -269,11 +269,18 @@ namespace OreanasOffice.Server.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CoverAssetId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("DefaultDmUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("JoinCode")
                         .IsRequired()
@@ -287,6 +294,8 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasColumnType("nvarchar(80)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CoverAssetId");
 
                     b.HasIndex("DefaultDmUserId");
 

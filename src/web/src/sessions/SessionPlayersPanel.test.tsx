@@ -23,6 +23,8 @@ const campaign: Campaign = {
     { userId: 'u-mira', displayName: 'Mira', role: 'player', joinedAt: '2026-10-02T00:00:00Z' },
     { userId: 'u-brom', displayName: 'Brom', role: 'player', joinedAt: '2026-10-03T00:00:00Z' },
   ],
+  description: null,
+  coverUrl: null,
 }
 
 const characters = [
