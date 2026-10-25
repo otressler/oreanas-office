@@ -57,7 +57,7 @@ A status list ("Zustandsliste" in the app) is the list a person picks from when 
 
 - **Each character has one**, managed on the character's page by whoever can edit the character: its owner and `dm` members ([character](/domain/character.md)). A new character starts with all 15 conditions; the owner removes the ones they never use and adds custom ones.
 - **Each `dm` member has their own DM status list** in the campaign, which also starts with all 15 conditions (question 22, confirmed on 2026-10-16).
-- **What the picker shows**: a player sees the status lists of their own characters in this fight (one list if they play one character). The session DM sees their own DM status list first, then every character's status list in the fight, under the character's name, so they can put on a status a player's character caused.
+- **What the picker shows**: a player sees the status lists of the characters they play in this session that are in this fight (one list if they play one character; [character](/domain/character.md), "Who plays it"). The session DM sees their own DM status list first, then every character's status list in the fight, under the character's name, so they can put on a status a player's character caused.
 - Picking a status puts it on at once; it's easy to remove, so there is no confirm step.
 
 # Custom statuses

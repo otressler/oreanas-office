@@ -1362,6 +1362,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/characters/{characterId}/player": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    sessionId: string;
+                    characterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetCharacterPlayerRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/join/{joinCode}": {
         parameters: {
             query?: never;
@@ -3119,7 +3187,7 @@ export interface components {
             field?: null | string;
         };
         /** @enum {unknown} */
-        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt";
+        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt";
         ArrowDrawnEvent: {
             /** Format: uuid */
             encounterId: string;
@@ -3305,6 +3373,8 @@ export interface components {
             size: components["schemas"]["CreatureSize"];
             appearance?: null | string;
             color?: null | string;
+            /** Format: uuid */
+            ownerUserId?: null | string;
         };
         CharacterResponse: {
             /** Format: uuid */
@@ -3449,7 +3519,7 @@ export interface components {
         };
         HubResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
         };
         ImageBudgetResponse: {
             /** Format: double */
@@ -3502,12 +3572,12 @@ export interface components {
         };
         InitiativeResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
             change: components["schemas"]["InitiativeChangedEvent"] | null;
         };
         InitiativeRollResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
             entries: components["schemas"]["InitiativeEntry"][] | null;
         };
         InitiativeView: {
@@ -3739,7 +3809,7 @@ export interface components {
         };
         MoveResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
             move: components["schemas"]["TokenMovedEvent"] | null;
         };
         MoveTokenRequest: {
@@ -3822,6 +3892,13 @@ export interface components {
             token: string;
             newPassword: string;
         };
+        SessionCharacterPlayerResponse: {
+            /** Format: uuid */
+            characterId: string;
+            /** Format: uuid */
+            userId: string;
+            displayName: string;
+        };
         SessionResponse: {
             /** Format: uuid */
             id: string;
@@ -3840,9 +3917,14 @@ export interface components {
             interruptedEncounter: null | components["schemas"]["ActiveEncounterSummary"];
             encounters: components["schemas"]["EncounterSummaryResponse"][];
             playMode: components["schemas"]["PlayMode"];
+            characterPlayers: components["schemas"]["SessionCharacterPlayerResponse"][];
         };
         /** @enum {unknown} */
         SessionStatus: "planned" | "active" | "ended";
+        SetCharacterPlayerRequest: {
+            /** Format: uuid */
+            userId: null | string;
+        };
         SetInitiativeRequest: {
             /** Format: uuid */
             encounterId: string;
@@ -3884,7 +3966,7 @@ export interface components {
         };
         SpawnResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
             tokenIds: null | string[];
         };
         SpectateSessionRequest: {
@@ -3934,7 +4016,7 @@ export interface components {
         };
         StatusResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
             change: components["schemas"]["TokenStatusesChangedEvent"] | null;
         };
         StoreMapResponse: {
@@ -4244,7 +4326,7 @@ export interface components {
         };
         WatchResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "notBuilt" | null;
             /** @enum {unknown} */
             mode: "player" | "spectator" | "sharedScreen";
             session: components["schemas"]["WatchedSession"] | null;

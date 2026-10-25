@@ -1201,6 +1201,87 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/characters/{characterId}/player": {
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCharacterPlayerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/join/{joinCode}": {
       "get": {
         "tags": [
@@ -3173,6 +3254,7 @@
           "notSessionDm",
           "sessionInvalid",
           "colorInvalid",
+          "notAMember",
           "textTooLong",
           "mapSizeInvalid",
           "layoutVersionUnsupported",
@@ -3896,6 +3978,13 @@
               "null",
               "string"
             ]
+          },
+          "ownerUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -4463,6 +4552,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -4738,6 +4828,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -4835,6 +4926,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -5791,6 +5883,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -6139,6 +6232,27 @@
           }
         }
       },
+      "SessionCharacterPlayerResponse": {
+        "required": [
+          "characterId",
+          "userId",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
       "SessionResponse": {
         "required": [
           "id",
@@ -6153,7 +6267,8 @@
           "activeEncounter",
           "interruptedEncounter",
           "encounters",
-          "playMode"
+          "playMode",
+          "characterPlayers"
         ],
         "type": "object",
         "properties": {
@@ -6216,6 +6331,12 @@
           },
           "playMode": {
             "$ref": "#/components/schemas/PlayMode"
+          },
+          "characterPlayers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionCharacterPlayerResponse"
+            }
           }
         }
       },
@@ -6225,6 +6346,21 @@
           "active",
           "ended"
         ]
+      },
+      "SetCharacterPlayerRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
       },
       "SetInitiativeRequest": {
         "required": [
@@ -6393,6 +6529,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -6670,6 +6807,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -7962,6 +8100,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",

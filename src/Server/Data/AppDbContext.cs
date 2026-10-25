@@ -51,6 +51,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityUser
 
     public DbSet<SessionSpectator> SessionSpectators => Set<SessionSpectator>();
 
+    public DbSet<SessionCharacterPlayer> SessionCharacterPlayers => Set<SessionCharacterPlayer>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

@@ -2028,6 +2028,7 @@ export class MockBackend {
       interruptedEncounter: interrupted ? { id: interrupted.id, name: interrupted.name } : null,
       encounters: memberOf(campaign, userId)?.role === 'dm' ? this.sessionEncounters(session) : [],
       playMode: session.playMode ?? 'byod',
+      characterPlayers: [],
     }
   }
 

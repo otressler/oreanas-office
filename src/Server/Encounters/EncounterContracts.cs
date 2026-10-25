@@ -118,8 +118,9 @@ public record BoardMap(
 // wider than 3:1 lies outside the map.
 public record BoardBackground(Guid AssetId, string Url, double X, double Y, double Width, double Height, double Rotation);
 
-// Label: the character's name or the creature's label. OwnerUserId: the character's
-// owner, null for creatures. ColorIndex: characters get a fixed ring colour by the
+// Label: the character's name or the creature's label. OwnerUserId: who plays the
+// character in this session, its owner unless the session DM handed it to someone else
+// (CharacterPlayers); null for creatures. ColorIndex: characters get a fixed ring colour by the
 // order they were added to the campaign (0, 1, 2…); null for creatures, which share
 // one colour. Color: the ring colour the character's player picked ("#rrggbb"), which
 // replaces the one ColorIndex gives; null for that default and for creatures. Size

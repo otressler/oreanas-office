@@ -26,7 +26,8 @@ public static class BoardTokens
                 Kind = t.Kind,
                 CharacterId = t.CharacterId,
                 CreatureTypeId = t.CreatureTypeId,
-                OwnerUserId = (Guid?)t.Character!.OwnerUserId,
+                // Who plays the character in this session (CharacterPlayers).
+                OwnerUserId = t.Character!.SessionPlayers.Where(p => p.SessionId == t.Encounter.SessionId).Select(p => (Guid?)p.UserId).FirstOrDefault() ?? (Guid?)t.Character!.OwnerUserId,
                 CharacterName = t.Character!.Name,
                 X = t.X,
                 Y = t.Y,

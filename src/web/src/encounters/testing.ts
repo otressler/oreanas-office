@@ -96,6 +96,7 @@ export function session(fields: Partial<Session> = {}): Session {
     interruptedEncounter: null,
     encounters: [],
     playMode: 'byod',
+    characterPlayers: [],
     ...fields,
   }
 }

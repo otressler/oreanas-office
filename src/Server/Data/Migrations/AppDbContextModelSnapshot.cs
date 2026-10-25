@@ -840,6 +840,26 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.ToTable("Sessions", (string)null);
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionCharacterPlayer", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("SessionId", "CharacterId");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SessionCharacterPlayers", (string)null);
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionSpectator", b =>
                 {
                     b.Property<Guid>("SessionId")
@@ -1408,6 +1428,33 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Dm");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionCharacterPlayer", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Characters.Character", "Character")
+                        .WithMany("SessionPlayers")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Sessions.GameSession", "Session")
+                        .WithMany("CharacterPlayers")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("Session");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionSpectator", b =>
                 {
                     b.HasOne("OreanasOffice.Server.Sessions.GameSession", "Session")
@@ -1534,6 +1581,11 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Sessions");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Characters.Character", b =>
+                {
+                    b.Navigation("SessionPlayers");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Encounters.Encounter", b =>
                 {
                     b.Navigation("Tokens");
@@ -1546,6 +1598,8 @@ namespace OreanasOffice.Server.Data.Migrations
 
             modelBuilder.Entity("OreanasOffice.Server.Sessions.GameSession", b =>
                 {
+                    b.Navigation("CharacterPlayers");
+
                     b.Navigation("Encounters");
                 });
 
