@@ -1,7 +1,7 @@
 // Creature types in the browser (knowledge/domain/creature-type.md): the campaign's
 // bestiary. Every change marks the type as not synced; nothing is ever deleted.
 import { useLiveQuery } from 'dexie-react-hooks'
-import type { CreatureSize } from '../api/types'
+import type { CreatureSize, InitiativeRollMode } from '../api/types'
 import { MODIFIER_MAX, MODIFIER_MIN } from '../initiative/initiative'
 import type { OfflineDb } from '../offline/db'
 import { LOCAL_CREATURE_TYPE_RECORD_VERSION, type LocalCreatureType } from '../offline/model'
@@ -29,7 +29,7 @@ export interface CreatureTypeInput {
   notes: string
   /** A whole number from MODIFIER_MIN to MODIFIER_MAX (knowledge/features/initiative.md); NaN for what isn't one. */
   initiativeModifier: number
-  initiativeAdvantage: boolean
+  initiativeRollMode: InitiativeRollMode
 }
 
 export type CreatureTypeProblem =
@@ -112,7 +112,7 @@ export async function createCreatureType(
       appearance: input.appearance,
       notes: input.notes,
       initiativeModifier: input.initiativeModifier,
-      initiativeAdvantage: input.initiativeAdvantage,
+      initiativeRollMode: input.initiativeRollMode,
       archivedAt: null,
       createdAt: time,
       updatedAt: time,
@@ -148,7 +148,7 @@ export async function saveCreatureType(
       appearance: input.appearance,
       notes: input.notes,
       initiativeModifier: input.initiativeModifier,
-      initiativeAdvantage: input.initiativeAdvantage,
+      initiativeRollMode: input.initiativeRollMode,
       updatedAt: now(),
       sync: markChanged(stored.sync),
     }

@@ -64,7 +64,7 @@ export async function createSpawnType(
           notes: '',
           archivedAt: null,
           initiativeModifier: 0,
-          initiativeAdvantage: false,
+          initiativeRollMode: 'normal',
         },
       },
     ],

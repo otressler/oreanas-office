@@ -59,6 +59,13 @@ test('the DM rolls initiative, drags an entry, selects from the list and ends it
     dialog.getByRole('spinbutton', { name: t.valueOf(creatures[1]!.label) }),
   ).toHaveValue(String(mockRoll(1)))
   await dialog.getByRole('spinbutton', { name: t.valueOf('Held') }).fill('12')
+  // Disadvantage on the creature that rolled a 1: a second d20, and the 1 still counts.
+  const lowest = creatures[2]!.label
+  await dialog.getByRole('combobox', { name: `Wurfart für ${lowest}` }).selectOption('disadvantage')
+  await expect(
+    dialog.getByTestId(`setup-${creatures[2]!.id}`).getByTestId('rolls').locator('span'),
+  ).toHaveCount(2)
+  await expect(dialog.getByRole('spinbutton', { name: t.valueOf(lowest) })).toHaveValue('1')
   await shot(dm, 'setup')
   await dialog.getByRole('button', { name: t.save }).click()
   await expect(dialog).toHaveCount(0)

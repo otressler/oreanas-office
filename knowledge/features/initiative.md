@@ -1,7 +1,7 @@
 ---
 type: Feature
 title: Initiative
-description: An optional initiative list for the session DM, switched on per fight; players say their rolls, creatures roll with a modifier and optional advantage from their type or their own, and the DM keeps the order by drag and drop.
+description: An optional initiative list for the session DM, switched on per fight; players say their rolls, creatures roll with a modifier and normally, with advantage or with disadvantage, from their type or their own, and the DM keeps the order by drag and drop.
 tags: [feature, dm, fight, tokens]
 status: draft
 generated: { by: claude-code/claude-opus-5-5, at: 2026-10-25T10:30:00Z }
@@ -17,19 +17,20 @@ The first DM tool at the table, asked for by the project owner on 2026-10-25. Th
 - **Order only.** The list shows the order and the values. There is no current-turn marker, no round counter and no "next turn".
 - **Session DM only.** Players, other `dm` members, spectator screens and shared screens never get the list, nor creatures' initiative settings.
 - **One roll per creature.** Each creature token rolls its own d20, so every goblin has its own entry.
+- **Advantage and disadvantage** (added 2026-10-25). A creature rolls normally, with advantage (two d20, the higher counts) or with disadvantage (two d20, the lower counts), like the dice tray.
 - **Spawned creatures roll and slot in.** A creature added during a fight while initiative is on rolls by itself and joins the list before the first entry with a lower value (or none).
 
 # Creature settings
 
-- A [creature type](/domain/creature-type.md) has an **initiative modifier** (a whole number from −10 to +20, default 0) and **advantage on initiative** (default off), set in the bestiary form.
+- A [creature type](/domain/creature-type.md) has an **initiative modifier** (a whole number from −10 to +20, default 0) and an **initiative roll**: Normal (the default), Vorteil (advantage) or Nachteil (disadvantage), set in the bestiary form. Disadvantage was added by the project owner on 2026-10-25, after advantage.
 - Each creature [token](/domain/token.md) on an encounter map can override both in the map editor's creature panel. An empty modifier and "Wie die Art" take the type's values. Both sync with the encounter like the other creature fields ([offline prep](/decisions/offline-prep-pwa.md)).
 - Characters have no initiative settings: players always roll for themselves and tell the DM.
 
 # Setup
 
 1. While the fight runs, the session DM taps **"Initiative würfeln"** in the fight's top bar. It needs a connection to the table.
-2. The server rolls every creature on the board: one d20, or two with advantage keeping the higher, plus the modifier. Rolling on the server keeps the modifiers off players' devices.
-3. The setup screen lists the characters, where the DM types in the values the players say (a character may stay empty for now), and the creatures with modifier, advantage, the d20s, the value and "neu würfeln". Changing a creature's modifier or advantage here only applies to this fight. Changing the modifier moves the value with the roll; switching advantage on rolls a second d20; typing a value replaces the roll. "Alle Kreaturen neu würfeln" rolls them all again.
+2. The server rolls every creature on the board: one d20, or two keeping the higher with advantage or the lower with disadvantage, plus the modifier. Rolling on the server keeps the modifiers off players' devices.
+3. The setup screen lists the characters, where the DM types in the values the players say (a character may stay empty for now), and the creatures with modifier, roll (Normal, Vorteil, Nachteil), the d20s with the one that doesn't count struck through, the value and "neu würfeln". Changing a creature's modifier or roll here only applies to this fight. Changing the modifier moves the value with the roll; switching from Normal to Vorteil or Nachteil rolls a second d20, switching between them keeps both, and back to Normal keeps the first; typing a value replaces the roll. "Alle Kreaturen neu würfeln" rolls them all again.
 4. **"Übernehmen"** saves the list sorted by value, highest first, entries without a value last, ties by the higher modifier and then by the order they had. Saving switches initiative on.
 
 **"Bearbeiten"** opens the setup screen again with the saved values; tokens without an entry roll fresh. Saving sorts again.
@@ -48,7 +49,7 @@ The list is saved on the [encounter](/domain/encounter.md), so it survives reloa
 
 # As built (2026-10-25)
 
-- Server: `Encounter.Initiative` (JSON column `InitiativeJson`, a list of `{ tokenId, value, modifier, advantage, rolls }`) and `InitiativeVersion`, a concurrency token; `CreatureType.InitiativeModifier`/`InitiativeAdvantage`; `Token.InitiativeModifier`/`InitiativeAdvantage`, nullable. Migration `Initiative`. Rules in `Encounters/Initiative.cs` (`InitiativeRules`), the table side in `Table/TableInitiative.cs` and `TableHub.Initiative.cs`.
+- Server: `Encounter.Initiative` (JSON column `InitiativeJson`, a list of `{ tokenId, value, modifier, mode, rolls }`) and `InitiativeVersion`, a concurrency token; `CreatureType.InitiativeModifier`/`InitiativeRollMode`; `Token.InitiativeModifier`/`InitiativeRollMode`, nullable. The roll mode `InitiativeRollMode` is `Normal`, `Advantage` or `Disadvantage`. Migrations `Initiative` and `InitiativeRollMode`; the second turns the first's advantage columns and saved lists into roll modes. Rules in `Encounters/Initiative.cs` (`InitiativeRules`), the table side in `Table/TableInitiative.cs` and `TableHub.Initiative.cs`.
 - Hub methods `RollInitiative` (not saved), `SetInitiative` (the whole list in order) and `ClearInitiative`, session DM only from a player connection; `InitiativeChanged` goes to the session DM's group only. Spawning adds to the list in the same save (`TableSpawns`). Bad lists are rejected with `initiativeInvalid`.
 - The board's `initiative` field is set on the session DM's board only; `TableVisibility.ForPlayers` drops it.
 - Frontend in `src/web/src/initiative/`: `initiative.ts` (pure rules), `InitiativeSetup.tsx`, `InitiativeList.tsx` (pointer drag and drop, keyboard moves) and `useInitiative.tsx`, wired into `FightTable`.

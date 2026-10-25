@@ -4,6 +4,7 @@ using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Sync;
 using OreanasOffice.Server.Table;
 using static OreanasOffice.Server.Tests.CampaignTestApi;
+using Mode = OreanasOffice.Server.Encounters.InitiativeRollMode;
 using static OreanasOffice.Server.Tests.SyncTestApi;
 
 namespace OreanasOffice.Server.Tests;
@@ -26,7 +27,7 @@ public sealed class InitiativeTests(AppFixture fixture) : IClassFixture<AppFixtu
         Assert.Equal(SyncOutcome.Saved, typed.Outcome);
 
         var tokens = data.Tokens
-            .Select(t => (t.X, t.Y) == (1, 3) ? t with { InitiativeModifier = 5, InitiativeAdvantage = true } : t)
+            .Select(t => (t.X, t.Y) == (1, 3) ? t with { InitiativeModifier = 5, InitiativeRollMode = Mode.Advantage } : t)
             .ToArray();
         var pushed = await table.Dm.PushOneAsync(Encounter(
             table.CampaignId, table.Session.Id, data.BattleMapId, encounter.Id, encounter.Version, data.Name, data.Status, data.ArchivedAt, tokens));
@@ -42,9 +43,9 @@ public sealed class InitiativeTests(AppFixture fixture) : IClassFixture<AppFixtu
     private static Task<InitiativeResult> ClearAsync(FogTestClient device, Guid encounterId) =>
         device.InvokeAsync<InitiativeResult>(nameof(ITableHub.ClearInitiative), encounterId);
 
-    private static InitiativeEntry Character(Guid tokenId, int? value) => new(tokenId, value, 0, false, []);
+    private static InitiativeEntry Character(Guid tokenId, int? value) => new(tokenId, value, 0, Mode.Normal, []);
 
-    private static InitiativeEntry Creature(Guid tokenId, int roll, int modifier) => new(tokenId, roll + modifier, modifier, false, [roll]);
+    private static InitiativeEntry Creature(Guid tokenId, int roll, int modifier) => new(tokenId, roll + modifier, modifier, Mode.Normal, [roll]);
 
     // Aria 18, Goblin 15, Thorin (not told yet), Ogre 9: a list in an order the DM chose.
     private static InitiativeEntry[] SomeList(RunningFight fight) =>
@@ -62,13 +63,13 @@ public sealed class InitiativeTests(AppFixture fixture) : IClassFixture<AppFixtu
         var entries = rolled.Entries!;
         // The characters come first, in no particular order between them.
         Assert.Equal(new[] { fight.Aria, fight.Thorin }.Order(), entries.Take(2).Select(e => e.TokenId).Order());
-        Assert.All(entries.Take(2), e => Assert.Equal((null, 0, false, 0), (e.Value, e.Modifier, e.Advantage, e.Rolls.Count)));
+        Assert.All(entries.Take(2), e => Assert.Equal((null, 0, Mode.Normal, 0), (e.Value, e.Modifier, e.Mode, e.Rolls.Count)));
         var goblin = entries.Single(e => e.TokenId == fight.Goblin);
-        Assert.Equal((2, false), (goblin.Modifier, goblin.Advantage));
+        Assert.Equal((2, Mode.Normal), (goblin.Modifier, goblin.Mode));
         Assert.InRange(Assert.Single(goblin.Rolls), 1, 20);
         Assert.Equal(goblin.Rolls[0] + 2, goblin.Value);
         var ogre = entries.Single(e => e.TokenId == fight.Ogre);
-        Assert.Equal((5, true, 2), (ogre.Modifier, ogre.Advantage, ogre.Rolls.Count));
+        Assert.Equal((5, Mode.Advantage, 2), (ogre.Modifier, ogre.Mode, ogre.Rolls.Count));
         Assert.Equal(ogre.Rolls.Max() + 5, ogre.Value);
 
         var board = await fight.Table.Dm.BoardAsync(fight);
@@ -115,9 +116,9 @@ public sealed class InitiativeTests(AppFixture fixture) : IClassFixture<AppFixtu
             [Character(Guid.NewGuid(), 10)],
             [Character(fight.Aria, 10), Character(fight.Aria, 12)],
             [Character(fight.Aria, InitiativeRules.ValueMax + 1)],
-            [new InitiativeEntry(fight.Goblin, 21, 0, false, [21])],
-            [new InitiativeEntry(fight.Goblin, 30, InitiativeRules.ModifierMax + 1, false, [9])],
-            [new InitiativeEntry(fight.Goblin, 12, 0, false, [12, 3])],
+            [new InitiativeEntry(fight.Goblin, 21, 0, Mode.Normal, [21])],
+            [new InitiativeEntry(fight.Goblin, 30, InitiativeRules.ModifierMax + 1, Mode.Normal, [9])],
+            [new InitiativeEntry(fight.Goblin, 12, 0, Mode.Normal, [12, 3])],
         ];
 
         foreach (var entries in broken)
@@ -157,7 +158,7 @@ public sealed class InitiativeTests(AppFixture fixture) : IClassFixture<AppFixtu
         var wolf = Guid.NewGuid();
         Assert.Equal(
             SyncOutcome.Created,
-            (await fight.Table.Dm.PushOneAsync(CreatureType(fight.CampaignId, wolf, "Wolf", CreatureSize.Medium, initiativeModifier: 3, initiativeAdvantage: true))).Outcome);
+            (await fight.Table.Dm.PushOneAsync(CreatureType(fight.CampaignId, wolf, "Wolf", CreatureSize.Medium, initiativeModifier: 3, initiativeRollMode: Mode.Disadvantage))).Outcome);
 
         // Off: a spawn leaves initiative alone.
         Assert.Null((await dm.SpawnAsync(fight.EncounterId, false, (wolf, 2, 0))).Error);
@@ -173,8 +174,8 @@ public sealed class InitiativeTests(AppFixture fixture) : IClassFixture<AppFixtu
         var entries = board.Initiative!.Entries!;
         Assert.Equal(2, board.Initiative.Version);
         var added = entries.Single(e => e.TokenId == token);
-        Assert.Equal((3, true, 2), (added.Modifier, added.Advantage, added.Rolls.Count));
-        Assert.Equal(added.Rolls.Max() + 3, added.Value);
+        Assert.Equal((3, Mode.Disadvantage, 2), (added.Modifier, added.Mode, added.Rolls.Count));
+        Assert.Equal(added.Rolls.Min() + 3, added.Value);
         Assert.Equal(InitiativeRules.Insert(before, added).Select(e => e.TokenId), entries.Select(e => e.TokenId));
         Assert.Equal(2, (await dm.WaitForAsync(nameof(ITableClient.InitiativeChanged), 2)).Count);
     }
@@ -188,9 +189,9 @@ public sealed class InitiativeTests(AppFixture fixture) : IClassFixture<AppFixtu
         var goblin = encounter.Encounter.Tokens.Single(t => t.Id == fight.Goblin);
         var type = await fight.Table.Dm.FetchOneAsync(fight.CampaignId, goblin.CreatureTypeId);
 
-        Assert.Equal((5, (bool?)true), (ogre.InitiativeModifier, ogre.InitiativeAdvantage));
-        Assert.Equal(((int?)null, (bool?)null), (goblin.InitiativeModifier, goblin.InitiativeAdvantage));
-        Assert.Equal((2, false), (type.CreatureType!.InitiativeModifier, type.CreatureType.InitiativeAdvantage));
+        Assert.Equal((5, (Mode?)Mode.Advantage), (ogre.InitiativeModifier, ogre.InitiativeRollMode));
+        Assert.Equal(((int?)null, (Mode?)null), (goblin.InitiativeModifier, goblin.InitiativeRollMode));
+        Assert.Equal((2, Mode.Normal), (type.CreatureType!.InitiativeModifier, type.CreatureType.InitiativeRollMode));
 
         var tooHigh = await fight.Table.Dm.PushOneAsync(CreatureType(
             fight.CampaignId, name: "Drache", initiativeModifier: InitiativeRules.ModifierMax + 1));
@@ -228,14 +229,17 @@ public sealed class InitiativeRulesTests
     }
 
     [Fact]
-    public void A_roll_adds_the_modifier_to_the_d20_and_advantage_keeps_the_higher_of_two()
+    public void A_roll_adds_the_modifier_to_the_d20_and_advantage_keeps_the_higher_of_two_disadvantage_the_lower()
     {
-        var plain = InitiativeRules.Roll(A, -2, false, Dice(11));
-        Assert.Equal((A, 9, -2, false), (plain.TokenId, plain.Value, plain.Modifier, plain.Advantage));
+        var plain = InitiativeRules.Roll(A, -2, Mode.Normal, Dice(11));
+        Assert.Equal((A, 9, -2, Mode.Normal), (plain.TokenId, plain.Value, plain.Modifier, plain.Mode));
         Assert.Equal([11], plain.Rolls);
-        var advantage = InitiativeRules.Roll(A, 3, true, Dice(4, 17));
-        Assert.Equal((20, true), (advantage.Value, advantage.Advantage));
+        var advantage = InitiativeRules.Roll(A, 3, Mode.Advantage, Dice(4, 17));
+        Assert.Equal((20, Mode.Advantage), (advantage.Value, advantage.Mode));
         Assert.Equal([4, 17], advantage.Rolls);
+        var disadvantage = InitiativeRules.Roll(A, 3, Mode.Disadvantage, Dice(4, 17));
+        Assert.Equal((7, Mode.Disadvantage), (disadvantage.Value, disadvantage.Mode));
+        Assert.Equal([4, 17], disadvantage.Rolls);
     }
 
     [Theory]
@@ -246,9 +250,9 @@ public sealed class InitiativeRulesTests
     public void A_newcomer_goes_before_the_first_lower_or_missing_value(int value, int index)
     {
         // 15, 12, (no value yet).
-        List<InitiativeEntry> entries = [new(A, 15, 0, false, []), new(B, 12, 0, false, []), new(C, null, 0, false, [])];
+        List<InitiativeEntry> entries = [new(A, 15, 0, Mode.Normal, []), new(B, 12, 0, Mode.Normal, []), new(C, null, 0, Mode.Normal, [])];
 
-        var inserted = InitiativeRules.Insert(entries, new InitiativeEntry(New, value, 0, false, []));
+        var inserted = InitiativeRules.Insert(entries, new InitiativeEntry(New, value, 0, Mode.Normal, []));
 
         Assert.Equal(index, inserted.FindIndex(e => e.TokenId == New));
         Assert.Equal([A, B, C], inserted.Where(e => e.TokenId != New).Select(e => e.TokenId));
@@ -259,15 +263,15 @@ public sealed class InitiativeRulesTests
     {
         HashSet<Guid> tokens = [A, B];
 
-        Assert.True(InitiativeRules.IsValid([new(A, 21, 3, true, [18, 2]), new(B, null, 0, false, [])], tokens));
+        Assert.True(InitiativeRules.IsValid([new(A, 21, 3, Mode.Advantage, [18, 2]), new(B, null, 0, Mode.Normal, [])], tokens));
         Assert.True(InitiativeRules.IsValid([], tokens));
-        Assert.False(InitiativeRules.IsValid([new(C, 3, 0, false, [])], tokens));
-        Assert.False(InitiativeRules.IsValid([new(A, 3, 0, false, []), new(A, 4, 0, false, [])], tokens));
+        Assert.False(InitiativeRules.IsValid([new(C, 3, 0, Mode.Normal, [])], tokens));
+        Assert.False(InitiativeRules.IsValid([new(A, 3, 0, Mode.Normal, []), new(A, 4, 0, Mode.Normal, [])], tokens));
         Assert.False(InitiativeRules.IsValid([null], tokens));
-        Assert.False(InitiativeRules.IsValid([new(A, 3, 0, false, [0])], tokens));
-        Assert.False(InitiativeRules.IsValid([new(A, 3, 0, false, [1, 2])], tokens));
-        Assert.False(InitiativeRules.IsValid([new(A, 3, 0, true, [1, 2, 3])], tokens));
-        Assert.False(InitiativeRules.IsValid([new(A, InitiativeRules.ValueMin - 1, 0, false, [])], tokens));
-        Assert.False(InitiativeRules.IsValid([new(A, 3, InitiativeRules.ModifierMin - 1, false, [])], tokens));
+        Assert.False(InitiativeRules.IsValid([new(A, 3, 0, Mode.Normal, [0])], tokens));
+        Assert.False(InitiativeRules.IsValid([new(A, 3, 0, Mode.Normal, [1, 2])], tokens));
+        Assert.False(InitiativeRules.IsValid([new(A, 3, 0, Mode.Disadvantage, [1, 2, 3])], tokens));
+        Assert.False(InitiativeRules.IsValid([new(A, InitiativeRules.ValueMin - 1, 0, Mode.Normal, [])], tokens));
+        Assert.False(InitiativeRules.IsValid([new(A, 3, InitiativeRules.ModifierMin - 1, Mode.Normal, [])], tokens));
     }
 }

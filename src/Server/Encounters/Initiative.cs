@@ -9,9 +9,18 @@ namespace OreanasOffice.Server.Encounters;
 public record InitiativeDocument(List<InitiativeEntry> Entries);
 
 // Value: the initiative count; null for a character whose player hasn't said it yet.
-// Modifier and Advantage: what a creature rolled with (0 and false for characters). Rolls:
-// the d20s behind Value, two with advantage (the higher counts); empty for a typed value.
-public record InitiativeEntry(Guid TokenId, int? Value, int Modifier, bool Advantage, List<int> Rolls);
+// Modifier and Mode: what a creature rolled with (0 and Normal for characters). Rolls: the
+// d20s behind Value, two with advantage (the higher counts) or disadvantage (the lower);
+// empty for a typed value.
+public record InitiativeEntry(Guid TokenId, int? Value, int Modifier, InitiativeRollMode Mode, List<int> Rolls);
+
+// How a creature rolls initiative: one d20, or two keeping the higher or the lower.
+public enum InitiativeRollMode
+{
+    Normal,
+    Advantage,
+    Disadvantage,
+}
 
 public static class InitiativeRules
 {
@@ -23,12 +32,16 @@ public static class InitiativeRules
     // More than any board holds; keeps a request from growing the document without bound.
     public const int MaxEntries = 500;
 
-    // One roll: a d20, or two with advantage, plus the modifier.
-    public static InitiativeEntry Roll(Guid tokenId, int modifier, bool advantage, Func<int> d20)
+    // One roll: a d20, or two with advantage or disadvantage, plus the modifier.
+    public static InitiativeEntry Roll(Guid tokenId, int modifier, InitiativeRollMode mode, Func<int> d20)
     {
-        List<int> rolls = advantage ? [d20(), d20()] : [d20()];
-        return new InitiativeEntry(tokenId, rolls.Max() + modifier, modifier, advantage, rolls);
+        List<int> rolls = mode == InitiativeRollMode.Normal ? [d20()] : [d20(), d20()];
+        return new InitiativeEntry(tokenId, Counting(rolls, mode) + modifier, modifier, mode, rolls);
     }
+
+    // The d20 that counts: the lower one with disadvantage, else the higher.
+    public static int Counting(IReadOnlyList<int> rolls, InitiativeRollMode mode) =>
+        mode == InitiativeRollMode.Disadvantage ? rolls.Min() : rolls.Max();
 
     public static int RollD20() => RandomNumberGenerator.GetInt32(1, 21);
 
@@ -46,7 +59,7 @@ public static class InitiativeRules
     }
 
     // Whether a saved list is well-formed: each token of the encounter at most once, values,
-    // modifiers and d20s in range, and at most two d20s, as many as advantage gives.
+    // modifiers and d20s in range, and at most as many d20s as the mode gives.
     public static bool IsValid(IReadOnlyList<InitiativeEntry?> entries, IReadOnlySet<Guid> encounterTokenIds)
     {
         if (entries.Count > MaxEntries)
@@ -60,6 +73,7 @@ public static class InitiativeRules
             if (entry is null
                 || !encounterTokenIds.Contains(entry.TokenId)
                 || !seen.Add(entry.TokenId)
+                || !Enum.IsDefined(entry.Mode)
                 || entry.Value is < ValueMin or > ValueMax
                 || entry.Modifier is < ModifierMin or > ModifierMax)
             {
@@ -67,7 +81,7 @@ public static class InitiativeRules
             }
 
             var rolls = entry.Rolls ?? [];
-            if (rolls.Count > (entry.Advantage ? 2 : 1) || rolls.Any(roll => roll is < 1 or > 20))
+            if (rolls.Count > (entry.Mode == InitiativeRollMode.Normal ? 1 : 2) || rolls.Any(roll => roll is < 1 or > 20))
             {
                 return false;
             }

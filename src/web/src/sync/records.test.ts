@@ -61,16 +61,19 @@ describe('initiative in sync items', () => {
   it('pushes a type’s modifier and advantage, 0 and false for records without them', () => {
     expect(recordPushItem('creatureType', type()).creatureType).toMatchObject({
       initiativeModifier: 0,
-      initiativeAdvantage: false,
+      initiativeRollMode: 'normal',
     })
     const quick = recordPushItem(
       'creatureType',
-      type({ initiativeModifier: 3, initiativeAdvantage: true }),
+      type({ initiativeModifier: 3, initiativeRollMode: 'disadvantage' }),
     )
-    expect(quick.creatureType).toMatchObject({ initiativeModifier: 3, initiativeAdvantage: true })
+    expect(quick.creatureType).toMatchObject({
+      initiativeModifier: 3,
+      initiativeRollMode: 'disadvantage',
+    })
     expect(recordFromServer(server(quick))).toMatchObject({
       initiativeModifier: 3,
-      initiativeAdvantage: true,
+      initiativeRollMode: 'disadvantage',
     })
     expect(sameData(quick, server(quick))).toBe(true)
   })
@@ -88,18 +91,21 @@ describe('initiative in sync items', () => {
           y: 0,
           size: 'small',
           initiativeModifier: -2,
-          initiativeAdvantage: true,
+          initiativeRollMode: 'advantage',
         },
       ]),
     )
-    expect(
-      item.encounter?.tokens.map((t) => [t.initiativeModifier, t.initiativeAdvantage]),
-    ).toEqual([
-      [null, null],
-      [-2, true],
-    ])
+    expect(item.encounter?.tokens.map((t) => [t.initiativeModifier, t.initiativeRollMode])).toEqual(
+      [
+        [null, null],
+        [-2, 'advantage'],
+      ],
+    )
     expect(sameData(item, server(item))).toBe(true)
     const pulled = recordFromServer(server(item)) as LocalEncounter
-    expect(pulled.tokens[1]).toMatchObject({ initiativeModifier: -2, initiativeAdvantage: true })
+    expect(pulled.tokens[1]).toMatchObject({
+      initiativeModifier: -2,
+      initiativeRollMode: 'advantage',
+    })
   })
 })

@@ -4,11 +4,11 @@
 // name must be free in the campaign, ignoring case. An existing type also shows its icons
 // (CreatureIconSection), outside the form element.
 import { useId, useState, type FormEvent } from 'react'
-import type { CreatureSize } from '../api/types'
+import type { CreatureSize, InitiativeRollMode } from '../api/types'
 import { footprint } from '../board/geometry'
 import { Button, ErrorAlert, SelectField, TextField } from '../components/ui'
 import { inputClass } from '../components/styles'
-import { MODIFIER_MAX, MODIFIER_MIN } from '../initiative/initiative'
+import { MODIFIER_MAX, MODIFIER_MIN, ROLL_MODES } from '../initiative/initiative'
 import { useLocalUser } from '../offline/localUser'
 import type { LocalCreatureType } from '../offline/model'
 import { de } from '../text/de'
@@ -50,7 +50,7 @@ export function CreatureTypeForm({
   const [appearance, setAppearance] = useState(type?.appearance ?? '')
   const [notes, setNotes] = useState(type?.notes ?? '')
   const [modifierText, setModifierText] = useState(String(type?.initiativeModifier ?? 0))
-  const [advantage, setAdvantage] = useState(type?.initiativeAdvantage ?? false)
+  const [rollMode, setRollMode] = useState<InitiativeRollMode>(type?.initiativeRollMode ?? 'normal')
   const [submitted, setSubmitted] = useState(false)
   const [failed, setFailed] = useState(false)
 
@@ -60,7 +60,7 @@ export function CreatureTypeForm({
     appearance,
     notes,
     initiativeModifier: modifierText.trim() === '' ? Number.NaN : Number(modifierText),
-    initiativeAdvantage: advantage,
+    initiativeRollMode: rollMode,
   }
   const others = (types ?? []).filter((other) => other.id !== type?.id)
   const problems = checkCreatureType(input, others)
@@ -95,7 +95,7 @@ export function CreatureTypeForm({
       appearance === type.appearance &&
       notes === type.notes &&
       input.initiativeModifier === (type.initiativeModifier ?? 0) &&
-      advantage === (type.initiativeAdvantage ?? false)
+      rollMode === (type.initiativeRollMode ?? 'normal')
     if (unchanged) return true
     setSubmitted(true)
     if (problems.length > 0) return false
@@ -161,14 +161,18 @@ export function CreatureTypeForm({
             invalid={has('initiativeInvalid')}
             onChange={(event) => setModifierText(event.target.value)}
           />
-          <label className="flex min-h-11 items-center gap-2 text-sm text-parchment">
-            <input
-              type="checkbox"
-              checked={advantage}
-              onChange={(event) => setAdvantage(event.target.checked)}
-            />
-            {t.initiativeAdvantage}
-          </label>
+          <SelectField
+            label={t.initiativeRollMode}
+            value={rollMode}
+            className="w-40"
+            onChange={(event) => setRollMode(event.target.value as InitiativeRollMode)}
+          >
+            {ROLL_MODES.map((mode) => (
+              <option key={mode} value={mode}>
+                {de.dice.mode[mode]}
+              </option>
+            ))}
+          </SelectField>
         </div>
         <p className={`-mt-2 text-sm ${has('initiativeInvalid') ? 'text-red-300' : 'text-dim'}`}>
           {has('initiativeInvalid') ? t.problems.initiativeInvalid : t.initiativeModifierHint}

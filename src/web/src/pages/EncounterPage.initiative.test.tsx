@@ -50,7 +50,7 @@ const entry = (tokenId: string, value: number | null, rolls: number[] = []): Ini
   tokenId,
   value,
   modifier: 0,
-  advantage: false,
+  mode: 'normal',
   rolls,
 })
 
