@@ -33,11 +33,11 @@ export function PreviewPane({ doc }: { doc: EditorMap }) {
 /** The preview of a map the server may have pictures for. */
 function WithBackground({ target, doc }: { target: EditorTarget; doc: EditorMap }) {
   const { query, enabled } = useMapBackgrounds(target.campaignId, target.mapId)
-  const { width, height } = doc
+  const { width, height, backgroundPlacement = null } = doc
   const data = enabled ? query.data : undefined
   const background = useMemo(
-    () => pickedBoardBackground(data, { width, height }),
-    [data, width, height],
+    () => pickedBoardBackground(data, { width, height }, backgroundPlacement),
+    [data, width, height, backgroundPlacement],
   )
   return <Preview doc={doc} background={background} />
 }

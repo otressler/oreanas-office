@@ -44,10 +44,32 @@ describe('background rules', () => {
       y: -2,
       width: 10,
       height: 12,
+      rotation: 0,
     })
     expect(pickedBoardBackground(data, { width: 11, height: 8 })).toBeNull()
     expect(pickedBoardBackground(backgroundsOf([picked]), size)).toBeNull()
     expect(pickedBoardBackground(undefined, size)).toBeNull()
+  })
+
+  it('places the picked version where the DM put it, only with a placement made for it', () => {
+    const picked = version()
+    const data = backgroundsOf([picked], { pickedAssetId: picked.id })
+    const placement = { assetId: picked.id, x: -1, y: 0.5, width: 12, height: 9, rotation: 3 }
+    expect(pickedBoardBackground(data, size, placement)).toMatchObject({
+      x: -1,
+      y: 0.5,
+      width: 12,
+      height: 9,
+      rotation: 3,
+    })
+    const other = { ...placement, assetId: 'another' }
+    expect(pickedBoardBackground(data, size, other)).toMatchObject({ x: 0, rotation: 0 })
+  })
+
+  it('keeps an upload pickable after a resize', () => {
+    const upload = version({ origin: 'uploaded' })
+    expect(isOutdated(upload, { width: 15, height: 3 })).toBe(false)
+    expect(canPick(upload, { width: 15, height: 3 })).toBe(true)
   })
 
   it('finds a store copy’s picked version by id, though it was made for the source map', () => {

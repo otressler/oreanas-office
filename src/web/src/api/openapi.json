@@ -1949,6 +1949,81 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/maps/{mapId}/backgrounds/upload": {
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapBackground"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/maps/{mapId}/background": {
       "put": {
         "tags": [
@@ -3239,6 +3314,43 @@
           }
         }
       },
+      "BackgroundPlacement": {
+        "required": [
+          "assetId",
+          "x",
+          "y",
+          "width",
+          "height",
+          "rotation"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "x": {
+            "type": "number",
+            "format": "double"
+          },
+          "y": {
+            "type": "number",
+            "format": "double"
+          },
+          "width": {
+            "type": "number",
+            "format": "double"
+          },
+          "height": {
+            "type": "number",
+            "format": "double"
+          },
+          "rotation": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "BoardBackground": {
         "required": [
           "assetId",
@@ -3246,7 +3358,8 @@
           "x",
           "y",
           "width",
-          "height"
+          "height",
+          "rotation"
         ],
         "type": "object",
         "properties": {
@@ -3258,20 +3371,24 @@
             "type": "string"
           },
           "x": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "y": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "width": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "height": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
+          },
+          "rotation": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -3330,6 +3447,9 @@
                 "$ref": "#/components/schemas/BoardBackground"
               }
             ]
+          },
+          "grid": {
+            "$ref": "#/components/schemas/MapGridStyle"
           }
         }
       },
@@ -4005,6 +4125,19 @@
           },
           "layout": {
             "$ref": "#/components/schemas/MapLayout"
+          },
+          "placement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BackgroundPlacement"
+              }
+            ]
+          },
+          "grid": {
+            "$ref": "#/components/schemas/MapGridStyle"
           }
         }
       },
@@ -5303,6 +5436,7 @@
           "id",
           "mapId",
           "status",
+          "origin",
           "url",
           "gridWidth",
           "gridHeight",
@@ -5331,6 +5465,9 @@
           "status": {
             "$ref": "#/components/schemas/AssetStatus"
           },
+          "origin": {
+            "$ref": "#/components/schemas/AssetOrigin"
+          },
           "url": {
             "type": [
               "null",
@@ -5346,20 +5483,20 @@
             "format": "int32"
           },
           "x": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "y": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "width": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "height": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "outdated": {
             "type": "boolean"
@@ -5428,6 +5565,14 @@
             "$ref": "#/components/schemas/ImageBudgetResponse"
           }
         }
+      },
+      "MapGridStyle": {
+        "enum": [
+          "normal",
+          "faint",
+          "hidden"
+        ],
+        "default": "normal"
       },
       "MapLayout": {
         "required": [
@@ -7001,6 +7146,19 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "backgroundPlacement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BackgroundPlacement"
+              }
+            ]
+          },
+          "gridStyle": {
+            "$ref": "#/components/schemas/MapGridStyle"
           }
         }
       },

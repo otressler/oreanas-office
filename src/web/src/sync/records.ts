@@ -130,6 +130,8 @@ export function recordPushItem(kind: ItemKind, record: ItemRecord): SyncPushItem
           lighting: r.lighting,
           archivedAt: r.archivedAt,
           copiedFromMapId: r.copiedFromMapId,
+          backgroundPlacement: r.backgroundPlacement ?? null,
+          gridStyle: r.gridStyle ?? 'normal',
         },
       }
     }
@@ -191,6 +193,9 @@ export function recordFromServer(item: SyncServerItem, existing?: ItemRecord): I
       lighting: d.lighting,
       archivedAt: d.archivedAt,
       copiedFromMapId: d.copiedFromMapId,
+      // Absent from servers older than background uploads.
+      backgroundPlacement: d.backgroundPlacement ?? null,
+      gridStyle: d.gridStyle ?? 'normal',
       recordVersion: LOCAL_MAP_RECORD_VERSION,
     }
   }
@@ -266,6 +271,9 @@ function comparable(
       return canonical({
         ...d,
         archivedAt: time(d.archivedAt),
+        // Left out by servers and records older than background uploads.
+        backgroundPlacement: d.backgroundPlacement ?? null,
+        gridStyle: d.gridStyle ?? 'normal',
         layout: {
           ...d.layout,
           cells: byKey(d.layout.cells, (c) => c.y * 1000 + c.x),

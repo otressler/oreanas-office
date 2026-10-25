@@ -31,6 +31,15 @@ export function json(status: number, body?: unknown): Response {
  * Stubs fetch with handlers keyed "METHOD /path" (path parameters as `:name`).
  * Unknown routes answer 404. Returns the calls made, for assertions.
  */
+/** JSON bodies parsed; anything else (an uploaded picture) kept as text. */
+function parseBody(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
 export function mockApi(handlers: Record<string, Handler | Response | (() => Response)>) {
   const calls: ApiCall[] = []
   const entries = Object.entries(handlers).map(([key, handler]) => {
@@ -48,7 +57,7 @@ export function mockApi(handlers: Record<string, Handler | Response | (() => Res
         method: request.method,
         path: url.pathname,
         search: url.search,
-        body: text ? JSON.parse(text) : undefined,
+        body: text ? parseBody(text) : undefined,
       }
       calls.push(call)
       const match = entries.find((e) => e.method === call.method && e.regex.test(call.path))

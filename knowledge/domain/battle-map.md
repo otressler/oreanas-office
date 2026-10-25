@@ -19,7 +19,9 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `scene` | text | What the place is: "rope bridge over a misty gorge" |
 | `vibe` | text | Mood: "tense, overcast, wind" |
 | `lighting` | text | e.g. "dusk", "torchlight" |
-| `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The chosen generated image. Other versions stay as assets. Not shown while the image was made for a different size (see Background image) |
+| `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The chosen image, generated or uploaded. Other versions stay as assets. A generated image isn't shown while it was made for a different size (see Background image) |
+| `backgroundPlacement` | object, nullable | Where the DM moved, scaled and turned the picked image: `assetId`, `x`, `y`, `width`, `height` in cells (the unturned picture's top-left corner and size, relative to the map's top-left cell) and `rotation` in degrees clockwise around its centre. Used only while `assetId` is the picked one; otherwise the image lies at its own frame. Part of the sync item |
+| `gridStyle` | `normal` \| `faint` \| `hidden` | How the board draws the grid over a picture, for images that bring their own grid. Without a picture the board always draws the normal grid. Part of the sync item |
 | `copiedFromMapId` | → Battle map, nullable | The map this one was duplicated or added from. Set once and never changed |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the map |
 
@@ -33,10 +35,12 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 
 # Background image
 
-- The DM generates backgrounds with [AI map generation](/features/ai-map-generation.md) and picks one version as `backgroundAssetId`. Picking needs a connection and isn't part of the map's sync item, so it never conflicts with offline edits and doesn't raise the map's version.
-- **Changing the size makes the background outdated.** Every version made for another size is outdated: the board doesn't show it and uses the plain rendering instead, and the editor says a new image is needed. Nothing is generated automatically; the DM starts a new generation. Undoing the resize, back to the image's size, makes the image usable again.
+- The DM generates backgrounds with [AI map generation](/features/ai-map-generation.md) or uploads their own (PNG, WebP or JPEG), and picks one version as `backgroundAssetId`. Picking needs a connection and isn't part of the map's sync item, so it never conflicts with offline edits and doesn't raise the map's version.
+- **Placing.** In the editor the DM moves, scales and turns the picked image with handles, or aligns it by two grid points ([DM map editor](/features/dm-map-editor.md), "Background"). That is `backgroundPlacement`, part of the sync item like any other edit: it undoes, saves offline and syncs. It belongs to one version; picking another shows that one at its own frame, and coming back finds the placement again. A store copy takes the placement with the picked image; a duplicate takes neither.
+- **Changing the size makes a generated background outdated.** Every generated version made for another size is outdated: the board doesn't show it and uses the plain rendering instead, and the editor says a new image is needed. Nothing is generated automatically; the DM starts a new generation. Undoing the resize, back to the image's size, makes the image usable again.
+- **Uploads survive a resize** (decided by the project owner on 2026-10-25). An upload isn't painted to the layout, so it is never outdated. It stays over the same cells: rows and columns added or removed at the top or left shift its placement along, and the DM fixes the rest by hand.
 - Other layout changes, such as a moved wall, keep the image. The editor notes that the layout changed since the image was made, so the DM can decide to regenerate.
-- An encounter saves the picked background when it starts, together with its copy of the layout ([encounter](/domain/encounter.md)).
+- An encounter saves the picked background when it starts, together with its copy of the layout, the placement and the grid style ([encounter](/domain/encounter.md)).
 
 # Layout document
 

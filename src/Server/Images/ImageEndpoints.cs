@@ -26,6 +26,7 @@ public static class ImageEndpoints
             .RequireAuthorization(Policies.CampaignDm);
         backgrounds.MapGet("/backgrounds", ListBackgrounds);
         backgrounds.MapPost("/backgrounds", GenerateBackground);
+        backgrounds.MapPost("/backgrounds/upload", UploadBackground).AcceptsRawPicture();
         backgrounds.MapPut("/background", PickBackground);
 
         app.MapGet("/api/assets/{assetId:guid}", GetAsset)
@@ -130,7 +131,8 @@ public static class ImageEndpoints
                             && a.Status == AssetStatus.Done
                             && ((a.OwnerType == AssetOwnerType.BattleMap && a.OwnerId == mapId) || a.Id == map.BackgroundAssetId),
                         cancellationToken);
-                if (source is null)
+                // An upload wasn't painted from the layout, so the model has nothing to refine.
+                if (source is null || source.Origin == AssetOrigin.Uploaded)
                 {
                     return new Outcome(null, ApiErrorCode.BackgroundNotFound);
                 }
@@ -200,6 +202,80 @@ public static class ImageEndpoints
 
         queue.Notify();
         return TypedResults.Accepted($"/api/campaigns/{campaignId}/maps/{mapId}/backgrounds", background);
+    }
+
+    // The DM's own picture (knowledge/features/ai-map-generation.md, "Uploads"): checked,
+    // shrunk and stored as WebP (BackgroundPicture), saved as a Done version made for the
+    // map's current size, and picked at once. Costs nothing, so no budget check. 201 with the
+    // version. 404 for a map of another campaign or an archived map. Errors (400):
+    // UploadInvalid, UploadTooLarge.
+    private static async Task<Results<Created<MapBackground>, NotFound, BadRequest<ApiError>>> UploadBackground(
+        Guid campaignId,
+        Guid mapId,
+        HttpRequest request,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        IOptions<ImageOptions> options,
+        IAssetStore store,
+        TimeProvider time,
+        CancellationToken cancellationToken)
+    {
+        var settings = options.Value;
+        var map = await db.BattleMaps.AsNoTracking()
+            .SingleOrDefaultAsync(m => m.Id == mapId && m.CampaignId == campaignId && m.ArchivedAt == null, cancellationToken);
+        if (map is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        if (!MediaTypeHeaderValue.TryParse(request.ContentType, out var mediaType)
+            || !TokenPicture.UploadFormats.TryGetValue(mediaType.MediaType.ToString(), out var declared))
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadInvalid));
+        }
+
+        if (request.ContentLength > settings.BackgroundUploadMaxBytes
+            || await TokenImageEndpoints.ReadBodyAsync(request, settings.BackgroundUploadMaxBytes, cancellationToken) is not { } body)
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadTooLarge));
+        }
+
+        if (BackgroundPicture.FromUpload(body, declared, settings.BackgroundPixels, settings.UploadMaxPixels) is not { } picture)
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadInvalid));
+        }
+
+        var now = time.GetUtcNow();
+        var asset = new Asset
+        {
+            Id = Guid.NewGuid(),
+            Kind = AssetKind.MapBackground,
+            OwnerType = AssetOwnerType.BattleMap,
+            OwnerId = mapId,
+            CampaignId = map.CampaignId,
+            Origin = AssetOrigin.Uploaded,
+            Status = AssetStatus.Done,
+            ContentType = BackgroundPicture.ContentType,
+            GridWidth = map.Width,
+            GridHeight = map.Height,
+            PixelWidth = picture.Width,
+            PixelHeight = picture.Height,
+            CreatedAt = now,
+            CreatedByUserId = user.GetUserId(),
+            FinishedAt = now,
+        };
+        asset.BlobName = $"maps/{mapId}/{asset.Id}.webp";
+        await store.SaveAsync(asset.BlobName, picture.Bytes, BackgroundPicture.ContentType, cancellationToken);
+        db.Assets.Add(asset);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Picked like PickBackground: not part of the sync item.
+        await db.BattleMaps
+            .Where(m => m.Id == mapId)
+            .ExecuteUpdateAsync(set => set.SetProperty(m => m.BackgroundAssetId, asset.Id), cancellationToken);
+
+        var view = MapBackgrounds.ToView(asset, map.Width, map.Height, LayoutFingerprint.Of(map.Width, map.Height, map.Layout));
+        return TypedResults.Created($"/api/campaigns/{campaignId}/maps/{mapId}/backgrounds", view);
     }
 
     // Sets the map's BackgroundAssetId: a Done version listed for the map (its own, or the

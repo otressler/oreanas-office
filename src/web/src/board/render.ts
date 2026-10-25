@@ -518,10 +518,10 @@ export function drawGrid(
   ctx: CanvasRenderingContext2D,
   scene: MapScene,
   dpr: number,
-  { onPicture = false }: { onPicture?: boolean } = {},
+  { onPicture = false, strength = 1 }: { onPicture?: boolean; strength?: number } = {},
 ): void {
   const m = ctx.getTransform()
-  const alpha = gridAlpha(m.a * CELL, dpr)
+  const alpha = gridAlpha(m.a * CELL, dpr) * strength
   if (alpha <= 0) return
   const { width: cw, height: ch } = ctx.canvas
   const sx = (cellX: number) => Math.round(m.a * cellX * CELL + m.e)

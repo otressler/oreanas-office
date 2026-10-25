@@ -1,10 +1,11 @@
 // The map's background picture under the grid (knowledge/domain/battle-map.md, "Background
 // image"). The picture lies at its frame: cell (x, y), relative to the map's top-left cell,
-// with a size in cells; a map wider than 3:1 was padded, so the frame can start left of or
-// above the map. Only the map's own area is shown. Until the picture has loaded, when it
+// with a size in cells, turned by `rotation` degrees clockwise around its centre; a map wider
+// than 3:1 was padded, and the DM can move an upload anywhere, so the frame can start left
+// of or above the map. Only the map's own area is shown. Until the picture has loaded, when it
 // fails, or without one, the board keeps the plain rendering (the permanent fallback).
 import { useEffect, useState } from 'react'
-import type { BoardBackground } from '../api/types'
+import type { BoardBackground, MapGridStyle } from '../api/types'
 import { CELL } from './viewport'
 
 /** A rectangle in world units (CELL per cell). */
@@ -15,10 +16,13 @@ export interface WorldRect {
   height: number
 }
 
-/** Where the picture is drawn, in world units. */
-export function pictureRect(
-  frame: Pick<BoardBackground, 'x' | 'y' | 'width' | 'height'>,
-): WorldRect {
+/** Where and how the picture lies, in cells: its unturned frame and the turn in degrees. */
+export type PictureFrame = Pick<BoardBackground, 'x' | 'y' | 'width' | 'height'> & {
+  rotation?: number
+}
+
+/** Where the unturned picture is drawn, in world units. */
+export function pictureRect(frame: PictureFrame): WorldRect {
   return {
     x: frame.x * CELL,
     y: frame.y * CELL,
@@ -43,29 +47,46 @@ export interface MapLayers {
   labels: boolean
 }
 
-export function mapLayers(pictureLoaded: boolean): MapLayers {
+/**
+ * The map's grid style ('normal' when left out) only counts over a picture: without one the
+ * plain rendering needs its grid.
+ */
+export function mapLayers(pictureLoaded: boolean, gridStyle: MapGridStyle = 'normal'): MapLayers {
   return pictureLoaded
-    ? { picture: true, plain: false, highlight: true, grid: true, labels: false }
+    ? { picture: true, plain: false, highlight: true, grid: gridStyle !== 'hidden', labels: false }
     : { picture: false, plain: true, highlight: true, grid: true, labels: true }
 }
 
-/** Draws the picture at its frame, clipped to the map. `ctx` must be in world units. */
+/** How strongly the grid is drawn over a picture: faint grids for pictures with their own. */
+export function gridStrength(gridStyle: MapGridStyle = 'normal'): number {
+  return gridStyle === 'faint' ? 0.4 : 1
+}
+
+/**
+ * Draws the picture at its frame, turned around its centre, clipped to the map (or, with
+ * `clip: false`, wherever it lies). `ctx` must be in world units.
+ */
 export function drawPicture(
   ctx: CanvasRenderingContext2D,
   image: CanvasImageSource,
-  frame: Pick<BoardBackground, 'x' | 'y' | 'width' | 'height'>,
+  frame: PictureFrame,
   width: number,
   height: number,
+  { clip = true }: { clip?: boolean } = {},
 ): void {
-  const clip = mapRect(width, height)
   const at = pictureRect(frame)
   ctx.save()
-  ctx.beginPath()
-  ctx.rect(clip.x, clip.y, clip.width, clip.height)
-  ctx.clip()
+  if (clip) {
+    const area = mapRect(width, height)
+    ctx.beginPath()
+    ctx.rect(area.x, area.y, area.width, area.height)
+    ctx.clip()
+  }
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'high'
-  ctx.drawImage(image, at.x, at.y, at.width, at.height)
+  ctx.translate(at.x + at.width / 2, at.y + at.height / 2)
+  if (frame.rotation) ctx.rotate((frame.rotation * Math.PI) / 180)
+  ctx.drawImage(image, -at.width / 2, -at.height / 2, at.width, at.height)
   ctx.restore()
 }
 

@@ -67,4 +67,11 @@ public sealed class ImageOptions
     public int UploadMaxBytes { get; set; } = 10 * 1024 * 1024;
 
     public int UploadMaxPixels { get; set; } = 8192;
+
+    // Uploaded map backgrounds (knowledge/features/ai-map-generation.md, "Uploads"): bought
+    // battle maps are large files, so they get their own limit. The server keeps a WebP whose
+    // long edge is at most BackgroundPixels, which phones still draw smoothly.
+    public int BackgroundUploadMaxBytes { get; set; } = 25 * 1024 * 1024;
+
+    public int BackgroundPixels { get; set; } = 4096;
 }

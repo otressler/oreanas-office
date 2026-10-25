@@ -453,6 +453,7 @@ export class MockBackend {
         id: randomUUID(),
         mapId: item.id,
         status: 'queued',
+        origin: 'generated',
         url: null,
         gridWidth: map.width,
         gridHeight: map.height,

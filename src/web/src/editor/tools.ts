@@ -22,6 +22,10 @@ export interface CellPointer {
   alt: boolean
   /** Ctrl, or Cmd on a Mac. */
   mod: boolean
+  /** The exact spot under the pointer, in cells (fractions included). */
+  point: { x: number; y: number }
+  /** CSS pixels per cell at the current zoom, for hit areas of a fixed screen size. */
+  cellPx: number
 }
 
 export interface ToolContext {
@@ -46,6 +50,13 @@ export interface EditorTool {
   Panel?: ComponentType
   /** A CSS cursor over the map. */
   cursor?: string
+  /**
+   * Moves reach onPointerMove on every pointer move, not only when the pointer enters
+   * another cell: for tools that drag freely, like the background's handles.
+   */
+  finePointer?: boolean
+  /** The cursor at a spot, replacing `cursor` while it returns one (e.g. over a handle). */
+  cursorAt?(pointer: CellPointer, ctx: ToolContext): string | null
 
   onActivate?(ctx: ToolContext): void
   onDeactivate?(ctx: ToolContext): void

@@ -122,7 +122,7 @@ public static class TokenPicture
 
     // Maps the stored pixels (width × height) onto the upright picture (TIFF orientation
     // tags 2–8). The last transform set is applied first.
-    private static void Orient(SKCanvas canvas, SKEncodedOrigin origin, int width, int height)
+    internal static void Orient(SKCanvas canvas, SKEncodedOrigin origin, int width, int height)
     {
         switch (origin)
         {

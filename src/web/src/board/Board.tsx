@@ -35,7 +35,7 @@ import { cellKey, footprint, stackCounts, tokenAt, tokensAt, type GridPoint } fr
 import { buildFogScene, drawFog, type BoardFog } from './fogRender'
 import { pingExpired, type PingTarget, type ShownPing } from './pings'
 import { GestureTracker, wheelZoomFactor, type Gesture, type PointerSample } from './gestures'
-import { drawPicture, mapLayers, useBackgroundImage } from './background'
+import { drawPicture, gridStrength, mapLayers, useBackgroundImage } from './background'
 import { cellInfo, tokenInfo, type BoardInfo } from './info'
 import {
   centredOn,
@@ -207,7 +207,7 @@ export function Board({
   fog,
   faintTokenIds,
 }: BoardProps) {
-  const { width, height, layout, id: mapId, background } = board.map
+  const { width, height, layout, id: mapId, background, grid: gridStyle = 'normal' } = board.map
   const surfaceRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const infoRef = useRef<HTMLDivElement>(null)
@@ -664,27 +664,32 @@ export function Board({
   const by = background?.y
   const bw = background?.width
   const bh = background?.height
+  const br = background?.rotation
   const shownPicture = useMemo(
     () =>
       picture && bx !== undefined && by !== undefined && bw !== undefined && bh !== undefined
-        ? { image: picture, frame: { x: bx, y: by, width: bw, height: bh } }
+        ? { image: picture, frame: { x: bx, y: by, width: bw, height: bh, rotation: br ?? 0 } }
         : null,
-    [picture, bx, by, bw, bh],
+    [picture, bx, by, bw, bh, br],
   )
   const drawMapShape = useCallback(
     (con: Konva.Context) => {
       const ctx = con._context
       const dpr = con.canvas.getPixelRatio()
-      const layers = mapLayers(shownPicture !== null)
+      const layers = mapLayers(shownPicture !== null, gridStyle)
       if (layers.picture && shownPicture)
         drawPicture(ctx, shownPicture.image, shownPicture.frame, scene.width, scene.height)
       if (layers.plain) drawMapAtZoom(ctx, scene)
       if (layers.highlight && highlightScene)
         drawHighlight(ctx, highlightScene, scene, ctx.getTransform().a / dpr)
-      if (layers.grid) drawGrid(ctx, scene, dpr, { onPicture: layers.picture })
+      if (layers.grid)
+        drawGrid(ctx, scene, dpr, {
+          onPicture: layers.picture,
+          strength: layers.picture ? gridStrength(gridStyle) : 1,
+        })
       if (layers.labels) drawLabels(ctx, scene, dpr)
     },
-    [scene, highlightScene, shownPicture],
+    [scene, highlightScene, shownPicture, gridStyle],
   )
 
   // The fog: drawn over the map and under the tokens, fading where cells change.

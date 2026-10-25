@@ -1366,9 +1366,55 @@ export const de = {
     /** The "Hintergrund" tool (src/editor/background): generate, follow, compare and pick. */
     background: {
       tool: 'Hintergrund',
-      help: 'Ein Bildmodell malt aus dem Layout und der Beschreibung ein Bild der Karte. Das Raster zeichnet die App darüber.',
+      help: 'Ein Bildmodell malt aus dem Layout und der Beschreibung ein Bild der Karte, oder du lädst ein eigenes hoch. Das Raster zeichnet die App darüber.',
       offline:
-        'Hintergründe brauchen eine Verbindung: zum Erzeugen, für die Versionen und zum Auswählen.',
+        'Hintergründe brauchen eine Verbindung: zum Erzeugen, Hochladen, für die Versionen und zum Auswählen.',
+      /** The canvas button that shows or hides the picture under the layout. */
+      layer: 'Hintergrund zeigen',
+      upload: {
+        button: 'Eigenes Bild hochladen',
+        hint: 'PNG, WebP oder JPEG, bis 25 MB und 8192 Pixel Kantenlänge. Ein hochgeladenes Bild passt zu jeder Kartengröße; du legst es selbst übers Raster.',
+        uploading: 'Das Bild wird hochgeladen…',
+        done: 'Das Bild ist hochgeladen und ausgewählt. Leg es jetzt mit den Griffen übers Raster.',
+        wrongType: 'Nimm ein PNG-, WebP- oder JPEG-Bild.',
+        tooLarge: 'Das Bild ist größer als 25 MB. Nimm ein kleineres.',
+        syncOffline:
+          'Ohne Verbindung lässt sich die Karte nicht synchronisieren. Es wurde nichts hochgeladen.',
+        syncBlocked:
+          'Die Karte ließ sich nicht synchronisieren. Kläre zuerst das Problem bei der Synchronisierung (oben „Sync“), dann versuch es noch einmal. Es wurde nichts hochgeladen.',
+      },
+      uploaded: 'Hochgeladen',
+      place: {
+        title: 'Platzieren',
+        help: 'Zieh das Bild, um es zu verschieben. Die Ecken skalieren es, der runde Griff darüber dreht es (mit Umschalt in 15°-Schritten).',
+        hidden: 'Der Hintergrund ist ausgeblendet.',
+        show: 'Einblenden',
+        reset: 'Zurücksetzen',
+        resetHint: 'Legt das Bild wieder so, wie es erzeugt oder hochgeladen wurde.',
+        /** The picture's turn and size, e.g. "Drehung 1,5° · 20,0 × 12,0 Felder". */
+        state: (rotation: string, width: string, height: string) =>
+          `Drehung ${rotation}° · ${width} × ${height} Felder`,
+        calibrate: 'Am Raster ausrichten',
+        calibrateHint:
+          'Für Bilder mit eigenem Raster: Klicke zwei Rasterpunkte im Bild und jeweils die Ecke der Karte, auf die sie gehören. Das Bild wird dann verschoben, skaliert und gedreht.',
+        /** The next click of the calibration, by step 0–3. */
+        steps: [
+          '1. Klicke einen Rasterpunkt im Bild.',
+          '2. Klicke die Rasterecke der Karte, auf die dieser Punkt gehört.',
+          '3. Klicke einen zweiten Rasterpunkt im Bild, möglichst weit vom ersten entfernt.',
+          '4. Klicke die Rasterecke der Karte, auf die der zweite Punkt gehört.',
+        ],
+        cancel: 'Abbrechen',
+        failed:
+          'Die Punkte lagen zu nah beieinander. Nimm zwei Punkte, die weiter auseinander liegen.',
+      },
+      grid: {
+        label: 'Raster über dem Bild',
+        hint: 'Für Bilder, die schon ein eigenes Raster haben. Ohne Bild zeigt das Brett immer das normale Raster.',
+        normal: 'Normal',
+        faint: 'Dezent',
+        hidden: 'Aus',
+      },
       notSynced:
         'Diese Karte ist noch nicht auf dem Server. Beim Erzeugen wird sie zuerst synchronisiert.',
       loadFailed: 'Die Hintergründe ließen sich nicht laden.',

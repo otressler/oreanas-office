@@ -79,6 +79,8 @@ describe('parseMapFile', () => {
       scene: '',
       vibe: '',
       lighting: '',
+      backgroundPlacement: null,
+      gridStyle: 'normal',
       layout: {
         schemaVersion: 1,
         cells: [{ x: 3, y: 2, terrain: 'wall', elevation: 1.5 }],

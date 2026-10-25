@@ -108,7 +108,7 @@ public sealed class BackgroundUseTests(AppFixture fixture) : IClassFixture<AppFi
 
         var first = await fixture.App.GenerateAndWaitAsync(dm, campaignId, mapId);
         var ready = (await BoardAsync(dm, campaignId, table.Encounter.Id)).Background;
-        Assert.Equal(new BoardBackground(first.Id, $"/api/assets/{first.Id}", 0, 0, 8, 5), ready);
+        Assert.Equal(new BoardBackground(first.Id, $"/api/assets/{first.Id}", 0, 0, 8, 5, 0), ready);
 
         Assert.Equal(HttpStatusCode.OK, (await dm.StartEncounterAsync(campaignId, table.Session.Id, table.Encounter.Id)).StatusCode);
         var second = await fixture.App.GenerateAndWaitAsync(dm, campaignId, mapId);

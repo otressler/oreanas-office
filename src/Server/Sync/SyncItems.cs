@@ -73,7 +73,8 @@ internal static class SyncItems
         null,
         null,
         new SyncMapData(
-            map.Name, map.Width, map.Height, map.Layout, map.Scene, map.Vibe, map.Lighting, map.ArchivedAt, map.CopiedFromMapId),
+            map.Name, map.Width, map.Height, map.Layout, map.Scene, map.Vibe, map.Lighting, map.ArchivedAt, map.CopiedFromMapId,
+            map.BackgroundPlacement, map.GridStyle),
         null);
 
     // Creature tokens only: character tokens exist once the encounter has started, and a

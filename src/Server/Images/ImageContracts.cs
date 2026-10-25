@@ -15,20 +15,23 @@ public record MapBackgroundsResponse(
 // One version. Url: /api/assets/{id} once Done, else null. Outdated: made for another size
 // than the map has now. LayoutChanged: the layout changed since it was made (same size);
 // the editor notes it, the board still shows it. Failure: set when Failed.
-// X, Y, Width, Height: as BoardBackground, so the editor can draw it under its grid.
+// X, Y, Width, Height: the picture's frame before the DM moves it, as BoardBackground, so
+// the editor can draw it under its grid. Origin: Uploaded versions are never outdated and
+// can't be refined.
 // RefinedFromId and Instruction: set for a refinement, the version it edits and what the DM
 // asked for.
 public record MapBackground(
     Guid Id,
     Guid MapId,
     AssetStatus Status,
+    AssetOrigin Origin,
     string? Url,
     int GridWidth,
     int GridHeight,
-    int X,
-    int Y,
-    int Width,
-    int Height,
+    double X,
+    double Y,
+    double Width,
+    double Height,
     bool Outdated,
     bool LayoutChanged,
     AssetFailure? Failure,
@@ -52,4 +55,8 @@ public record GenerateBackgroundRequest(int MapVersion, Guid? RefineAssetId = nu
 
 // PUT background: pick a Done version that fits the map's size, or null for the plain
 // rendering. Errors: BackgroundNotFound, BackgroundOutdated.
+//
+// POST backgrounds/upload: the DM's own picture as the raw body (image/png, image/webp or
+// image/jpeg), stored as a new Done version and picked at once. Errors (409): UploadInvalid,
+// UploadTooLarge.
 public record PickBackgroundRequest(Guid? AssetId);
