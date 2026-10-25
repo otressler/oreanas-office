@@ -59,7 +59,7 @@ app.MapStatusEndpoints();
 app.MapTableHub();
 app.MapImageHub();
 
-if (app.Environment.IsEnvironment(TestingEndpoints.Environment))
+if (TestingEndpoints.IsMappedIn(app.Environment))
 {
     app.MapTestingEndpoints();
 }

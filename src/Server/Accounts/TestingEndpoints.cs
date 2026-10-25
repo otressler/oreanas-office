@@ -5,12 +5,15 @@ using OreanasOffice.Server.Data;
 
 namespace OreanasOffice.Server.Accounts;
 
-// Only for the Playwright tests, which can't sign in to Google to become admin:
-// they get registration invites here. Mapped only in the E2E environment, so it
-// doesn't exist anywhere else.
+// For the Playwright tests and local development, which can't sign in to Google to
+// become admin: they get registration invites here (scripts/dev-user.ps1 uses it).
+// Mapped only in the E2E and Development environments, so production never has it.
 public static class TestingEndpoints
 {
     public const string Environment = "E2E";
+
+    public static bool IsMappedIn(IHostEnvironment environment) =>
+        environment.IsEnvironment(Environment) || environment.IsDevelopment();
 
     // The invite's creator. Invites need one, and nobody is admin in a fresh E2E
     // database. It has no password and no Google login, so nobody can sign in as it.
