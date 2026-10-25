@@ -134,18 +134,33 @@ export async function pickTokenImage(
   }
 }
 
+/** Where a picture for the owner is uploaded; custom statuses only generate their icons. */
+function uploadPath(owner: TokenImageOwner): string {
+  const id = encodeURIComponent(owner.id)
+  switch (owner.type) {
+    case 'character':
+      return `characters/${id}/portraits/upload`
+    case 'creatureType':
+      return `creature-types/${id}/icons/upload`
+    case 'status':
+      throw new Error('Status icons cannot be uploaded.')
+  }
+}
+
 /**
- * Uploads a picture as the character's portrait: the raw body with its type, not a form.
- * The server answers with the new version, already done and picked.
+ * Uploads a picture as the character's portrait or the creature type's icon: the raw body
+ * with its type, not a form. The server answers with the new version, already done and
+ * picked.
  */
-export async function uploadPortrait(
+export async function uploadTokenImage(
   campaignId: string,
-  characterId: string,
+  owner: TokenImageOwner,
   picture: Blob,
 ): Promise<TokenImage> {
   const base = globalThis.location?.origin ?? ''
+  const path = uploadPath(owner)
   const response = await globalThis.fetch(
-    `${base}/api/campaigns/${encodeURIComponent(campaignId)}/characters/${encodeURIComponent(characterId)}/portraits/upload`,
+    `${base}/api/campaigns/${encodeURIComponent(campaignId)}/${path}`,
     {
       method: 'POST',
       body: picture,

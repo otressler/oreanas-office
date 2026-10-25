@@ -1,10 +1,9 @@
 // The gallery of a creature type's icons, a character's portraits or a custom status's
 // icons (knowledge/features/token-icons.md, statuses.md): the picked image in the token's
-// ring, the versions
-// with their state, picking one or none, generating after a confirm, and for characters
-// uploading through the crop step and restyling an upload. It follows running jobs over
-// the image hub only while one is queued or running. Everything needs a connection;
-// offline it says so instead.
+// ring, the versions with their state, picking one or none, generating after a confirm,
+// uploading through the crop step (characters and creature types) and restyling an upload
+// (characters). It follows running jobs over the image hub only while one is queued or
+// running. Everything needs a connection; offline it says so instead.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, type ReactNode } from 'react'
 import { errorMessage } from '../api/errors'
@@ -26,7 +25,7 @@ import {
   pickedImageKeys,
   pickTokenImage,
   tokenImagesKey,
-  uploadPortrait,
+  uploadTokenImage,
   useTokenImages,
   withImage,
   type TokenImageOwner,
@@ -65,8 +64,10 @@ export interface TokenImageGalleryProps {
    * what is happening meanwhile.
    */
   prepare: (progress: (text: string) => void) => Promise<Prepared>
-  /** Characters: upload through the crop step, and restyle uploaded versions. */
+  /** Characters and creature types: upload through the crop step. */
   uploads?: boolean
+  /** Characters: restyle uploaded versions in the token style. */
+  restyles?: boolean
   /** What "Ohne Bild" means for this owner; the token's letter by default. */
   noneHint?: string
 }
@@ -90,6 +91,7 @@ function OnlineGallery({
   generateHint = null,
   prepare,
   uploads = false,
+  restyles = false,
   noneHint = t.noneHint,
 }: TokenImageGalleryProps) {
   const queryClient = useQueryClient()
@@ -167,7 +169,7 @@ function OnlineGallery({
   }
 
   async function upload(picture: Blob) {
-    const created = await uploadPortrait(campaignId, owner.id, picture)
+    const created = await uploadTokenImage(campaignId, owner, picture)
     remember(created)
     setCropping(null)
     setMessage({ kind: 'info', text: t.uploaded })
@@ -268,7 +270,7 @@ function OnlineGallery({
                   pickBusy={pick.isPending}
                   onPick={() => pick.mutate(version.id)}
                   restyle={
-                    uploads && imageKind(version) === 'uploaded' && canPickImage(version)
+                    restyles && imageKind(version) === 'uploaded' && canPickImage(version)
                       ? {
                           enabled: canStart && !block,
                           onClick: () => {

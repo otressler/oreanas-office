@@ -55,6 +55,7 @@ function renderGallery(props: Partial<TokenImageGalleryProps> = {}) {
         regenerateLabel="Neues Porträt erzeugen"
         prepare={prepare}
         uploads
+        restyles
         {...props}
       />
     </QueryClientProvider>,
@@ -218,6 +219,15 @@ describe('generating', () => {
     await screen.findByText(t.queued)
     expect(prepare).not.toHaveBeenCalled()
     expect(posts()[0]!.body).toEqual({ restyleAssetId: uploaded.id })
+  })
+
+  it('offers uploading without restyling when only uploads are on', async () => {
+    const uploaded = tokenImage({ origin: 'uploaded' })
+    list = tokenImagesOf([uploaded], { pickedAssetId: uploaded.id })
+    renderGallery({ restyles: false })
+    await screen.findAllByRole('listitem')
+    expect(screen.getByRole('button', { name: t.upload })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: t.restyle })).not.toBeInTheDocument()
   })
 })
 

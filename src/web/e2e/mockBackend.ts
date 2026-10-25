@@ -541,15 +541,21 @@ export class MockBackend {
 
   private dispatchTokenImages(context: BrowserContext, request: Request, url: URL): Reply | null {
     const list = matchPath('/api/campaigns/:campaignId/creature-types/icons', url.pathname)
+    const iconUpload = matchPath(
+      '/api/campaigns/:campaignId/creature-types/:ownerId/icons/upload',
+      url.pathname,
+    )
     const icon =
+      iconUpload ??
       matchPath('/api/campaigns/:campaignId/creature-types/:ownerId/icons', url.pathname) ??
       matchPath('/api/campaigns/:campaignId/creature-types/:ownerId/icon', url.pathname)
-    const upload = matchPath(
+    const portraitUpload = matchPath(
       '/api/campaigns/:campaignId/characters/:ownerId/portraits/upload',
       url.pathname,
     )
+    const upload = iconUpload ?? portraitUpload
     const portrait =
-      upload ??
+      portraitUpload ??
       matchPath('/api/campaigns/:campaignId/characters/:ownerId/portraits', url.pathname) ??
       matchPath('/api/campaigns/:campaignId/characters/:ownerId/portrait', url.pathname)
     // Stage 9: a custom status's icons (src/Server/Statuses/StatusEndpoints.cs).
@@ -620,7 +626,7 @@ export class MockBackend {
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(contentType) || !bytes?.length) {
         return error('uploadInvalid')
       }
-      const image = this.newTokenImage('character', ownerId, 'uploaded', null)
+      const image = this.newTokenImage(ownerType, ownerId, 'uploaded', null)
       this.finishTokenImage(image)
       store(image, bytes, contentType)
       return [201, { ...image }]

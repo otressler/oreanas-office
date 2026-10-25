@@ -174,6 +174,7 @@ export function CharacterForm({
             generateHint={appearance.trim() ? null : t.portrait.needsAppearance}
             prepare={prepare}
             uploads
+            restyles
           />
         </section>
       )}

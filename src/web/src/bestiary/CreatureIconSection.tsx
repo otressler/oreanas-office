@@ -1,5 +1,5 @@
 // The icon part of an existing creature type's form (knowledge/features/token-icons.md):
-// the gallery of its icons. The server paints from its own copy of the type, so generating
+// the gallery of its icons, generated or uploaded. The server paints from its own copy of the type, so generating
 // saves the form's edits, syncs the type and sends the version it was synced at. A type the
 // server has never seen gets no gallery until it is synced; the section says so.
 import { useState } from 'react'
@@ -65,6 +65,7 @@ export function CreatureIconSection({
           generateLabel={t.generate}
           regenerateLabel={t.regenerate}
           prepare={prepare}
+          uploads
         />
       )}
     </section>

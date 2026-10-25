@@ -148,6 +148,18 @@ describe('the icon section', () => {
     ])
   })
 
+  it('offers uploading an icon, but no restyling', async () => {
+    const uploaded = tokenImage({ ownerType: 'creatureType', origin: 'uploaded' })
+    calls = mockApi({
+      'GET /api/campaigns/:c/creature-types/:t/icons': () =>
+        json(200, tokenImagesOf([uploaded], { pickedAssetId: uploaded.id })),
+    })
+    renderForm(await goblin(3))
+    await screen.findAllByRole('listitem')
+    expect(screen.getByRole('button', { name: de.tokenImages.upload })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: de.tokenImages.restyle })).not.toBeInTheDocument()
+  })
+
   it('generates nothing when the sync finds no connection', async () => {
     const type = await goblin(3)
     syncCreatureTypeBeforeGenerate.mockResolvedValue({ result: 'offline', version: null })

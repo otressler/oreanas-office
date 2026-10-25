@@ -18,11 +18,11 @@ namespace OreanasOffice.Server.Images;
 // character's owner and every `dm` member (knowledge/domain/character.md); 403 for anyone
 // else in the campaign. 404 for an owner that isn't in the campaign.
 //
-// Uploads send the picture as the raw request body with its Content-Type (image/jpeg,
-// image/png or image/webp), not as a form, so a cross-site page can't post one without a
-// CORS preflight. The server checks the type and size, turns it the right way up, crops the
-// middle square, shrinks it to ImageOptions.TokenPixels and saves it as WebP, which drops
-// the photo's metadata.
+// Both can be uploaded. Uploads send the picture as the raw request body with its
+// Content-Type (image/jpeg, image/png or image/webp), not as a form, so a cross-site page
+// can't post one without a CORS preflight. The server checks the type and size, turns it the
+// right way up, crops the middle square, shrinks it to ImageOptions.TokenPixels and saves it
+// as WebP, which drops the photo's metadata.
 public static class TokenImageEndpoints
 {
     public static IEndpointRouteBuilder MapTokenImageEndpoints(this IEndpointRouteBuilder app)
@@ -33,6 +33,7 @@ public static class TokenImageEndpoints
         icons.MapGet("/icons", ListCreatureTypeIcons);
         icons.MapGet("/{creatureTypeId:guid}/icons", ListIcons);
         icons.MapPost("/{creatureTypeId:guid}/icons", GenerateIcon);
+        icons.MapPost("/{creatureTypeId:guid}/icons/upload", UploadIcon).AcceptsRawPicture();
         icons.MapPut("/{creatureTypeId:guid}/icon", PickIcon);
 
         var portraits = app.MapGroup("/api/campaigns/{campaignId:guid}/characters/{characterId:guid}")
@@ -40,21 +41,7 @@ public static class TokenImageEndpoints
             .RequireAuthorization(Policies.CampaignMember);
         portraits.MapGet("/portraits", ListPortraits);
         portraits.MapPost("/portraits", GeneratePortrait);
-        // The accepted types are only described in the OpenAPI document, not set as Accepts
-        // metadata: routing would answer any other type with the /api fallback's 404,
-        // where the app needs UploadInvalid.
-        portraits.MapPost("/portraits/upload", UploadPortrait)
-            .AddOpenApiOperationTransformer((operation, _, _) =>
-            {
-                operation.RequestBody = new OpenApiRequestBody
-                {
-                    Required = true,
-                    Content = TokenPicture.UploadFormats.Keys.ToDictionary(
-                        type => type,
-                        _ => new OpenApiMediaType { Schema = new OpenApiSchema { Type = JsonSchemaType.String, Format = "byte" } }),
-                };
-                return Task.CompletedTask;
-            });
+        portraits.MapPost("/portraits/upload", UploadPortrait).AcceptsRawPicture();
         portraits.MapPut("/portrait", PickPortrait);
 
         return app;
@@ -133,6 +120,31 @@ public static class TokenImageEndpoints
             { Image: { } image } => QueuedAt(queue, $"/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icons", image),
             _ => TypedResults.NotFound(),
         };
+    }
+
+    // 201 with the new version, already Done and picked. Archived types may still get one,
+    // like picking; only generating is refused. Errors (400): UploadInvalid, UploadTooLarge.
+    private static async Task<Results<Created<TokenImage>, NotFound, BadRequest<ApiError>>> UploadIcon(
+        Guid campaignId,
+        Guid creatureTypeId,
+        HttpRequest request,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        IOptions<ImageOptions> options,
+        IAssetStore store,
+        TimeProvider time,
+        CancellationToken cancellationToken)
+    {
+        if (!await db.CreatureTypes.AnyAsync(t => t.Id == creatureTypeId && t.CampaignId == campaignId, cancellationToken))
+        {
+            return TypedResults.NotFound();
+        }
+
+        var (image, error) = await UploadAsync(
+            request, db, options.Value, store, time, AssetOwnerType.CreatureType, creatureTypeId, campaignId, user.GetUserId(), cancellationToken);
+        return image is null
+            ? TypedResults.BadRequest(new ApiError(error!.Value))
+            : TypedResults.Created($"/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icons", image);
     }
 
     // Sets IconAssetId to a Done version of the type, or null for the letter.
@@ -270,56 +282,11 @@ public static class TokenImageEndpoints
             return TypedResults.Forbid();
         }
 
-        var settings = options.Value;
-        if (!MediaTypeHeaderValue.TryParse(request.ContentType, out var mediaType)
-            || !TokenPicture.UploadFormats.TryGetValue(mediaType.MediaType.ToString(), out var declared))
-        {
-            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadInvalid));
-        }
-
-        if (request.ContentLength > settings.UploadMaxBytes)
-        {
-            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadTooLarge));
-        }
-
-        var body = await ReadBodyAsync(request, settings.UploadMaxBytes, cancellationToken);
-        if (body is null)
-        {
-            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadTooLarge));
-        }
-
-        // The bytes must be the picture the Content-Type says.
-        var picture = TokenPicture.Identify(body) == declared
-            ? TokenPicture.FromUpload(body, settings.TokenPixels, settings.UploadMaxPixels)
-            : null;
-        if (picture is null)
-        {
-            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadInvalid));
-        }
-
-        var now = time.GetUtcNow();
-        var asset = new Asset
-        {
-            Id = Guid.NewGuid(),
-            Kind = AssetKind.TokenIcon,
-            OwnerType = AssetOwnerType.Character,
-            OwnerId = characterId,
-            CampaignId = campaignId,
-            Origin = AssetOrigin.Uploaded,
-            Status = AssetStatus.Done,
-            ContentType = TokenPicture.ContentType,
-            CreatedAt = now,
-            CreatedByUserId = user.GetUserId(),
-            FinishedAt = now,
-        };
-        asset.BlobName = TokenImages.BlobName(AssetOwnerType.Character, characterId, asset.Id);
-        await store.SaveAsync(asset.BlobName, picture, TokenPicture.ContentType, cancellationToken);
-
-        // The upload becomes the picked portrait at once.
-        db.Assets.Add(asset);
-        character.TokenAssetId = asset.Id;
-        await db.SaveChangesAsync(cancellationToken);
-        return TypedResults.Created(PortraitsUrl(campaignId, characterId), TokenImages.ToView(asset));
+        var (image, error) = await UploadAsync(
+            request, db, options.Value, store, time, AssetOwnerType.Character, characterId, campaignId, user.GetUserId(), cancellationToken);
+        return image is null
+            ? TypedResults.BadRequest(new ApiError(error!.Value))
+            : TypedResults.Created(PortraitsUrl(campaignId, characterId), image);
     }
 
     // Sets TokenAssetId to a Done version of the character, or null for the letter.
@@ -443,6 +410,87 @@ public static class TokenImageEndpoints
     {
         queue.Notify();
         return TypedResults.Accepted(location, image);
+    }
+
+    // The accepted types are only described in the OpenAPI document, not set as Accepts
+    // metadata: routing would answer any other type with the /api fallback's 404, where the
+    // app needs UploadInvalid.
+    private static RouteHandlerBuilder AcceptsRawPicture(this RouteHandlerBuilder endpoint) =>
+        endpoint.AddOpenApiOperationTransformer((operation, _, _) =>
+        {
+            operation.RequestBody = new OpenApiRequestBody
+            {
+                Required = true,
+                Content = TokenPicture.UploadFormats.Keys.ToDictionary(
+                    type => type,
+                    _ => new OpenApiMediaType { Schema = new OpenApiSchema { Type = JsonSchemaType.String, Format = "byte" } }),
+            };
+            return Task.CompletedTask;
+        });
+
+    // Checks an uploaded picture and stores it as a new Done version of the owner, picked at
+    // once: the version, or why not (UploadInvalid, UploadTooLarge). The pick goes through
+    // TokenImages.PickAsync, so a creature type's sync version stays as it is.
+    private static async Task<(TokenImage? Image, ApiErrorCode? Error)> UploadAsync(
+        HttpRequest request,
+        AppDbContext db,
+        ImageOptions settings,
+        IAssetStore store,
+        TimeProvider time,
+        AssetOwnerType ownerType,
+        Guid ownerId,
+        Guid campaignId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (!MediaTypeHeaderValue.TryParse(request.ContentType, out var mediaType)
+            || !TokenPicture.UploadFormats.TryGetValue(mediaType.MediaType.ToString(), out var declared))
+        {
+            return (null, ApiErrorCode.UploadInvalid);
+        }
+
+        if (request.ContentLength > settings.UploadMaxBytes)
+        {
+            return (null, ApiErrorCode.UploadTooLarge);
+        }
+
+        var body = await ReadBodyAsync(request, settings.UploadMaxBytes, cancellationToken);
+        if (body is null)
+        {
+            return (null, ApiErrorCode.UploadTooLarge);
+        }
+
+        // The bytes must be the picture the Content-Type says.
+        var picture = TokenPicture.Identify(body) == declared
+            ? TokenPicture.FromUpload(body, settings.TokenPixels, settings.UploadMaxPixels)
+            : null;
+        if (picture is null)
+        {
+            return (null, ApiErrorCode.UploadInvalid);
+        }
+
+        var now = time.GetUtcNow();
+        var asset = new Asset
+        {
+            Id = Guid.NewGuid(),
+            Kind = AssetKind.TokenIcon,
+            OwnerType = ownerType,
+            OwnerId = ownerId,
+            CampaignId = campaignId,
+            Origin = AssetOrigin.Uploaded,
+            Status = AssetStatus.Done,
+            ContentType = TokenPicture.ContentType,
+            CreatedAt = now,
+            CreatedByUserId = userId,
+            FinishedAt = now,
+        };
+        asset.BlobName = TokenImages.BlobName(ownerType, ownerId, asset.Id);
+        await store.SaveAsync(asset.BlobName, picture, TokenPicture.ContentType, cancellationToken);
+
+        db.Assets.Add(asset);
+        await db.SaveChangesAsync(cancellationToken);
+        await TokenImages.PickAsync(db, ownerType, ownerId, asset.Id, cancellationToken);
+        return (TokenImages.ToView(asset), null);
     }
 
     // Reads at most maxBytes; null when the body is longer.

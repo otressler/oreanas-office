@@ -1738,11 +1738,11 @@ export const de = {
     /** The icon part of an existing type's form (knowledge/features/token-icons.md). */
     icon: {
       title: 'Symbol',
-      help: 'Ein Bildmodell malt aus Name und Aussehen ein Symbol. Alle Kreaturen dieser Art zeigen es auf dem Brett.',
+      help: 'Ein Bildmodell malt aus Name und Aussehen ein Symbol, oder du lädst ein eigenes Bild hoch. Alle Kreaturen dieser Art zeigen es auf dem Brett.',
       generate: 'Symbol erzeugen',
       regenerate: 'Neues Symbol erzeugen',
       notSynced:
-        'Diese Kreaturenart ist noch nicht auf dem Server. Synchronisiere sie zuerst, dann lässt sich ein Symbol erzeugen.',
+        'Diese Kreaturenart ist noch nicht auf dem Server. Synchronisiere sie zuerst, dann lässt sich ein Symbol erzeugen oder hochladen.',
       syncNow: 'Jetzt synchronisieren',
       syncing: 'Die Kreaturenart wird synchronisiert…',
       /** Why the type couldn't be synced; generating adds `nothingGenerated`. */
