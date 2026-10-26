@@ -12,15 +12,16 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:45:10Z }
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | id | |
-| `kind` | enum `map-background` \| `token-icon` | |
-| `ownerType`, `ownerId` | string, id | The [battle map](/domain/battle-map.md), [creature type](/domain/creature-type.md) or [character](/domain/character.md) it belongs to |
+| `kind` | enum `map-background` \| `token-icon` \| `campaign-cover` | |
+| `ownerType`, `ownerId` | string, id | The [battle map](/domain/battle-map.md), [creature type](/domain/creature-type.md), [character](/domain/character.md), custom [status](/domain/status.md) or [campaign](/domain/campaign.md) it belongs to |
 | `origin` | enum `generated` \| `uploaded` | |
 | `prompt` | text, nullable | The full prompt sent to the model |
 | `sourceAssetId` | → Asset, nullable | For a portrait restyled from an upload: the uploaded version sent to the model as the reference |
 | `model` | string, nullable | Model deployment used |
 | `status` | enum `queued` \| `running` \| `done` \| `failed` | Generation runs as a background job. These rows are the job queue, so queued jobs survive the container stopping ([hosting](/decisions/hosting.md)) |
 | `blobName` | string, nullable | Where the image lies in the private blob container. The browser loads it from `/api/assets/{id}` ([persistence](/decisions/persistence.md)) |
-| `gridWidth`, `gridHeight` | int, cells, nullable | For a map background: the map's size when the image was made. A background whose size no longer matches the map is outdated |
+| `gridWidth`, `gridHeight` | int, cells, nullable | For a map background: the map's size when the image was made or uploaded. A generated background whose size no longer matches the map is outdated; an uploaded one never is |
+| `pixelWidth`, `pixelHeight` | int, nullable | For an uploaded map background: the stored picture's size, so its first frame keeps its aspect |
 | `costUsd` | decimal, nullable | What the generation cost, counted against the monthly [image budget](/decisions/image-budget.md) |
 | `createdAt` | timestamp | |
 
@@ -30,6 +31,12 @@ A battle map can have several background assets: every "regenerate" adds one. `B
 
 A map copied from the store points to the same background asset as its source, so `ownerId` stays the map it was generated for. Regenerating on the copy makes a new asset owned by the copy ([battle map](/domain/battle-map.md)).
 
+A map can also get uploaded backgrounds: already `done` when saved, with no prompt or cost, stored as WebP ([AI map generation](/features/ai-map-generation.md), "Uploads").
+
+Deleting a map deletes the files of its background assets that nothing else shows, and clears their `blobName`. The rows stay, so `ownerId` may name a map that no longer exists: they keep what each image cost for the monthly [image budget](/decisions/image-budget.md) ([battle map](/domain/battle-map.md), "Deleting").
+
 A creature type and a character also collect versions: generated, uploaded (already `done` when saved, with no prompt or cost) and restyled from an upload. `CreatureType.iconAssetId` and `Character.tokenAssetId` point to the picked one ([token icons](/features/token-icons.md)).
+
+A campaign collects cover versions the same way, as `campaign-cover` assets: 3:2, opaque, kept as a 1200 × 800 WebP. `Campaign.coverAssetId` points to the picked one ([campaign overview](/features/campaign-overview.md)).
 
 No job is ever queued automatically. A person starts every generation and confirms it first ([image budget](/decisions/image-budget.md)).

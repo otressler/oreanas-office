@@ -9,23 +9,40 @@ import type { HubConnection } from '@microsoft/signalr'
 import type {
   AddStatusRequest,
   ArrowDrawnEvent,
+  ChangeFogRequest,
   DrawArrowRequest,
+  EncounterStartedEvent,
+  FogChangedEvent,
   HubResult,
+  InitiativeChangedEvent,
+  InitiativeResult,
+  InitiativeRollResult,
   MovePreviewClearedEvent,
   MovePreviewEvent,
   MoveResult,
   MoveTokenRequest,
   PingRequest,
   PingedEvent,
+  PlayModeChangedEvent,
+  PresenceChangedEvent,
   RemoveStatusRequest,
+  SetInitiativeRequest,
   SetStatusLevelRequest,
+  SetTokensHiddenRequest,
+  SpawnCreaturesRequest,
+  SpawnResult,
   StatusResult,
   TableClientMethod,
   TableHubMethod,
+  TokenHiddenEvent,
   TokenMovedEvent,
   TokenRemovedEvent,
   TokenRestoredEvent,
+  TokenRevealedEvent,
   TokenStatusesChangedEvent,
+  TokensAddedEvent,
+  WatchResult,
+  WatchSessionRequest,
 } from '../api/types'
 
 export const TABLE_HUB_PATH = '/hubs/table'
@@ -68,6 +85,28 @@ export interface TableHubCalls {
   RemoveToken: { args: [tokenId: string]; result: HubResult }
   /** Session DM only. Errors as RemoveToken. Everyone gets TokenRestored. */
   RestoreToken: { args: [tokenId: string]; result: HubResult }
+  /**
+   * Makes this connection a spectator screen, or with `sharedScreen` a shared screen; call it
+   * before JoinEncounter. Errors: tokenNotFound (no access to the session), notLocalMode.
+   */
+  WatchSession: { args: [request: WatchSessionRequest]; result: WatchResult }
+  /** Session DM only. Errors: tokenNotFound, encounterNotActive, notSessionDm, fogInvalid. */
+  ChangeFog: { args: [request: ChangeFogRequest]; result: HubResult }
+  /** Session DM only. Reveals or hides creatures. Errors: tokenNotFound, encounterNotActive, notSessionDm. */
+  SetTokensHidden: { args: [request: SetTokensHiddenRequest]; result: HubResult }
+  /** Session DM only. Errors: tokenNotFound, encounterNotActive, notSessionDm, spawnInvalid, targetInvalid. */
+  SpawnCreatures: { args: [request: SpawnCreaturesRequest]; result: SpawnResult }
+  /** Session DM only. Takes back the latest fog change, reveal or spawn. Errors: ..., nothingToUndo. */
+  UndoChange: { args: [encounterId: string]; result: HubResult }
+  /**
+   * Session DM only (knowledge/features/initiative.md). A fresh roll for the setup screen, not
+   * saved. Errors: tokenNotFound, encounterNotActive, notSessionDm.
+   */
+  RollInitiative: { args: [encounterId: string]; result: InitiativeRollResult }
+  /** Session DM only. Saves the whole list in this order. Errors: ..., initiativeInvalid. */
+  SetInitiative: { args: [request: SetInitiativeRequest]; result: InitiativeResult }
+  /** Session DM only. Switches initiative off for the fight. */
+  ClearInitiative: { args: [encounterId: string]; result: InitiativeResult }
 }
 
 /** Server → device messages and their arguments. */
@@ -92,6 +131,26 @@ export interface TableClientEvents {
   TokenRemoved: [removed: TokenRemovedEvent]
   /** A removed token is back. */
   TokenRestored: [restored: TokenRestoredEvent]
+  /** Session group: a fight started; a screen joins it by itself. */
+  EncounterStarted: [started: EncounterStartedEvent]
+  /** Session group: the session ended; show "Sitzung beendet" and disconnect. */
+  SessionEnded: [sessionId: string]
+  /** Session group: the play mode changed; nothing reloads. */
+  PlayModeChanged: [changed: PlayModeChangedEvent]
+  /** Who is connected to the fight changed. */
+  PresenceChanged: [presence: PresenceChangedEvent]
+  /** Fog changed: the plain change for the DM, the newly revealed layout and creatures for players. */
+  FogChanged: [changed: FogChangedEvent]
+  /** A creature became visible (players: the whole token), or is no longer hidden (DM). */
+  TokenRevealed: [revealed: TokenRevealedEvent]
+  /** A creature was hidden again; players get only its id. */
+  TokenHidden: [hidden: TokenHiddenEvent]
+  /** Spawned creatures: the ones this device may see. */
+  TokensAdded: [added: TokensAddedEvent]
+  /** What this device may see changed (a hand-over): JoinEncounter again and reload the board. */
+  ReloadBoard: [encounterId: string]
+  /** The session DM's group only: the initiative list changed; keep the higher version. */
+  InitiativeChanged: [changed: InitiativeChangedEvent]
 }
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false

@@ -6,6 +6,7 @@
 import type { LayoutCell, Terrain } from '../../api/types'
 import { cellKey, type GridPoint } from '../../board/geometry'
 import { limits } from '../../lib/limits'
+import { shifted } from '../background/transform'
 import { MIN_MAP_SIZE, type EditorMap } from '../model'
 
 const byPosition = (a: LayoutCell, b: LayoutCell) => a.y - b.y || a.x - b.x
@@ -200,7 +201,8 @@ export function canResize(doc: Pick<EditorMap, 'width' | 'height'>, edges: Resiz
  * new cells are void; cells outside the new grid are dropped, and so are features
  * that no longer lie completely inside. Entrance cells outside are dropped and an
  * entrance left without cells is removed; entrance cells no longer on the edge stay
- * (the layout checks flag them). A size outside the limits leaves the map as it is.
+ * (the layout checks flag them). The background placement shifts along, so the picture
+ * stays over the same cells. A size outside the limits leaves the map as it is.
  */
 export function resizeMap(doc: EditorMap, edges: ResizeEdges): EditorMap {
   if (!canResize(doc, edges)) return doc
@@ -225,7 +227,14 @@ export function resizeMap(doc: EditorMap, edges: ResizeEdges): EditorMap {
     }))
     .filter((entrance) => entrance.cells.length > 0)
 
-  return { ...doc, ...size, layout: { ...doc.layout, cells, features, entrances } }
+  const placement = doc.backgroundPlacement
+  const backgroundPlacement = placement ? shifted(placement, dx, dy) : placement
+  return {
+    ...doc,
+    ...size,
+    layout: { ...doc.layout, cells, features, entrances },
+    ...(placement !== undefined && { backgroundPlacement }),
+  }
 }
 
 /** A column or row count as typed in the resize panel ("2", "-3", "+1"); empty counts as 0, anything else is null. */

@@ -56,6 +56,8 @@ async function goblin(baseVersion: number): Promise<LocalCreatureType> {
     size: 'small',
     appearance: 'grün',
     notes: '',
+    initiativeModifier: 0,
+    initiativeRollMode: 'normal',
   })
   if (!created.ok) throw new Error('not created')
   const type = {
@@ -146,6 +148,18 @@ describe('the icon section', () => {
         body: { itemVersion: 4 },
       }),
     ])
+  })
+
+  it('offers uploading an icon, but no restyling', async () => {
+    const uploaded = tokenImage({ ownerType: 'creatureType', origin: 'uploaded' })
+    calls = mockApi({
+      'GET /api/campaigns/:c/creature-types/:t/icons': () =>
+        json(200, tokenImagesOf([uploaded], { pickedAssetId: uploaded.id })),
+    })
+    renderForm(await goblin(3))
+    await screen.findAllByRole('listitem')
+    expect(screen.getByRole('button', { name: de.tokenImages.upload })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: de.tokenImages.restyle })).not.toBeInTheDocument()
   })
 
   it('generates nothing when the sync finds no connection', async () => {

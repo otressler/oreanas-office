@@ -249,6 +249,82 @@ public sealed class IconEndpointTests(AppFixture fixture) : IClassFixture<AppFix
             icons);
     }
 
+    [Fact]
+    public async Task An_upload_becomes_a_finished_picked_icon_without_changing_the_sync_version()
+    {
+        fixture.App.ResetFakeTokens();
+        var table = await fixture.App.CreateTokenTableAsync();
+        var generated = await fixture.App.IconAndWaitAsync(table.Dm, table.CampaignId, table.CreatureTypeId);
+        var before = await table.Dm.FetchOneAsync(table.CampaignId, table.CreatureTypeId);
+
+        var response = await table.SecondDm.UploadIconAsync(table.CampaignId, table.CreatureTypeId, TestPictures.SplitJpeg(300, 200), "image/jpeg");
+
+        var upload = await response.ReadAsync<TokenImage>(HttpStatusCode.Created);
+        Assert.Equal(IconsUrl(table), response.Headers.Location?.OriginalString);
+        Assert.Equal(
+            (AssetOwnerType.CreatureType, table.CreatureTypeId, AssetOrigin.Uploaded, AssetStatus.Done, $"/api/assets/{upload.Id}", (Guid?)null),
+            (upload.OwnerType, upload.OwnerId, upload.Origin, upload.Status, upload.Url, upload.SourceAssetId));
+        var asset = await fixture.App.AssetAsync(upload.Id);
+        Assert.Equal(
+            ($"tokens/creature-type/{table.CreatureTypeId}/{upload.Id}.webp", "image/webp", (decimal?)null, (Guid?)table.SecondDm.Id),
+            (asset.BlobName, asset.ContentType, asset.CostUsd, asset.CreatedByUserId));
+
+        var list = await table.Dm.ListIconsAsync(table.CampaignId, table.CreatureTypeId);
+        Assert.Equal(upload.Id, list.PickedAssetId);
+        Assert.Equal([upload.Id, generated.Id], list.Versions.Select(v => v.Id));
+        var after = await table.Dm.FetchOneAsync(table.CampaignId, table.CreatureTypeId);
+        Assert.Equal((before.Version, before.UpdatedAt), (after.Version, after.UpdatedAt));
+
+        using var bitmap = TestPictures.Decode(await (await table.Dm.GetAssetAsync(upload.Id)).Content.ReadAsByteArrayAsync());
+        Assert.Equal((512, 512), (bitmap.Width, bitmap.Height));
+    }
+
+    [Fact]
+    public async Task Uploading_is_for_dm_members_and_types_of_the_campaign()
+    {
+        var table = await fixture.App.CreateTokenTableAsync();
+        var other = await fixture.App.CreateTokenTableAsync();
+        var jpeg = TestPictures.SplitJpeg(50, 50);
+
+        foreach (var person in new[] { table.Player, table.Stranger })
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, (await person.UploadIconAsync(table.CampaignId, table.CreatureTypeId, jpeg, "image/jpeg")).StatusCode);
+        }
+
+        Assert.Equal(HttpStatusCode.NotFound, (await table.Dm.UploadIconAsync(table.CampaignId, other.CreatureTypeId, jpeg, "image/jpeg")).StatusCode);
+        Assert.Empty((await table.Dm.ListIconsAsync(table.CampaignId, table.CreatureTypeId)).Versions);
+    }
+
+    [Fact]
+    public async Task An_archived_type_can_still_get_an_upload()
+    {
+        var table = await fixture.App.CreateTokenTableAsync();
+        await table.Dm.PushOneAsync(CreatureType(
+            table.CampaignId, table.CreatureTypeId, baseVersion: table.TypeVersion, archivedAt: DateTimeOffset.UtcNow));
+
+        var upload = await table.Dm.UploadIconOkAsync(table.CampaignId, table.CreatureTypeId);
+
+        Assert.Equal(upload.Id, (await table.Dm.ListIconsAsync(table.CampaignId, table.CreatureTypeId)).PickedAssetId);
+    }
+
+    [Fact]
+    public async Task An_upload_that_isnt_the_picture_it_claims_is_refused()
+    {
+        var table = await fixture.App.CreateTokenTableAsync();
+        var jpeg = TestPictures.SplitJpeg(50, 50);
+
+        foreach (var response in new[]
+        {
+            await table.Dm.UploadIconAsync(table.CampaignId, table.CreatureTypeId, jpeg, "image/png"),
+            await table.Dm.UploadIconAsync(table.CampaignId, table.CreatureTypeId, "<svg/>"u8.ToArray(), "image/svg+xml"),
+        })
+        {
+            await response.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.UploadInvalid);
+        }
+
+        Assert.Empty((await table.Dm.ListIconsAsync(table.CampaignId, table.CreatureTypeId)).Versions);
+    }
+
     private static string IconsUrl(TokenTable table) => TokenImageTestApi.IconsUrl(table.CampaignId, table.CreatureTypeId);
 
     private static string IconsUrl(Guid campaignId, Guid typeId) => TokenImageTestApi.IconsUrl(campaignId, typeId);

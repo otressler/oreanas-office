@@ -20,17 +20,22 @@ export function canAddStatus(
   token: Pick<BoardToken, 'kind' | 'ownerUserId'>,
   board: Pick<BoardState, 'isSessionDm'>,
   userId: string,
+  sharedScreen = false,
 ): boolean {
-  if (board.isSessionDm) return true
+  // A shared screen acts like a player who owns every character (knowledge/features/shared-table.md).
+  if (sharedScreen || board.isSessionDm) return true
   return token.kind === 'creature' || token.ownerUserId === userId
 }
 
 /** Whether the person may take the status off (or change its level). */
 export function canRemoveStatus(
-  status: Pick<BoardTokenStatus, 'appliedByUserId'>,
+  status: Pick<BoardTokenStatus, 'appliedByUserId' | 'fromSharedScreen'>,
   board: Pick<BoardState, 'isSessionDm'>,
   userId: string,
+  sharedScreen = false,
 ): boolean {
+  // A shared screen takes off only what was put on from a shared screen.
+  if (sharedScreen) return status.fromSharedScreen
   return board.isSessionDm || status.appliedByUserId === userId
 }
 

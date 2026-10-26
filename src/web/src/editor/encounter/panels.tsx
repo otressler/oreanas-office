@@ -8,12 +8,23 @@ import { useCreatureTypes } from '../../bestiary/creatureTypes'
 import { useSessions } from '../../campaigns/queries'
 import { Badge, Button } from '../../components/ui'
 import { inputClass } from '../../components/styles'
+import type { InitiativeRollMode } from '../../api/types'
+import {
+  formatModifier,
+  MODIFIER_MAX,
+  MODIFIER_MIN,
+  parseWhole,
+  ROLL_MODES,
+} from '../../initiative/initiative'
 import { useLocalUser } from '../../offline/localUser'
+import type { LocalCreatureToken, LocalCreatureType } from '../../offline/model'
 import { syncThenStart } from '../../sync'
 import { de } from '../../text/de'
 import { saveEncounter } from './encounters'
 import { pickType, usePickedState } from './picked'
 import { useEncounter, useEncounterStore } from './store'
+import { FogChecks } from '../fog/FogPanel'
+import { useFogOptions } from '../fog/options'
 import { useEditor } from '../store'
 import {
   cleanLabel,
@@ -22,6 +33,8 @@ import {
   notReadyReason,
   removeToken,
   renameToken,
+  setTokenHidden,
+  setTokenInitiative,
   setArchived,
   setReady,
   LABEL_MAX,
@@ -40,6 +53,8 @@ export function PlacePanel() {
   const campaignId = useEncounter((s) => s.meta.campaignId)
   const { type: picked, campaignId: pickedCampaign } = usePickedState()
   const types = useCreatureTypes(db, campaignId)
+  const placeHidden = useFogOptions((s) => s.placeHidden)
+  const setPlaceHidden = useFogOptions((s) => s.setPlaceHidden)
 
   // The pick is a copy of the type. Editing or archiving it in the list updates the pick;
   // here it is dropped when it belongs to another campaign or was archived elsewhere.
@@ -53,6 +68,15 @@ export function PlacePanel() {
   return (
     <div className="flex flex-col gap-3">
       <Help>{picked ? t.placeHelp(picked.name) : t.placePickFirst}</Help>
+      <label className="flex min-h-9 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          role="switch"
+          checked={placeHidden}
+          onChange={(event) => setPlaceHidden(event.target.checked)}
+        />
+        {de.fog.editor.placeHidden}
+      </label>
       <BestiaryList campaignId={campaignId} pickedId={picked?.id ?? null} onPick={pickType} />
     </div>
   )
@@ -72,6 +96,25 @@ export function SelectCreaturePanel() {
   return (
     <div className="flex flex-col gap-3">
       <LabelField key={token.id} id={token.id} label={token.label} disabled={readOnly} />
+      <label className="flex min-h-9 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          role="switch"
+          checked={token.hidden ?? false}
+          disabled={readOnly}
+          onChange={(event) =>
+            store.getState().apply((doc) => setTokenHidden(doc, token.id, event.target.checked))
+          }
+        />
+        {de.fog.editor.hiddenSwitch}
+      </label>
+      <Help>{de.fog.editor.hiddenHelp}</Help>
+      <InitiativeFields
+        key={`initiative-${token.id}`}
+        token={token}
+        type={type}
+        disabled={readOnly}
+      />
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
         <dt className="text-dim">{t.type}</dt>
         <dd>{type?.name ?? '…'}</dd>
@@ -88,6 +131,92 @@ export function SelectCreaturePanel() {
           </Button>
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * The creature's own initiative modifier and roll mode (knowledge/features/initiative.md):
+ * empty and "Wie die Art" take the type's. The modifier is kept while the field is valid.
+ */
+function InitiativeFields({
+  token,
+  type,
+  disabled,
+}: {
+  token: LocalCreatureToken
+  type: LocalCreatureType | undefined
+  disabled: boolean
+}) {
+  const store = useEncounterStore()
+  const modifierId = useId()
+  const modeId = useId()
+  const own = token.initiativeModifier ?? null
+  const [text, setText] = useState(own === null ? '' : String(own))
+  const parsed = text.trim() === '' ? null : parseWhole(text, MODIFIER_MIN, MODIFIER_MAX)
+  const invalid = text.trim() !== '' && parsed === null
+  const typeModifier = type?.initiativeModifier ?? 0
+  const typeMode = type?.initiativeRollMode ?? 'normal'
+  const mode = token.initiativeRollMode ?? null
+
+  function changeModifier(value: string) {
+    setText(value)
+    const next = value.trim() === '' ? null : parseWhole(value, MODIFIER_MIN, MODIFIER_MAX)
+    if (value.trim() === '' || next !== null)
+      store.getState().apply((doc) => setTokenInitiative(doc, token.id, { modifier: next }))
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
+        <label htmlFor={modifierId} className="text-sm text-dim">
+          {t.initiativeModifier}
+        </label>
+        <input
+          id={modifierId}
+          className={inputClass}
+          type="number"
+          inputMode="numeric"
+          min={MODIFIER_MIN}
+          max={MODIFIER_MAX}
+          step={1}
+          value={text}
+          placeholder={t.initiativeFromType(formatModifier(typeModifier))}
+          disabled={disabled}
+          aria-invalid={invalid || undefined}
+          aria-describedby={`${modifierId}-hint`}
+          onChange={(event) => changeModifier(event.target.value)}
+        />
+        <p id={`${modifierId}-hint`} className={`text-sm ${invalid ? 'text-red-300' : 'text-dim'}`}>
+          {invalid ? t.initiativeModifierInvalid : t.initiativeModifierHint}
+        </p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor={modeId} className="text-sm text-dim">
+          {t.initiativeRollMode}
+        </label>
+        <select
+          id={modeId}
+          className={inputClass}
+          value={mode ?? 'type'}
+          disabled={disabled}
+          onChange={(event) => {
+            const value = event.target.value
+            store.getState().apply((doc) =>
+              setTokenInitiative(doc, token.id, {
+                mode: value === 'type' ? null : (value as InitiativeRollMode),
+              }),
+            )
+          }}
+        >
+          <option value="type">{t.rollModeFromType(de.dice.mode[typeMode])}</option>
+          {ROLL_MODES.map((value) => (
+            <option key={value} value={value}>
+              {de.dice.mode[value]}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   )
 }
@@ -186,6 +315,8 @@ export function EncounterPanel() {
           {t.readyBroken(labels.join(', '))}
         </p>
       )}
+
+      <FogChecks />
 
       <StartEncounter ready={ready} reason={reason} />
 

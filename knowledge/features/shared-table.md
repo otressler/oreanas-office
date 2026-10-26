@@ -23,7 +23,7 @@ Proposals in this concept that the project owner hasn't confirmed yet are marked
 **What it shows** (question 28)
 
 - A row of small round avatars along the top edge of the board, on every device in the fight, the spectator screen included.
-- **Who is in the row**: the session DM, the owner of every character in the fight, and anyone else connected to the fight, such as a `dm` member who only watches. Each person appears once, however many devices they use.
+- **Who is in the row**: the session DM, whoever plays each character in the fight ([character](/domain/character.md), "Who plays it"), and anyone else connected to the fight, such as a `dm` member who only watches. Each person appears once, however many devices they use.
 - **Connected or not**: an avatar is drawn full when at least one of the person's devices is connected to the fight, and greyed out when none is. Phones close their connection when the app goes to the background ([realtime sync](/decisions/realtime-sync.md)), so a locked phone shows as not connected. That is honest: the person won't see a ping until they look again.
 - **The avatar** is the portrait of the person's character in the fight in its ring colour, as on the token; with several characters, the one added to the campaign first, as for [ping colours](/features/pings-and-arrows.md). The session DM gets a gold ring; someone without a character in the fight gets their initial in white.
 - **The shared screen** counts as its own avatar, a table icon, while at least one spectator screen is connected to the session. Its account doesn't count as a person through it, as the [spectator view](/features/spectator-view.md) says.
@@ -100,3 +100,10 @@ Proposals in this concept that the project owner hasn't confirmed yet are marked
 - [ ] A tablet signed in as the session DM shows no hidden goblin and no fog layout, also in local mode.
 - [ ] A spectator who isn't a campaign member can't move anything and isn't offered a shared screen in local mode.
 - [ ] Switching back to "Eigene Geräte" ends the shared screen's selection, and it only watches again.
+
+# As built (stage 10)
+
+- `PUT /api/campaigns/{c}/sessions/{s}/play-mode` (session DM) saves the mode and sends `PlayModeChanged` to the session group; the session page refetches.
+- Presence: `TablePresence` keeps a roster per encounter in memory, with the 10-second grace in a timer; spectator and shared screens only make `sharedScreen` true. `PresentPerson` also tells whether the person is the session DM.
+- Permissions: `TablePermissions` decides by connection mode and play mode; a shared screen outside local mode is read-only at its next call. Moves, statuses and pings from a shared screen carry `fromSharedScreen`; a shared screen's undo is fight-wide (the last move made from any shared screen), a player's undo stays their own. Board and status picker take `?sharedScreen=true` for a shared screen.
+- Known gaps: any member can pass `?sharedScreen=true` to the status picker and see every character's status list; `SharedScreenControls` is covered by unit and backend tests but was not run in a browser against the real backend.

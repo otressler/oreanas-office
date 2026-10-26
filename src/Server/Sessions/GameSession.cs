@@ -33,11 +33,25 @@ public class GameSession
     // Encounter.BackgroundAssetId: sessions and encounters already point at each other.
     public Guid? InterruptedEncounterId { get; set; }
 
+    // knowledge/features/shared-table.md, "The play mode": set by the session DM.
+    public PlayMode PlayMode { get; set; }
+
     public Campaign Campaign { get; set; } = null!;
 
     public AppUser Dm { get; set; } = null!;
 
     public List<Encounter> Encounters { get; } = [];
+
+    // Characters someone other than their owner plays in this session.
+    public List<SessionCharacterPlayer> CharacterPlayers { get; } = [];
+}
+
+// Byod: everyone plays on their own device. Local: any member may also open a shared screen
+// that moves every character.
+public enum PlayMode
+{
+    Byod,
+    Local,
 }
 
 public enum SessionStatus

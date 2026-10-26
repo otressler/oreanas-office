@@ -1,8 +1,9 @@
 // The "Hintergrund" panel (knowledge/features/ai-map-generation.md): generate a background
-// after the DM confirmed the job, follow it over the image hub while it runs, compare the
-// versions and pick one (or none). Everything here needs a connection; offline it says so.
+// after the DM confirmed the job, follow it over the image hub while it runs, upload the DM's
+// own picture, compare the versions and pick one (or none). Placing the picked picture and
+// the grid style change the map, so they work offline; everything else needs a connection.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { errorMessage } from '../../api/errors'
 import type { MapBackground, MapBackgrounds } from '../../api/types'
 import { Badge, Button, ErrorAlert } from '../../components/ui'
@@ -25,6 +26,8 @@ import {
   isOutdated,
   pickBackground,
   pickedVersion,
+  UPLOAD_TYPES,
+  uploadBackground,
   useMapBackgrounds,
   withVersion,
   type MapSize,
@@ -33,6 +36,7 @@ import {
 import { CompareDialog } from './CompareDialog'
 import { ConfirmDialog } from './ConfirmDialog'
 import { createImageConnection } from './createConnection'
+import { GridStyleField, PlacementSection } from './PlacementSection'
 import { useBackgroundWatch } from './watch'
 
 const t = de.maps.background
@@ -41,11 +45,19 @@ const Help = ({ children }: { children: ReactNode }) => (
   <p className="text-sm text-dim">{children}</p>
 )
 
+/** The largest upload the server takes (ImageOptions.BackgroundUploadMaxBytes). */
+const UPLOAD_MAX_BYTES = 25 * 1024 * 1024
+
 export function BackgroundPanel() {
   const online = useOnline()
-  // Offline nothing is asked for and no connection is opened: one clear line instead.
-  if (!online) return <Help>{t.offline}</Help>
-  return <OnlinePanel />
+  return (
+    <div className="flex flex-col gap-5">
+      <PlacementSection />
+      {/* Offline nothing is asked for and no connection is opened: one clear line instead. */}
+      {online ? <OnlinePanel /> : <Help>{t.offline}</Help>}
+      <GridStyleField />
+    </div>
+  )
 }
 
 type Message = { kind: 'info' | 'error'; text: string } | null
@@ -96,29 +108,73 @@ function OnlinePanel() {
     onSettled: () => refetch(),
   })
 
+  /**
+   * Saves edits the autosave hasn't written yet, then syncs the map; its server version, or
+   * null after saying why not.
+   */
+  async function syncFirst(texts: { offline: string; blocked: string }): Promise<number | null> {
+    setMessage({ kind: 'info', text: t.syncing })
+    const doc = store.getState().doc
+    const stored = await db.maps.get(mapId)
+    if (stored && JSON.stringify(editorMapOf(stored)) !== JSON.stringify(doc)) {
+      await saveMap(db, mapId, doc)
+    }
+    const synced = await syncMapBeforeGenerate(db, mapId)
+    if (synced.result === 'offline') {
+      setMessage({ kind: 'error', text: texts.offline })
+      return null
+    }
+    if (synced.result === 'blocked' || synced.version === null) {
+      setMessage({ kind: 'error', text: texts.blocked })
+      return null
+    }
+    return synced.version
+  }
+
+  const fileInput = useRef<HTMLInputElement>(null)
+
+  async function upload(file: File) {
+    if (!(UPLOAD_TYPES as readonly string[]).includes(file.type)) {
+      setMessage({ kind: 'error', text: t.upload.wrongType })
+      return
+    }
+    if (file.size > UPLOAD_MAX_BYTES) {
+      setMessage({ kind: 'error', text: t.upload.tooLarge })
+      return
+    }
+    setBusy(true)
+    try {
+      // The server needs the map; one only on this device is synced first.
+      if (notSynced) {
+        const version = await syncFirst({
+          offline: t.upload.syncOffline,
+          blocked: t.upload.syncBlocked,
+        })
+        if (version === null) return
+      }
+      setMessage({ kind: 'info', text: t.upload.uploading })
+      const created = await uploadBackground(campaignId, mapId, file)
+      queryClient.setQueryData<MapBackgrounds>(key, (current) =>
+        current ? { ...withVersion(current, created), pickedAssetId: created.id } : current,
+      )
+      setMessage({ kind: 'info', text: t.upload.done })
+      void refetch()
+    } catch (error) {
+      setMessage({ kind: 'error', text: errorMessage(error) })
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function generate(refine?: Refinement) {
     setConfirming(false)
     setRefining(null)
     setBusy(true)
-    setMessage({ kind: 'info', text: t.syncing })
     try {
-      // The server paints from its own copy: save edits the autosave hasn't written yet,
-      // then sync the map.
-      const doc = store.getState().doc
-      const stored = await db.maps.get(mapId)
-      if (stored && JSON.stringify(editorMapOf(stored)) !== JSON.stringify(doc)) {
-        await saveMap(db, mapId, doc)
-      }
-      const synced = await syncMapBeforeGenerate(db, mapId)
-      if (synced.result === 'offline') {
-        setMessage({ kind: 'error', text: t.syncOffline })
-        return
-      }
-      if (synced.result === 'blocked' || synced.version === null) {
-        setMessage({ kind: 'error', text: t.syncBlocked })
-        return
-      }
-      const created = await generateBackground(campaignId, mapId, synced.version, refine)
+      // The server paints from its own copy: save and sync the map first.
+      const version = await syncFirst({ offline: t.syncOffline, blocked: t.syncBlocked })
+      if (version === null) return
+      const created = await generateBackground(campaignId, mapId, version, refine)
       queryClient.setQueryData<MapBackgrounds>(key, (current) =>
         current ? withVersion(current, created) : current,
       )
@@ -139,6 +195,7 @@ function OnlinePanel() {
   const loading = enabled && query.isPending
   const failed = enabled && query.isError
   const canGenerate = !busy && !pending && !block && !loading && !failed
+  const canUpload = !busy && !loading && !failed
 
   return (
     <div className="flex flex-col gap-3">
@@ -155,7 +212,7 @@ function OnlinePanel() {
         </p>
       )}
 
-      <div>
+      <div className="flex flex-wrap gap-2">
         <Button
           variant="primary"
           busy={busy}
@@ -167,7 +224,29 @@ function OnlinePanel() {
         >
           {versions.length > 0 ? t.regenerate : t.generate}
         </Button>
+        <Button
+          disabled={!canUpload}
+          onClick={() => {
+            setMessage(null)
+            fileInput.current?.click()
+          }}
+        >
+          {t.upload.button}
+        </Button>
+        <input
+          ref={fileInput}
+          type="file"
+          accept={UPLOAD_TYPES.join(',')}
+          aria-label={t.upload.button}
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            e.target.value = ''
+            if (file) void upload(file)
+          }}
+        />
       </div>
+      <p className="text-xs text-dim">{t.upload.hint}</p>
       {pending && <Help>{t.running}</Help>}
       {message?.kind === 'info' && (
         <p role="status" className="text-sm text-parchment">
@@ -304,6 +383,7 @@ function Version({
         <span className="text-dim tabular-nums">{time}</span>
         {version.status !== 'done' && <span>{t.status[version.status]}</span>}
         {picked && <Badge tone="candle">{t.picked}</Badge>}
+        {version.origin === 'uploaded' && <Badge>{t.uploaded}</Badge>}
         {outdated && <Badge>{t.outdated}</Badge>}
       </div>
       {version.instruction && (
@@ -327,7 +407,8 @@ function Version({
               {t.pick}
             </Button>
           )}
-          {done && !outdated && (
+          {/* An upload wasn't painted from the layout: nothing for the model to refine. */}
+          {done && !outdated && version.origin === 'generated' && (
             <Button className="min-h-9 px-3 text-sm" disabled={!canRefine} onClick={onRefine}>
               {t.refine.button}
             </Button>

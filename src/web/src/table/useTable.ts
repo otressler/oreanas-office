@@ -3,24 +3,36 @@
 // server merged into the cached board by version, others' move previews, and reloads
 // after every (re)connect.
 import { useQueryClient } from '@tanstack/react-query'
+import type { HubConnection } from '@microsoft/signalr'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   AddStatusRequest,
+  ApiErrorCode,
   ArrowDrawnEvent,
+  BoardCell,
   BoardState,
   DrawArrowRequest,
+  FogChangedEvent,
   HubResult,
+  InitiativeChangedEvent,
+  InitiativeEntry,
+  InitiativeResult,
+  InitiativeRollResult,
+  InitiativeView,
   MoveResult,
   MoveTokenRequest,
   PingRequest,
   PingedEvent,
   RemoveStatusRequest,
   SetStatusLevelRequest,
+  SpawnCreaturesRequest,
+  SpawnResult,
   StatusResult,
   TokenMovedEvent,
   TokenStatusesChangedEvent,
 } from '../api/types'
 import { encounterKeys } from '../encounters/queries'
+import { applyInitiative, newerInitiative } from '../initiative/initiative'
 import { recheckServer } from '../server/serverStatus'
 import { NotConnectedError, TableConnection, type TableStatus } from './connection'
 import { createTableConnection } from './createConnection'
@@ -32,6 +44,13 @@ import {
   rememberMove,
   type KnownPositions,
 } from './merge'
+import {
+  applyAdded,
+  applyFogChanged,
+  applyRevealed,
+  applyTokenHidden,
+  type KnownFog,
+} from './fogMerge'
 import { NO_PREVIEWS, withPreview, withoutPreview, type Previews } from './previews'
 
 export interface Table {
@@ -60,6 +79,32 @@ export interface Table {
   applyStatuses: (change: TokenStatusesChangedEvent) => void
   removeToken: (tokenId: string) => Promise<HubResult>
   restoreToken: (tokenId: string) => Promise<HubResult>
+  /** The SignalR connection while joined to the encounter; null otherwise (spectator and shared screens). */
+  hubConnection: HubConnection | null
+
+  // ---- Stage 10: fog and spawning, for the session DM (knowledge/features/fog-of-war.md) ----
+
+  /** The newest fog seen from events; mergeFog puts it into a reloaded board that has an older one. */
+  knownFog: KnownFog | null
+  /** Reveals or hides cells. Everyone, the caller included, gets FogChanged. */
+  changeFog: (cells: BoardCell[], reveal: boolean) => Promise<HubResult>
+  /** Reveals or hides creatures; the change also arrives as events. */
+  setTokensHidden: (tokenIds: string[], hidden: boolean) => Promise<HubResult>
+  /** Puts new creatures on the board; they arrive as TokensAdded. */
+  spawnCreatures: (request: Omit<SpawnCreaturesRequest, 'encounterId'>) => Promise<SpawnResult>
+  /** Takes back the latest fog change, reveal or spawn. */
+  undoChange: () => Promise<HubResult>
+
+  // ---- Initiative, for the session DM (knowledge/features/initiative.md) ----
+
+  /** The newest list seen from events and results; newerInitiative picks it over an older board. */
+  knownInitiative: InitiativeView | null
+  /** A fresh roll for the setup screen; nothing is saved. */
+  rollInitiative: () => Promise<InitiativeRollResult>
+  /** Saves the whole list; the result's change is already taken into the board. */
+  setInitiative: (entries: InitiativeEntry[]) => Promise<InitiativeResult>
+  /** Switches initiative off for the fight. */
+  clearInitiative: () => Promise<InitiativeResult>
 }
 
 /** Others' pings and arrows as they arrive; not kept anywhere, so the page keeps them. */
@@ -68,11 +113,18 @@ export interface TableEvents {
   onArrowDrawn?: (arrow: ArrowDrawnEvent) => void
 }
 
+/** A screen that isn't a player's device (spectator view): what to do on a fresh connection. */
+export interface TableScreen {
+  /** Runs before JoinEncounter on every (re)connect: WatchSession. An error code stops the join. */
+  beforeJoin: (connection: HubConnection) => Promise<ApiErrorCode | null>
+}
+
 export function useTable(
   campaignId: string,
   encounterId: string,
   running: boolean,
   events: TableEvents = {},
+  screen?: TableScreen,
 ): Table {
   const queryClient = useQueryClient()
   // The latest handlers, so a new function each render doesn't reconnect.
@@ -80,9 +132,17 @@ export function useTable(
   useEffect(() => {
     handlers.current = events
   })
+  const screenRef = useRef(screen)
+  useEffect(() => {
+    screenRef.current = screen
+  })
+  const isScreen = screen !== undefined
   const [status, setStatus] = useState<TableStatus>('connecting')
+  const [hubConnection, setHubConnection] = useState<HubConnection | null>(null)
   const [known, setKnown] = useState<KnownPositions>(() => new Map())
   const [previews, setPreviews] = useState<Previews>(NO_PREVIEWS)
+  const [knownFog, setKnownFog] = useState<KnownFog | null>(null)
+  const [knownInitiative, setKnownInitiative] = useState<InitiativeView | null>(null)
   const connection = useRef<TableConnection | null>(null)
 
   const apply = useCallback(
@@ -109,6 +169,28 @@ export function useTable(
     [updateBoard],
   )
 
+  const takeFog = useCallback(
+    (event: FogChangedEvent) => {
+      const key = encounterKeys.board(campaignId, encounterId)
+      const board = queryClient.getQueryData<BoardState>(key)
+      if (!board) return
+      const next = applyFogChanged(board, event)
+      if (next === board) return
+      queryClient.setQueryData<BoardState>(key, next)
+      if (next.fog) setKnownFog({ version: next.fog.version, hiddenCells: next.fog.hiddenCells })
+    },
+    [queryClient, campaignId, encounterId],
+  )
+
+  const takeInitiative = useCallback(
+    (changed: InitiativeChangedEvent) => {
+      if (changed.encounterId !== encounterId) return
+      setKnownInitiative((current) => newerInitiative(current, changed.initiative))
+      updateBoard((board) => applyInitiative(board, changed))
+    },
+    [encounterId, updateBoard],
+  )
+
   const reload = useCallback(() => {
     void queryClient.invalidateQueries({
       queryKey: encounterKeys.board(campaignId, encounterId),
@@ -122,7 +204,13 @@ export function useTable(
       encounterId,
       createConnection: createTableConnection,
       recheckServer,
-      onStatus: setStatus,
+      onStatus: (next) => {
+        setStatus(next)
+        setHubConnection(next === 'connected' ? table.hubConnection : null)
+      },
+      beforeJoin: isScreen
+        ? (connection) => screenRef.current?.beforeJoin(connection) ?? Promise.resolve(null)
+        : undefined,
       onJoined: reload,
       onMoved: apply,
       onPreview: (preview) =>
@@ -137,6 +225,15 @@ export function useTable(
       onStatusesChanged: takeStatuses,
       onTokenRemoved: (removed) => updateBoard((board) => applyRemoved(board, removed)),
       onTokenRestored: (restored) => updateBoard((board) => applyRestored(board, restored)),
+      onPresenceChanged: (event) =>
+        updateBoard((board) =>
+          board.encounterId === event.encounterId ? { ...board, presence: event.presence } : board,
+        ),
+      onFogChanged: takeFog,
+      onTokenRevealed: (revealed) => updateBoard((board) => applyRevealed(board, revealed)),
+      onTokenHidden: (hidden) => updateBoard((board) => applyTokenHidden(board, hidden)),
+      onTokensAdded: (added) => updateBoard((board) => applyAdded(board, added)),
+      onInitiativeChanged: takeInitiative,
     })
     connection.current = table
     table.start()
@@ -145,7 +242,17 @@ export function useTable(
       if (connection.current === table) connection.current = null
       setStatus('connecting')
     }
-  }, [running, encounterId, apply, reload, takeStatuses, updateBoard])
+  }, [
+    running,
+    encounterId,
+    apply,
+    reload,
+    takeStatuses,
+    takeFog,
+    takeInitiative,
+    updateBoard,
+    isScreen,
+  ])
 
   const move = useCallback(
     (request: MoveTokenRequest) =>
@@ -197,6 +304,54 @@ export function useTable(
     [],
   )
 
+  const changeFog = useCallback(
+    (cells: BoardCell[], reveal: boolean) =>
+      connection.current?.changeFog({ encounterId, cells, reveal }) ??
+      Promise.reject(new NotConnectedError()),
+    [encounterId],
+  )
+  const setTokensHidden = useCallback(
+    (tokenIds: string[], hidden: boolean) =>
+      connection.current?.setTokensHidden({ encounterId, tokenIds, hidden }) ??
+      Promise.reject(new NotConnectedError()),
+    [encounterId],
+  )
+  const spawnCreatures = useCallback(
+    (request: Omit<SpawnCreaturesRequest, 'encounterId'>) =>
+      connection.current?.spawnCreatures({ encounterId, ...request }) ??
+      Promise.reject(new NotConnectedError()),
+    [encounterId],
+  )
+  const undoChange = useCallback(
+    () => connection.current?.undoChange() ?? Promise.reject(new NotConnectedError()),
+    [],
+  )
+
+  const rollInitiative = useCallback(
+    () => connection.current?.rollInitiative() ?? Promise.reject(new NotConnectedError()),
+    [],
+  )
+  // The result's change goes into the board at once; its event may come a moment later.
+  const takeResult = useCallback(
+    (result: InitiativeResult) => {
+      if (result.change) takeInitiative(result.change)
+      return result
+    },
+    [takeInitiative],
+  )
+  const setInitiative = useCallback(
+    (entries: InitiativeEntry[]) =>
+      connection.current?.setInitiative({ encounterId, entries }).then(takeResult) ??
+      Promise.reject(new NotConnectedError()),
+    [encounterId, takeResult],
+  )
+  const clearInitiative = useCallback(
+    () =>
+      connection.current?.clearInitiative().then(takeResult) ??
+      Promise.reject(new NotConnectedError()),
+    [takeResult],
+  )
+
   return {
     status: running ? status : null,
     known,
@@ -214,5 +369,15 @@ export function useTable(
     applyStatuses: takeStatuses,
     removeToken,
     restoreToken,
+    hubConnection: running ? hubConnection : null,
+    knownFog,
+    changeFog,
+    setTokensHidden,
+    spawnCreatures,
+    undoChange,
+    knownInitiative,
+    rollInitiative,
+    setInitiative,
+    clearInitiative,
   }
 }

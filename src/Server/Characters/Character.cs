@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OreanasOffice.Server.Accounts;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Rules;
+using OreanasOffice.Server.Sessions;
 
 namespace OreanasOffice.Server.Characters;
 
@@ -43,6 +44,9 @@ public class Character
     public Campaign Campaign { get; set; } = null!;
 
     public AppUser Owner { get; set; } = null!;
+
+    // Who plays it in a session other than its owner (knowledge/domain/session.md).
+    public List<SessionCharacterPlayer> SessionPlayers { get; } = [];
 }
 
 internal sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>

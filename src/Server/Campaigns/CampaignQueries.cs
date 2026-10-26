@@ -12,6 +12,11 @@ public static class CampaignQueries
         db.CampaignMembers.AnyAsync(
             m => m.CampaignId == campaignId && m.UserId == userId && m.Role == CampaignRole.Dm, cancellationToken);
 
+    // Whether a user is a member of the campaign in any role: who a character can be given to.
+    public static Task<bool> IsCampaignMemberAsync(
+        this AppDbContext db, Guid campaignId, Guid userId, CancellationToken cancellationToken) =>
+        db.CampaignMembers.AnyAsync(m => m.CampaignId == campaignId && m.UserId == userId, cancellationToken);
+
     // Ring colours (knowledge/domain/token.md): each character's place in the order
     // characters were added to the campaign, 0, 1, 2…, by character id. The character
     // list and the board both use this, so the setup screen shows the fight's colours.

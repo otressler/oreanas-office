@@ -65,6 +65,8 @@ export function at(x: number, y: number, extra: Partial<CellPointer> = {}): Cell
     shift: false,
     alt: false,
     mod: false,
+    point: { x: x + 0.5, y: y + 0.5 },
+    cellPx: 64,
     ...extra,
   }
 }

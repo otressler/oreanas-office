@@ -14,6 +14,7 @@
 // (dropped from the proof of concept).
 import type { BoardState, BoardToken, CreatureSize } from '../api/types'
 import {
+  cellKey,
   footprint,
   footprintCells,
   tokensAt,
@@ -57,6 +58,8 @@ export interface TapContext {
   enabled: boolean
   /** What the card shows before the tap; nothing when it is closed. */
   card?: Card | null
+  /** Cells that are no target (the fog, for a player); the session DM has none. */
+  blocked?: ReadonlySet<string>
 }
 
 export interface TapResult {
@@ -91,9 +94,21 @@ export function ownTokensOnTop<T extends Pick<BoardToken, 'kind' | 'ownerUserId'
   return [...tokens.filter((token) => !own(token)), ...tokens.filter(own)]
 }
 
-/** Whether a token of this size may stand with its top-left corner on the cell. */
-export function isValidTarget(grid: MapGrid, size: CreatureSize, x: number, y: number): boolean {
-  return footprintCells(size, x, y).every((cell) => grid.walkable(cell.x, cell.y))
+/**
+ * Whether a token of this size may stand with its top-left corner on the cell. `blocked`
+ * (stage 10) are cells in the fog, which a player can't choose as a target
+ * (knowledge/features/fog-of-war.md, "Moving in and out of the fog").
+ */
+export function isValidTarget(
+  grid: MapGrid,
+  size: CreatureSize,
+  x: number,
+  y: number,
+  blocked?: ReadonlySet<string>,
+): boolean {
+  return footprintCells(size, x, y).every(
+    (cell) => grid.walkable(cell.x, cell.y) && !blocked?.has(cellKey(cell.x, cell.y)),
+  )
 }
 
 /**
@@ -101,13 +116,18 @@ export function isValidTarget(grid: MapGrid, size: CreatureSize, x: number, y: n
  * cell; if that doesn't fit, the other positions whose footprint covers the tapped
  * cell, in reading order. Null when none fits.
  */
-export function chooseTarget(grid: MapGrid, size: CreatureSize, cell: GridPoint): GridPoint | null {
-  if (isValidTarget(grid, size, cell.x, cell.y)) return { x: cell.x, y: cell.y }
+export function chooseTarget(
+  grid: MapGrid,
+  size: CreatureSize,
+  cell: GridPoint,
+  blocked?: ReadonlySet<string>,
+): GridPoint | null {
+  if (isValidTarget(grid, size, cell.x, cell.y, blocked)) return { x: cell.x, y: cell.y }
   const n = footprint(size)
   for (let y = cell.y - n + 1; y <= cell.y; y++) {
     for (let x = cell.x - n + 1; x <= cell.x; x++) {
       if (x === cell.x && y === cell.y) continue
-      if (isValidTarget(grid, size, x, y)) return { x, y }
+      if (isValidTarget(grid, size, x, y, blocked)) return { x, y }
     }
   }
   return null
@@ -135,7 +155,7 @@ export function currentControls(
 
 /** What a tap on the board does. */
 export function tapBoard(controls: Controls, tap: Tap, context: TapContext): TapResult {
-  const { tokens, grid, canMove, enabled, card = null } = context
+  const { tokens, grid, canMove, enabled, card = null, blocked } = context
   const current = currentControls(controls, tokens, enabled)
 
   if (current.mode === 'idle') {
@@ -167,7 +187,7 @@ export function tapBoard(controls: Controls, tap: Tap, context: TapContext): Tap
   // Any other cell is a target, also one with another token on it: tokens may overlap,
   // and the session DM, who may move every token, must be able to stack them too. To
   // take another token, let go of this one first, or pick it in the card's stack.
-  const target = chooseTarget(grid, selected.size, tap.cell)
+  const target = chooseTarget(grid, selected.size, tap.cell, blocked)
   if (!target) return { controls: current, card, hint: 'invalidTarget' }
   return { controls: { mode: 'preview', tokenId: selected.id, target }, card }
 }

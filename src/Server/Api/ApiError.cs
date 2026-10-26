@@ -38,6 +38,8 @@ public enum ApiErrorCode
     SessionInvalid,
     // ColorInvalid: a character's ring colour isn't "#rrggbb".
     ColorInvalid,
+    // NotAMember: a character was given to someone who isn't a member of the campaign.
+    NotAMember,
 
     // Map imports. Field is the JSON path of the offending entry, e.g. "layout.cells[12]".
     TextTooLong,
@@ -90,6 +92,12 @@ public enum ApiErrorCode
     // MapNotInStore: the map isn't offered in this campaign's store.
     MapNotInStore,
 
+    // Deleting a map (knowledge/domain/battle-map.md, "Deleting").
+    // MapNotArchived: only an archived map can be deleted.
+    MapNotArchived,
+    // MapPlayed: a running or ended encounter uses the map, so it stays.
+    MapPlayed,
+
     // Map backgrounds (knowledge/features/ai-map-generation.md).
     // ImagesUnavailable: the server has no image model configured.
     ImagesUnavailable,
@@ -124,6 +132,12 @@ public enum ApiErrorCode
     // UploadTooLarge: the body is larger than ImageOptions.UploadMaxBytes.
     UploadTooLarge,
 
+    // Campaign descriptions and covers (knowledge/domain/campaign.md).
+    // DescriptionInvalid: a campaign description longer than Campaign.DescriptionMaxLength.
+    DescriptionInvalid,
+    // DescriptionMissing: a cover is generated from the campaign's description, which is empty.
+    DescriptionMissing,
+
     // Statuses (knowledge/features/statuses.md).
     // StatusNotFound: no library status or custom status of this campaign with this id.
     StatusNotFound,
@@ -133,4 +147,22 @@ public enum ApiErrorCode
     LevelInvalid,
     // NotYourStatus: a player removes or changes a status someone else put on.
     NotYourStatus,
+
+    // Fog of war, spawning and the shared table (stage 10).
+    // FogInvalid: fog cells or areas are malformed, outside the map, or the encounter has no
+    // fog to change. Field names the offending entry.
+    FogInvalid,
+    // ReadOnlyConnection: a spectator screen, or a shared screen outside local mode, tried to
+    // act (move, ping, set statuses, remove, spawn).
+    ReadOnlyConnection,
+    // SpawnInvalid: no creatures, too many, or a creature type outside the campaign.
+    SpawnInvalid,
+    // NotLocalMode: a shared screen was asked for in a session that isn't in local mode.
+    NotLocalMode,
+    // InitiativeInvalid: an initiative list names a token outside the encounter or twice, or
+    // a value, modifier or d20 is out of range (knowledge/features/initiative.md).
+    InitiativeInvalid,
+    // NotBuilt: a hub method of stage 10 whose lane has not been built yet. Removed with the
+    // last stub.
+    NotBuilt,
 }

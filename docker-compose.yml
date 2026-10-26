@@ -24,7 +24,14 @@ services:
 
   app:
     profiles: [app]
-    build: .
+    build:
+      context: .
+      # From .env (never commit). Without them the Impressum says its details are missing.
+      args:
+        IMPRINT_NAME: ${IMPRINT_NAME:-}
+        IMPRINT_STREET: ${IMPRINT_STREET:-}
+        IMPRINT_CITY: ${IMPRINT_CITY:-}
+        IMPRINT_EMAIL: ${IMPRINT_EMAIL:-}
     depends_on: [sql, azurite]
     environment:
       ASPNETCORE_ENVIRONMENT: Production

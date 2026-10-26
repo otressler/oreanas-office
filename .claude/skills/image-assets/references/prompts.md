@@ -66,6 +66,23 @@ Transparent background. No text, no letters, no numbers, no border, no ring, no 
 
 Use the token style block word for word, so statuses sit with creature icons and portraits as one set. Use `--background transparent --size 1024x1024`. The app draws each icon on a small dark disc on the token's edge, so a symbol needs a clear silhouette and a light or saturated colour against dark grey. Check every result at 20 px before generating the next. Learned in T1 (2026-10-16): without "simple bold emblem" the model paints whole people (a blindfolded elf, a cowering halfling) that turn to mush at 20 px; light, saturated subjects and one large shape read best, dark brown wood and thin horizontal shapes don't ("prone" needed a big arrow above the figure). The 15 conditions and their motifs are in `knowledge/features/statuses.md`.
 
+## Campaign cover
+
+```
+Cover illustration for a tabletop role-playing campaign: <campaign name>, <description>.
+A wide establishing scene that sets the campaign's mood, the main subject in the middle of the picture so a wider or narrower crop keeps it, calm darker edges.
+<COVER STYLE BLOCK>
+No text, no title, no letters, no logos, no border, no frame.
+```
+
+Cover style block, word for word for every cover (the app's `Images:CoverStyle`), in the landing page's key-art look:
+
+```
+Dark fantasy digital painting in the manner of cinematic role-playing game key art: deep near-black shadows, warm candle-gold and ember-red light, painterly brush texture, dramatic rim light, drifting smoke.
+```
+
+Use `--size 1536x1024 --background opaque`, high quality. The app crops covers to 3:2 cards and to a wide banner on the campaign page, so keep the subject in the middle. The default cover and the home page's join and create pictures (`assets/generated/home/`) used the landing page's full style block with this framing.
+
 ## Texture or fallback tile
 
 ```

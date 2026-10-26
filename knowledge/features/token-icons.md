@@ -1,10 +1,10 @@
 ---
 type: Feature
 title: Token icons
-description: Generated icons for creature types, and generated, uploaded or restyled portraits for characters, kept as versions to pick from.
+description: Generated or uploaded icons for creature types, and generated, uploaded or restyled portraits for characters, kept as versions to pick from.
 tags: [feature, ai, images, tokens]
 status: draft
-generated: { by: claude-code/claude-opus-5-5, at: 2026-10-15T06:28:25Z }
+generated: { by: claude-code/claude-opus-5-5, at: 2026-10-25T09:35:42Z }
 sources:
   - id: brief
     resource: /references/original-brief.md
@@ -19,8 +19,8 @@ Every enemy type has its own recognisable icon.[^brief] All goblins share one ic
 
 1. Generate an icon for a [creature type](/domain/creature-type.md) from its `name` and `appearance`. Only `dm` members generate creature icons.
 2. Generate a portrait for a [character](/domain/character.md) from its `name` and `appearance`. The character's owner and every `dm` member of the campaign can do this. Generating is offered once `appearance` is filled in.
-3. Upload a picture as a character's portrait, from a phone's photo library or a computer. A crop step comes first: the person drags and zooms the picture inside the token circle, and only the chosen square is uploaded. The server checks the type and size, and saves it as a square WebP, which also turns it the right way up and drops the photo's metadata, including where it was taken.
-4. Restyle an uploaded portrait: the uploaded picture goes to the model as a reference, which paints a portrait of that person or figure in the shared token style. The result is a new version, and the uploaded one stays.
+3. Upload a picture as a character's portrait or a creature type's icon, from a phone's photo library or a computer. The same people who generate one may upload one: the character's owner and `dm` members for portraits, `dm` members for creature icons. A crop step comes first: the person drags and zooms the picture inside the token circle, and only the chosen square is uploaded. The server checks the type and size, and saves it as a square WebP, which also turns it the right way up and drops the photo's metadata, including where it was taken.
+4. Restyle an uploaded portrait (characters only): the uploaded picture goes to the model as a reference, which paints a portrait of that person or figure in the shared token style. The result is a new version, and the uploaded one stays.
 5. Every generation, restyling included, is started by a person and confirmed first, never automatic. All of them count against the site-wide monthly limit ([image budget](/decisions/image-budget.md)).
 6. Use a fixed style template so all icons and portraits look like one set: centred subject, top-down or portrait framing, transparent background, nothing important in the corners, no frame or ring painted in. The template is the token template of the `image-assets` skill.
 7. **Versions.** Generating again adds a version instead of replacing the image, as with map backgrounds ([AI map generation](/features/ai-map-generation.md)). A creature type and a character each have a gallery of their versions (generated, uploaded and restyled) and one picked version: `iconAssetId` on the creature type, `tokenAssetId` on the character.
@@ -57,5 +57,14 @@ Built on `stage/8-token-icons`.
 - **Uploads.** The crop step sends the chosen square as a 1024 × 1024 JPEG, so a transparent PNG gets the board's dark background behind it. The server keeps every version, uploads included, as a 512 × 512 WebP.
 - **Archived creature types** keep their icons and can still switch versions; only generating is refused.
 - **First real batch** (2026-10-15, through the app against the Foundry deployment): icons for a goblin, an ogre and a giant spider, and a portrait of a half-elf ranger, high quality, about $0.05 each. They read as one set, with clean transparent backgrounds. A weapon held out to the side (the goblin's sabre, the ogre's club) can reach the frame's edge, so the circle cuts its tip.
+
+# Creature icon uploads (2026-10-25)
+
+Asked for by the project owner: "the same mechanism as in the character profile upload".
+
+- The bestiary's "Symbol" section has "Bild hochladen" next to generating, with the same crop step. `POST /api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icons/upload` takes the raw picture like the portrait upload, `dm` members only; the server shares one code path for both. The upload is done at once, picked, costs nothing, and like any pick leaves the type's sync version alone.
+- A type the server hasn't seen yet must be synced first, as for generating.
+- Archived types can still get an upload, like switching versions; only generating is refused.
+- No restyling for creature icons: the restyle prompt is written for people ("Turn the person in this picture into a portrait token"). A creature restyle would need its own template in the `image-assets` skill; not built.
 
 [^brief]: Original project brief

@@ -9,7 +9,8 @@ namespace OreanasOffice.Server.Images;
 // queue (knowledge/decisions/hosting.md): a queued job survives the container stopping,
 // and ImageJobWorker picks it up when it starts again. Stage 7 makes map backgrounds;
 // stage 8 adds token icons for creature types and portraits for characters, both
-// AssetKind.TokenIcon (knowledge/features/token-icons.md).
+// AssetKind.TokenIcon (knowledge/features/token-icons.md); campaign covers are
+// AssetKind.CampaignCover (knowledge/domain/campaign.md).
 public class Asset
 {
     public const int PromptMaxLength = 4000;
@@ -43,7 +44,8 @@ public class Asset
 
     public string? Quality { get; set; }
 
-    // Where the image lies in the private "assets" blob container; set when Done.
+    // Where the image lies in the private "assets" blob container; set when Done. Cleared
+    // when its map is deleted and the image removed; the row stays for the monthly limit.
     public string? BlobName { get; set; }
 
     public string? ContentType { get; set; }
@@ -65,6 +67,12 @@ public class Asset
     public int? FrameWidth { get; set; }
 
     public int? FrameHeight { get; set; }
+
+    // Uploaded map backgrounds: the stored picture's size in pixels, so its first frame keeps
+    // the picture's aspect (MapBackgrounds.Frame).
+    public int? PixelWidth { get; set; }
+
+    public int? PixelHeight { get; set; }
 
     // Map backgrounds: LayoutFingerprint of the map when the job was queued, so the editor
     // can say the layout changed since the image was made.
@@ -107,6 +115,9 @@ public enum AssetKind
 {
     MapBackground,
     TokenIcon,
+
+    // A campaign's cover for its card on the home page: a 3:2 picture, no transparency.
+    CampaignCover,
 }
 
 public enum AssetOwnerType
@@ -118,6 +129,9 @@ public enum AssetOwnerType
     // A custom status's icon (knowledge/features/statuses.md, "Custom statuses"): a
     // TokenIcon asset like creature icons, with the same style block.
     Status,
+
+    // A campaign's cover (AssetKind.CampaignCover); OwnerId is the campaign's id.
+    Campaign,
 }
 
 public enum AssetOrigin

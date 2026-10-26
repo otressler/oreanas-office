@@ -8,6 +8,12 @@ WORKDIR /src/web
 COPY src/web/package.json src/web/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY src/web/ ./
+# The Impressum's details (src/web/vite.config.ts), kept out of the repository.
+# CI passes them from repository variables, docker compose from .env.
+ARG IMPRINT_NAME
+ARG IMPRINT_STREET
+ARG IMPRINT_CITY
+ARG IMPRINT_EMAIL
 RUN npm run build
 
 # --- Backend ------------------------------------------------------------------

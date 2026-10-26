@@ -2,6 +2,9 @@
 // protocol"): one sync at a time per browser, a push then a pull, and a status for the
 // editor header. The dialogs and the header item are in components.tsx.
 import { useLiveQuery } from 'dexie-react-hooks'
+import { api } from '../api/client'
+import { ApiRequestError, unwrap } from '../api/errors'
+import type { LocalMap } from '../editor/model'
 import type { OfflineDb } from '../offline/db'
 import { SYNC_VERSION, SYNC_VERSION_HEADER, SyncFailure } from './api'
 import { useSyncDb } from './context'
@@ -224,34 +227,90 @@ export function syncMapBeforeGenerate(
     if (!navigator.onLine) return { result: 'offline' as const, version: null }
     if (!map) return { result: 'blocked' as const, version: null }
 
-    const campaign = await db.campaigns.get(map.campaignId)
-    const scope = {
-      campaignIds: new Set(campaign?.local ? [campaign.id] : []),
-      ids: {
-        creatureType: new Set<string>(),
-        battleMap: new Set([map.id]),
-        encounter: new Set<string>(),
-      },
-    }
-    useSyncStore.setState((s) => ({ running: s.running + 1 }))
-    try {
-      const planned = await planPush(db, scope)
-      if (planned.length > 0) noteCampaigns((await push(db, planned)).campaignsCreated)
-      noteSuccess()
-    } catch (error) {
-      noteFailure(error)
-      const result =
-        error instanceof SyncFailure && error.kind === 'offline' ? 'offline' : 'blocked'
-      return { result, version: null }
-    } finally {
-      useSyncStore.setState((s) => ({ running: s.running - 1 }))
+    const result = await pushMapHoldingLock(db, map)
+    if (result !== 'ready') return { result, version: null }
+    const after = await db.maps.get(mapId)
+    return after
+      ? { result: 'ready' as const, version: after.sync.baseVersion }
+      : { result: 'blocked' as const, version: null }
+  })
+}
+
+/**
+ * Pushes one map (and its campaign when made offline); the caller holds the sync lock.
+ * 'ready' when the server then has the device's version of the map, 'blocked' when a
+ * conflict or rejection must be resolved first, 'offline' without a connection.
+ */
+async function pushMapHoldingLock(
+  db: OfflineDb,
+  map: LocalMap,
+): Promise<'ready' | 'blocked' | 'offline'> {
+  const campaign = await db.campaigns.get(map.campaignId)
+  const scope = {
+    campaignIds: new Set(campaign?.local ? [campaign.id] : []),
+    ids: {
+      creatureType: new Set<string>(),
+      battleMap: new Set([map.id]),
+      encounter: new Set<string>(),
+    },
+  }
+  useSyncStore.setState((s) => ({ running: s.running + 1 }))
+  try {
+    const planned = await planPush(db, scope)
+    if (planned.length > 0) noteCampaigns((await push(db, planned)).campaignsCreated)
+    noteSuccess()
+  } catch (error) {
+    noteFailure(error)
+    return error instanceof SyncFailure && error.kind === 'offline' ? 'offline' : 'blocked'
+  } finally {
+    useSyncStore.setState((s) => ({ running: s.running - 1 }))
+  }
+
+  const after = await db.maps.get(map.id)
+  return !after || after.sync.changed || after.sync.issue !== null ? 'blocked' : 'ready'
+}
+
+/**
+ * Deletes an archived map with its encounters that never started
+ * (knowledge/domain/battle-map.md, "Deleting"). A map the server never saw, or no longer
+ * lists, goes from this device alone, also offline. Otherwise the map's own changes are
+ * pushed first, since the server deletes only an archived map; then the server deletes it,
+ * and this device drops the map and its encounters. The DM's other devices drop theirs at
+ * their next pull. Resolves 'offline' without a connection and 'blocked' when the map has a
+ * conflict or rejection to resolve first; rejects with the server's ApiRequestError
+ * (mapPlayed, generationRunning, ...) or fetch's TypeError.
+ */
+export function deleteMap(
+  db: OfflineDb,
+  mapId: string,
+): Promise<'deleted' | 'blocked' | 'offline'> {
+  return withSyncLock(userIdOf(db), async () => {
+    const map = await db.maps.get(mapId)
+    if (!map) return 'deleted'
+
+    if (map.sync.baseVersion > 0 && map.sync.issue?.kind !== 'vanished') {
+      if (!navigator.onLine) return 'offline'
+      if (map.sync.changed || map.sync.issue) {
+        const pushed = await pushMapHoldingLock(db, map)
+        if (pushed !== 'ready') return pushed
+      }
+      try {
+        await unwrap(
+          api.DELETE('/api/campaigns/{campaignId}/maps/{mapId}', {
+            params: { path: { campaignId: map.campaignId, mapId } },
+          }),
+        )
+      } catch (error) {
+        // Gone already, e.g. deleted on another device.
+        if (!(error instanceof ApiRequestError && error.status === 404)) throw error
+      }
     }
 
-    const after = await db.maps.get(mapId)
-    const stuck = !after || after.sync.changed || after.sync.issue !== null
-    return stuck
-      ? { result: 'blocked' as const, version: null }
-      : { result: 'ready' as const, version: after.sync.baseVersion }
+    await db.transaction('rw', db.maps, db.encounters, async () => {
+      await db.encounters.where('battleMapId').equals(mapId).delete()
+      await db.maps.delete(mapId)
+    })
+    return 'deleted'
   })
 }
 

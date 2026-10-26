@@ -21,13 +21,14 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T07:50:00Z }
 | `x`, `y` | int, cells | Top-left cell of the footprint |
 | `elevation` | decimal, meters | Defaults to the cell's elevation. Changeable for flying or climbing |
 | `hidden` | bool | Later: visible only to the session DM until revealed ([fog of war](/features/fog-of-war.md)) |
+| `initiativeModifier`, `initiativeRollMode` | int, enum; nullable | A creature's own initiative settings, set in the map editor; null takes the creature type's. Always null for characters ([initiative](/features/initiative.md)) |
 | `removedAt`, `removedByUserId` | timestamp, → [User](/domain/user.md); nullable | Later (stage 9): set when the session DM takes the token off the board. It disappears from every board but is kept, and can be brought back ([removing tokens](/features/removing-tokens.md)) |
 
-The image comes from the linked character or creature type: always its currently picked version, also in a running fight. A changed image shows the next time a board loads ([token icons](/features/token-icons.md)). On the board, a character's token has a ring in the colour its player picked ([character](/domain/character.md) `color`), or else one of eight default colours picked by the order characters were added to the campaign, repeating from the ninth; creatures share one red ring. Until images arrive, a token shows the first letter of its label. Creatures that share a letter show it with a number instead (S1, S2, S3), counted in the natural order of their labels, so "Goblin 1" and "Goblin 2" become G1 and G2. Characters keep the plain letter; their ring colours tell them apart. Each player sees their own characters drawn on top of any other token.
+The image comes from the linked character or creature type: always its currently picked version, also in a running fight. A changed image shows the next time a board loads ([token icons](/features/token-icons.md)). On the board, a character's token has a ring in the colour its player picked ([character](/domain/character.md) `color`), or else one of eight default colours picked by the order characters were added to the campaign, repeating from the ninth; creatures share one red ring. Until images arrive, a token shows the first letter of its label. Creatures that share a letter show it with a number instead (S1, S2, S3), counted in the natural order of their labels, so "Goblin 1" and "Goblin 2" become G1 and G2. Characters keep the plain letter; their ring colours tell them apart. Each player sees the characters they play in this session drawn on top of any other token.
 
 # Who can move it
 
-- `character` tokens: the character's owner and the session DM.
+- `character` tokens: whoever plays the character in this session (its owner, unless the session DM handed it to someone else; [character](/domain/character.md), "Who plays it") and the session DM.
 - `creature` tokens: the session DM only.
 - Later (stage 10), in local mode: a shared screen, a device a campaign member opened in that mode (not a spectator screen), moves every `character` token in the fight, whoever owns it. In bring-your-own-device mode it moves none ([shared table](/features/shared-table.md)).
 
@@ -40,3 +41,7 @@ Every move is recorded as `{ tokenId, from, to, byUserId, at, version }`, positi
 # Later
 
 Statuses and removing tokens come in stage 9 ([statuses](/features/statuses.md), [status](/domain/status.md), [removing tokens](/features/removing-tokens.md)), the hidden flag in stage 10 ([fog of war](/features/fog-of-war.md)). HP is in the [backlog](/backlog.md).
+
+# As built (stage 10)
+
+The label is stored as `number` and `label` (the DM's own name, empty for numbered creatures); `CreatureLabels` shows "Goblin 3" or the name. The migration split existing labels. The sync format still sends one string.

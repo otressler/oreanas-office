@@ -27,8 +27,10 @@ test('shows a German not-found page for unknown addresses', async ({ page, conte
 
   await expect(shellHeader(page)).toBeVisible()
   await expect(page.getByRole('heading', { name: text.notFoundTitle })).toBeVisible()
+  // The server said nobody is signed in, so home is the landing page.
   await page.getByRole('link', { name: 'Zur Startseite' }).click()
-  await expect(page.getByRole('heading', { name: text.signInTitle })).toBeVisible()
+  await expect(page).toHaveURL('/willkommen')
+  await expect(page.getByRole('heading', { level: 1, name: text.appName })).toBeVisible()
 })
 
 test('opens the roadmap while the server sleeps', async ({ page, context }) => {
@@ -36,7 +38,7 @@ test('opens the roadmap while the server sleeps', async ({ page, context }) => {
   await page.goto('/fahrplan')
 
   await expect(shellHeader(page)).toBeVisible()
-  await expect(page.getByRole('heading', { level: 1, name: 'Fahrplan' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Roadmap' })).toBeVisible()
   await expect(page.getByRole('article', { name: 'Grundgerüst' })).toBeVisible()
   await expect(page.getByText(text.wakingTitle)).toHaveCount(0)
 })

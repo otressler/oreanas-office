@@ -66,8 +66,20 @@ function withPing(list: readonly ShownPing[], ping: ShownPing): ShownPing[] {
   return [...kept, ping]
 }
 
-/** `board`: the shown board, for the person's colour and name and the tokens pinged. */
-export function usePings(board: BoardState, userId: string): Pings {
+/**
+ * Who a ping or arrow counts as: the shared screen is its own "person", white and named
+ * "Tisch", apart from the account that is signed in on it (knowledge/features/shared-table.md),
+ * so its arrow never replaces the same account's arrow from a phone.
+ */
+function tableKey(userId: string): string {
+  return `table:${userId}`
+}
+
+/**
+ * `board`: the shown board, for the person's colour and name and the tokens pinged.
+ * `asTable`: this device is a shared screen, so its own pings and arrows are the table's.
+ */
+export function usePings(board: BoardState, userId: string, asTable = false): Pings {
   const [shown, setShown] = useState<readonly ShownPing[]>([])
   const latest = useRef({ board, userId })
   useEffect(() => {
@@ -84,6 +96,23 @@ export function usePings(board: BoardState, userId: string): Pings {
       color: found?.pingColor ?? FALLBACK_PING_COLOR,
     }
   }, [])
+
+  /** Who a ping from the hub is from: the shared screen, or a person on the board. */
+  const whoSent = useCallback(
+    (event: { userId: string; fromSharedScreen: boolean }) =>
+      event.fromSharedScreen
+        ? { name: de.sharedTable.tableName, color: FALLBACK_PING_COLOR }
+        : person(event.userId),
+    [person],
+  )
+
+  /** This device's own pings and arrows: the person's, or the table's on a shared screen. */
+  const me = useCallback(() => {
+    const { userId } = latest.current
+    return asTable
+      ? { userId: tableKey(userId), name: de.sharedTable.tableName, color: FALLBACK_PING_COLOR }
+      : { userId, ...person(userId) }
+  }, [asTable, person])
 
   // Drop each ping when its time is up; an arrow still being drawn stays.
   useEffect(() => {
@@ -104,10 +133,10 @@ export function usePings(board: BoardState, userId: string): Pings {
   const events = useMemo<TableEvents>(
     () => ({
       onPinged: (event: PingedEvent) => {
-        const { name } = person(event.userId)
+        const { name } = whoSent(event)
         const base = {
           id: nextId(),
-          userId: event.userId,
+          userId: event.fromSharedScreen ? tableKey(event.userId) : event.userId,
           color: event.color,
           name,
           at: performance.now(),
@@ -126,10 +155,10 @@ export function usePings(board: BoardState, userId: string): Pings {
             ? { cell: event.fromCell }
             : null
         if (!from) return
-        const { name } = person(event.userId)
+        const { name } = whoSent(event)
         const ping: ShownPing = {
           id: nextId(),
-          userId: event.userId,
+          userId: event.fromSharedScreen ? tableKey(event.userId) : event.userId,
           color: event.color,
           name,
           at: performance.now(),
@@ -141,13 +170,12 @@ export function usePings(board: BoardState, userId: string): Pings {
         setShown((list) => withPing(list, ping))
       },
     }),
-    [person],
+    [whoSent],
   )
 
   const ping = useCallback(
     (target: PingTarget): Omit<PingRequest, 'encounterId'> => {
-      const { userId } = latest.current
-      const base = { id: nextId(), userId, ...person(userId), at: performance.now() }
+      const base = { id: nextId(), ...me(), at: performance.now() }
       const shownPing: ShownPing = target.tokenId
         ? { ...base, kind: 'token', tokenId: target.tokenId }
         : { ...base, kind: 'cell', cell: target.cell }
@@ -156,7 +184,7 @@ export function usePings(board: BoardState, userId: string): Pings {
         ? { cell: null, tokenId: target.tokenId }
         : { cell: target.cell, tokenId: null }
     },
-    [person],
+    [me],
   )
 
   const arrow = useCallback(
@@ -165,7 +193,7 @@ export function usePings(board: BoardState, userId: string): Pings {
       to: GridPoint,
       done: boolean,
     ): Omit<DrawArrowRequest, 'encounterId'> | null => {
-      const { board, userId } = latest.current
+      const { board } = latest.current
       const current = drawing.current
       if (done) drawing.current = null
       if (endsAtStart(board, from, to)) {
@@ -179,8 +207,7 @@ export function usePings(board: BoardState, userId: string): Pings {
       const start: ArrowStart = from.tokenId ? { tokenId: from.tokenId } : { cell: from.cell }
       const shownArrow: ShownPing = {
         id,
-        userId,
-        ...person(userId),
+        ...me(),
         at: now,
         kind: 'arrow',
         from: start,
@@ -193,7 +220,7 @@ export function usePings(board: BoardState, userId: string): Pings {
         ? { fromCell: null, fromTokenId: from.tokenId, to }
         : { fromCell: from.cell, fromTokenId: null, to }
     },
-    [person],
+    [me],
   )
 
   return useMemo(() => ({ shown, events, ping, arrow }), [shown, events, ping, arrow])

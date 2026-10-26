@@ -14,6 +14,10 @@ import {
   renameToken,
   setArchived,
   setReady,
+  setTokenHidden,
+  setTokenInitiative,
+  toBoardToken,
+  encounterDocOf,
   type EncounterDoc,
   type PlaceableType,
 } from './tokens'
@@ -242,5 +246,55 @@ describe('ready', () => {
   it('leaves active and ended encounters alone', () => {
     const active: EncounterDoc = { ...valid, status: 'active' }
     expect(setReady(active, grid, false)).toBe(active)
+  })
+})
+
+describe('hidden creatures', () => {
+  it('places a token hidden on request, and visible by default', () => {
+    const visible = placeToken(empty(), goblin, { x: 0, y: 0 }, 't1')
+    expect(visible.tokens[0]).not.toHaveProperty('hidden')
+    const doc = placeToken(visible, goblin, { x: 1, y: 0 }, 't2', true)
+    expect(doc.tokens.map((t) => t.hidden)).toEqual([undefined, true])
+    expect(doc.tokens[1]?.label).toBe('Goblin 2')
+  })
+
+  it('hides and shows a creature, and leaves the document alone when nothing changes', () => {
+    const doc = placeToken(empty(), goblin, { x: 0, y: 0 }, 't1')
+    expect(setTokenHidden(doc, 't1', false)).toBe(doc)
+    expect(setTokenHidden(doc, 'missing', true)).toBe(doc)
+    const hidden = setTokenHidden(doc, 't1', true)
+    expect(hidden.tokens[0]?.hidden).toBe(true)
+    expect(setTokenHidden(hidden, 't1', true)).toBe(hidden)
+    const shown = setTokenHidden(hidden, 't1', false)
+    expect(shown.tokens[0]).not.toHaveProperty('hidden')
+  })
+
+  it('gives a creature its own initiative and hands it back to its type', () => {
+    const doc = placeToken(empty(), goblin, { x: 0, y: 0 }, 't1')
+    expect(setTokenInitiative(doc, 't1', { modifier: null })).toBe(doc)
+    expect(setTokenInitiative(doc, 'missing', { modifier: 2 })).toBe(doc)
+    const own = setTokenInitiative(doc, 't1', { modifier: 4 })
+    const both = setTokenInitiative(own, 't1', { mode: 'normal' })
+    expect(both.tokens[0]).toMatchObject({ initiativeModifier: 4, initiativeRollMode: 'normal' })
+    const back = setTokenInitiative(both, 't1', { modifier: null, mode: null })
+    expect(back.tokens[0]).not.toHaveProperty('initiativeModifier')
+    expect(back.tokens[0]).not.toHaveProperty('initiativeRollMode')
+  })
+
+  it('draws a hidden token as hidden (see-through with the eye mark)', () => {
+    const doc = placeToken(empty(), goblin, { x: 2, y: 2 }, 't1', true)
+    const grid = gridOf(mapWith([], roomCells()))
+    expect(toBoardToken(doc.tokens[0]!, grid).hidden).toBe(true)
+    const plain = placeToken(empty(), goblin, { x: 2, y: 2 }, 't2')
+    expect(toBoardToken(plain.tokens[0]!, grid).hidden).toBe(false)
+  })
+
+  it('takes the fog from the stored record only when there is some', () => {
+    const base = { name: 'A', status: 'draft' as const, archivedAt: null, tokens: [] }
+    const record = { ...base, id: 'e1' } as unknown as Parameters<typeof encounterDocOf>[0]
+    expect(encounterDocOf(record)).not.toHaveProperty('fog')
+    const fog = { hiddenCells: [[1, 1]], areas: [] }
+    expect(encounterDocOf({ ...record, fog }).fog).toBe(fog)
+    expect(encounterDocOf({ ...record, fog: null }).fog).toBeNull()
   })
 })

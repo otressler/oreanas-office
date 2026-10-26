@@ -1,6 +1,8 @@
 // The map editor's canvas: the map drawn as the board draws it (board/render.ts), a
 // grid over every cell including void so empty cells can be painted, the selection,
-// and the shapes tools put in the store's overlay. Mouse first (laptops): the primary
+// and the shapes tools put in the store's overlay. With the picked background shown, the
+// picture lies under a see-through layout; while the "Hintergrund" tool places it, the part
+// outside the map shows faintly too. Mouse first (laptops): the primary
 // button goes to the active tool; the middle or right button, or Space with the
 // primary button, pans; the wheel zooms at the pointer.
 import type Konva from 'konva'
@@ -12,6 +14,10 @@ import { drawLabels, drawMap, drawTokens, visibleCells } from '../board/render'
 import { tokenMarks } from '../board/palette'
 import { wheelZoomFactor } from '../board/gestures'
 import { useTokenPictures } from '../board/tokenPictures'
+import { drawPicture, useBackgroundImage } from '../board/background'
+import { BackgroundToggle } from './background/BackgroundLayer'
+import { placementFor } from './background/backgrounds'
+import { backgroundToolId } from './background/ids'
 import { useCreatureIcons } from '../tokenImages/queries'
 import { useElementSize } from '../board/useElementSize'
 import {
@@ -20,6 +26,7 @@ import {
   fitViewport,
   keepCentre,
   screenToCell,
+  screenToWorld,
   worldSize,
   zoomAt,
   zoomLimits,
@@ -29,6 +36,11 @@ import {
 } from '../board/viewport'
 import { footprint, type GridPoint } from '../board/geometry'
 import { de } from '../text/de'
+import { hiddenOfDocument } from '../fog/cells'
+import { NO_FADES } from '../fog/fade'
+import { labelWithoutNumber } from '../fog/labels'
+import { buildFogScene, drawFog } from '../board/fogRender'
+import { useTypeNames } from './fog/typeNames'
 import type { EditorMap } from './model'
 import type { LocalCreatureToken } from '../offline/model'
 import { useOptionalEncounter, type EncounterStore } from './encounter/store'
@@ -59,10 +71,21 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
   const doc = useStore(store, (s) => s.doc)
   const overlay = useStore(store, (s) => s.overlay)
   const selection = useStore(store, (s) => s.selection)
+  const background = useStore(store, (s) => s.background)
+  const backgroundVisible = useStore(store, (s) => s.backgroundVisible)
+  const picture = useBackgroundImage(backgroundVisible ? background?.url : null)
+  const placing = tool?.id === backgroundToolId
   const tokens = useOptionalEncounter(encounter, (s) => s.doc.tokens, NO_TOKENS)
   const selectedTokenId = useOptionalEncounter(encounter, (s) => s.selectedId, null)
+  // Fog (knowledge/features/fog-of-war.md): hidden cells hatched, creatures without numbers.
+  const fog = useOptionalEncounter(encounter, (s) => s.doc.fog ?? null, null)
+  const fogScene = useMemo(
+    () => (fog ? buildFogScene(hiddenOfDocument(fog), doc.width, doc.height) : null),
+    [fog, doc.width, doc.height],
+  )
   // Creature icons need a connection; offline, or until they load, tokens show letters.
   const campaignId = useOptionalEncounter(encounter, (s) => s.meta.campaignId, null)
+  const typeNames = useTypeNames(campaignId)
   const icons = useCreatureIcons(campaignId)
   const iconUrl = useCallback(
     (token: LocalCreatureToken) => icons.get(token.creatureTypeId)?.url ?? null,
@@ -135,7 +158,9 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
     const pointer = (e: PointerEvent, pressed: boolean): CellPointer | null => {
       const v = view.current
       if (!v) return null
-      const cell = screenToCell(v, local(e))
+      const at = local(e)
+      const cell = screenToCell(v, at)
+      const world = screenToWorld(v, at)
       const { doc } = latest.current
       return {
         cell,
@@ -144,6 +169,8 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
         shift: e.shiftKey,
         alt: e.altKey,
         mod: e.ctrlKey || e.metaKey,
+        point: { x: world.x / CELL, y: world.y / CELL },
+        cellPx: v.scale * CELL,
       }
     }
     const transform = (change: (v: Viewport, world: Size, s: Size) => Viewport) => {
@@ -188,10 +215,14 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
       if (toolPointer !== null && !pressed) return
       const p = pointer(e, pressed)
       if (!p) return
-      if (lastCell && lastCell.x === p.cell.x && lastCell.y === p.cell.y) return
+      const { tool } = latest.current
+      if (tool?.cursorAt && !space)
+        surface.style.cursor = tool.cursorAt(p, ctx) ?? tool.cursor ?? 'crosshair'
+      const sameCell = lastCell && lastCell.x === p.cell.x && lastCell.y === p.cell.y
+      if (sameCell && !tool?.finePointer) return
+      if (!sameCell) latest.current.onHover?.(p.inside ? p.cell : null)
       lastCell = p.cell
-      latest.current.onHover?.(p.inside ? p.cell : null)
-      latest.current.tool?.onPointerMove?.(p, ctx)
+      tool?.onPointerMove?.(p, ctx)
     }
 
     const onPointerUp = (e: PointerEvent) => {
@@ -272,15 +303,26 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
       const ctx = con._context
       const dpr = con.canvas.getPixelRatio()
       const m = ctx.getTransform()
-      drawMap(
-        ctx,
-        scene,
-        visibleCells(m, ctx.canvas.width, ctx.canvas.height, scene.width, scene.height),
-      )
+      const cells = visibleCells(m, ctx.canvas.width, ctx.canvas.height, scene.width, scene.height)
+      const placement =
+        picture && background ? placementFor(background, doc.backgroundPlacement) : null
+      if (picture && placement) {
+        if (placing) {
+          ctx.save()
+          ctx.globalAlpha = OUTSIDE_PICTURE_ALPHA
+          drawPicture(ctx, picture, placement, scene.width, scene.height, { clip: false })
+          ctx.restore()
+        }
+        drawPicture(ctx, picture, placement, scene.width, scene.height)
+        drawTranslucent(ctx, LAYOUT_OVER_PICTURE_ALPHA, (target) => drawMap(target, scene, cells))
+      } else {
+        drawMap(ctx, scene, cells)
+      }
       drawEditorGrid(ctx, scene, dpr)
       drawLabels(ctx, scene, dpr)
+      if (fogScene) drawFog(ctx, fogScene, 'dm', NO_FADES, 0, m.a / dpr)
     },
-    [scene],
+    [scene, fogScene, picture, background, doc.backgroundPlacement, placing],
   )
 
   // Creatures, with a red frame where one doesn't stand validly on the map.
@@ -291,8 +333,22 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
       const cssScale = ctx.getTransform().a / con.canvas.getPixelRatio()
       const grid = gridOf(doc)
       const bad = misplacedIds(grid, tokens)
-      const drawn = tokens.map((token) => toBoardToken(token, grid, iconUrl(token)))
-      drawTokens(ctx, drawn, { selectedTokenId, cssScale, marks: tokenMarks(drawn), images })
+      // Numbers only come at the table, when players first see a creature.
+      const drawn = tokens.map((token) => {
+        const board = toBoardToken(token, grid, iconUrl(token))
+        return fog
+          ? {
+              ...board,
+              label: labelWithoutNumber(token.label, typeNames.get(token.creatureTypeId)),
+            }
+          : board
+      })
+      drawTokens(ctx, drawn, {
+        selectedTokenId,
+        cssScale,
+        marks: tokenMarks(drawn, { fog: !!fog }),
+        images,
+      })
       for (const token of tokens) {
         if (!bad.has(token.id)) continue
         const n = footprint(token.size)
@@ -303,7 +359,7 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
         )
       }
     },
-    [doc, tokens, selectedTokenId, iconUrl, images],
+    [doc, tokens, selectedTokenId, iconUrl, images, fog, typeNames],
   )
 
   const drawOverlayShape = useCallback(
@@ -315,6 +371,11 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
     },
     [doc, selection, overlay],
   )
+  // The background's frame in the overlay reads the store when drawn, so a new picture or
+  // the toggle redraws every layer, not only the map's.
+  useEffect(() => {
+    stageRef.current?.batchDraw()
+  }, [background, backgroundVisible])
 
   return (
     <div className={className} data-testid="editor-canvas">
@@ -344,16 +405,52 @@ export function EditorCanvas({ tool, encounter = null, onHover, className }: Edi
             </Stage>
           )}
         </div>
-        <button
-          type="button"
-          onClick={fit}
-          className="absolute right-3 bottom-3 z-10 inline-flex min-h-9 items-center rounded-lg border border-line bg-panel/90 px-3 text-sm text-parchment shadow-lg shadow-black/40 hover:border-candle"
-        >
-          {de.board.fit}
-        </button>
+        <div className="absolute right-3 bottom-3 z-10 flex gap-2">
+          <BackgroundToggle />
+          <button
+            type="button"
+            onClick={fit}
+            className="inline-flex min-h-9 items-center rounded-lg border border-line bg-panel/90 px-3 text-sm text-parchment shadow-lg shadow-black/40 hover:border-candle"
+          >
+            {de.board.fit}
+          </button>
+        </div>
       </div>
     </div>
   )
+}
+
+/** How much of the layout shows over the picture, so painting stays visible. */
+const LAYOUT_OVER_PICTURE_ALPHA = 0.4
+/** How much of the picture shows outside the map while it is being placed. */
+const OUTSIDE_PICTURE_ALPHA = 0.35
+
+let scratch: HTMLCanvasElement | null = null
+
+/**
+ * Draws through a scratch canvas, then lays it over at `alpha` as one sheet, so fills that
+ * overlap inside the layout don't add up to darker patches.
+ */
+function drawTranslucent(
+  ctx: CanvasRenderingContext2D,
+  alpha: number,
+  draw: (target: CanvasRenderingContext2D) => void,
+) {
+  const { width, height } = ctx.canvas
+  scratch ??= document.createElement('canvas')
+  if (scratch.width !== width) scratch.width = width
+  if (scratch.height !== height) scratch.height = height
+  const target = scratch.getContext('2d')
+  if (!target) return
+  target.setTransform(1, 0, 0, 1, 0, 0)
+  target.clearRect(0, 0, width, height)
+  target.setTransform(ctx.getTransform())
+  draw(target)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalAlpha = alpha
+  ctx.drawImage(scratch, 0, 0)
+  ctx.restore()
 }
 
 /** A faint line along every cell edge, void included, and a frame around the whole map. */
@@ -387,6 +484,10 @@ function drawEditorGrid(ctx: CanvasRenderingContext2D, scene: MapScene, dpr: num
 function drawOverlay(ctx: CanvasRenderingContext2D, shape: Overlay, cssScale: number) {
   if (shape.kind === 'labels') {
     drawCellLabels(ctx, shape.items, cssScale)
+    return
+  }
+  if (shape.kind === 'custom') {
+    shape.draw(ctx, cssScale)
     return
   }
   const colors = OVERLAY_COLORS[shape.style]

@@ -145,23 +145,35 @@ export const de = {
   },
 
   home: {
+    kicker: 'Am Tisch',
     title: 'Deine Kampagnen',
     empty:
       'Du bist noch in keiner Kampagne. Tritt mit dem Code deiner Spielleitung bei oder leg selbst eine an.',
     activeSession: 'Läuft gerade',
+    /** The card's characters, for screen readers. */
+    characters: 'Charaktere',
+    noCharacters: 'Noch keine Charaktere',
+    /** Characters left out of a full card's row, e.g. "+3". */
+    moreCharacters: (count: number) => `+${count}`,
+    moreCharactersLabel: (count: number) =>
+      count === 1 ? 'und ein weiterer Charakter' : `und ${count} weitere Charaktere`,
+    newKicker: 'Neues Abenteuer',
+    newTitle: 'Beitreten oder selbst leiten',
     joinTitle: 'Kampagne beitreten',
+    joinBody: 'Deine Spielleitung hat schon einen Tisch gedeckt? Mit ihrem Code bist du dabei.',
     joinCode: 'Beitrittscode',
     joinHint: 'Sechs Zeichen, die dir deine Spielleitung gibt.',
     join: 'Beitreten',
     createTitle: 'Neue Kampagne',
+    createBody: 'Leg eine eigene Kampagne an, lade deine Runde ein und bau die ersten Kämpfe.',
     createName: 'Name der Kampagne',
     createHint: 'Du wirst ihre Spielleitung.',
   },
 
   /** The stages of knowledge/implementation-plan.md, told for the people at the table. */
   roadmap: {
-    title: 'Fahrplan',
-    link: 'Fahrplan',
+    title: 'Roadmap',
+    link: 'Roadmap',
     intro:
       "So wächst Oreana's Office, Stufe für Stufe. Termine gibt es keine: Eine Stufe ist fertig, wenn sie am echten Tisch funktioniert.",
     stage: (number: number) => `Stufe ${number}`,
@@ -341,6 +353,274 @@ export const de = {
     },
   },
 
+  /** The Impressum. The provider's details come from the build (ImprintPage.tsx). */
+  imprint: {
+    title: 'Impressum',
+    link: 'Impressum',
+    legalBasis: 'Angaben gemäß § 5 DDG und § 18 Abs. 1 MStV',
+    provider: 'Anbieter',
+    contact: 'Kontakt',
+    email: 'E-Mail:',
+    missing: 'In dieser Version der App fehlen die Angaben zum Anbieter.',
+    project: {
+      title: 'Über dieses Projekt',
+      body: "Oreana's Office ist ein privates Hobbyprojekt ohne kommerzielle Absicht. Die App ist nicht für die Allgemeinheit bestimmt: Ein Konto gibt es nur mit einer Einladung, für eine private D&D-Runde unter Freunden.",
+    },
+    trademarks: {
+      title: 'Marken',
+      body: 'Kein offizielles Produkt von Wizards of the Coast und nicht mit Wizards of the Coast verbunden. Dungeons & Dragons und D&D sind Marken von Wizards of the Coast LLC.',
+    },
+  },
+
+  /**
+   * The privacy policy (GDPR Art. 13). Each section's body is a list of paragraphs; a
+   * nested list is a bullet list. Keep it in step with knowledge/decisions/legal-notice.md.
+   */
+  privacy: {
+    title: 'Datenschutzerklärung',
+    link: 'Datenschutz',
+    intro:
+      "Hier steht, welche Daten Oreana's Office verarbeitet, wozu und wie lange. Die App ist ein privates Hobbyprojekt für eine Runde unter Freunden: ohne Werbung, ohne Tracking, ohne Analyse-Werkzeuge. Daten werden nicht verkauft und nicht für andere Zwecke genutzt.",
+    asOf: 'Stand: 24. Oktober 2026',
+    controller: {
+      title: 'Verantwortlich',
+      body: 'Für Fragen zum Datenschutz und um deine Rechte geltend zu machen, schreib an diese E-Mail-Adresse.',
+      imprint: 'Alle Angaben stehen auch im Impressum.',
+    },
+    sections: [
+      {
+        title: 'Hosting und Server-Protokolle',
+        body: [
+          'Die App läuft bei Microsoft Azure: die Anwendung in einem Rechenzentrum in den Niederlanden, Datenbank, Dateien und Protokolle in Frankfurt am Main. Microsoft verarbeitet die Daten als Auftragsverarbeiter nach Art. 28 DSGVO, auf Grundlage seiner Datenschutzbedingungen für Onlinedienste (Data Protection Addendum).',
+          'Beim Aufruf der App verarbeitet der Server technisch notwendig deine IP-Adresse, die aufgerufene Adresse und den Zeitpunkt, um die Seite auszuliefern. Die App legt keine Zugriffsprotokolle an. Sie protokolliert nur Warnungen und Fehler, und diese Protokolle werden nach 30 Tagen gelöscht.',
+          'Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Das berechtigte Interesse ist ein sicherer und funktionierender Betrieb.',
+        ],
+      },
+      {
+        title: 'Konto und Anmeldung',
+        body: [
+          'Ein Konto gibt es nur mit einer Einladung. Dafür speichert die App:',
+          [
+            'deine E-Mail-Adresse und deinen Anzeigenamen,',
+            'dein Passwort, falls du eines festlegst, nur als sicheren Hash und nie im Klartext,',
+            'wann du dich registriert hast und ob dein Konto mit Google verknüpft ist.',
+          ],
+          'Ohne E-Mail-Adresse kann die App kein Konto anlegen. Die Daten bleiben gespeichert, bis dein Konto gelöscht wird. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO: Sie sind nötig, damit du die App nutzen kannst.',
+        ],
+      },
+      {
+        title: 'Anmelden mit Google',
+        body: [
+          'Wenn du „Mit Google anmelden“ wählst, leitet dich die App zu Google weiter. Nach der Anmeldung übermittelt Google deine E-Mail-Adresse, ob Google sie bestätigt hat, deinen Namen und eine Kennung deines Google-Kontos. Der Name dient nur als Vorschlag für deinen Anzeigenamen; ein Profilbild übernimmt die App nicht.',
+          'Anbieter ist Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. Dabei können Daten an Google LLC in den USA gehen, die nach dem EU-US Data Privacy Framework zertifiziert ist. Für die Anmeldung bei Google gilt zusätzlich die Datenschutzerklärung von Google. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO. Die Anmeldung mit Google ist freiwillig; ein Konto mit Passwort geht genauso.',
+        ],
+      },
+      {
+        title: 'Was du in der App anlegst',
+        body: [
+          'Kampagnen, Charaktere, Karten, Begegnungen, Sitzungen, Kreaturen und Bilder speichert der Server, damit alle in der Runde sie sehen und bespielen können. Sehen können sie nur Mitglieder der jeweiligen Kampagne.',
+          'Hochgeladene Bilder speichert der Server neu ab und entfernt dabei Metadaten wie den Aufnahmeort. Lade Fotos von anderen Menschen nur mit deren Einverständnis hoch.',
+          'Die Inhalte bleiben gespeichert, solange es die Kampagne gibt. Bilder bewahrt die App als Versionen auf, auch wenn ein anderes ausgewählt ist. Löscht die Spielleitung eine archivierte Karte, löscht die App auch deren Hintergrundbilder, soweit keine andere Karte und kein Kampf sie noch zeigt. Auf Anfrage per E-Mail werden Bilder gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.',
+        ],
+      },
+      {
+        title: 'Bilder mit KI',
+        body: [
+          'Karten-Hintergründe, Kreatur-Icons und Charakter-Porträts malt ein Bildmodell bei Microsoft Foundry (Microsoft Azure). Dafür gehen an Microsoft:',
+          [
+            'die Beschreibung, die du dazu schreibst, etwa Szene, Stimmung und Licht oder Name und Aussehen,',
+            'bei Karten eine Skizze des Rasters,',
+            'beim Umgestalten eines Porträts das hochgeladene Bild.',
+          ],
+          'Microsoft verarbeitet diese Daten als Auftragsverarbeiter und nutzt sie nicht zum Training von Modellen. Das Bildmodell ist weltweit bereitgestellt („Global“). Eine Anfrage kann deshalb in einem Rechenzentrum außerhalb der EU verarbeitet werden, zum Beispiel in den USA. Dauerhaft gespeichert wird dort nichts. Für solche Übermittlungen gelten die EU-Standardvertragsklauseln aus Microsofts Datenschutzbedingungen, und Microsoft ist nach dem EU-US Data Privacy Framework zertifiziert.',
+          'Hält Microsofts Missbrauchsschutz eine Anfrage für möglicherweise missbräuchlich, kann Microsoft sie in der EU (Schweden) speichern und von eigenen Beschäftigten im Europäischen Wirtschaftsraum prüfen lassen. Schreib deshalb keine persönlichen Daten in die Beschreibungen. Die fertigen Bilder speichert die App wie andere Inhalte. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.',
+        ],
+      },
+      {
+        title: 'Cookies und Speicher im Browser',
+        body: [
+          'Die App setzt ein einziges eigenes Cookie, „oreana.auth“. Es hält dich angemeldet, gilt bis zu 180 Tage, verlängert sich bei Benutzung und wird beim Abmelden gelöscht. Während einer Anmeldung mit Google kommen kurzlebige Cookies dazu, die die Anmeldung vor Missbrauch schützen.',
+          'Im Speicher deines Browsers (Local Storage, IndexedDB und Cache) legt die App ab, was sie auf deinem Gerät braucht:',
+          [
+            'wer zuletzt auf diesem Gerät angemeldet war, damit die Karten auch offline aufgehen,',
+            'Karten und Änderungen, die noch nicht mit dem Server abgeglichen sind,',
+            'deine letzten Würfe und Einstellungen wie das Vibrieren,',
+            'die App selbst und schon geladene Bilder, damit sie schnell und offline startet.',
+          ],
+          'Diese Daten bleiben auf deinem Gerät und gehen nur an den Server, wenn du sie abgleichst. Du kannst sie jederzeit in den Einstellungen deines Browsers löschen.',
+          'All das ist für die App unbedingt erforderlich und braucht deshalb keine Einwilligung (§ 25 Abs. 2 Nr. 2 TDDDG). Cookies für Tracking oder Werbung gibt es nicht.',
+        ],
+      },
+      {
+        title: 'Keine weiteren Dienste',
+        body: [
+          'Schriften und alle anderen Dateien kommen vom eigenen Server. Die App bindet keine Inhalte von Dritten ein, nutzt keine Analyse-Werkzeuge und verschickt keine E-Mails. Eine automatisierte Entscheidungsfindung oder ein Profiling findet nicht statt.',
+        ],
+      },
+      {
+        title: 'Deine Rechte',
+        body: [
+          'Du hast das Recht auf:',
+          [
+            'Auskunft über deine gespeicherten Daten (Art. 15 DSGVO),',
+            'Berichtigung falscher Daten (Art. 16 DSGVO),',
+            'Löschung (Art. 17 DSGVO) und Einschränkung der Verarbeitung (Art. 18 DSGVO),',
+            'Datenübertragbarkeit (Art. 20 DSGVO),',
+            'Widerspruch gegen die Verarbeitung auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (Art. 21 DSGVO).',
+          ],
+          'Schreib dafür einfach eine E-Mail an die Adresse oben. Wenn du dein Konto löschen möchtest, werden dein Konto und deine Inhalte gelöscht.',
+          'Du kannst dich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77 DSGVO), zum Beispiel bei der in deinem Bundesland.',
+        ],
+      },
+    ],
+  },
+
+  landing: {
+    navLabel: 'Bereiche der Seite',
+    signIn: 'Anmelden',
+    roadmap: 'Roadmap',
+    hero: {
+      kicker: 'Digitale D&D Battlemaps',
+      tagline: 'Dein digitaler Dungeon Crawl Companion',
+      body: 'Deine Spielleiter*in plant und erstellt die Encounter für deine nächste Session. Du und deine Party können deine Charakter auf dem eigenen Gerät steuern. Nie wieder zu kleine Kästchen für eure Figuren.',
+      howItWorks: "So geht's",
+      inviteOnly:
+        'Dies ist eine private App für D&D Abenteuer und nicht für die Allgemeinheit bestimmt. Zum Registrieren benötigst du eine Einladung vom Admin',
+      worksOnLabel: 'Spiel so wie du willst',
+      worksOn: ['Handy', 'Tablet', 'Laptop', 'Spectator Device', 'Zentraler Bildschirm'],
+      scroll: 'Weiter',
+    },
+    steps: {
+      nav: "So geht's",
+      kicker: 'Bring deine Ideen auf den Tisch',
+      title: 'Encounter erstellen',
+      tabsLabel: '',
+      detailsLabel: '',
+      items: [
+        {
+          key: 'sketch',
+          name: 'Skizzieren',
+          lead: 'Erstelle eine grobe Version deiner Karte.',
+          body: 'Die Spielleitung erstellt eine neue Karte und malt Boden, Wände, Wasser und schwieriges Gelände hinein. Danach folgen Objekte, Ein- und Ausgänge und Terrain. Dafür musst du nicht einmal Online sein. Funktioniert also sogar beim Zugfahren.',
+          details: [
+            '(Fast) so viel Platz wie du brauchst - bis zu 40x40 Felder.',
+            'Objektkatalog für so viele Details wie du willst.',
+            'Intuitiver Mapeditor für einfache und schnelle Bearbeitung.',
+            'Kreaturen platzieren und Überraschungen planen.',
+          ],
+        },
+        {
+          key: 'paint',
+          name: 'Malen lassen',
+          lead: 'Oreana zaubert aus der Skizze eine Karte.',
+          body: 'Basierend auf deiner Skizze erstellt die App einen Hintergrund, Feld für Feld passend zum Raster. Szenerie und Vibe folgen dabei deiner Vision. „Mehr Nebel in der Schlucht“? Kein Problem. Änderungswünsche einfach eingeben.',
+          details: [
+            'Erzeuge mehrere Varianten und wähle die beste.',
+            'Erwecke Kreaturen mit Bildern zum Leben.',
+            'Lass deine Party mit Porträts glänzen.',
+            'Kein Geld mehr für Illustrationen? Kein Problem, geht auch ohne.',
+          ],
+        },
+        {
+          key: 'play',
+          name: 'Spielen',
+          lead: 'Lass die Party auf deine Karten los.',
+          body: 'Die Spieler können Züge auf ihrem eigenen Gerät ausführen. Figur antippen, Ziel wählen, bestätigen: Jeder sieht den Zug sofort. Die Spielleitung zieht die Monster. Auf Wunsch bringt Oreana euch sogar eure Würfel mit.',
+          details: [
+            'Alle können Züge auf ihrem eigenen Gerät ausführen.',
+            'Teile deine Pläne mit allen, auch wenn ihr nicht an einem Tisch sitzt.',
+            'Lass deine Gegner bluten - und zeige es allen mit Statusmarkern.',
+            'Zu wenig W6? Keine Sorge, wir haben genug Würfel parat.',
+          ],
+        },
+      ],
+    },
+    map: {
+      nav: 'Die Karte',
+      kicker: 'Erwecke deine Karte zum Leben',
+      title: 'Karte verschönern',
+      body: 'Links deine Skizze, wie du sie im Editor erstellst. Rechts das Bild, das daraus gemalt wurde. Zieh den Regler und vergleiche.',
+      note: 'Das Bild ist nur Schmuck: Wege, Wände und Terrain kommen immer aus dem Raster. Ohne Bild bleibt die gezeichnete Karte, und der Kampf ist trotzdem spielbar.',
+      before: 'Skizziert',
+      after: 'Gemalt',
+      slider: 'Vergleich zwischen gezeichneter und gemalter Karte',
+      beforeAlt:
+        'Die skizzierte Karte einer fast verlassenen Gruft: graue Böden, dunkle Wände und blaues Wasser im Raster.',
+      afterAlt:
+        'Dieselbe Gruft als gemaltes Bild: feuchte Steinplatten, schwarzes Wasser, Fackeln und ein Altar mit Kerzen.',
+      caption: 'Alte Gruft · 24\u00a0×\u00a016 Felder · 36\u00a0×\u00a024\u00a0m',
+    },
+    creatures: {
+      nav: 'Kreaturen',
+      kicker: 'Nie wieder generische Tokens',
+      title: 'Feindbilder erschaffen',
+      intro:
+        'Jede Kreaturenart bekommt ein gemaltes Symbol. So können die Spieler sie sofort erkennen und unterscheiden, auch wenn sie nicht am Tisch sitzen. Über den Verlauf einer Kampagne wächst dein Bestiarium.',
+      pickLabel: 'Kreatur wählen',
+      size: 'Größe',
+      speed: 'Bewegung',
+      token: 'Auf dem Feld',
+      onBoard: 'Im Kampf',
+      picture: 'Bild',
+      pictureText: 'Gemalt auf Wunsch, im Stil des ganzen Bestiariums.',
+      items: [
+        {
+          key: 'goblin',
+          name: 'Goblin-Boss',
+          epithet: 'Anführer der Bande',
+          body: 'Seinen Platz an der Spitze hat er sich mit dem Messer erkämpft, und er verteidigt ihn bis aufs Blut. Wo er hinzeigt, stürmt die Bande hin. Er selbst bleibt lieber in der zweiten Reihe.',
+          size: 'Klein · 1 Feld',
+          speed: '6 Felder · 9 m',
+          onBoard: 'Goblin-Boss, Goblin 1, Goblin 2\u00a0… Die Nummern zählt die App von selbst.',
+        },
+        {
+          key: 'owlbear',
+          name: 'Eulenbär',
+          epithet: 'Schrecken des Waldes',
+          body: 'Halb Bär, halb Eule und durch und durch schlechte Laune. Sein Schrei hallt nachts durch den Wald, und wer ihn hört, hat meist nur noch Zeit für einen letzten Zug.',
+          size: 'Groß · 2 × 2 Felder',
+          speed: '8 Felder · 12 m',
+          onBoard: 'Belegt vier Felder - ein gefiederter Koloss.',
+        },
+        {
+          key: 'lich',
+          name: 'Lich',
+          epithet: 'Herr der Gruft',
+          body: 'Er hat den Tod überlistet und wartet seitdem tief unten in seiner Gruft. Seine Geduld ist endlos, und seine Macht ist es beinahe auch.',
+          size: 'Mittelgroß · 1 Feld',
+          speed: '6 Felder · 9 m',
+          onBoard: 'Verängstigt, Vergiftet, Verhext: Zustände hängen als Symbole an der Figur.',
+        },
+      ],
+    },
+    table: {
+      nav: 'Am Tisch',
+      kicker: "Oreana's Office",
+      title: 'Am Tisch',
+      previous: 'Zurück',
+      next: 'Weiter',
+      items: [
+        { key: 'live', title: 'Live', text: 'Jeder Zug sofort auf allen Handys.' },
+        { key: 'distance', title: 'In Metern', text: 'Wie weit ein Zug war, auf 1,5 m genau.' },
+        { key: 'ping', title: 'Zeigen', text: 'Doppeltippen leuchtet auf allen Bildschirmen.' },
+        { key: 'arrow', title: 'Pfeile', text: 'Zeigen, wohin es als Nächstes geht.' },
+        { key: 'status', title: 'Zustände', text: 'Liegend, vergiftet, verhext, mit Symbol.' },
+        { key: 'card', title: 'Figurenkarte', text: 'Ein Tipp zeigt Bild, Name und Zustände.' },
+        { key: 'dice', title: 'Würfelschale', text: 'Würfeln, ohne den Kampf zu verlassen.' },
+        { key: 'undo', title: 'Rückgängig', text: 'Den eigenen letzten Zug zurücknehmen.' },
+        { key: 'offline', title: 'Offline', text: 'Karten bauen, ganz ohne Internet.' },
+        { key: 'install', title: 'Als App', text: 'Auf dem Handy installieren.' },
+      ],
+    },
+    finale: {
+      title: 'Die Runde wartet!',
+      body: 'Registrieren geht nur mit einem Einladungslink. Frag deine Spielleitung danach, oder melde dich an, wenn du schon ein Konto hast.',
+    },
+    footer: 'Gebaut für eine Runde unter Freunden.',
+    unofficial:
+      'Inoffizielles Fan-Projekt, nicht mit Wizards of the Coast verbunden. Dungeons & Dragons und D&D sind Marken von Wizards of the Coast LLC.',
+  },
+
   roles: {
     dm: 'Spielleitung',
     player: 'Spieler',
@@ -356,6 +636,24 @@ export const de = {
     joinCodeShareTitle: (name: string) => `Beitrittscode für ${name}`,
     replaceJoinCode: 'Neuen Code erstellen',
     replaceJoinCodeNote: 'Der alte Code funktioniert danach nicht mehr.',
+    /** The `dm` members' panel for the home page's card (knowledge/domain/campaign.md). */
+    cardTitle: 'Titelbild und Beschreibung',
+    name: 'Name',
+    description: 'Beschreibung',
+    descriptionHint:
+      'Ein, zwei Sätze für die Karte auf der Startseite, höchstens 300 Zeichen. Daraus wird auch das Titelbild gemalt.',
+    saving: 'Die Änderungen an der Kampagne werden gespeichert…',
+    edit: 'Bearbeiten',
+    coverTitle: 'Titelbild',
+    generateCover: 'Titelbild erzeugen',
+    regenerateCover: 'Neues Titelbild erzeugen',
+    coverNeedsDescription:
+      'Schreib erst eine Beschreibung und speichere sie, dann kann ein Titelbild erzeugt werden.',
+    coverNoneHint: 'Ohne eigenes Titelbild zeigt die Karte auf der Startseite ein Standardbild.',
+    coverRejected:
+      'Das Bildmodell hat dieses Bild abgelehnt. Versuch es mit einer anderen Beschreibung.',
+    /** The cover's alt text, e.g. "Titelbild von Die Rabenküste". */
+    coverAlt: (name: string) => `Titelbild von ${name}`,
   },
 
   characters: {
@@ -365,6 +663,10 @@ export const de = {
     name: 'Name',
     size: 'Größe',
     owner: (name: string) => `Gehört ${name}`,
+    /** The DM's field for whom a character belongs to (knowledge/domain/character.md). */
+    ownerField: 'Gehört',
+    ownerHint:
+      'Wem der Charakter gehört, der spielt ihn. Für eine einzelne Sitzung kann ihre Spielleitung ihn jemand anderem geben.',
     editTitle: (name: string) => `${name} bearbeiten`,
     appearance: 'Aussehen',
     appearanceHint: 'Kurze Beschreibung, aus der ein Porträt gemalt werden kann.',
@@ -457,6 +759,17 @@ export const de = {
   /** /kampagnen/:id/sitzungen/:sessionId (knowledge/features/session-planning.md). */
   sessionPage: {
     back: 'Zur Kampagne',
+    /** Who plays which character in this session (knowledge/domain/session.md). */
+    players: {
+      title: 'Wer spielt wen',
+      help: 'Fehlt jemand, gib den Charakter für diese Sitzung jemand anderem. Danach spielt ihn wieder, wem er gehört.',
+      playedBy: (name: string) => `Gespielt von ${name}`,
+      /** Shown when the session DM handed the character to someone else. */
+      handedOver: (owner: string) => `Nur in dieser Sitzung, sonst ${owner}`,
+      field: (character: string) => `Wer spielt ${character}?`,
+      /** The option that gives the character back to its owner. */
+      ownerOption: (owner: string) => `${owner} (wie in der Kampagne)`,
+    },
     /** Links back to the session page, e.g. from the import and the setup screen. */
     toSession: 'Zur Sitzung',
     notFoundTitle: 'Diese Sitzung gibt es hier nicht',
@@ -671,6 +984,49 @@ export const de = {
     vibrateTitle: 'Vibrieren',
     vibrate: 'Kurz vibrieren, wenn ein Zug angekommen ist',
     vibrateHint: 'Gilt nur für dieses Gerät.',
+  },
+
+  /** The dice tray (src/dice, knowledge/features/dice-tray.md). Dice are written W4 … W100. */
+  dice: {
+    open: 'Würfeln',
+    title: 'Würfel',
+    /** Under the dialog's title: the rolls stay on this device for now. */
+    localHint: 'Nur du siehst deine Würfe.',
+    tray: 'Würfelschale',
+    empty: 'Tipp unten auf einen Würfel, um ihn in die Schale zu legen.',
+    tapToRemove: 'Tipp auf einen Würfel in der Schale, um ihn herauszunehmen.',
+    limit: (max: number) => `Mehr als ${max} Würfel gehen nicht auf einmal.`,
+    picker: 'Würfel dazunehmen',
+    add: (die: string, inRoll: number) =>
+      `Einen ${die} dazunehmen${inRoll ? ` (${inRoll} im Wurf)` : ''}`,
+    die: (die: string, value: number | null, dropped: number | null) =>
+      `${die}, ${value == null ? 'noch nicht gewürfelt' : `zeigt ${value}${dropped != null ? `, verworfen ${dropped}` : ''}`}. Aus dem Wurf nehmen`,
+    modifier: 'Modifikator',
+    decrease: 'Modifikator verringern',
+    increase: 'Modifikator erhöhen',
+    modes: 'W20-Würfe',
+    modesHint: 'Gilt für die W20 im Wurf',
+    mode: { normal: 'Normal', advantage: 'Vorteil', disadvantage: 'Nachteil' },
+    withMode: { normal: '', advantage: 'mit Vorteil', disadvantage: 'mit Nachteil' },
+    rolledWith: {
+      normal: '',
+      advantage: 'Mit Vorteil gewürfelt',
+      disadvantage: 'Mit Nachteil gewürfelt',
+    },
+    clear: 'Leeren',
+    pickDice: 'Würfel wählen',
+    rolling: 'Wird gewürfelt …',
+    rollAgain: 'Noch mal würfeln',
+    roll: (count: number) => `${count} Würfel werfen`,
+    natural20: 'Natürliche 20',
+    natural1: 'Natürliche 1',
+    natural20And1: 'Natürliche 20 und natürliche 1',
+    announce: (notation: string, total: number, note: string) =>
+      `${notation}: Summe ${total}.${note ? ` ${note}.` : ''}`,
+    history: 'Letzte Würfe',
+    historyEmpty: 'Hier stehen deine letzten Würfe.',
+    again: 'Noch mal',
+    againLabel: (notation: string) => `${notation} noch mal würfeln`,
   },
 
   /** The map editor's frame (src/editor). */
@@ -968,7 +1324,8 @@ export const de = {
     activeTitle: 'Karten',
     empty: 'Noch keine Karten. Lege eine neue an oder importiere eine Kartendatei.',
     archivedTitle: (count: number) => `Archiviert (${count})`,
-    archivedHint: 'Archivierte Karten werden nicht zum Auswählen angeboten. Gelöscht wird nichts.',
+    archivedHint:
+      'Archivierte Karten werden nicht zum Auswählen angeboten. Hier holst du sie zurück oder löschst sie endgültig.',
     /** Size in cells, then meters, e.g. "20 × 15 Felder (30 m × 22,5 m)". */
     size: (width: number, height: number, widthMeters: string, heightMeters: string) =>
       `${width} × ${height} Felder (${widthMeters} × ${heightMeters})`,
@@ -992,6 +1349,28 @@ export const de = {
     duplicated: (name: string) => `„${name}“ ist angelegt.`,
     archived: (name: string) => `„${name}“ ist archiviert.`,
     restored: (name: string) => `„${name}“ ist zurück.`,
+    delete: 'Löschen',
+    deleteMap: (name: string) => `${name} löschen`,
+    deleted: (name: string) => `„${name}“ ist gelöscht.`,
+    /** The question before an archived map is deleted (knowledge/domain/battle-map.md, "Deleting"). */
+    deleteDialog: {
+      title: (name: string) => `„${name}“ löschen?`,
+      body: 'Die Karte wird endgültig gelöscht, auch auf deinen anderen Geräten und für die übrige Spielleitung. Das lässt sich nicht rückgängig machen.',
+      encounters: (count: number) =>
+        count === 1
+          ? 'Diese Begegnung ist noch nicht gespielt und wird mitgelöscht:'
+          : `Diese ${count} Begegnungen sind noch nicht gespielt und werden mitgelöscht:`,
+      /** A fight in the lists above, with the title of its session. */
+      inSession: (encounter: string, session: string) => `${encounter} (${session})`,
+      played:
+        'Diese Karte lässt sich nicht löschen, weil ein laufender oder beendeter Kampf sie verwendet:',
+      images:
+        'Ihre Hintergrundbilder werden mitgelöscht, außer eine Kopie aus dem Kartenspeicher oder ein gespielter Kampf zeigt sie noch.',
+      offline: 'Zum Löschen braucht es eine Verbindung zum Server.',
+      blocked:
+        'Die Karte hat Änderungen, die sich nicht synchronisieren lassen. Kläre das zuerst über „Sync“ und versuch es dann noch einmal.',
+      confirm: 'Endgültig löschen',
+    },
     actionFailed: 'Das hat auf diesem Gerät nicht geklappt. Versuch es bitte noch einmal.',
 
     newTitle: 'Neue Karte',
@@ -1055,9 +1434,55 @@ export const de = {
     /** The "Hintergrund" tool (src/editor/background): generate, follow, compare and pick. */
     background: {
       tool: 'Hintergrund',
-      help: 'Ein Bildmodell malt aus dem Layout und der Beschreibung ein Bild der Karte. Das Raster zeichnet die App darüber.',
+      help: 'Ein Bildmodell malt aus dem Layout und der Beschreibung ein Bild der Karte, oder du lädst ein eigenes hoch. Das Raster zeichnet die App darüber.',
       offline:
-        'Hintergründe brauchen eine Verbindung: zum Erzeugen, für die Versionen und zum Auswählen.',
+        'Hintergründe brauchen eine Verbindung: zum Erzeugen, Hochladen, für die Versionen und zum Auswählen.',
+      /** The canvas button that shows or hides the picture under the layout. */
+      layer: 'Hintergrund zeigen',
+      upload: {
+        button: 'Eigenes Bild hochladen',
+        hint: 'PNG, WebP oder JPEG, bis 25 MB und 8192 Pixel Kantenlänge. Ein hochgeladenes Bild passt zu jeder Kartengröße; du legst es selbst übers Raster.',
+        uploading: 'Das Bild wird hochgeladen…',
+        done: 'Das Bild ist hochgeladen und ausgewählt. Leg es jetzt mit den Griffen übers Raster.',
+        wrongType: 'Nimm ein PNG-, WebP- oder JPEG-Bild.',
+        tooLarge: 'Das Bild ist größer als 25 MB. Nimm ein kleineres.',
+        syncOffline:
+          'Ohne Verbindung lässt sich die Karte nicht synchronisieren. Es wurde nichts hochgeladen.',
+        syncBlocked:
+          'Die Karte ließ sich nicht synchronisieren. Kläre zuerst das Problem bei der Synchronisierung (oben „Sync“), dann versuch es noch einmal. Es wurde nichts hochgeladen.',
+      },
+      uploaded: 'Hochgeladen',
+      place: {
+        title: 'Platzieren',
+        help: 'Zieh das Bild, um es zu verschieben. Die Ecken skalieren es, der runde Griff darüber dreht es (mit Umschalt in 15°-Schritten).',
+        hidden: 'Der Hintergrund ist ausgeblendet.',
+        show: 'Einblenden',
+        reset: 'Zurücksetzen',
+        resetHint: 'Legt das Bild wieder so, wie es erzeugt oder hochgeladen wurde.',
+        /** The picture's turn and size, e.g. "Drehung 1,5° · 20,0 × 12,0 Felder". */
+        state: (rotation: string, width: string, height: string) =>
+          `Drehung ${rotation}° · ${width} × ${height} Felder`,
+        calibrate: 'Am Raster ausrichten',
+        calibrateHint:
+          'Für Bilder mit eigenem Raster: Klicke zwei Rasterpunkte im Bild und jeweils die Ecke der Karte, auf die sie gehören. Das Bild wird dann verschoben, skaliert und gedreht.',
+        /** The next click of the calibration, by step 0–3. */
+        steps: [
+          '1. Klicke einen Rasterpunkt im Bild.',
+          '2. Klicke die Rasterecke der Karte, auf die dieser Punkt gehört.',
+          '3. Klicke einen zweiten Rasterpunkt im Bild, möglichst weit vom ersten entfernt.',
+          '4. Klicke die Rasterecke der Karte, auf die der zweite Punkt gehört.',
+        ],
+        cancel: 'Abbrechen',
+        failed:
+          'Die Punkte lagen zu nah beieinander. Nimm zwei Punkte, die weiter auseinander liegen.',
+      },
+      grid: {
+        label: 'Raster über dem Bild',
+        hint: 'Für Bilder, die schon ein eigenes Raster haben. Ohne Bild zeigt das Brett immer das normale Raster.',
+        normal: 'Normal',
+        faint: 'Dezent',
+        hidden: 'Aus',
+      },
       notSynced:
         'Diese Karte ist noch nicht auf dem Server. Beim Erzeugen wird sie zuerst synchronisiert.',
       loadFailed: 'Die Hintergründe ließen sich nicht laden.',
@@ -1183,6 +1608,7 @@ export const de = {
     notSessionDm: 'Die Kämpfe einer Sitzung plant nur ihre Spielleitung.',
     sessionInvalid: 'Diese Sitzung gibt es in der Kampagne nicht (mehr).',
     colorInvalid: 'Ein Farbcode ist # und sechs Zeichen aus 0–9 und a–f, etwa #4da3ff.',
+    notAMember: 'Diese Person gehört nicht zur Kampagne.',
     textTooLong: 'Ein Text in der Datei ist zu lang.',
     mapSizeInvalid: 'Eine Karte ist 1 bis 40 Felder breit und hoch.',
     layoutVersionUnsupported: 'Diese Kartendatei stammt aus einer neueren Version der App.',
@@ -1217,6 +1643,9 @@ export const de = {
     creaturesMisplaced:
       'Eine Kreatur steht nicht gültig auf der Karte. Korrigiere die Aufstellung, bevor die Begegnung bereit ist oder startet.',
     mapNotInStore: 'Diese Karte wird im Kartenspeicher dieser Kampagne nicht angeboten.',
+    mapNotArchived: 'Nur archivierte Karten lassen sich löschen.',
+    mapPlayed:
+      'Diese Karte lässt sich nicht löschen, weil ein laufender oder beendeter Kampf sie verwendet.',
     imagesUnavailable:
       'Auf dem Server ist kein Bildmodell eingerichtet. Hintergründe können gerade nicht erzeugt werden.',
     imageBudgetExhausted:
@@ -1233,11 +1662,22 @@ export const de = {
     imageNotFound: 'Dieses Bild gibt es hier nicht mehr.',
     uploadInvalid: 'Das Bild lässt sich nicht lesen. Nimm ein JPEG-, PNG- oder WebP-Bild.',
     uploadTooLarge: 'Das Bild ist zu groß. Nimm ein kleineres.',
+    descriptionInvalid: 'Die Beschreibung darf höchstens 300 Zeichen lang sein.',
+    descriptionMissing:
+      'Schreib erst eine Beschreibung der Kampagne, dann kann ein Titelbild erzeugt werden.',
     statusNotFound: 'Diesen Zustand gibt es hier nicht (mehr).',
     statusAlreadySet: 'Die Figur hat diesen Zustand schon.',
     levelInvalid: 'Die Stufe geht von 1 bis 6.',
     notYourStatus:
       'Diesen Zustand hat jemand anderes gesetzt. Entfernen kann ihn nur die Person oder die Spielleitung.',
+    fogInvalid:
+      'Mit dem Nebel stimmt etwas nicht: Felder außerhalb der Karte, oder der Kampf hat keinen Nebel.',
+    readOnlyConnection: 'Dieser Bildschirm schaut nur zu.',
+    spawnInvalid: 'Diese Kreaturen lassen sich nicht erscheinen lassen.',
+    notLocalMode: 'Ein gemeinsamer Bildschirm geht nur in der Spielweise „Gemeinsamer Bildschirm“.',
+    initiativeInvalid:
+      'Mit der Initiative stimmt etwas nicht: ein Wert außerhalb des Erlaubten, oder eine Figur, die nicht zum Kampf gehört.',
+    notBuilt: 'Das gibt es noch nicht.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */
@@ -1402,6 +1842,11 @@ export const de = {
     appearanceHint: 'Kurze Beschreibung, aus der das Symbol gemalt wird.',
     notes: 'Notizen der Spielleitung',
     notesHint: 'Nur für die Spielleitung sichtbar.',
+    /** What the type's creatures roll initiative with (knowledge/features/initiative.md). */
+    initiativeModifier: 'Initiative-Modifikator',
+    initiativeModifierHint:
+      'Wird zum W20 addiert, von −10 bis +20. Jede Kreatur auf einer Karte kann ihren eigenen haben.',
+    initiativeRollMode: 'Initiative-Wurf',
     create: 'Anlegen',
     save: 'Speichern',
     cancel: 'Abbrechen',
@@ -1418,15 +1863,16 @@ export const de = {
       nameTaken: 'Diese Kampagne hat schon eine Kreaturenart mit diesem Namen.',
       appearanceTooLong: 'Das Aussehen darf höchstens 500 Zeichen haben.',
       notesTooLong: 'Die Notizen dürfen höchstens 2000 Zeichen haben.',
+      initiativeInvalid: 'Der Initiative-Modifikator ist eine ganze Zahl von −10 bis +20.',
     } satisfies Record<import('../bestiary/creatureTypes').CreatureTypeProblem, string>,
     /** The icon part of an existing type's form (knowledge/features/token-icons.md). */
     icon: {
       title: 'Symbol',
-      help: 'Ein Bildmodell malt aus Name und Aussehen ein Symbol. Alle Kreaturen dieser Art zeigen es auf dem Brett.',
+      help: 'Ein Bildmodell malt aus Name und Aussehen ein Symbol, oder du lädst ein eigenes Bild hoch. Alle Kreaturen dieser Art zeigen es auf dem Brett.',
       generate: 'Symbol erzeugen',
       regenerate: 'Neues Symbol erzeugen',
       notSynced:
-        'Diese Kreaturenart ist noch nicht auf dem Server. Synchronisiere sie zuerst, dann lässt sich ein Symbol erzeugen.',
+        'Diese Kreaturenart ist noch nicht auf dem Server. Synchronisiere sie zuerst, dann lässt sich ein Symbol erzeugen oder hochladen.',
       syncNow: 'Jetzt synchronisieren',
       syncing: 'Die Kreaturenart wird synchronisiert…',
       /** Why the type couldn't be synced; generating adds `nothingGenerated`. */
@@ -1481,6 +1927,9 @@ export const de = {
     confirm: {
       iconTitle: 'Symbol erzeugen?',
       portraitTitle: 'Porträt erzeugen?',
+      coverTitle: 'Titelbild erzeugen?',
+      coverFrom:
+        'Das Bildmodell malt das Titelbild aus dem Namen und der Beschreibung der Kampagne.',
       restyleTitle: 'Im Token-Stil umwandeln?',
       iconFrom:
         'Das Bildmodell malt das Symbol aus dem Namen und dem Aussehen. Die Kreaturenart wird zuerst synchronisiert, denn der Server malt nach seiner Kopie.',
@@ -1557,6 +2006,15 @@ export const de = {
     selectKeys: 'Entf entfernt die Kreatur, Esc hebt die Auswahl auf.',
     label: 'Bezeichnung',
     labelInvalid: 'Die Bezeichnung braucht 1 bis 40 Zeichen.',
+    /** This creature's own initiative, over its type's (knowledge/features/initiative.md). */
+    initiativeModifier: 'Initiative-Modifikator',
+    /** The field's placeholder while empty, e.g. "Wie die Art (+2)". */
+    initiativeFromType: (modifier: string) => `Wie die Art (${modifier})`,
+    initiativeModifierHint: 'Leer lassen für den Wert der Kreaturenart.',
+    initiativeModifierInvalid: 'Eine ganze Zahl von −10 bis +20, oder leer.',
+    initiativeRollMode: 'Initiative-Wurf',
+    /** The empty choice, e.g. "Wie die Art (Vorteil)". */
+    rollModeFromType: (mode: string) => `Wie die Art (${mode})`,
     type: 'Art',
     size: 'Größe',
     position: 'Feld',
@@ -1618,6 +2076,8 @@ export const de = {
     appliedBy: (name: string) => `von ${name}`,
     /** Someone who isn't (any more) in the campaign. */
     someone: 'jemandem',
+    /** Who put a status on when it came from the shared screen: "von Tisch". */
+    table: 'Tisch',
     /** The status picker on the token card (knowledge/features/statuses.md, "What the picker shows"). */
     picker: {
       title: (label: string) => `Zustand für ${label}`,
@@ -1733,6 +2193,307 @@ export const de = {
     restoreRow: (label: string) => `${label} zurückholen`,
     /** When a token was taken off, e.g. "um 20:15". */
     removedAt: (time: string) => `um ${time}`,
+  },
+
+  /** Fog of war and creature spawn (fog frontend lane). */
+  fog: {
+    /** Tapping a hidden cell as a player: no terrain, no height. */
+    unexplored: 'Unerkundet',
+    /** The closed-eye mark's accessible name. */
+    hiddenMark: 'Verborgen',
+    needsConnection: 'Dafür braucht es eine Verbindung zum Tisch.',
+
+    /** The session DM's board: fog mode, previews, the confirm bar. */
+    board: {
+      fogButton: 'Nebel',
+      playerView: 'Spieleransicht',
+      /** Shown while "Spieleransicht" is on. */
+      playerViewNote: 'So sehen die Spielenden den Tisch. Es wird nichts gesendet.',
+      toolsLabel: 'Nebelwerkzeuge',
+      tools: { area: 'Bereich', brush: 'Pinsel', rect: 'Rechteck' },
+      reveal: 'Aufdecken',
+      hide: 'Verdecken',
+      directionLabel: 'Felder',
+      hints: {
+        area: 'Tippe auf ein Feld, um einen Bereich zu wählen.',
+        brush: 'Tippe auf die Felder, die du ändern willst.',
+        rectFirst: 'Tippe auf die erste Ecke.',
+        rectSecond: 'Tippe auf die gegenüberliegende Ecke.',
+      },
+      noArea: 'Auf diesem Feld liegt kein Bereich.',
+      chooseArea: 'Welcher Bereich?',
+      /** "12 Felder aufdecken?" / "1 Feld verdecken?" */
+      confirmReveal: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} aufdecken?`,
+      confirmHide: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} verdecken?`,
+      nothingToChange: 'Diese Felder sind schon so.',
+      cancel: 'Abbrechen',
+      undo: 'Rückgängig',
+      /** The undo bar after a change, e.g. "12 Felder aufgedeckt". */
+      revealed: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} aufgedeckt`,
+      hidden: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} verdeckt`,
+      failed: 'Die Änderung ist nicht angekommen. Versuch es bitte noch einmal.',
+      undoFailed: 'Das Rückgängigmachen ist nicht angekommen. Versuch es bitte noch einmal.',
+    },
+
+    /** The token card's buttons for a creature. */
+    token: {
+      reveal: 'Aufdecken',
+      hide: 'Verbergen',
+      revealAllHere: 'Alle verborgenen hier',
+      /** A note on a hidden creature's card. */
+      hiddenNote: 'Verborgen: Nur du siehst diese Kreatur.',
+      /** The undo bar, e.g. "Goblin aufgedeckt". */
+      revealed: (label: string) => `${label} aufgedeckt`,
+      hidden: (label: string) => `${label} verborgen`,
+      revealedMany: (count: number) => `${count} Kreaturen aufgedeckt`,
+      failed: 'Das Aufdecken oder Verbergen ist nicht angekommen. Versuch es bitte noch einmal.',
+    },
+
+    /** "Kreatur hinzufügen": the picker, placing, the confirm bar (creature-spawn.md). */
+    spawn: {
+      button: 'Kreatur hinzufügen',
+      pickerTitle: 'Welche Kreatur?',
+      usedHere: 'In diesem Kampf',
+      others: 'Weitere Arten',
+      loading: 'Arten werden geladen…',
+      loadFailed: 'Die Arten konnten nicht geladen werden.',
+      empty: 'Diese Kampagne hat noch keine Kreaturenart.',
+      /** A type's button, e.g. "Goblin hinzufügen". */
+      pick: (name: string) => `${name} hinzufügen`,
+      newType: 'Neue Art',
+      newName: 'Name',
+      newSize: 'Größe',
+      newCreate: 'Anlegen',
+      newNameTaken: 'Diese Kampagne hat schon eine Art mit diesem Namen.',
+      newFailed: 'Die Art konnte nicht angelegt werden. Versuch es bitte noch einmal.',
+      close: 'Schließen',
+      /** While placing; `name` is the picked type. */
+      placing: (name: string) =>
+        `${name}: Tippe auf Felder, um Kreaturen zu platzieren. Tippe auf eine platzierte Kreatur, um sie wegzunehmen.`,
+      /** Chips of what is placed, e.g. "Goblin × 2". */
+      placed: (name: string, count: number) => `${name} × ${count}`,
+      otherType: 'Andere Art',
+      done: 'Fertig',
+      /** The confirm bar: "3 Kreaturen erscheinen lassen?" */
+      confirm: (count: number) =>
+        `${count} ${count === 1 ? 'Kreatur' : 'Kreaturen'} erscheinen lassen?`,
+      hidden: 'Verborgen',
+      appear: 'Erscheinen lassen',
+      cancel: 'Abbrechen',
+      back: 'Weiter platzieren',
+      /** The undo bar, e.g. "3 Kreaturen erschienen". */
+      appeared: (count: number) => `${count} ${count === 1 ? 'Kreatur' : 'Kreaturen'} erschienen`,
+      undo: 'Rückgängig',
+      failed: 'Die Kreaturen sind nicht angekommen. Versuch es bitte noch einmal.',
+    },
+
+    /** The map editor, encounter mode. */
+    editor: {
+      tool: 'Nebel',
+      /** The panel's heading for areas. */
+      areas: 'Bereiche',
+      turnOn: 'Nebel einschalten',
+      turnOnHelp:
+        'Mit Nebel ist die ganze Karte für die Spielenden verdeckt. Danach deckst du auf, was sie zuerst sehen sollen.',
+      turnOff: 'Nebel ausschalten',
+      on: 'Nebel an',
+      shapes: { brush: 'Pinsel', rect: 'Rechteck', fill: 'Füllen' },
+      shapesLabel: 'Werkzeug',
+      reveal: 'Aufdecken',
+      hide: 'Verdecken',
+      modeLabel: 'Wirkung',
+      revealAll: 'Alles aufdecken',
+      hideAll: 'Alles verdecken',
+      counts: (hidden: number, total: number) => `${hidden} von ${total} Feldern verdeckt`,
+      help: 'Ziehen oder Klicken verdeckt oder deckt auf. Verdeckte Felder siehst du schraffiert; die Spielenden sehen dort nichts.',
+      /** The cells chosen for a new area or a redraw. */
+      selectCells: 'Felder wählen',
+      selectCellsHelp:
+        'Schalte „Felder wählen“ ein und male mit dem Pinsel oder Rechteck die Felder eines Bereichs, statt Nebel zu ändern.',
+      selectionCount: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'} gewählt`,
+      clearSelection: 'Auswahl aufheben',
+      createArea: 'Bereich anlegen',
+      areaName: 'Name des Bereichs',
+      areaNameInvalid: 'Der Name braucht 1 bis 40 Zeichen.',
+      noAreas: 'Noch kein Bereich.',
+      areaCells: (count: number) => `${count} ${count === 1 ? 'Feld' : 'Felder'}`,
+      rename: 'Umbenennen',
+      redraw: 'Neu zeichnen',
+      delete: 'Löschen',
+      renameLabel: (name: string) => `${name} umbenennen`,
+      redrawLabel: (name: string) => `${name} mit der Auswahl neu zeichnen`,
+      deleteLabel: (name: string) => `${name} löschen`,
+      showLabel: (name: string) => `${name} auf der Karte zeigen`,
+      /** The creature panel's switch and the placement option. */
+      hiddenSwitch: 'Verborgen',
+      hiddenHelp: 'Nur du siehst diese Kreatur, bis du sie am Tisch aufdeckst.',
+      placeHidden: 'Verborgen platzieren',
+      placeHiddenHelp: 'Neue Kreaturen werden verborgen hingestellt.',
+      /** The Prüfung note: an entrance lies entirely in the fog. */
+      checksTitle: 'Prüfung',
+      entranceInFog: (label: string) => `${label} liegt ganz im Nebel.`,
+      entranceInFogHint: 'Meist beginnen die Charaktere dort. Die Begegnung kann trotzdem starten.',
+      /** An entrance without a label. */
+      entrance: 'Ein Eingang',
+      /** Unnumbered creatures in an encounter with fog. */
+      numbersNote: 'Mit Nebel bekommen Kreaturen ihre Nummer erst, wenn die Spielenden sie sehen.',
+    },
+  },
+
+  /** The spectator screen and the join page (spectator lane). */
+  spectator: {
+    /** Accessible name of the screen. */
+    screen: 'Zuschaueransicht',
+    connecting: 'Verbinde mit dem Tisch …',
+    reconnecting: 'Die Verbindung ist weg. Ich versuche es wieder …',
+    offline: 'Kein Netz. Sobald es wieder da ist, geht es weiter.',
+    paused: 'Pausiert. Tippe auf den Bildschirm, um fortzufahren.',
+    idle: 'Pausiert, weil länger nichts los war. Tippe auf den Bildschirm, um fortzufahren.',
+    denied: 'Du hast keinen Zugang zu dieser Sitzung.',
+    deniedHint: 'Scanne den QR-Code der Sitzung noch einmal oder gib den Beitrittscode ein.',
+    toJoin: 'Zum Beitreten',
+    toHome: 'Zur Startseite',
+    notStarted: 'Noch nicht gestartet',
+    notStartedHint:
+      'Der Kampf erscheint hier von selbst, sobald die Spielleitung die Sitzung startet.',
+    ended: 'Sitzung beendet',
+    endedHint: 'Wird die Sitzung fortgesetzt, tippe auf den Bildschirm.',
+    waiting: 'Der nächste Kampf beginnt gleich',
+    sessionDate: (date: string) => `Sitzung vom ${date}`,
+    scanToJoin: 'Scannen, um mitzuspielen oder zuzuschauen',
+    qrLabel: 'QR-Code zum Beitreten',
+    characters: 'Die Helden',
+    noCharacters: 'Noch keine Helden in dieser Kampagne.',
+    /** Accessible name of a portrait, e.g. "Thorin". */
+    portrait: (name: string) => `Bild von ${name}`,
+    menu: 'Menü',
+    menuLabel: 'Menü der Zuschaueransicht',
+    fit: 'Ganze Karte',
+    fullscreen: 'Vollbild',
+    exitFullscreen: 'Vollbild beenden',
+    leave: 'Zuschaueransicht verlassen',
+    boardLoadFailed: 'Die Karte konnte nicht geladen werden.',
+    retry: 'Noch einmal versuchen',
+    /** Session page: a member turns this device into the session's screen. */
+    open: 'Als Zuschauer öffnen',
+    openHint: 'Dieses Gerät zeigt den Kampf für alle am Tisch und kann nichts verändern.',
+    invite: 'Zuschauer einladen',
+    inviteTitle: 'Zuschauer einladen',
+    inviteHint:
+      'Wer den QR-Code scannt oder den Link öffnet, kann mitspielen oder nur zuschauen. Zuschauer sehen nur diese Sitzung.',
+    inviteLink: 'Link zur Sitzung',
+    inviteCode: 'Beitrittscode der Kampagne',
+    inviteShare: 'Zuschauer einladen',
+    close: 'Schließen',
+    /** The join page. */
+    joinTitle: 'Beitreten',
+    joinLoading: 'Suche die Kampagne …',
+    joinInvalid: 'Diesen Beitrittscode gibt es nicht (mehr).',
+    joinInvalidHint: 'Frag deine Spielleitung nach einem neuen Code oder QR-Code.',
+    joinIntro: (campaign: string) => `Du wurdest zu „${campaign}“ eingeladen.`,
+    joinMember: 'Du bist in dieser Kampagne schon dabei.',
+    play: 'Mitspielen',
+    playHint: 'Du wirst Mitglied der Kampagne und spielst mit deinem eigenen Gerät.',
+    watch: 'Nur zuschauen',
+    watchHint: 'Du siehst nur den Kampf dieser Sitzung und kannst nichts verändern.',
+    pickSession: 'Welche Sitzung?',
+    sessionRunning: 'läuft',
+    sessionPlanned: 'geplant',
+    noSessions: 'Zurzeit gibt es keine geplante oder laufende Sitzung zum Zuschauen.',
+    /** The home page's join form: the same choice, for people who only want to watch. */
+    joinFormWatch: 'Zuschauen …',
+  },
+
+  /** Who is here and local mode (shared table lane). */
+  sharedTable: {
+    /** The shared screen's name on pings, arrows and in the row of avatars. */
+    tableName: 'Tisch',
+    /** The row of avatars along the top of the board (knowledge/features/shared-table.md, "Who's here"). */
+    presence: {
+      label: 'Wer am Tisch ist',
+      connected: 'verbunden',
+      notConnected: 'nicht verbunden',
+      /** The avatar's accessible name, e.g. "Eli, verbunden". */
+      person: (name: string, connected: boolean) =>
+        `${name}, ${connected ? 'verbunden' : 'nicht verbunden'}`,
+      /** A person whose name the board doesn't list. */
+      unknown: 'Jemand',
+    },
+    /** The play mode on the session page ("Spielweise"). */
+    playMode: {
+      title: 'Spielweise',
+      byod: 'Eigene Geräte',
+      local: 'Gemeinsamer Bildschirm',
+      byodHint: 'Jede und jeder spielt am eigenen Gerät.',
+      localHint: 'Ein Bildschirm in der Mitte des Tisches bewegt alle Figuren.',
+      /** Shown to everyone but the session DM: the mode, which they can't change. */
+      readOnly: (mode: string) => `Spielweise: ${mode}`,
+      failed: 'Die Spielweise konnte nicht geändert werden.',
+    },
+    /** On the session page while the session is in local mode. */
+    openScreen: 'Gemeinsamen Bildschirm öffnen',
+    /** The shared screen's own controls. */
+    screen: {
+      /** The board is read-only again after the session DM switched back. */
+      watchingOnly: 'Der Bildschirm zeigt nur noch zu.',
+    },
+  },
+
+  /** The session DM's initiative list (knowledge/features/initiative.md). */
+  initiative: {
+    /** The top bar's button before initiative is on. */
+    roll: 'Initiative würfeln',
+    /** The top bar's button that shows or hides the list once it is on. */
+    show: 'Initiative',
+    setupTitle: 'Initiative würfeln',
+    editTitle: 'Initiative bearbeiten',
+    setupHint:
+      'Die Spieler würfeln selbst und sagen dir ihre Werte. Die Kreaturen sind schon gewürfelt; du kannst alles ändern. Gespeichert wird nach Wert sortiert.',
+    characters: 'Charaktere',
+    creatures: 'Kreaturen',
+    /** Column headings of the creature rows. */
+    modifier: 'Mod.',
+    rollMode: 'Wurfart',
+    rolls: 'Wurf',
+    /** Before a creature's d20s, e.g. "W20: 14 7". */
+    d20: 'W20:',
+    value: 'Initiative',
+    /** Accessible names of a row's fields, e.g. "Initiative von Thorin". */
+    valueOf: (label: string) => `Initiative von ${label}`,
+    modifierOf: (label: string) => `Modifikator von ${label}`,
+    rollModeOf: (label: string) => `Wurfart für ${label}`,
+    rerollOf: (label: string) => `${label} neu würfeln`,
+    rerollAll: 'Alle Kreaturen neu würfeln',
+    /** A value typed in by hand, without a roll behind it. */
+    typed: 'eingetragen',
+    hidden: 'verborgen',
+    rolling: 'Die Kreaturen würfeln…',
+    save: 'Übernehmen',
+    cancel: 'Abbrechen',
+    /** The panel over the board. */
+    listTitle: 'Initiative',
+    collapse: 'Initiative einklappen',
+    expand: 'Initiative ausklappen',
+    edit: 'Bearbeiten',
+    end: 'Beenden',
+    endQuestion: 'Initiative für diesen Kampf beenden?',
+    endConfirm: 'Ja, beenden',
+    /** A row without a value yet. */
+    noValue: '–',
+    empty: 'Niemand steht in der Liste.',
+    /** The row's accessible name, e.g. "Goblin 2 auswählen, Initiative 14". */
+    select: (label: string, value: number | null) =>
+      value === null
+        ? `${label} auswählen, ohne Initiative`
+        : `${label} auswählen, Initiative ${value}`,
+    /** The drag handle's accessible name, e.g. "Goblin 2 verschieben". */
+    handle: (label: string) => `${label} verschieben`,
+    handleHint: 'Ziehen, oder mit den Pfeiltasten hoch und runter.',
+    /** Read out after a move, e.g. "Goblin 2 ist jetzt an Stelle 3." */
+    moved: (label: string, position: number) => `${label} ist jetzt an Stelle ${position}.`,
+    needsConnection: 'Dafür braucht es eine Verbindung zum Tisch.',
+    saveFailed: 'Die Initiative konnte nicht gespeichert werden.',
+    rollFailed: 'Das Würfeln hat nicht geklappt.',
   },
 
   /** Failures without an error code. */

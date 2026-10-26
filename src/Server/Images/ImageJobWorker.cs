@@ -170,7 +170,8 @@ public sealed class ImageJobWorker(
             return;
         }
 
-        if (asset is { Kind: AssetKind.TokenIcon, OwnerType: AssetOwnerType.CreatureType or AssetOwnerType.Character or AssetOwnerType.Status })
+        if (asset is { Kind: AssetKind.TokenIcon, OwnerType: AssetOwnerType.CreatureType or AssetOwnerType.Character or AssetOwnerType.Status }
+            or { Kind: AssetKind.CampaignCover, OwnerType: AssetOwnerType.Campaign })
         {
             await RunTokenAsync(db, client, asset, stoppingToken);
             return;
@@ -287,8 +288,10 @@ public sealed class ImageJobWorker(
     // custom status's icon (knowledge/features/statuses.md, from its name and icon description):
     // text to image from the owner's name and appearance as they are when the job runs, or
     // for a restyle the uploaded version sent to the edits endpoint as the reference. Both
-    // ask for a transparent PNG; the server keeps a square WebP. Same request spacing,
-    // 429 waits, retries and failures as a background.
+    // ask for a transparent PNG; the server keeps a square WebP. A campaign's cover
+    // (knowledge/domain/campaign.md) goes the same way from its name and description, as an
+    // opaque 3:2 JPEG kept as a WebP of the cover size. Same request spacing, 429 waits,
+    // retries and failures as a background.
     private async Task RunTokenAsync(AppDbContext db, IImageClient client, Asset asset, CancellationToken stoppingToken)
     {
         asset.Status = AssetStatus.Running;
@@ -315,7 +318,10 @@ public sealed class ImageJobWorker(
             reference = TokenPicture.ToPng(source.Content);
         }
 
-        var pixels = _options.TokenRequestPixels;
+        var cover = asset.OwnerType == AssetOwnerType.Campaign;
+        var (width, height) = cover
+            ? (_options.CoverRequestWidth, _options.CoverRequestHeight)
+            : (_options.TokenRequestPixels, _options.TokenRequestPixels);
         var rateLimitedWaits = 0;
         while (true)
         {
@@ -334,6 +340,7 @@ public sealed class ImageJobWorker(
             {
                 AssetOwnerType.CreatureType => TokenPrompt.CreatureIcon(subject.Name, subject.Appearance, _options.TokenStyle),
                 AssetOwnerType.Status => TokenPrompt.StatusIcon(subject.Name, subject.Appearance, _options.TokenStyle),
+                AssetOwnerType.Campaign => TokenPrompt.CampaignCover(subject.Name, subject.Appearance, _options.CoverStyle),
                 _ when reference is null => TokenPrompt.CharacterPortrait(subject.Name, subject.Appearance, _options.TokenStyle),
                 _ => TokenPrompt.Restyle(subject.Name, subject.Appearance, _options.TokenStyle),
             };
@@ -344,13 +351,17 @@ public sealed class ImageJobWorker(
             try
             {
                 _lastRequestAt = time.GetUtcNow();
-                result = reference is null
-                    ? await client.GenerateAsync(
-                        new ImageGenerateRequest(prompt, pixels, pixels, _options.TokenQuality, "transparent", "png"), stoppingToken)
-                    : await client.EditAsync(
+                result = (reference, cover) switch
+                {
+                    (null, true) => await client.GenerateAsync(
+                        new ImageGenerateRequest(prompt, width, height, _options.CoverQuality, "opaque", "jpeg"), stoppingToken),
+                    (null, false) => await client.GenerateAsync(
+                        new ImageGenerateRequest(prompt, width, height, _options.TokenQuality, "transparent", "png"), stoppingToken),
+                    _ => await client.EditAsync(
                         new ImageEditRequest(
-                            prompt, reference, pixels, pixels, _options.TokenQuality, "png", _options.OutputCompression, Background: "transparent"),
-                        stoppingToken);
+                            prompt, reference, width, height, _options.TokenQuality, "png", _options.OutputCompression, Background: "transparent"),
+                        stoppingToken),
+                };
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -394,7 +405,7 @@ public sealed class ImageJobWorker(
     }
 
     // The owner's name and what the picture should show: a creature type's or character's
-    // appearance, a status's icon description.
+    // appearance, a status's icon description, a campaign's description.
     private static async Task<(string Name, string Appearance)?> TokenOwnerAsync(
         AppDbContext db, Asset asset, CancellationToken cancellationToken) =>
         asset.OwnerType switch
@@ -407,18 +418,24 @@ public sealed class ImageJobWorker(
                 .Where(s => s.Id == asset.OwnerId && s.CampaignId != null)
                 .Select(s => new { s.Name, s.IconDescription })
                 .SingleOrDefaultAsync(cancellationToken) is { } status ? (status.Name, status.IconDescription ?? "") : null,
+            AssetOwnerType.Campaign => await db.Campaigns.AsNoTracking()
+                .Where(c => c.Id == asset.OwnerId)
+                .Select(c => new { c.Name, c.Description })
+                .SingleOrDefaultAsync(cancellationToken) is { } campaign ? (campaign.Name, campaign.Description ?? "") : null,
             _ => await db.Characters.AsNoTracking()
                 .Where(c => c.Id == asset.OwnerId)
                 .Select(c => new { c.Name, c.Appearance })
                 .SingleOrDefaultAsync(cancellationToken) is { } character ? (character.Name, character.Appearance) : null,
         };
 
-    // Stores the square WebP and makes it the owner's pick: the newest finished version
+    // Stores the WebP (a square, or a cover) and makes it the owner's pick: the newest finished version
     // becomes the picked one (project owner, 2026-10-15).
     private async Task FinishTokenAsync(AppDbContext db, Asset asset, ImageResult result)
     {
         // Throws for a picture that can't be read, which counts as a failed attempt.
-        var webp = TokenPicture.FromModel(result.Image, _options.TokenPixels);
+        var webp = asset.OwnerType == AssetOwnerType.Campaign
+            ? TokenPicture.FromModel(result.Image, _options.CoverWidth, _options.CoverHeight)
+            : TokenPicture.FromModel(result.Image, _options.TokenPixels, _options.TokenPixels);
 
         // A paid image is kept even when shutdown begins now.
         var cancellationToken = CancellationToken.None;
@@ -552,7 +569,7 @@ public sealed class ImageJobWorker(
 
     private async Task FailAsync(AppDbContext db, Asset asset, AssetFailure failure, BattleMap? map, string reason)
     {
-        if (asset.Kind == AssetKind.TokenIcon)
+        if (asset.Kind != AssetKind.MapBackground)
         {
             logger.LogWarning(
                 "Token image job {AssetId} for {OwnerType} {OwnerId} failed ({Failure}): {Reason}", asset.Id, asset.OwnerType, asset.OwnerId, failure, reason);
@@ -575,7 +592,7 @@ public sealed class ImageJobWorker(
     {
         try
         {
-            if (asset.Kind == AssetKind.TokenIcon)
+            if (asset.Kind != AssetKind.MapBackground)
             {
                 await events.TokenImageUpdatedAsync(TokenImages.ToView(asset));
                 return;

@@ -4,10 +4,14 @@ import { ApiRequestError } from '../api/errors'
 import { useCampaign, useSession } from '../campaigns/queries'
 import { SessionControls, SessionDetailsForm } from '../campaigns/SessionControls'
 import { Badge, Button, ButtonLink, LoadError, Loading, PageTitle } from '../components/ui'
+import { DiceButton } from '../dice/DiceButton'
 import { EndEncounterButton } from '../encounters/EndEncounterButton'
 import { formatDate } from '../lib/dates'
 import { FightsPanel } from '../sessions/FightsPanel'
 import { fightPath } from '../sessions/paths'
+import { SessionPlayersPanel } from '../sessions/SessionPlayersPanel'
+import { SessionTableControls } from '../sharedTable/SessionTableControls'
+import { SessionSpectatorControls } from '../spectator/SessionSpectatorControls'
 import { de } from '../text/de'
 
 const t = de.sessionPage
@@ -54,6 +58,9 @@ export function SessionPage() {
       <div className="flex flex-wrap items-center gap-3">
         <PageTitle>{s.title}</PageTitle>
         <Badge tone={s.status === 'active' ? 'candle' : 'dim'}>{de.sessionStatus[s.status]}</Badge>
+        <div className="ml-auto pt-4">
+          <DiceButton />
+        </div>
       </div>
       <p className="text-sm text-dim">
         {formatDate(s.date)} · {de.sessions.dmName(s.dmDisplayName)}
@@ -76,6 +83,8 @@ export function SessionPage() {
           )
         )}
         <SessionControls campaign={campaign.data} session={s} />
+        <SessionSpectatorControls campaign={campaign.data} session={s} />
+        <SessionTableControls campaignId={campaignId} session={s} />
       </div>
 
       {s.activeEncounter && (
@@ -106,6 +115,8 @@ export function SessionPage() {
           <p className="mt-4 text-dim">{s.status === 'ended' ? t.playerEnded : t.playerHint}</p>
         )
       )}
+
+      <SessionPlayersPanel campaign={campaign.data} session={s} />
     </div>
   )
 }

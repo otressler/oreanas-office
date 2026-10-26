@@ -27,7 +27,7 @@ Let the DM build a fight quickly. This is not a full level editor: the DM places
 8. Start [AI map generation](/features/ai-map-generation.md), compare versions and pick a background.
 9. Save as an [encounter](/domain/encounter.md) in a planned session. The editor's "Neue Begegnung" asks which of the user's planned or running sessions it goes in ([session planning](/features/session-planning.md)).
 10. Work offline: everything except image generation works without a connection and syncs on demand ([offline prep](/decisions/offline-prep-pwa.md)).
-11. A map list per campaign: open a map to edit it later, duplicate it to adjust a copy, archive it, or bring an archived map back. Maps are never deleted ([battle map](/domain/battle-map.md)).
+11. A map list per campaign: open a map to edit it later, duplicate it to adjust a copy, archive it, and bring an archived map back or delete it for good. Deleting takes the map's unplayed encounters along and isn't possible while a running or ended fight uses the map ([battle map](/domain/battle-map.md), "Deleting").
 12. A map store: add a copy of a map from another campaign ([battle map](/domain/battle-map.md)).
 13. Import and export of the map file stays as a tool. An import is created on the server and reaches the editor with the next sync ([battle map](/domain/battle-map.md)).
 
@@ -61,5 +61,15 @@ The project owner found the stage 5 side panel incoherent: the active tool's pan
 - **Object catalog:** the feature tool's panel shows what the next feature gets on top: kind (with its icon), label, elevation and "blocks movement". Below that is a catalog of the suggested kinds as cards with an icon, the name and "begehbar" or "blockiert", two per row, in five sections (Wege und Durchgänge, Natur, Bauwerke, Einrichtung und Lager, Feuer). A search filters the cards and ignores case and umlauts ("tur" finds Tür). A search without a match can be used as a kind of the DM's own, and the kind field above still takes free text. Picking a card sets its "blocks movement" preset. The select tool's panel keeps the plain kind field with the list.
 - **Header:** what belongs to the whole map or encounter: the back link, the map's name as an editable field (the encounter's name in encounter mode, with its status and creature count), the sync status and "Sync" button, a "Begegnungen" menu with the map's encounters and "Neue Begegnung", export, undo and redo, and edit or preview. The menu's button carries a warning when a creature on one of the encounters no longer stands validly.
 - **Status bar (bottom):** live information: the save state and the sync mark ("Nur auf diesem Gerät"), the cell under the pointer, and the number of layout problems. Clicking the number opens the Prüfung list; clicking a problem selects its item and closes the list.
+
+# Background (2026-10-25)
+
+Built at the project owner's request on `feature/background-uploads`, with the uploads of [AI map generation](/features/ai-map-generation.md).
+
+- **The picture in the editor.** In map mode the canvas draws the picked background under the layout, which is then drawn see-through so painting stays visible. "Hintergrund zeigen" next to "Ganze Karte" hides or shows it; the choice is kept per device. Offline, or while no picture is picked or it is outdated, the canvas looks as before.
+- **Handles.** While the "Hintergrund" tool is active the picture has a frame: dragging the picture moves it, a corner scales it around the opposite corner keeping its aspect, and the round handle above the top edge turns it, catching right angles and in 15° steps with Shift. The part outside the map shows faintly while placing. Every drag is one undo step.
+- **Two-point calibration.** "Am Raster ausrichten", for pictures with their own grid: click a grid point in the picture, then the map's grid corner it belongs on (clicks snap to the nearest corner), then a second pair. The picture moves, scales and turns so both points land on their corners. Points too close together leave it as it was and say so.
+- **Panel.** The "Hintergrund" panel shows the turn and size, "Zurücksetzen" back to the version's own frame, and "Raster über dem Bild" (Normal, Dezent, Aus). Placing and the grid style change the map and work offline; the versions, generating, uploading and picking still need a connection.
+- **Resize.** Rows and columns added or removed at the top or left shift the placement, so an upload stays over the same cells.
 
 [^brief]: Original project brief

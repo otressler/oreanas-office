@@ -44,6 +44,51 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/maps/{mapId}": {
+      "delete": {
+        "tags": [
+          "Maps"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/assets/{assetId}": {
       "get": {
         "tags": [
@@ -583,6 +628,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CampaignResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Campaigns"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCampaignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -1142,6 +1235,310 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/play-mode": {
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlayModeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/sessions/{sessionId}/characters/{characterId}/player": {
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCharacterPlayerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/join/{joinCode}": {
+      "get": {
+        "tags": [
+          "Spectators"
+        ],
+        "parameters": [
+          {
+            "name": "joinCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinLookupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/join/{joinCode}/spectate": {
+      "post": {
+        "tags": [
+          "Spectators"
+        ],
+        "parameters": [
+          {
+            "name": "joinCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpectateSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpectateSessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/{sessionId}/spectate": {
+      "get": {
+        "tags": [
+          "Spectators"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchedSession"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/sessions/{sessionId}/spectate/board": {
+      "get": {
+        "tags": [
+          "Spectators"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardStateResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/encounters/{encounterId}/board": {
       "get": {
         "tags": [
@@ -1164,6 +1561,21 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sharedScreen",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -1711,6 +2123,81 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/maps/{mapId}/backgrounds/upload": {
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapBackground"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/maps/{mapId}/background": {
       "put": {
         "tags": [
@@ -1890,6 +2377,81 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/creature-types/{creatureTypeId}/icons/upload": {
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "creatureTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
@@ -2174,6 +2736,193 @@
           },
           "404": {
             "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/covers": {
+      "get": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImagesResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/covers/upload": {
+      "post": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenImage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/cover": {
+      "put": {
+        "tags": [
+          "Images"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickTokenImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
           },
           "409": {
             "description": "Conflict",
@@ -2474,6 +3223,14 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "sharedScreen",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -2777,6 +3534,7 @@
           "notSessionDm",
           "sessionInvalid",
           "colorInvalid",
+          "notAMember",
           "textTooLong",
           "mapSizeInvalid",
           "layoutVersionUnsupported",
@@ -2806,6 +3564,8 @@
           "encounterArchived",
           "creaturesMisplaced",
           "mapNotInStore",
+          "mapNotArchived",
+          "mapPlayed",
           "imagesUnavailable",
           "imageBudgetExhausted",
           "generationRunning",
@@ -2818,10 +3578,18 @@
           "imageNotFound",
           "uploadInvalid",
           "uploadTooLarge",
+          "descriptionInvalid",
+          "descriptionMissing",
           "statusNotFound",
           "statusAlreadySet",
           "levelInvalid",
-          "notYourStatus"
+          "notYourStatus",
+          "fogInvalid",
+          "readOnlyConnection",
+          "spawnInvalid",
+          "notLocalMode",
+          "initiativeInvalid",
+          "notBuilt"
         ]
       },
       "ArrowDrawnEvent": {
@@ -2831,7 +3599,8 @@
           "color",
           "fromCell",
           "fromTokenId",
-          "to"
+          "to",
+          "fromSharedScreen"
         ],
         "type": "object",
         "properties": {
@@ -2865,6 +3634,9 @@
           },
           "to": {
             "$ref": "#/components/schemas/BoardCell"
+          },
+          "fromSharedScreen": {
+            "type": "boolean"
           }
         }
       },
@@ -2886,7 +3658,8 @@
           "battleMap",
           "creatureType",
           "character",
-          "status"
+          "status",
+          "campaign"
         ]
       },
       "AssetStatus": {
@@ -2908,6 +3681,43 @@
           }
         }
       },
+      "BackgroundPlacement": {
+        "required": [
+          "assetId",
+          "x",
+          "y",
+          "width",
+          "height",
+          "rotation"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "x": {
+            "type": "number",
+            "format": "double"
+          },
+          "y": {
+            "type": "number",
+            "format": "double"
+          },
+          "width": {
+            "type": "number",
+            "format": "double"
+          },
+          "height": {
+            "type": "number",
+            "format": "double"
+          },
+          "rotation": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "BoardBackground": {
         "required": [
           "assetId",
@@ -2915,7 +3725,8 @@
           "x",
           "y",
           "width",
-          "height"
+          "height",
+          "rotation"
         ],
         "type": "object",
         "properties": {
@@ -2927,20 +3738,24 @@
             "type": "string"
           },
           "x": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "y": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "width": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "height": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
+          },
+          "rotation": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -2999,6 +3814,9 @@
                 "$ref": "#/components/schemas/BoardBackground"
               }
             ]
+          },
+          "grid": {
+            "$ref": "#/components/schemas/MapGridStyle"
           }
         }
       },
@@ -3035,7 +3853,11 @@
           "undoableMove",
           "removedTokens",
           "statuses",
-          "people"
+          "people",
+          "viewer",
+          "fog",
+          "playMode",
+          "presence"
         ],
         "type": "object",
         "properties": {
@@ -3096,6 +3918,35 @@
             "items": {
               "$ref": "#/components/schemas/BoardPerson"
             }
+          },
+          "viewer": {
+            "$ref": "#/components/schemas/BoardViewer"
+          },
+          "fog": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FogView"
+              }
+            ]
+          },
+          "playMode": {
+            "$ref": "#/components/schemas/PlayMode"
+          },
+          "presence": {
+            "$ref": "#/components/schemas/PresenceState"
+          },
+          "initiative": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/InitiativeView"
+              }
+            ]
           }
         }
       },
@@ -3200,6 +4051,10 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "hidden": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -3208,7 +4063,8 @@
           "statusId",
           "level",
           "appliedByUserId",
-          "appliedAt"
+          "appliedAt",
+          "fromSharedScreen"
         ],
         "type": "object",
         "properties": {
@@ -3230,6 +4086,54 @@
           "appliedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "fromSharedScreen": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BoardViewer": {
+        "enum": [
+          "dm",
+          "player"
+        ]
+      },
+      "CampaignCharacterSummary": {
+        "required": [
+          "id",
+          "name",
+          "colorIndex",
+          "color",
+          "portraitUrl",
+          "mine"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "colorIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "color": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "portraitUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mine": {
+            "type": "boolean"
           }
         }
       },
@@ -3241,7 +4145,9 @@
           "myRole",
           "joinCode",
           "activeSessionId",
-          "members"
+          "members",
+          "description",
+          "coverUrl"
         ],
         "type": "object",
         "properties": {
@@ -3277,6 +4183,18 @@
             "items": {
               "$ref": "#/components/schemas/MemberResponse"
             }
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "coverUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3291,7 +4209,10 @@
           "id",
           "name",
           "myRole",
-          "activeSession"
+          "activeSession",
+          "description",
+          "coverUrl",
+          "characters"
         ],
         "type": "object",
         "properties": {
@@ -3314,6 +4235,47 @@
                 "$ref": "#/components/schemas/ActiveSessionSummary"
               }
             ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "coverUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "characters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CampaignCharacterSummary"
+            }
+          }
+        }
+      },
+      "ChangeFogRequest": {
+        "required": [
+          "encounterId",
+          "cells",
+          "reveal"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardCell"
+            }
+          },
+          "reveal": {
+            "type": "boolean"
           }
         }
       },
@@ -3375,6 +4337,13 @@
               "null",
               "string"
             ]
+          },
+          "ownerUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -3604,6 +4573,36 @@
           },
           "layout": {
             "$ref": "#/components/schemas/MapLayout"
+          },
+          "placement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BackgroundPlacement"
+              }
+            ]
+          },
+          "grid": {
+            "$ref": "#/components/schemas/MapGridStyle"
+          }
+        }
+      },
+      "EncounterStartedEvent": {
+        "required": [
+          "sessionId",
+          "encounterId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -3688,6 +4687,144 @@
           "exit",
           "both"
         ]
+      },
+      "FogArea": {
+        "required": [
+          "id",
+          "name",
+          "cells"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        }
+      },
+      "FogChangedEvent": {
+        "required": [
+          "encounterId",
+          "version",
+          "reveal",
+          "cells",
+          "revealedLayout",
+          "appeared",
+          "disappeared",
+          "numbered"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reveal": {
+            "type": "boolean"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardCell"
+            }
+          },
+          "revealedLayout": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MapLayout"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "appeared": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardToken"
+            }
+          },
+          "disappeared": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "numbered": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenNumber"
+            }
+          }
+        }
+      },
+      "FogDocument": {
+        "required": [
+          "hiddenCells",
+          "areas"
+        ],
+        "type": "object",
+        "properties": {
+          "hiddenCells": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          "areas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FogArea"
+            }
+          }
+        }
+      },
+      "FogView": {
+        "required": [
+          "version",
+          "hiddenCells",
+          "areas"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hiddenCells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardCell"
+            }
+          },
+          "areas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FogArea"
+            }
+          }
+        }
       },
       "GenerateBackgroundRequest": {
         "required": [
@@ -3774,6 +4911,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -3803,6 +4941,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -3815,10 +4955,18 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",
               "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "notBuilt",
               null
             ]
           }
@@ -3959,6 +5107,299 @@
           }
         }
       },
+      "InitiativeChangedEvent": {
+        "required": [
+          "encounterId",
+          "initiative"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "initiative": {
+            "$ref": "#/components/schemas/InitiativeView"
+          }
+        }
+      },
+      "InitiativeEntry": {
+        "required": [
+          "tokenId",
+          "value",
+          "modifier",
+          "mode",
+          "rolls"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "value": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "modifier": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/InitiativeRollMode"
+          },
+          "rolls": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        }
+      },
+      "InitiativeResult": {
+        "required": [
+          "error",
+          "change"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "notAMember",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "notBuilt",
+              null
+            ]
+          },
+          "change": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/InitiativeChangedEvent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "InitiativeRollMode": {
+        "enum": [
+          "normal",
+          "advantage",
+          "disadvantage"
+        ]
+      },
+      "InitiativeRollResult": {
+        "required": [
+          "error",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "notAMember",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "notBuilt",
+              null
+            ]
+          },
+          "entries": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InitiativeEntry"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "InitiativeView": {
+        "required": [
+          "version",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "entries": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InitiativeEntry"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "InviteResponse": {
         "required": [
           "id",
@@ -4000,6 +5441,31 @@
           }
         }
       },
+      "JoinableSession": {
+        "required": [
+          "id",
+          "title",
+          "date",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SessionStatus"
+          }
+        }
+      },
       "JoinCampaignRequest": {
         "required": [
           "code"
@@ -4019,6 +5485,33 @@
         "properties": {
           "joinCode": {
             "type": "string"
+          }
+        }
+      },
+      "JoinLookupResponse": {
+        "required": [
+          "campaignId",
+          "campaignName",
+          "isMember",
+          "sessions"
+        ],
+        "type": "object",
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignName": {
+            "type": "string"
+          },
+          "isMember": {
+            "type": "boolean"
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JoinableSession"
+            }
           }
         }
       },
@@ -4413,6 +5906,7 @@
           "id",
           "mapId",
           "status",
+          "origin",
           "url",
           "gridWidth",
           "gridHeight",
@@ -4441,6 +5935,9 @@
           "status": {
             "$ref": "#/components/schemas/AssetStatus"
           },
+          "origin": {
+            "$ref": "#/components/schemas/AssetOrigin"
+          },
           "url": {
             "type": [
               "null",
@@ -4456,20 +5953,20 @@
             "format": "int32"
           },
           "x": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "y": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "width": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "height": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "outdated": {
             "type": "boolean"
@@ -4538,6 +6035,14 @@
             "$ref": "#/components/schemas/ImageBudgetResponse"
           }
         }
+      },
+      "MapGridStyle": {
+        "enum": [
+          "normal",
+          "faint",
+          "hidden"
+        ],
+        "default": "normal"
       },
       "MapLayout": {
         "required": [
@@ -4756,6 +6261,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -4785,6 +6291,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -4797,10 +6305,18 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",
               "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "notBuilt",
               null
             ]
           },
@@ -4874,7 +6390,8 @@
           "userId",
           "color",
           "cell",
-          "tokenId"
+          "tokenId",
+          "fromSharedScreen"
         ],
         "type": "object",
         "properties": {
@@ -4905,6 +6422,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "fromSharedScreen": {
+            "type": "boolean"
           }
         }
       },
@@ -4936,6 +6456,85 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "PlayMode": {
+        "enum": [
+          "byod",
+          "local"
+        ]
+      },
+      "PlayModeChangedEvent": {
+        "required": [
+          "sessionId",
+          "playMode"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "playMode": {
+            "enum": [
+              "byod",
+              "local"
+            ]
+          }
+        }
+      },
+      "PresenceChangedEvent": {
+        "required": [
+          "encounterId",
+          "presence"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "presence": {
+            "$ref": "#/components/schemas/PresenceState"
+          }
+        }
+      },
+      "PresenceState": {
+        "required": [
+          "people",
+          "sharedScreen"
+        ],
+        "type": "object",
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PresentPerson"
+            }
+          },
+          "sharedScreen": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PresentPerson": {
+        "required": [
+          "userId",
+          "connected",
+          "isSessionDm"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connected": {
+            "type": "boolean"
+          },
+          "isSessionDm": {
+            "type": "boolean"
           }
         }
       },
@@ -5015,6 +6614,27 @@
           }
         }
       },
+      "SessionCharacterPlayerResponse": {
+        "required": [
+          "characterId",
+          "userId",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
       "SessionResponse": {
         "required": [
           "id",
@@ -5028,7 +6648,9 @@
           "isSessionDm",
           "activeEncounter",
           "interruptedEncounter",
-          "encounters"
+          "encounters",
+          "playMode",
+          "characterPlayers"
         ],
         "type": "object",
         "properties": {
@@ -5088,6 +6710,15 @@
             "items": {
               "$ref": "#/components/schemas/EncounterSummaryResponse"
             }
+          },
+          "playMode": {
+            "$ref": "#/components/schemas/PlayMode"
+          },
+          "characterPlayers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionCharacterPlayerResponse"
+            }
           }
         }
       },
@@ -5097,6 +6728,51 @@
           "active",
           "ended"
         ]
+      },
+      "SetCharacterPlayerRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "SetInitiativeRequest": {
+        "required": [
+          "encounterId",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InitiativeEntry"
+            }
+          }
+        }
+      },
+      "SetPlayModeRequest": {
+        "required": [
+          "playMode"
+        ],
+        "type": "object",
+        "properties": {
+          "playMode": {
+            "$ref": "#/components/schemas/PlayMode"
+          }
+        }
       },
       "SetStatusLevelRequest": {
         "required": [
@@ -5132,6 +6808,210 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "SetTokensHiddenRequest": {
+        "required": [
+          "encounterId",
+          "tokenIds",
+          "hidden"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "hidden": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SpawnCreaturesRequest": {
+        "required": [
+          "encounterId",
+          "creatures",
+          "hidden"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creatures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpawnedCreature"
+            }
+          },
+          "hidden": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SpawnedCreature": {
+        "required": [
+          "creatureTypeId",
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "properties": {
+          "creatureTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SpawnResult": {
+        "required": [
+          "error",
+          "tokenIds"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "notAMember",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "notBuilt",
+              null
+            ]
+          },
+          "tokenIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "SpectateSessionRequest": {
+        "required": [
+          "sessionId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "SpectateSessionResponse": {
+        "required": [
+          "campaignId",
+          "sessionId",
+          "isMember"
+        ],
+        "type": "object",
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isMember": {
+            "type": "boolean"
           }
         }
       },
@@ -5313,6 +7193,7 @@
               "notSessionDm",
               "sessionInvalid",
               "colorInvalid",
+              "notAMember",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -5342,6 +7223,8 @@
               "encounterArchived",
               "creaturesMisplaced",
               "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
               "imagesUnavailable",
               "imageBudgetExhausted",
               "generationRunning",
@@ -5354,10 +7237,18 @@
               "imageNotFound",
               "uploadInvalid",
               "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
               "statusNotFound",
               "statusAlreadySet",
               "levelInvalid",
               "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "notBuilt",
               null
             ]
           },
@@ -5454,6 +7345,27 @@
           },
           "size": {
             "$ref": "#/components/schemas/CreatureSize"
+          },
+          "hidden": {
+            "type": "boolean",
+            "default": false
+          },
+          "initiativeModifier": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "initiativeRollMode": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/InitiativeRollMode"
+              }
+            ]
           }
         }
       },
@@ -5485,6 +7397,14 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "initiativeModifier": {
+            "type": "integer",
+            "format": "int32",
+            "default": 0
+          },
+          "initiativeRollMode": {
+            "$ref": "#/components/schemas/InitiativeRollMode"
           }
         }
       },
@@ -5525,6 +7445,16 @@
           "sessionId": {
             "type": "string",
             "format": "uuid"
+          },
+          "fog": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FogDocument"
+              }
+            ]
           }
         }
       },
@@ -5574,6 +7504,16 @@
               },
               {
                 "$ref": "#/components/schemas/EncounterMapCopy"
+              }
+            ]
+          },
+          "fog": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FogDocument"
               }
             ]
           }
@@ -5737,6 +7677,19 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "backgroundPlacement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BackgroundPlacement"
+              }
+            ]
+          },
+          "gridStyle": {
+            "$ref": "#/components/schemas/MapGridStyle"
           }
         }
       },
@@ -6001,20 +7954,32 @@
         "enum": [
           "ArrowDrawn",
           "EncounterEnded",
+          "EncounterStarted",
+          "FogChanged",
           "IdleTimeout",
+          "InitiativeChanged",
           "MovePreviewCleared",
           "MovePreviewed",
           "Pinged",
+          "PlayModeChanged",
+          "PresenceChanged",
+          "ReloadBoard",
+          "SessionEnded",
+          "TokenHidden",
           "TokenMoved",
           "TokenRemoved",
           "TokenRestored",
-          "TokenStatusesChanged"
+          "TokenRevealed",
+          "TokenStatusesChanged",
+          "TokensAdded"
         ],
         "type": "string"
       },
       "TableHubMethod": {
         "enum": [
           "AddStatus",
+          "ChangeFog",
+          "ClearInitiative",
           "ClearPreview",
           "DrawArrow",
           "JoinEncounter",
@@ -6025,8 +7990,14 @@
           "RemoveStatus",
           "RemoveToken",
           "RestoreToken",
+          "RollInitiative",
+          "SetInitiative",
           "SetStatusLevel",
-          "UndoMove"
+          "SetTokensHidden",
+          "SpawnCreatures",
+          "UndoChange",
+          "UndoMove",
+          "WatchSession"
         ],
         "type": "string"
       },
@@ -6038,6 +8009,23 @@
           "water",
           "wall"
         ]
+      },
+      "TokenHiddenEvent": {
+        "required": [
+          "encounterId",
+          "tokenId"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       },
       "TokenImage": {
         "required": [
@@ -6185,6 +8173,27 @@
           }
         }
       },
+      "TokenNumber": {
+        "required": [
+          "tokenId",
+          "number",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
       "TokenRemovedEvent": {
         "required": [
           "encounterId",
@@ -6235,6 +8244,41 @@
           }
         }
       },
+      "TokenRevealedEvent": {
+        "required": [
+          "encounterId",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "$ref": "#/components/schemas/BoardToken"
+          }
+        }
+      },
+      "TokensAddedEvent": {
+        "required": [
+          "encounterId",
+          "tokens"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardToken"
+            }
+          }
+        }
+      },
       "TokenStatusesChangedEvent": {
         "required": [
           "encounterId",
@@ -6280,6 +8324,23 @@
           "version": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "UpdateCampaignRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6337,12 +8398,220 @@
             "type": "boolean"
           }
         }
+      },
+      "WatchedCharacter": {
+        "required": [
+          "name",
+          "imageUrl",
+          "color",
+          "colorIndex"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "color": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "colorIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "WatchedSession": {
+        "required": [
+          "sessionId",
+          "campaignId",
+          "title",
+          "date",
+          "status",
+          "playMode",
+          "activeEncounterId",
+          "characters"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SessionStatus"
+          },
+          "playMode": {
+            "$ref": "#/components/schemas/PlayMode"
+          },
+          "activeEncounterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "characters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchedCharacter"
+            }
+          }
+        }
+      },
+      "WatchResult": {
+        "required": [
+          "error",
+          "mode",
+          "session"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "notAMember",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "notBuilt",
+              null
+            ]
+          },
+          "mode": {
+            "enum": [
+              "player",
+              "spectator",
+              "sharedScreen"
+            ]
+          },
+          "session": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WatchedSession"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "WatchSessionRequest": {
+        "required": [
+          "sessionId",
+          "sharedScreen"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sharedScreen": {
+            "type": "boolean"
+          }
+        }
       }
     }
   },
   "tags": [
     {
       "name": "Health"
+    },
+    {
+      "name": "Maps"
     },
     {
       "name": "Images"
@@ -6363,13 +8632,13 @@
       "name": "Sessions"
     },
     {
+      "name": "Spectators"
+    },
+    {
       "name": "Encounters"
     },
     {
       "name": "Sync"
-    },
-    {
-      "name": "Maps"
     },
     {
       "name": "Statuses"

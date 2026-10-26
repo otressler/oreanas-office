@@ -183,7 +183,7 @@ public sealed class MapImportTests
         Assert.All(import.NewTypes, t => Assert.Equal((CampaignId, Now), (t.CampaignId, t.CreatedAt)));
         Assert.Equal(
             ["Goblin 1", "Goblin 2", "Oger 1", "Goblin 3", "Wolf 1"],
-            import.Encounter.Tokens.Select(t => t.Label));
+            import.Encounter.Tokens.Select(Shown));
         Assert.Same(import.NewTypes[0], import.Encounter.Tokens[3].CreatureType);
     }
 
@@ -206,7 +206,7 @@ public sealed class MapImportTests
         Assert.Empty(import!.NewTypes);
         var token = Assert.Single(import.Encounter.Tokens);
         Assert.Same(goblin, token.CreatureType);
-        Assert.Equal("Goblin 1", token.Label);
+        Assert.Equal("Goblin 1", Shown(token));
     }
 
     [Fact]
@@ -223,7 +223,7 @@ public sealed class MapImportTests
             ],
         });
 
-        Assert.Equal(["Anführer", "Goblin 1", "Goblin 2"], import.Encounter.Tokens.Select(t => t.Label));
+        Assert.Equal(["Anführer", "Goblin 1", "Goblin 2"], import.Encounter.Tokens.Select(Shown));
     }
 
     [Fact]
@@ -233,7 +233,7 @@ public sealed class MapImportTests
         var map = TestMaps.Gorge();
         var import = Build(map with { Creatures = [new ImportCreature(name, CreatureSize.Small, 0, 0, null)] });
 
-        Assert.Equal(new string('x', 38) + " 1", import.Encounter.Tokens.Single().Label);
+        Assert.Equal(new string('x', 38) + " 1", Shown(import.Encounter.Tokens.Single()));
     }
 
     [Fact]
@@ -253,7 +253,7 @@ public sealed class MapImportTests
         Assert.Equal(
             [(5, 1, 1m), (6, 1, 1m), (1, 3, 0m), (2, 1, 0.5m), (4, 1, 0.5m)],
             import.Encounter.Tokens.Select(t => (t.X, t.Y, t.Elevation)));
-        Assert.All(import.Encounter.Tokens, t => Assert.Equal((TokenKind.Creature, Now), (t.Kind, t.CreatedAt)));
+        Assert.All(import.Encounter.Tokens.Select((t, i) => (t, i)), p => Assert.Equal((TokenKind.Creature, Now.AddTicks(p.i)), (p.t.Kind, p.t.CreatedAt)));
     }
 
     [Fact]
@@ -289,4 +289,6 @@ public sealed class MapImportTests
 
     private static ImportMapRequest WithCreature(ImportMapRequest map, ImportCreature creature) =>
         map with { Creatures = [.. map.Creatures!, creature] };
+
+    private static string Shown(Token token) => CreatureLabels.Display(token.CreatureType!.Name, token.Number, token.Label);
 }

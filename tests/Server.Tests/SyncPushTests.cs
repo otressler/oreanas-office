@@ -409,8 +409,8 @@ public sealed class SyncPushTests(AppFixture fixture) : IClassFixture<AppFixture
         await using var scope = fixture.App.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var stored = await db.Tokens.Where(t => t.EncounterId == created.Id).ToListAsync();
-        Assert.Equal(1.5m, stored.Single(t => t.Label == "Goblin 1").Elevation);
-        Assert.Equal(0m, stored.Single(t => t.Label == "Goblin 2").Elevation);
+        Assert.Equal(1.5m, stored.Single(t => t.Number == 1).Elevation);
+        Assert.Equal(0m, stored.Single(t => t.Number == 2).Elevation);
         Assert.All(stored, t => Assert.Equal(TokenKind.Creature, t.Kind));
     }
 

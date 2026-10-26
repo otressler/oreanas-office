@@ -1,61 +1,128 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { api } from '../api/client'
 import { unwrap } from '../api/errors'
 import type { CampaignSummary } from '../api/types'
+import { ringColor } from '../board/palette'
+import { CampaignCover } from '../campaigns/CampaignCover'
 import { useLocalCampaigns } from '../campaigns/localCampaigns'
 import { campaignKeys, useCampaigns } from '../campaigns/queries'
-import {
-  Badge,
-  Button,
-  ButtonLink,
-  ErrorAlert,
-  LoadError,
-  Loading,
-  PageTitle,
-  Panel,
-  TextField,
-} from '../components/ui'
+import { ChevronButton, ChevronLink, Diamond, Kicker, Rule } from '../components/ornaments'
+import { ErrorAlert, LoadError, Loading, TextField } from '../components/ui'
 import { formatDate } from '../lib/dates'
 import { SyncMark } from '../maps/SyncMark'
 import type { CampaignCopy } from '../offline/db'
+import { cleanJoinCode } from '../spectator/joinCode'
+import { useResumeScreen } from '../spectator/useResumeScreen'
+import { joinPath } from '../sessions/paths'
 import { de } from '../text/de'
+import { TokenPicture } from '../tokenImages/TokenPicture'
 import { limits } from '../lib/limits'
 
-/** The landing page: your campaigns, joining one by code, creating one. */
+/** A picture in public/home/, at two widths (knowledge/features/campaign-overview.md). */
+function picture(name: string) {
+  return {
+    src: `/home/${name}-1536.webp`,
+    srcSet: `/home/${name}-768.webp 768w, /home/${name}-1536.webp 1536w`,
+  }
+}
+
+const JOIN_PICTURE = picture('join')
+const CREATE_PICTURE = picture('create')
+
+/** How many characters a card shows before "+3". */
+const CARD_CHARACTERS = 6
+
+/**
+ * Home: your campaigns as cards, then joining one by code or creating one, in the look of
+ * the landing page (knowledge/features/campaign-overview.md). Uses a desktop's width.
+ */
 export function HomePage() {
   const campaigns = useCampaigns()
-  useLandOnFight(campaigns.data)
+  // A device that is a session's spectator screen goes back to it before anything else.
+  const resuming = useResumeScreen()
+  useLandOnFight(resuming ? undefined : campaigns.data)
   // Campaigns made offline that the server doesn't list yet.
   const listed = new Set(campaigns.data?.map((campaign) => campaign.id))
   const local = (useLocalCampaigns() ?? []).filter((copy) => !listed.has(copy.id))
+  const newId = useId()
 
   return (
-    <div className="flex flex-col pb-8">
-      <PageTitle>{de.home.title}</PageTitle>
-      {campaigns.isPending ? (
-        <Loading />
-      ) : campaigns.isError ? (
-        <LoadError error={campaigns.error} onRetry={() => void campaigns.refetch()} />
-      ) : campaigns.data.length === 0 && local.length === 0 ? (
-        <p className="text-dim">{de.home.empty}</p>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {local.map((copy) => (
-            <li key={copy.id}>
-              <LocalCampaignCard copy={copy} />
-            </li>
-          ))}
-          {campaigns.data.map((campaign) => (
-            <li key={campaign.id}>
-              <CampaignCard campaign={campaign} />
-            </li>
-          ))}
-        </ul>
-      )}
-      <JoinForm />
-      <CreateForm />
+    <div className="relative isolate flex flex-col gap-16 pt-8 pb-12 sm:pt-12">
+      <img
+        src="/landing/backdrop-1536.webp"
+        srcSet="/landing/backdrop-768.webp 768w, /landing/backdrop-1536.webp 1536w"
+        sizes="(min-width: 1024px) 60vw, 100vw"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-8 right-0 -z-10 h-80 w-full object-cover opacity-25 [mask-image:radial-gradient(70%_70%_at_75%_25%,black,transparent)] sm:-top-12 lg:w-3/5"
+      />
+      <section>
+        <SectionHeading kicker={de.home.kicker} level={1}>
+          {de.home.title}
+        </SectionHeading>
+        <div className="mt-10">
+          {campaigns.isPending ? (
+            <Loading />
+          ) : campaigns.isError ? (
+            <LoadError error={campaigns.error} onRetry={() => void campaigns.refetch()} />
+          ) : campaigns.data.length === 0 && local.length === 0 ? (
+            <p className="max-w-xl rounded-sm border border-candle/25 bg-panel/70 p-5 text-dim">
+              {de.home.empty}
+            </p>
+          ) : (
+            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {local.map((copy) => (
+                <li key={copy.id} className="flex">
+                  <LocalCampaignCard copy={copy} />
+                </li>
+              ))}
+              {campaigns.data.map((campaign) => (
+                <li key={campaign.id} className="flex">
+                  <CampaignCard campaign={campaign} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+      <section aria-labelledby={newId}>
+        <SectionHeading id={newId} kicker={de.home.newKicker} level={2}>
+          {de.home.newTitle}
+        </SectionHeading>
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          <JoinForm />
+          <CreateForm />
+        </div>
+      </section>
+    </div>
+  )
+}
+
+/** A kicker, the heading in engraved capitals and a gold rule, as on the landing page. */
+function SectionHeading({
+  id,
+  kicker,
+  level,
+  children,
+}: {
+  id?: string
+  kicker: string
+  level: 1 | 2
+  children: ReactNode
+}) {
+  const Heading = level === 1 ? 'h1' : 'h2'
+  return (
+    <div>
+      <Kicker>{kicker}</Kicker>
+      <Heading
+        id={id}
+        className="mt-3 bg-gradient-to-b from-parchment to-candle-strong bg-clip-text font-display text-3xl font-semibold text-transparent sm:text-5xl"
+      >
+        {children}
+      </Heading>
+      <Rule className="mt-4 w-56" />
     </div>
   )
 }
@@ -87,67 +154,225 @@ function useLandOnFight(campaigns: CampaignSummary[] | undefined) {
   }, [campaigns, navigate])
 }
 
+/**
+ * A card's frame: the cover on top fading into the panel, a double gold edge, and the
+ * title as a link that covers the whole card. Links can't nest, so the fight's button
+ * sits above that link (z-10).
+ */
+function CardFrame({
+  to,
+  name,
+  coverUrl,
+  corner,
+  children,
+}: {
+  to: string
+  name: string
+  coverUrl: string | null
+  /** Over the cover's top: the role and the sync state. */
+  corner: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <article className="group relative flex w-full flex-col overflow-hidden rounded-sm border border-candle/25 bg-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)] transition-colors focus-within:border-candle/70 hover:border-candle/60">
+      <div className="relative aspect-[3/2] overflow-hidden">
+        <CampaignCover
+          url={coverUrl}
+          alt=""
+          className="size-full transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-panel via-panel/60 to-transparent"
+        />
+        <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2">{corner}</div>
+      </div>
+      <div className="relative -mt-14 flex flex-1 flex-col gap-4 px-5 pb-5">
+        <h2 className="font-display text-2xl leading-tight font-semibold text-parchment drop-shadow-[0_2px_8px_rgb(0_0_0/0.9)]">
+          <Link
+            to={to}
+            className="outline-none after:absolute after:inset-0 after:content-[''] hover:text-candle-strong"
+          >
+            {name}
+          </Link>
+        </h2>
+        <Rule className="-mt-2 w-32" />
+        {children}
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-1.5 rounded-sm border border-candle/10"
+      />
+    </article>
+  )
+}
+
+/** A small engraved label over a cover. */
+function CoverLabel({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-sm border border-candle/40 bg-table/80 px-2 py-0.5 font-display text-[0.65rem] font-semibold tracking-[0.2em] text-parchment uppercase backdrop-blur-sm">
+      {children}
+    </span>
+  )
+}
+
 /** A campaign made on this device: no fight, no join code until it is synced. */
 function LocalCampaignCard({ copy }: { copy: CampaignCopy }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4 has-[>a:hover]:border-candle">
-      <Link to={`/kampagnen/${copy.id}`} className="flex flex-wrap items-center gap-2">
-        <span className="text-lg font-semibold text-parchment">{copy.name}</span>
-        <Badge>{de.roles[copy.myRole]}</Badge>
-        {copy.sync && <SyncMark sync={copy.sync} />}
-      </Link>
-    </div>
+    <CardFrame
+      to={`/kampagnen/${copy.id}`}
+      name={copy.name}
+      coverUrl={null}
+      corner={
+        <>
+          <CoverLabel>{de.roles[copy.myRole]}</CoverLabel>
+          {copy.sync && <SyncMark sync={copy.sync} />}
+        </>
+      }
+    >
+      <p className="text-sm text-dim">{de.sync.localCampaign.localBody}</p>
+    </CardFrame>
   )
 }
 
 function CampaignCard({ campaign }: { campaign: CampaignSummary }) {
-  const session = campaign.activeSession
-  const fight = session?.activeEncounter
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4 has-[>a:hover]:border-candle">
-      <CampaignCardLink campaign={campaign} />
+    <CardFrame
+      to={`/kampagnen/${campaign.id}`}
+      name={campaign.name}
+      coverUrl={campaign.coverUrl}
+      corner={<CoverLabel>{de.roles[campaign.myRole]}</CoverLabel>}
+    >
+      {campaign.description && (
+        <p className="line-clamp-3 text-sm text-parchment/80">{campaign.description}</p>
+      )}
+      <CardCharacters characters={campaign.characters} />
+      <ActiveSession campaign={campaign} />
+    </CardFrame>
+  )
+}
+
+/** The campaign's characters, the viewer's own first, in their ring colours. */
+function CardCharacters({ characters }: { characters: CampaignSummary['characters'] }) {
+  if (characters.length === 0) {
+    return <p className="text-sm text-dim italic">{de.home.noCharacters}</p>
+  }
+  const shown = characters.slice(0, CARD_CHARACTERS)
+  const more = characters.length - shown.length
+  return (
+    <ul aria-label={de.home.characters} className="flex flex-wrap gap-x-3 gap-y-2">
+      {shown.map((character) => (
+        <li key={character.id} className="flex min-w-0 items-center gap-1.5">
+          <TokenPicture
+            url={character.portraitUrl}
+            label={character.name}
+            ring={ringColor({ kind: 'character', ...character })}
+            alt=""
+            className="h-8 w-8 text-sm"
+          />
+          <span
+            className={`max-w-[8rem] truncate text-sm ${character.mine ? 'font-semibold text-parchment' : 'text-dim'}`}
+          >
+            {character.name}
+          </span>
+        </li>
+      ))}
+      {more > 0 && (
+        <li className="flex items-center text-sm text-dim">
+          <span aria-hidden="true">{de.home.moreCharacters(more)}</span>
+          <span className="sr-only">{de.home.moreCharactersLabel(more)}</span>
+        </li>
+      )}
+    </ul>
+  )
+}
+
+/** The running session and, if one is on, its fight with a way in. */
+function ActiveSession({ campaign }: { campaign: CampaignSummary }) {
+  const session = campaign.activeSession
+  if (!session) return null
+  const fight = session.activeEncounter
+  return (
+    <div className="mt-auto flex flex-col gap-3 border-t border-candle/15 pt-4">
+      <div className="flex flex-col gap-0.5">
+        <span className="flex items-center gap-2 font-display text-[0.65rem] font-semibold tracking-[0.25em] text-candle uppercase">
+          <Diamond className="bg-candle motion-safe:animate-pulse" />
+          {de.home.activeSession}
+        </span>
+        <span className="text-parchment">{session.title}</span>
+        <span className="text-sm text-dim">
+          {formatDate(session.date)} · {de.sessions.dmName(session.dmDisplayName)}
+        </span>
+      </div>
       {fight && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-l-2 border-candle pl-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <div className="flex min-w-0 flex-col">
             <span className="text-xs font-semibold tracking-wide text-candle uppercase">
               {de.encounters.running}
             </span>
             <span className="text-parchment">{fight.name}</span>
           </div>
-          <ButtonLink
-            variant="primary"
-            className="ml-auto"
+          <ChevronLink
+            variant="light"
+            small
+            className="z-10 ml-auto"
             to={`/kampagnen/${campaign.id}/kampf/${fight.id}`}
           >
             {de.encounters.toFight}
-          </ButtonLink>
+          </ChevronLink>
         </div>
       )}
     </div>
   )
 }
 
-/** The card's main part; the fight link sits beside it, since links can't nest. */
-function CampaignCardLink({ campaign }: { campaign: CampaignSummary }) {
-  const session = campaign.activeSession
+/** Joining or creating: a picture on top, then the title, a line and the form. */
+function ActionPanel({
+  title,
+  body,
+  image,
+  children,
+}: {
+  title: string
+  body: string
+  image: { src: string; srcSet: string }
+  children: ReactNode
+}) {
+  const id = useId()
   return (
-    <Link to={`/kampagnen/${campaign.id}`} className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-lg font-semibold text-parchment">{campaign.name}</span>
-        <Badge>{de.roles[campaign.myRole]}</Badge>
+    <section
+      aria-labelledby={id}
+      className="relative flex flex-col overflow-hidden rounded-sm border border-candle/25 bg-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]"
+    >
+      <div className="relative h-44 sm:h-56">
+        <img
+          src={image.src}
+          srcSet={image.srcSet}
+          sizes="(min-width: 768px) 560px, 100vw"
+          alt=""
+          className="size-full object-cover"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-panel via-panel/60 to-transparent"
+        />
       </div>
-      {session && (
-        <div className="flex flex-col gap-0.5 border-l-2 border-candle pl-3">
-          <span className="text-xs font-semibold tracking-wide text-candle uppercase">
-            {de.home.activeSession}
-          </span>
-          <span className="text-parchment">{session.title}</span>
-          <span className="text-sm text-dim">
-            {formatDate(session.date)} · {de.sessions.dmName(session.dmDisplayName)}
-          </span>
-        </div>
-      )}
-    </Link>
+      <div className="relative -mt-12 flex flex-1 flex-col gap-3 px-5 pb-6">
+        <h3
+          id={id}
+          className="font-display text-2xl font-semibold text-parchment drop-shadow-[0_2px_8px_rgb(0_0_0/0.9)]"
+        >
+          {title}
+        </h3>
+        <Rule className="w-32" />
+        <p className="text-sm text-dim">{body}</p>
+        {children}
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-1.5 rounded-sm border border-candle/10"
+      />
+    </section>
   )
 }
 
@@ -170,8 +395,8 @@ function JoinForm() {
   }
 
   return (
-    <Panel title={de.home.joinTitle}>
-      <form onSubmit={submit} className="flex flex-col gap-3">
+    <ActionPanel title={de.home.joinTitle} body={de.home.joinBody} image={JOIN_PICTURE}>
+      <form onSubmit={submit} className="mt-2 flex flex-1 flex-col gap-4">
         <TextField
           label={de.home.joinCode}
           hint={de.home.joinHint}
@@ -185,13 +410,20 @@ function JoinForm() {
           onChange={(event) => setCode(event.target.value)}
         />
         <ErrorAlert error={join.error} />
-        <div>
-          <Button type="submit" variant="primary" busy={join.isPending}>
+        <div className="mt-auto flex flex-wrap gap-x-4 gap-y-5 pt-2">
+          <ChevronButton type="submit" variant="light" busy={join.isPending}>
             {de.home.join}
-          </Button>
+          </ChevronButton>
+          {/* The same choice as the QR code's join page: "Mitspielen" or "Nur zuschauen". */}
+          <ChevronButton
+            disabled={!code.trim()}
+            onClick={() => void navigate(joinPath(cleanJoinCode(code)))}
+          >
+            {de.spectator.joinFormWatch}
+          </ChevronButton>
         </div>
       </form>
-    </Panel>
+    </ActionPanel>
   )
 }
 
@@ -215,8 +447,8 @@ function CreateForm() {
   }
 
   return (
-    <Panel title={de.home.createTitle}>
-      <form onSubmit={submit} className="flex flex-col gap-3">
+    <ActionPanel title={de.home.createTitle} body={de.home.createBody} image={CREATE_PICTURE}>
+      <form onSubmit={submit} className="mt-2 flex flex-1 flex-col gap-4">
         <TextField
           label={de.home.createName}
           hint={de.home.createHint}
@@ -226,12 +458,12 @@ function CreateForm() {
           onChange={(event) => setName(event.target.value)}
         />
         <ErrorAlert error={create.error} />
-        <div>
-          <Button type="submit" variant="primary" busy={create.isPending}>
+        <div className="mt-auto pt-2">
+          <ChevronButton type="submit" variant="light" busy={create.isPending}>
             {de.common.create}
-          </Button>
+          </ChevronButton>
         </div>
       </form>
-    </Panel>
+    </ActionPanel>
   )
 }

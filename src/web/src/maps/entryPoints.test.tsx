@@ -26,6 +26,8 @@ describe('campaign page', () => {
           joinCode: null,
           activeSessionId: null,
           members: [],
+          description: null,
+          coverUrl: null,
         } satisfies Campaign),
       'GET /api/campaigns/:id/characters': () => json(200, []),
       'GET /api/campaigns/:id/sessions': () => json(200, []),

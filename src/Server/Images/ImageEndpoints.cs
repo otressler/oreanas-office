@@ -6,6 +6,7 @@ using Microsoft.Net.Http.Headers;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Images.Guide;
 
 namespace OreanasOffice.Server.Images;
@@ -25,6 +26,7 @@ public static class ImageEndpoints
             .RequireAuthorization(Policies.CampaignDm);
         backgrounds.MapGet("/backgrounds", ListBackgrounds);
         backgrounds.MapPost("/backgrounds", GenerateBackground);
+        backgrounds.MapPost("/backgrounds/upload", UploadBackground).AcceptsRawPicture();
         backgrounds.MapPut("/background", PickBackground);
 
         app.MapGet("/api/assets/{assetId:guid}", GetAsset)
@@ -129,7 +131,8 @@ public static class ImageEndpoints
                             && a.Status == AssetStatus.Done
                             && ((a.OwnerType == AssetOwnerType.BattleMap && a.OwnerId == mapId) || a.Id == map.BackgroundAssetId),
                         cancellationToken);
-                if (source is null)
+                // An upload wasn't painted from the layout, so the model has nothing to refine.
+                if (source is null || source.Origin == AssetOrigin.Uploaded)
                 {
                     return new Outcome(null, ApiErrorCode.BackgroundNotFound);
                 }
@@ -201,6 +204,80 @@ public static class ImageEndpoints
         return TypedResults.Accepted($"/api/campaigns/{campaignId}/maps/{mapId}/backgrounds", background);
     }
 
+    // The DM's own picture (knowledge/features/ai-map-generation.md, "Uploads"): checked,
+    // shrunk and stored as WebP (BackgroundPicture), saved as a Done version made for the
+    // map's current size, and picked at once. Costs nothing, so no budget check. 201 with the
+    // version. 404 for a map of another campaign or an archived map. Errors (400):
+    // UploadInvalid, UploadTooLarge.
+    private static async Task<Results<Created<MapBackground>, NotFound, BadRequest<ApiError>>> UploadBackground(
+        Guid campaignId,
+        Guid mapId,
+        HttpRequest request,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        IOptions<ImageOptions> options,
+        IAssetStore store,
+        TimeProvider time,
+        CancellationToken cancellationToken)
+    {
+        var settings = options.Value;
+        var map = await db.BattleMaps.AsNoTracking()
+            .SingleOrDefaultAsync(m => m.Id == mapId && m.CampaignId == campaignId && m.ArchivedAt == null, cancellationToken);
+        if (map is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        if (!MediaTypeHeaderValue.TryParse(request.ContentType, out var mediaType)
+            || !TokenPicture.UploadFormats.TryGetValue(mediaType.MediaType.ToString(), out var declared))
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadInvalid));
+        }
+
+        if (request.ContentLength > settings.BackgroundUploadMaxBytes
+            || await TokenImageEndpoints.ReadBodyAsync(request, settings.BackgroundUploadMaxBytes, cancellationToken) is not { } body)
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadTooLarge));
+        }
+
+        if (BackgroundPicture.FromUpload(body, declared, settings.BackgroundPixels, settings.UploadMaxPixels) is not { } picture)
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.UploadInvalid));
+        }
+
+        var now = time.GetUtcNow();
+        var asset = new Asset
+        {
+            Id = Guid.NewGuid(),
+            Kind = AssetKind.MapBackground,
+            OwnerType = AssetOwnerType.BattleMap,
+            OwnerId = mapId,
+            CampaignId = map.CampaignId,
+            Origin = AssetOrigin.Uploaded,
+            Status = AssetStatus.Done,
+            ContentType = BackgroundPicture.ContentType,
+            GridWidth = map.Width,
+            GridHeight = map.Height,
+            PixelWidth = picture.Width,
+            PixelHeight = picture.Height,
+            CreatedAt = now,
+            CreatedByUserId = user.GetUserId(),
+            FinishedAt = now,
+        };
+        asset.BlobName = $"maps/{mapId}/{asset.Id}.webp";
+        await store.SaveAsync(asset.BlobName, picture.Bytes, BackgroundPicture.ContentType, cancellationToken);
+        db.Assets.Add(asset);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Picked like PickBackground: not part of the sync item.
+        await db.BattleMaps
+            .Where(m => m.Id == mapId)
+            .ExecuteUpdateAsync(set => set.SetProperty(m => m.BackgroundAssetId, asset.Id), cancellationToken);
+
+        var view = MapBackgrounds.ToView(asset, map.Width, map.Height, LayoutFingerprint.Of(map.Width, map.Height, map.Layout));
+        return TypedResults.Created($"/api/campaigns/{campaignId}/maps/{mapId}/backgrounds", view);
+    }
+
     // Sets the map's BackgroundAssetId: a Done version listed for the map (its own, or the
     // one it was copied with) that fits the map's size, or null. Doesn't raise the map's
     // sync version. Errors (409): BackgroundNotFound, BackgroundOutdated.
@@ -250,17 +327,26 @@ public static class ImageEndpoints
     // The image, for a signed-in member of a campaign that uses it: the asset's own campaign,
     // or one whose map or encounter points to it. Images never change, so the answer may be
     // cached for good (Cache-Control: private, max-age=31536000, immutable). 404 otherwise,
-    // and for an asset that isn't Done.
+    // and for an asset that isn't Done. A session spectator (not a member) also gets the
+    // pictures that session's screen draws: the campaign's character portraits, and the
+    // background and token pictures of the session's running fights
+    // (knowledge/features/spectator-view.md); nothing else of the campaign.
     private static async Task<Results<FileStreamHttpResult, NotFound>> GetAsset(
         Guid assetId, ClaimsPrincipal user, AppDbContext db, IAssetStore store, HttpContext http, CancellationToken cancellationToken)
     {
         var userId = user.GetUserId();
         var campaigns = db.CampaignMembers.Where(m => m.UserId == userId).Select(m => m.CampaignId);
+        var watched = db.SessionSpectators.Where(p => p.UserId == userId).Select(p => p.SessionId);
         var asset = await db.Assets.AsNoTracking()
             .Where(a => a.Id == assetId && a.Status == AssetStatus.Done && a.BlobName != null)
             .Where(a => campaigns.Contains(a.CampaignId)
                 || db.BattleMaps.Any(m => m.BackgroundAssetId == a.Id && campaigns.Contains(m.CampaignId))
-                || db.Encounters.Any(e => e.BackgroundAssetId == a.Id && campaigns.Contains(e.CampaignId)))
+                || db.Encounters.Any(e => e.BackgroundAssetId == a.Id && campaigns.Contains(e.CampaignId))
+                || db.Characters.Any(c => c.TokenAssetId == a.Id && db.Sessions.Any(s => watched.Contains(s.Id) && s.CampaignId == c.CampaignId))
+                || db.Encounters.Any(e => e.Status == EncounterStatus.Active && watched.Contains(e.SessionId)
+                    && (e.BackgroundAssetId == a.Id
+                        || e.Tokens.Any(t => !t.Hidden && t.RemovedAt == null
+                            && (t.Character!.TokenAssetId == a.Id || t.CreatureType!.IconAssetId == a.Id)))))
             .Select(a => new { a.BlobName, a.ContentType })
             .SingleOrDefaultAsync(cancellationToken);
         if (asset is null || await store.OpenReadAsync(asset.BlobName!, cancellationToken) is not { } content)

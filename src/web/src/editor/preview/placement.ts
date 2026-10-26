@@ -59,6 +59,7 @@ export function previewBoard(
           imageUrl: null,
           color: null,
           statuses: [],
+          hidden: false,
         },
       ]
     : []
@@ -75,6 +76,7 @@ export function previewBoard(
       height: doc.height,
       layout: doc.layout,
       background,
+      grid: doc.gridStyle ?? 'normal',
     },
     tokens,
     isSessionDm: false,
@@ -82,5 +84,9 @@ export function previewBoard(
     removedTokens: [],
     statuses: [],
     people: [],
+    viewer: 'dm',
+    fog: null,
+    playMode: 'byod',
+    presence: { people: [], sharedScreen: false },
   }
 }

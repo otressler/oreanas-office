@@ -23,6 +23,9 @@ import {
 import { newSyncState, pulledSyncState } from '../offline/sync'
 import { json, testUser } from '../test/api'
 
+/** A campaign summary's card fields: no description, the default cover, no characters. */
+export const NO_CARD = { description: null, coverUrl: null, characters: [] }
+
 export const CAMPAIGN = 'c0000000-0000-0000-0000-000000000001'
 export const SESSION = '50000000-0000-0000-0000-000000000001'
 const TIME = '2026-10-14T10:00:00.000Z'
@@ -130,6 +133,7 @@ export class FakeServer {
           name: item.campaign!.name.trim(),
           myRole: 'dm',
           activeSession: null,
+          ...NO_CARD,
         })
       }
       const server = this.serverItem(item, 1)
@@ -232,6 +236,21 @@ export class FakeServer {
       })
       this.store = this.store.filter((map) => map.id !== offered.id)
       return json(200, copy)
+    }
+    match = /^\/api\/campaigns\/([^/]+)\/maps\/([^/]+)$/.exec(call.path)
+    if (match && call.method === 'DELETE') {
+      const [, campaignId, mapId] = match
+      const map = this.items.get(mapId!)
+      if (map?.kind !== 'battleMap' || map.campaignId !== campaignId) return json(404)
+      if (!map.map?.archivedAt) return json(409, { code: 'mapNotArchived' })
+      const encounters = [...this.items.values()].filter(
+        (item) => item.encounter?.battleMapId === mapId,
+      )
+      const played = (item: SyncServerItem) =>
+        item.encounter?.status === 'active' || item.encounter?.status === 'ended'
+      if (encounters.some(played)) return json(409, { code: 'mapPlayed' })
+      for (const item of [map, ...encounters]) this.items.delete(item.id)
+      return json(204)
     }
     return json(404)
   }

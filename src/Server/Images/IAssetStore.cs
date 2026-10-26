@@ -8,4 +8,7 @@ public interface IAssetStore
 
     // Null when the blob doesn't exist.
     Task<Stream?> OpenReadAsync(string blobName, CancellationToken cancellationToken);
+
+    // Nothing happens when the blob doesn't exist.
+    Task DeleteAsync(string blobName, CancellationToken cancellationToken);
 }

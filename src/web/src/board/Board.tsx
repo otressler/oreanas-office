@@ -30,11 +30,13 @@ import {
 import { Layer, Shape, Stage } from 'react-konva'
 import type { BoardState, BoardToken, StatusDefinition } from '../api/types'
 import { de } from '../text/de'
-import { footprint, stackCounts, tokenAt, tokensAt, type GridPoint } from './geometry'
+import { fadesRunning, NO_FADES, startFades, type FogFades } from '../fog/fade'
+import { cellKey, footprint, stackCounts, tokenAt, tokensAt, type GridPoint } from './geometry'
+import { buildFogScene, drawFog, type BoardFog } from './fogRender'
 import { pingExpired, type PingTarget, type ShownPing } from './pings'
 import { GestureTracker, wheelZoomFactor, type Gesture, type PointerSample } from './gestures'
-import { drawPicture, mapLayers, useBackgroundImage } from './background'
-import { cellInfo, tokenInfo } from './info'
+import { drawPicture, gridStrength, mapLayers, useBackgroundImage } from './background'
+import { cellInfo, tokenInfo, type BoardInfo } from './info'
 import {
   centredOn,
   edgeMarker,
@@ -137,6 +139,17 @@ export interface BoardProps {
   keepInView?: string | null
   /** For "Meine Figur": centre a token. */
   handleRef?: Ref<BoardHandle>
+
+  // ---- Stage 10 (knowledge/features/fog-of-war.md, creature-spawn.md) ----
+
+  /**
+   * Fog over the hidden cells: opaque and cloudy for players, hatched for the session DM. It
+   * fades away over cells that are revealed and in over cells that are hidden (with `slide`).
+   * Tapping a hidden cell in the players' look says "Unerkundet".
+   */
+  fog?: BoardFog | null
+  /** Tokens drawn see-through without a mark: the creatures about to be spawned. */
+  faintTokenIds?: ReadonlySet<string>
 }
 
 /** What a page can ask of the board. */
@@ -147,6 +160,8 @@ export interface BoardHandle {
    * once in its ring colour. Doesn't select it. Nothing if it isn't on the board.
    */
   centerOn: (tokenId: string, options?: { pulse?: boolean }) => void
+  /** Zooms out until the whole map fits ("Ganze Karte"), as the board's own button does. Missing on test doubles. */
+  fit?: () => void
 }
 
 /** What the board's own info box is about. */
@@ -189,8 +204,10 @@ export function Board({
   inset,
   keepInView,
   handleRef,
+  fog,
+  faintTokenIds,
 }: BoardProps) {
-  const { width, height, layout, id: mapId, background } = board.map
+  const { width, height, layout, id: mapId, background, grid: gridStyle = 'normal' } = board.map
   const surfaceRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const infoRef = useRef<HTMLDivElement>(null)
@@ -202,12 +219,19 @@ export function Board({
     [highlight, width, height],
   )
 
+  const fogHidden = fog?.hidden
+  const fogLook = fog?.look
+  const fogScene = useMemo(
+    () => (fogHidden ? buildFogScene(fogHidden, width, height) : null),
+    [fogHidden, width, height],
+  )
+
   const [info, setInfo] = useState<InfoTarget | null>(null)
   const infoToken =
     info?.kind === 'token' ? board.tokens.find((token) => token.id === info.id) : undefined
   const infoContent =
     info?.kind === 'cell'
-      ? cellInfo(scene, info.x, info.y)
+      ? cellContent(scene, info.x, info.y, fogLook === 'player' ? fogHidden : undefined)
       : infoToken && info?.kind === 'token'
         ? tokenInfo(
             infoToken,
@@ -244,6 +268,7 @@ export function Board({
 
   // Slides: where each token stood at the last render, and the tokens on their way.
   const tokenLayerRef = useRef<Konva.Layer>(null)
+  const fogLayerRef = useRef<Konva.Layer>(null)
   const pingLayerRef = useRef<Konva.Layer>(null)
   const lastTokens = useRef(new Map<string, BoardToken>())
   const lastBoard = useRef<string | null>(null)
@@ -252,7 +277,9 @@ export function Board({
   const pulses = useRef(new Map<string, Pulse>())
   const frame = useRef(0)
   /** What the last animation frame redrew, so the frame after it draws the end state. */
-  const animating = useRef({ tokens: false, pings: false })
+  const animating = useRef({ tokens: false, pings: false, fog: false })
+  const fogFades = useRef<FogFades>(NO_FADES)
+  const lastFog = useRef<{ encounterId: string; hidden: ReadonlySet<string> } | null>(null)
   const markerEls = useRef(new Map<string, HTMLButtonElement>())
 
   /** Where a token is drawn now, slides included: pings follow it. */
@@ -356,18 +383,21 @@ export function Board({
       for (const [id, p] of pulses.current) if (now - p.start >= PULSE_MS) pulses.current.delete(id)
       const shown = pingsRef.current
       const tokensMove = slides.current.size > 0 || fades.current.size > 0
+      const fogMoves = fadesRunning(fogFades.current, now)
       const pingsMove =
         pulses.current.size > 0 ||
         shown.some((ping) => pingAnimates(ping, now, motion)) ||
         (tokensMove && shown.length > 0)
+      if (fogMoves || animating.current.fog) fogLayerRef.current?.batchDraw()
       if (tokensMove || animating.current.tokens) tokenLayerRef.current?.batchDraw()
       if (pingsMove || animating.current.pings) pingLayerRef.current?.batchDraw()
       if (tokensMove && shown.length > 0) positionMarkers()
-      animating.current = { tokens: tokensMove, pings: pingsMove }
+      animating.current = { tokens: tokensMove, pings: pingsMove, fog: fogMoves }
       // Arrows wait for their fade without drawing.
       const waiting =
         motion && shown.some((ping) => ping.kind === 'arrow' && !pingExpired(ping, now))
-      if (tokensMove || pingsMove || waiting) frame.current = requestAnimationFrame(tick)
+      if (tokensMove || pingsMove || fogMoves || waiting)
+        frame.current = requestAnimationFrame(tick)
     },
     [positionMarkers],
   )
@@ -423,6 +453,7 @@ export function Board({
     onTapTakenBack,
     onDoubleTap,
     onArrow,
+    unexplored: fogLook === 'player' ? fogHidden : undefined,
   })
   useLayoutEffect(() => {
     latest.current = {
@@ -434,6 +465,7 @@ export function Board({
       onTapTakenBack,
       onDoubleTap,
       onArrow,
+      unexplored: fogLook === 'player' ? fogHidden : undefined,
     }
   })
 
@@ -480,7 +512,7 @@ export function Board({
     const tap = (point: Point) => {
       const v = view.current
       if (!v) return
-      const { board, scene, onCellTap, onTokenTap, selectedTokenId } = latest.current
+      const { board, scene, onCellTap, onTokenTap, selectedTokenId, unexplored } = latest.current
       const cell = screenToCell(v, point)
       const token = tokenAt(board.tokens, cell, selectedTokenId)
       if (token) {
@@ -501,7 +533,7 @@ export function Board({
         return
       }
       // Tapping void, outside the map or the same cell again closes the box.
-      if (!inside || !cellInfo(scene, cell.x, cell.y)) {
+      if (!inside || !cellContent(scene, cell.x, cell.y, unexplored)) {
         setInfo(null)
         return
       }
@@ -632,31 +664,66 @@ export function Board({
   const by = background?.y
   const bw = background?.width
   const bh = background?.height
+  const br = background?.rotation
   const shownPicture = useMemo(
     () =>
       picture && bx !== undefined && by !== undefined && bw !== undefined && bh !== undefined
-        ? { image: picture, frame: { x: bx, y: by, width: bw, height: bh } }
+        ? { image: picture, frame: { x: bx, y: by, width: bw, height: bh, rotation: br ?? 0 } }
         : null,
-    [picture, bx, by, bw, bh],
+    [picture, bx, by, bw, bh, br],
   )
   const drawMapShape = useCallback(
     (con: Konva.Context) => {
       const ctx = con._context
       const dpr = con.canvas.getPixelRatio()
-      const layers = mapLayers(shownPicture !== null)
+      const layers = mapLayers(shownPicture !== null, gridStyle)
       if (layers.picture && shownPicture)
         drawPicture(ctx, shownPicture.image, shownPicture.frame, scene.width, scene.height)
       if (layers.plain) drawMapAtZoom(ctx, scene)
       if (layers.highlight && highlightScene)
         drawHighlight(ctx, highlightScene, scene, ctx.getTransform().a / dpr)
-      if (layers.grid) drawGrid(ctx, scene, dpr, { onPicture: layers.picture })
+      if (layers.grid)
+        drawGrid(ctx, scene, dpr, {
+          onPicture: layers.picture,
+          strength: layers.picture ? gridStrength(gridStyle) : 1,
+        })
       if (layers.labels) drawLabels(ctx, scene, dpr)
     },
-    [scene, highlightScene, shownPicture],
+    [scene, highlightScene, shownPicture, gridStyle],
   )
 
+  // The fog: drawn over the map and under the tokens, fading where cells change.
+  const drawFogShape = useCallback(
+    (con: Konva.Context) => {
+      if (!fogScene || !fogLook) return
+      const ctx = con._context
+      const cssScale = ctx.getTransform().a / con.canvas.getPixelRatio()
+      drawFog(ctx, fogScene, fogLook, fogFades.current, performance.now(), cssScale)
+    },
+    [fogScene, fogLook],
+  )
+  // Fades start when the hidden cells change within one fight (not on the first render).
+  const fogEncounterId = board.encounterId
+  useLayoutEffect(() => {
+    const before = lastFog.current
+    lastFog.current = fogHidden ? { encounterId: fogEncounterId, hidden: fogHidden } : null
+    if (!before || !fogHidden || before.encounterId !== fogEncounterId) {
+      fogFades.current = NO_FADES
+      return
+    }
+    const motion = slide && !prefersReducedMotion()
+    fogFades.current = startFades(
+      fogFades.current,
+      before.hidden,
+      fogHidden,
+      performance.now(),
+      motion,
+    )
+    if (fadesRunning(fogFades.current, performance.now())) kick()
+  }, [fogHidden, fogEncounterId, slide, kick])
+
   const stacks = useMemo(() => stackCounts(tokens, selectedTokenId), [tokens, selectedTokenId])
-  const marks = useMemo(() => tokenMarks(tokens), [tokens])
+  const marks = useMemo(() => tokenMarks(tokens, { fog: !!board.fog }), [tokens, board.fog])
   // Each token image loads once; its arrival re-renders, which redraws the tokens.
   const images = useTokenPictures(useMemo(() => tokens.map((token) => token.imageUrl), [tokens]))
   const ghostToken = useMemo(() => {
@@ -747,6 +814,7 @@ export function Board({
   useImperativeHandle(
     handleRef,
     () => ({
+      fit,
       centerOn(tokenId, options) {
         const token = tokensRef.current.find((candidate) => candidate.id === tokenId)
         const v = view.current
@@ -767,7 +835,7 @@ export function Board({
         }
       },
     }),
-    [width, height, moveView, kick],
+    [width, height, moveView, kick, fit],
   )
 
   /** Tapping a marker pans its ping to the middle of the uncovered board. */
@@ -816,6 +884,7 @@ export function Board({
       images,
       statuses: statusLook,
       alpha,
+      faint: faintTokenIds,
     })
   }
 
@@ -856,6 +925,9 @@ export function Board({
             <Stage ref={stageRef} width={size.width} height={size.height} listening={false}>
               <Layer listening={false}>
                 <Shape sceneFunc={drawMapShape} listening={false} />
+              </Layer>
+              <Layer ref={fogLayerRef} listening={false}>
+                <Shape sceneFunc={drawFogShape} listening={false} />
               </Layer>
               <Layer ref={tokenLayerRef} listening={false}>
                 <Shape sceneFunc={drawTokenShape} listening={false} />
@@ -960,6 +1032,24 @@ export function Board({
       </div>
     </div>
   )
+}
+
+/**
+ * What the info box says about a cell: "Unerkundet" for a cell in the fog (`unexplored`, the
+ * players' look only: nothing about its terrain or height), else the cell itself.
+ */
+function cellContent(
+  scene: Parameters<typeof cellInfo>[0],
+  x: number,
+  y: number,
+  unexplored?: ReadonlySet<string>,
+): BoardInfo | null {
+  if (unexplored?.has(cellKey(x, y))) {
+    return x >= 0 && y >= 0 && x < scene.width && y < scene.height
+      ? { title: de.fog.unexplored, details: [] }
+      : null
+  }
+  return cellInfo(scene, x, y)
 }
 
 /** How long a token takes to glide to its new cell. */

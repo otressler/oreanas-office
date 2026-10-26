@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
+using OreanasOffice.Server.Characters;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Table;
@@ -14,7 +15,8 @@ namespace OreanasOffice.Server.Sessions;
 
 // knowledge/domain/session.md: any `dm` member creates sessions; the session DM or
 // the campaign's default DM makes one active, hands it over, ends it and continues it.
-// At most one session per campaign is active. The session DM edits title and date.
+// At most one session per campaign is active. The session DM edits title and date, and
+// decides who plays which character in the session.
 public static class SessionEndpoints
 {
     public static IEndpointRouteBuilder MapSessionEndpoints(this IEndpointRouteBuilder app)
@@ -30,8 +32,10 @@ public static class SessionEndpoints
         session.MapPost("/activate", ActivateSession).RequireAuthorization(Policies.SessionManager);
         session.MapPost("/end", EndSession).RequireAuthorization(Policies.SessionManager);
         session.MapPut("/dm", ChangeSessionDm).RequireAuthorization(Policies.SessionManager);
+        session.MapPut("/play-mode", SetPlayMode).RequireAuthorization(Policies.SessionDm);
+        session.MapPut("/characters/{characterId:guid}/player", SetCharacterPlayer).RequireAuthorization(Policies.SessionDm);
 
-        return app;
+        return app.MapSessionSpectatorEndpoints();
     }
 
     // Newest date first.
@@ -230,7 +234,7 @@ public static class SessionEndpoints
         ClaimsPrincipal user,
         AppDbContext db,
         TimeProvider time,
-        [FromServices] IHubContext<TableHub, ITableClient> table,
+        [FromServices] TableBroadcaster table,
         CancellationToken cancellationToken)
     {
         var strategy = db.Database.CreateExecutionStrategy();
@@ -266,7 +270,96 @@ public static class SessionEndpoints
 
         foreach (var encounterId in ended)
         {
-            await table.Clients.Group(TableHub.GroupName(encounterId)).EncounterEnded(encounterId);
+            await table.EncounterEndedAsync(sessionId, encounterId);
+        }
+
+        await table.SessionEndedAsync(sessionId);
+
+        return TypedResults.Ok(await LoadAsync(db, campaignId, sessionId, user.GetUserId(), cancellationToken));
+    }
+
+    // The session DM switches between "Eigene Geräte" and "Gemeinsamer Bildschirm", also while
+    // a fight runs (knowledge/features/shared-table.md). Every screen of the session hears
+    // PlayModeChanged; nothing reloads. SessionEnded for an ended session.
+    private static async Task<Results<Ok<SessionResponse>, Conflict<ApiError>>> SetPlayMode(
+        Guid campaignId,
+        Guid sessionId,
+        SetPlayModeRequest request,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        [FromServices] TableBroadcaster table,
+        CancellationToken cancellationToken)
+    {
+        if (await StatusAsync(db, campaignId, sessionId, cancellationToken) == SessionStatus.Ended)
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
+        }
+
+        await db.Sessions
+            .Where(s => s.Id == sessionId)
+            .ExecuteUpdateAsync(set => set.SetProperty(s => s.PlayMode, request.PlayMode), cancellationToken);
+        await table.PlayModeChangedAsync(sessionId, request.PlayMode);
+        return TypedResults.Ok(await LoadAsync(db, campaignId, sessionId, user.GetUserId(), cancellationToken));
+    }
+
+    // The session DM hands a character to another member for this session, or back to its
+    // owner (knowledge/domain/session.md, "Who plays which character"). Planned and active
+    // sessions only (SessionEnded). A running fight of the session reloads its boards.
+    private static async Task<Results<Ok<SessionResponse>, BadRequest<ApiError>, NotFound, Conflict<ApiError>>> SetCharacterPlayer(
+        Guid campaignId,
+        Guid sessionId,
+        Guid characterId,
+        SetCharacterPlayerRequest request,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        [FromServices] TableBroadcaster table,
+        CancellationToken cancellationToken)
+    {
+        var ownerUserId = await db.Characters
+            .Where(c => c.Id == characterId && c.CampaignId == campaignId)
+            .Select(c => (Guid?)c.OwnerUserId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (ownerUserId is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        if (await StatusAsync(db, campaignId, sessionId, cancellationToken) == SessionStatus.Ended)
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
+        }
+
+        var playerUserId = request.UserId == ownerUserId ? null : request.UserId;
+        if (playerUserId is { } player && !await db.IsCampaignMemberAsync(campaignId, player, cancellationToken))
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.NotAMember, "userId"));
+        }
+
+        var existing = await db.SessionCharacterPlayers
+            .SingleOrDefaultAsync(p => p.SessionId == sessionId && p.CharacterId == characterId, cancellationToken);
+        if (existing?.UserId != playerUserId)
+        {
+            if (existing is not null)
+            {
+                db.SessionCharacterPlayers.Remove(existing);
+            }
+
+            if (playerUserId is { } newPlayer)
+            {
+                db.SessionCharacterPlayers.Add(new SessionCharacterPlayer { SessionId = sessionId, CharacterId = characterId, UserId = newPlayer });
+            }
+
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex) when (UniqueIndex.IsViolation(ex) || ex is DbUpdateConcurrencyException)
+            {
+                // Two changes for the same character at once: the other one stands.
+                return TypedResults.Ok(await LoadAsync(db, campaignId, sessionId, user.GetUserId(), cancellationToken));
+            }
+
+            await CharacterPlayers.ChangedAsync(db.Encounters.Where(e => e.SessionId == sessionId), table, cancellationToken);
         }
 
         return TypedResults.Ok(await LoadAsync(db, campaignId, sessionId, user.GetUserId(), cancellationToken));
@@ -279,6 +372,7 @@ public static class SessionEndpoints
         ChangeSessionDmRequest request,
         ClaimsPrincipal user,
         AppDbContext db,
+        [FromServices] TableBroadcaster table,
         CancellationToken cancellationToken)
     {
         if (await StatusAsync(db, campaignId, sessionId, cancellationToken) == SessionStatus.Ended)
@@ -297,6 +391,14 @@ public static class SessionEndpoints
         if (updated == 0)
         {
             return TypedResults.Conflict(new ApiError(ApiErrorCode.SessionEnded));
+        }
+
+        // What the devices at the table may see changed: both groups reload the board
+        // (knowledge/features/fog-of-war.md, "Session DM hand-over").
+        if (await db.Encounters.Where(e => e.SessionId == sessionId && e.Status == EncounterStatus.Active)
+            .Select(e => (Guid?)e.Id).SingleOrDefaultAsync(cancellationToken) is { } encounterId)
+        {
+            await table.Everyone(encounterId).ReloadBoard(encounterId);
         }
 
         return TypedResults.Ok(await LoadAsync(db, campaignId, sessionId, user.GetUserId(), cancellationToken));
@@ -344,5 +446,11 @@ public static class SessionEndpoints
                 .OrderBy(e => e.CreatedAt)
                 .ThenBy(e => e.Id)
                 .Select(EncounterEndpoints.SummaryOf)
+                .ToList(),
+            s.PlayMode,
+            s.CharacterPlayers
+                .OrderBy(p => p.Character.Name)
+                .ThenBy(p => p.CharacterId)
+                .Select(p => new SessionCharacterPlayerResponse(p.CharacterId, p.UserId, p.User.DisplayName))
                 .ToList()));
 }

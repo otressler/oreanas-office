@@ -2,7 +2,13 @@
 // domain/token.md, "label"): where creatures may stand, how labels number themselves and
 // when an encounter may be marked ready. Every change is a function from one
 // EncounterDoc to the next, like the map editor's.
-import type { BoardToken, CreatureSize, EncounterStatus } from '../../api/types'
+import type {
+  BoardToken,
+  CreatureSize,
+  EncounterStatus,
+  FogDocument,
+  InitiativeRollMode,
+} from '../../api/types'
 import {
   buildGrid,
   fitsAt,
@@ -20,6 +26,8 @@ export interface EncounterDoc {
   status: EncounterStatus
   archivedAt: string | null
   tokens: LocalCreatureToken[]
+  /** Fog of war (knowledge/features/fog-of-war.md); absent or null while fog is off. */
+  fog?: FogDocument | null
 }
 
 /** The server's limits for encounter names and token labels. */
@@ -28,8 +36,10 @@ export const LABEL_MAX = 40
 
 /** The editable part of a stored encounter. */
 export function encounterDocOf(record: LocalEncounter): EncounterDoc {
-  const { name, status, archivedAt, tokens } = record
-  return { name, status, archivedAt, tokens }
+  const { name, status, archivedAt, tokens, fog } = record
+  return fog === undefined
+    ? { name, status, archivedAt, tokens }
+    : { name, status, archivedAt, tokens, fog }
 }
 
 /** The part of a creature type a new token takes over. */
@@ -133,6 +143,7 @@ export function placeToken(
   type: PlaceableType,
   at: GridPoint,
   id: string = crypto.randomUUID(),
+  hidden = false,
 ): EncounterDoc {
   const token: LocalCreatureToken = {
     id,
@@ -141,6 +152,7 @@ export function placeToken(
     x: at.x,
     y: at.y,
     size: type.size,
+    ...(hidden && { hidden }),
   }
   return { ...doc, tokens: [...doc.tokens, token] }
 }
@@ -167,6 +179,53 @@ export function renameToken(doc: EncounterDoc, id: string, label: string): Encou
   return {
     ...doc,
     tokens: doc.tokens.map((item) => (item.id === id ? { ...item, label: clean } : item)),
+  }
+}
+
+/** Hides a creature from the players ("Verborgen"), or shows it again. Absent means false. */
+export function setTokenHidden(doc: EncounterDoc, id: string, hidden: boolean): EncounterDoc {
+  const token = doc.tokens.find((item) => item.id === id)
+  if (!token || (token.hidden ?? false) === hidden) return doc
+  return {
+    ...doc,
+    tokens: doc.tokens.map((item) => {
+      if (item.id !== id) return item
+      const { hidden: _unused, ...rest } = item
+      return hidden ? { ...rest, hidden } : rest
+    }),
+  }
+}
+
+/**
+ * Gives a creature its own initiative modifier or roll mode, or (null) hands it back to its
+ * type's (knowledge/features/initiative.md). Null fields are left out of the record.
+ */
+export function setTokenInitiative(
+  doc: EncounterDoc,
+  id: string,
+  change: { modifier?: number | null; mode?: InitiativeRollMode | null },
+): EncounterDoc {
+  const token = doc.tokens.find((item) => item.id === id)
+  if (!token) return doc
+  const modifier =
+    'modifier' in change ? (change.modifier ?? null) : (token.initiativeModifier ?? null)
+  const mode = 'mode' in change ? (change.mode ?? null) : (token.initiativeRollMode ?? null)
+  if (
+    modifier === (token.initiativeModifier ?? null) &&
+    mode === (token.initiativeRollMode ?? null)
+  )
+    return doc
+  return {
+    ...doc,
+    tokens: doc.tokens.map((item) => {
+      if (item.id !== id) return item
+      const { initiativeModifier: _m, initiativeRollMode: _a, ...rest } = item
+      return {
+        ...rest,
+        ...(modifier !== null && { initiativeModifier: modifier }),
+        ...(mode !== null && { initiativeRollMode: mode }),
+      }
+    }),
   }
 }
 
@@ -231,5 +290,6 @@ export function toBoardToken(
     imageUrl,
     color: null,
     statuses: [],
+    hidden: token.hidden ?? false,
   }
 }

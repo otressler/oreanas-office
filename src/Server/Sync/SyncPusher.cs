@@ -234,6 +234,16 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "size")), false);
         }
 
+        if (!Enum.IsDefined(data.InitiativeRollMode))
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "initiativeRollMode")), false);
+        }
+
+        if (data.InitiativeModifier is < InitiativeRules.ModifierMin or > InitiativeRules.ModifierMax)
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "initiativeModifier")), false);
+        }
+
         // The database collation ignores case, which is what makes names unique per campaign.
         var taken = await db.CreatureTypes
             .Where(t => t.CampaignId == item.CampaignId && t.Name == name && t.Id != item.Id)
@@ -256,6 +266,8 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
         type.Size = data.Size;
         type.Appearance = appearance;
         type.Notes = notes;
+        type.InitiativeModifier = data.InitiativeModifier;
+        type.InitiativeRollMode = data.InitiativeRollMode;
         type.ArchivedAt = data.ArchivedAt;
         type.UpdatedAt = now;
         type.UpdatedByUserId = userId;
@@ -282,6 +294,16 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             return (Reject(item, new ApiError(ApiErrorCode.LayoutInvalid)) with { Problems = problems }, false);
         }
 
+        if (data.BackgroundPlacement is { } placement && !placement.IsValid())
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.LayoutInvalid, "backgroundPlacement")), false);
+        }
+
+        if (!Enum.IsDefined(data.GridStyle))
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.LayoutInvalid, "gridStyle")), false);
+        }
+
         var now = time.GetUtcNow();
         var map = existing ?? db.BattleMaps.Add(new BattleMap
         {
@@ -303,6 +325,8 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
         map.Vibe = (data.Vibe ?? "").Trim();
         map.Lighting = (data.Lighting ?? "").Trim();
         map.ArchivedAt = data.ArchivedAt;
+        map.BackgroundPlacement = data.BackgroundPlacement;
+        map.GridStyle = data.GridStyle;
         map.UpdatedAt = now;
         map.UpdatedByUserId = userId;
         if (existing is not null)
@@ -377,6 +401,15 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             elevations.Add(elevation);
         }
 
+        if (data.Fog is { } pushedFog && FogCells.Check(pushedFog, map.Width, map.Height) is { } fogField)
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.FogInvalid, fogField)), false);
+        }
+
+        var typeNames = await db.CreatureTypes.AsNoTracking()
+            .Where(t => t.CampaignId == item.CampaignId)
+            .ToDictionaryAsync(t => t.Id, t => t.Name, cancellationToken);
+
         var now = time.GetUtcNow();
         var encounter = existing ?? db.Encounters.Add(new Encounter
         {
@@ -392,6 +425,7 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
         encounter.BattleMapId = data.BattleMapId;
         encounter.Status = data.Status;
         encounter.ArchivedAt = data.ArchivedAt;
+        encounter.Fog = data.Fog is { } fog ? FogCells.Normalize(fog) : null;
         encounter.UpdatedAt = now;
         encounter.UpdatedByUserId = userId;
         if (existing is not null)
@@ -416,7 +450,10 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             }
 
             token.CreatureTypeId = pushed.CreatureTypeId;
-            token.Label = pushed.Label.Trim();
+            (token.Number, token.Label) = CreatureLabels.Split(typeNames[pushed.CreatureTypeId], pushed.Label);
+            token.Hidden = pushed.Hidden;
+            token.InitiativeModifier = pushed.InitiativeModifier;
+            token.InitiativeRollMode = pushed.InitiativeRollMode;
             token.Size = pushed.Size;
             token.X = pushed.X;
             token.Y = pushed.Y;
@@ -479,7 +516,9 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
                 || !seen.Add(token.Id)
                 || usedElsewhere.Contains(token.Id)
                 || (token.Label ?? "").Trim().Length is 0 or > Token.LabelMaxLength
-                || !Enum.IsDefined(token.Size))
+                || !Enum.IsDefined(token.Size)
+                || token.InitiativeModifier is < InitiativeRules.ModifierMin or > InitiativeRules.ModifierMax
+                || token.InitiativeRollMode is { } mode && !Enum.IsDefined(mode))
             {
                 return Reject(item, new ApiError(ApiErrorCode.TokenInvalid, field));
             }

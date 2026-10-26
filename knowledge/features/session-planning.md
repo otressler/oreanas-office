@@ -36,6 +36,7 @@ Plan a game night as a whole and run it from one place. The DM thinks in game ni
 - **Fights:** the session's fights in the order they were added, each with its name, map, creature count and status (Entwurf, Bereit, Läuft, Vorbei). A fight whose creatures no longer stand validly on a changed map carries the warning from the editor.
 - **For the session DM, per fight:** open it in the editor ("Bearbeiten", wide screens only), start it ("Aufstellen und starten": ready fights, while the session runs and no other fight runs), move it to another planned or running session they run ("Verschieben"), archive it or bring it back. Draft and ready fights can be moved; running and ended ones can't. A fight made on this device and not synced yet carries "Nur auf diesem Gerät".
 - **For the session DM, for the session:** "Kampf hinzufügen", "Karte importieren" (the [import file](/domain/battle-map.md) now creates its fight in this session).
+- **Wer spielt wen** (added 2026-10-24): every character of the campaign with who plays it in this session, and "Nur in dieser Sitzung, sonst …" for one handed to someone else. The session DM picks the player per character, while the session isn't ended ([session](/domain/session.md), "Who plays which character").
 - **Players** see the session's header and the running fight with "Zum Kampf". Prepared and ended fights stay hidden from them, as before ([encounter](/domain/encounter.md)).
 - Ending a fight returns everyone to the session page.
 

@@ -19,24 +19,39 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `scene` | text | What the place is: "rope bridge over a misty gorge" |
 | `vibe` | text | Mood: "tense, overcast, wind" |
 | `lighting` | text | e.g. "dusk", "torchlight" |
-| `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The chosen generated image. Other versions stay as assets. Not shown while the image was made for a different size (see Background image) |
+| `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The chosen image, generated or uploaded. Other versions stay as assets. A generated image isn't shown while it was made for a different size (see Background image) |
+| `backgroundPlacement` | object, nullable | Where the DM moved, scaled and turned the picked image: `assetId`, `x`, `y`, `width`, `height` in cells (the unturned picture's top-left corner and size, relative to the map's top-left cell) and `rotation` in degrees clockwise around its centre. Used only while `assetId` is the picked one; otherwise the image lies at its own frame. Part of the sync item |
+| `gridStyle` | `normal` \| `faint` \| `hidden` | How the board draws the grid over a picture, for images that bring their own grid. Without a picture the board always draws the normal grid. Part of the sync item |
 | `copiedFromMapId` | → Battle map, nullable | The map this one was duplicated or added from. Set once and never changed |
-| `archivedAt` | timestamp, nullable | Set when a `dm` member archives the map |
+| `archivedAt` | timestamp, nullable | Set when a `dm` member archives the map. Only an archived map can be deleted |
 
 # Map list, archive and store
 
 - **Map list.** `dm` members of the campaign see its maps, open one to edit it, and duplicate or archive it. Players don't see the list.
-- **Archive, never delete.** Only `dm` members archive a map, and they can bring it back from the archived maps in the list. An archived map can't be picked for a new encounter and isn't offered in other campaigns' stores. Encounters that already use it keep working. Archiving only sets a field, so it syncs like any other change ([offline prep](/decisions/offline-prep-pwa.md)).
+- **Archive first.** Only `dm` members archive a map, and they can bring it back from the archived maps in the list, or delete it there (see Deleting). An archived map can't be picked for a new encounter and isn't offered in other campaigns' stores. Encounters that already use it keep working. Archiving only sets a field, so it syncs like any other change ([offline prep](/decisions/offline-prep-pwa.md)).
 - **Duplicate.** A copy in the same campaign, for a map that needs only small changes to be used again. It gets a new id and `copiedFromMapId`. Later changes to either map don't reach the other.
 - **Store.** Maps from other campaigns. Adding one makes a copy in the campaign with `copiedFromMapId` set; the source stays as it is. The store leaves out the campaign's own maps, maps the campaign already has an unarchived copy of, and copies made from the campaign's own maps. If the campaign's copy is archived, the store still offers the map, and adding it brings the archived copy back instead of making a new one. For now every map that isn't archived is in the store, whoever made it; choosing which maps to publish is in the [backlog](/backlog.md). The store needs a connection.
 - **What a copy takes:** name, size, layout, scene, vibe, lighting and the picked background image. The copy points to the same image [asset](/domain/asset.md) rather than a copy of the file; the copy's DMs can regenerate it for their own map. Other versions of the source's background don't come along. Encounters and their creatures aren't copied.
 
+# Deleting
+
+Added on 2026-10-24 at the project owner's request; before, maps were never deleted.
+
+- **Only archived maps.** A `dm` member deletes a map from the archived maps in the list, after a question that names what goes with it. Like archiving, any `dm` member may do it, also when the encounters that go with it belong to a session someone else runs; the question names their sessions. Deleting can't be undone.
+- **Unplayed encounters go with it.** Draft and ready encounters on the map, archived or not, are deleted with their creature tokens. The project owner chose this over refusing while any encounter uses the map.
+- **Played fights keep their map.** While an active or ended encounter uses the map, it can't be deleted, and nothing is deleted. The question names those fights instead.
+- **Background images.** The map's own background versions are deleted, unless another map shows one (a store copy), an encounter saved one when it started, or a running job refines one. Their [asset](/domain/asset.md) rows stay with the file name cleared: they hold what each image cost, which the monthly [image budget](/decisions/image-budget.md) counts. While a background job for the map is queued or running, it can't be deleted.
+- **Store copies stay.** Copies in other campaigns are independent maps; their `copiedFromMapId` keeps pointing to the deleted map.
+- **Needs a connection** for a map the server has. The device pushes the map's own unsynced changes first, since the server deletes only what it has archived, then drops its copy of the map and its encounters. The DM's other devices drop theirs at their next pull, and a device that still pushes changes to the deleted map gets "not found" ([offline prep](/decisions/offline-prep-pwa.md)). A map the server never saw is deleted on the device alone, also offline.
+
 # Background image
 
-- The DM generates backgrounds with [AI map generation](/features/ai-map-generation.md) and picks one version as `backgroundAssetId`. Picking needs a connection and isn't part of the map's sync item, so it never conflicts with offline edits and doesn't raise the map's version.
-- **Changing the size makes the background outdated.** Every version made for another size is outdated: the board doesn't show it and uses the plain rendering instead, and the editor says a new image is needed. Nothing is generated automatically; the DM starts a new generation. Undoing the resize, back to the image's size, makes the image usable again.
+- The DM generates backgrounds with [AI map generation](/features/ai-map-generation.md) or uploads their own (PNG, WebP or JPEG), and picks one version as `backgroundAssetId`. Picking needs a connection and isn't part of the map's sync item, so it never conflicts with offline edits and doesn't raise the map's version.
+- **Placing.** In the editor the DM moves, scales and turns the picked image with handles, or aligns it by two grid points ([DM map editor](/features/dm-map-editor.md), "Background"). That is `backgroundPlacement`, part of the sync item like any other edit: it undoes, saves offline and syncs. It belongs to one version; picking another shows that one at its own frame, and coming back finds the placement again. A store copy takes the placement with the picked image; a duplicate takes neither.
+- **Changing the size makes a generated background outdated.** Every generated version made for another size is outdated: the board doesn't show it and uses the plain rendering instead, and the editor says a new image is needed. Nothing is generated automatically; the DM starts a new generation. Undoing the resize, back to the image's size, makes the image usable again.
+- **Uploads survive a resize** (decided by the project owner on 2026-10-25). An upload isn't painted to the layout, so it is never outdated. It stays over the same cells: rows and columns added or removed at the top or left shift its placement along, and the DM fixes the rest by hand.
 - Other layout changes, such as a moved wall, keep the image. The editor notes that the layout changed since the image was made, so the DM can decide to regenerate.
-- An encounter saves the picked background when it starts, together with its copy of the layout ([encounter](/domain/encounter.md)).
+- An encounter saves the picked background when it starts, together with its copy of the layout, the placement and the grid style ([encounter](/domain/encounter.md)).
 
 # Layout document
 

@@ -220,6 +220,14 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid?>("IconAssetId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("InitiativeModifier")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InitiativeRollMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -263,11 +271,18 @@ namespace OreanasOffice.Server.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CoverAssetId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("DefaultDmUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("JoinCode")
                         .IsRequired()
@@ -281,6 +296,8 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasColumnType("nvarchar(80)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CoverAssetId");
 
                     b.HasIndex("DefaultDmUserId");
 
@@ -386,6 +403,21 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<DateTimeOffset?>("EndedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("Fog")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("FogJson");
+
+                    b.Property<int>("FogVersion")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Initiative")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("InitiativeJson");
+
+                    b.Property<int>("InitiativeVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
                     b.Property<string>("MapCopy")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("MapCopyJson");
@@ -434,6 +466,44 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.ToTable("Encounters");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.EncounterChange", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("UndoneAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ByUserId");
+
+                    b.HasIndex("EncounterId", "Id");
+
+                    b.ToTable("EncounterChanges");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Encounters.Token", b =>
                 {
                     b.Property<Guid>("Id")
@@ -459,6 +529,13 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<bool>("Hidden")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("InitiativeModifier")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InitiativeRollMode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -467,6 +544,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<string>("Label")
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
+
+                    b.Property<int?>("Number")
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("RemovedAt")
                         .HasColumnType("datetimeoffset");
@@ -592,6 +672,12 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("PixelHeight")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PixelWidth")
+                        .HasColumnType("int");
+
                     b.Property<string>("Prompt")
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
@@ -641,6 +727,10 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid?>("BackgroundAssetId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("BackgroundPlacement")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("BackgroundPlacementJson");
+
                     b.Property<Guid>("CampaignId")
                         .HasColumnType("uniqueidentifier");
 
@@ -649,6 +739,11 @@ namespace OreanasOffice.Server.Data.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("GridStyle")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Height")
                         .HasColumnType("int");
@@ -726,6 +821,11 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid?>("InterruptedEncounterId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("PlayMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -750,6 +850,44 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasIndex("CampaignId", "Date");
 
                     b.ToTable("Sessions", (string)null);
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionCharacterPlayer", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("SessionId", "CharacterId");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SessionCharacterPlayers", (string)null);
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionSpectator", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("SessionId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SessionSpectators");
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusDefinition", b =>
@@ -1000,6 +1138,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid>("AppliedByUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("FromSharedScreen")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("Level")
                         .HasColumnType("int");
 
@@ -1032,6 +1173,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<decimal>("FromElevation")
                         .HasPrecision(6, 1)
                         .HasColumnType("decimal(6,1)");
+
+                    b.Property<bool>("FromSharedScreen")
+                        .HasColumnType("bit");
 
                     b.Property<int>("FromX")
                         .HasColumnType("int");
@@ -1200,6 +1344,15 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Session");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Encounters.EncounterChange", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("ByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Encounters.Token", b =>
                 {
                     b.HasOne("OreanasOffice.Server.Characters.Character", "Character")
@@ -1285,6 +1438,50 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Campaign");
 
                     b.Navigation("Dm");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionCharacterPlayer", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Characters.Character", "Character")
+                        .WithMany("SessionPlayers")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Sessions.GameSession", "Session")
+                        .WithMany("CharacterPlayers")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("Session");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Sessions.SessionSpectator", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Sessions.GameSession", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusDefinition", b =>
@@ -1396,6 +1593,11 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Sessions");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Characters.Character", b =>
+                {
+                    b.Navigation("SessionPlayers");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Encounters.Encounter", b =>
                 {
                     b.Navigation("Tokens");
@@ -1408,6 +1610,8 @@ namespace OreanasOffice.Server.Data.Migrations
 
             modelBuilder.Entity("OreanasOffice.Server.Sessions.GameSession", b =>
                 {
+                    b.Navigation("CharacterPlayers");
+
                     b.Navigation("Encounters");
                 });
 

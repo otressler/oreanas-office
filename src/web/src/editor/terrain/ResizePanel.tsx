@@ -6,6 +6,7 @@ import { inputClass } from '../../components/styles'
 import { limits } from '../../lib/limits'
 import { formatMeters } from '../../lib/units'
 import { de } from '../../text/de'
+import { placementFor } from '../background/backgrounds'
 import { useEditor } from '../store'
 import {
   canResize,
@@ -25,6 +26,7 @@ const ZERO: Record<Edge, string> = { left: '0', right: '0', top: '0', bottom: '0
 export function ResizePanel() {
   const doc = useEditor((s) => s.doc)
   const apply = useEditor((s) => s.apply)
+  const background = useEditor((s) => s.background)
   const [inputs, setInputs] = useState(ZERO)
   const hintId = useId()
 
@@ -40,7 +42,19 @@ export function ResizePanel() {
 
   const submit = () => {
     if (!edges || !valid || !changes) return
-    apply((current) => resizeMap(current, edges))
+    // An upload survives the resize: its frame becomes a placement first, so it can shift
+    // along with the cells (a generated picture is outdated by the new size anyway).
+    apply((current) =>
+      resizeMap(
+        background?.origin === 'uploaded'
+          ? {
+              ...current,
+              backgroundPlacement: placementFor(background, current.backgroundPlacement),
+            }
+          : current,
+        edges,
+      ),
+    )
     setInputs(ZERO)
   }
 

@@ -1,16 +1,18 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Images;
+using OreanasOffice.Server.Table;
 
 namespace OreanasOffice.Server.Characters;
 
 // knowledge/domain/character.md: players create and edit their own characters;
-// `dm` members edit any character in the campaign.
+// `dm` members edit any character in the campaign and give characters to members.
 public static class CharacterEndpoints
 {
     public static IEndpointRouteBuilder MapCharacterEndpoints(this IEndpointRouteBuilder app)
@@ -37,8 +39,8 @@ public static class CharacterEndpoints
         return TypedResults.Ok(await WithColorsAsync(db, campaignId, characters, cancellationToken));
     }
 
-    // Owned by the signed-in user.
-    private static async Task<Results<Created<CharacterResponse>, BadRequest<ApiError>>> CreateCharacter(
+    // Owned by the signed-in user, or by the member a `dm` member picked.
+    private static async Task<Results<Created<CharacterResponse>, BadRequest<ApiError>, ForbidHttpResult>> CreateCharacter(
         Guid campaignId,
         CharacterRequest request,
         ClaimsPrincipal user,
@@ -52,10 +54,24 @@ public static class CharacterEndpoints
         }
 
         var userId = user.GetUserId();
+        var ownerUserId = request.OwnerUserId ?? userId;
+        if (ownerUserId != userId)
+        {
+            if (!await db.IsCampaignDmAsync(campaignId, userId, cancellationToken))
+            {
+                return TypedResults.Forbid();
+            }
+
+            if (!await db.IsCampaignMemberAsync(campaignId, ownerUserId, cancellationToken))
+            {
+                return TypedResults.BadRequest(new ApiError(ApiErrorCode.NotAMember, "ownerUserId"));
+            }
+        }
+
         var character = new Character
         {
             CampaignId = campaignId,
-            OwnerUserId = userId,
+            OwnerUserId = ownerUserId,
             Name = name,
             Size = request.Size,
             Appearance = appearance,
@@ -69,13 +85,16 @@ public static class CharacterEndpoints
         return TypedResults.Created($"/api/campaigns/{campaignId}/characters/{character.Id}", response);
     }
 
-    // 403 unless the owner or a `dm` member.
+    // 403 unless the owner or a `dm` member, and for a new owner unless a `dm` member. A new
+    // owner plays the character in every session that doesn't hand it to someone else, so
+    // a running fight with it reloads its boards.
     private static async Task<Results<Ok<CharacterResponse>, BadRequest<ApiError>, NotFound, ForbidHttpResult>> UpdateCharacter(
         Guid campaignId,
         Guid characterId,
         CharacterRequest request,
         ClaimsPrincipal user,
         AppDbContext db,
+        [FromServices] TableBroadcaster table,
         CancellationToken cancellationToken)
     {
         var character = await db.Characters
@@ -86,7 +105,8 @@ public static class CharacterEndpoints
         }
 
         var userId = user.GetUserId();
-        if (character.OwnerUserId != userId && !await db.IsCampaignDmAsync(campaignId, userId, cancellationToken))
+        var isDm = await db.IsCampaignDmAsync(campaignId, userId, cancellationToken);
+        if (character.OwnerUserId != userId && !isDm)
         {
             return TypedResults.Forbid();
         }
@@ -96,11 +116,34 @@ public static class CharacterEndpoints
             return TypedResults.BadRequest(error);
         }
 
+        var newOwner = request.OwnerUserId is { } ownerUserId && ownerUserId != character.OwnerUserId ? ownerUserId : (Guid?)null;
+        if (newOwner is not null)
+        {
+            if (!isDm)
+            {
+                return TypedResults.Forbid();
+            }
+
+            if (!await db.IsCampaignMemberAsync(campaignId, newOwner.Value, cancellationToken))
+            {
+                return TypedResults.BadRequest(new ApiError(ApiErrorCode.NotAMember, "ownerUserId"));
+            }
+
+            character.OwnerUserId = newOwner.Value;
+        }
+
         character.Name = name;
         character.Size = request.Size;
         character.Appearance = appearance;
         character.Color = color;
         await db.SaveChangesAsync(cancellationToken);
+        if (newOwner is not null)
+        {
+            await CharacterPlayers.ChangedAsync(
+                db.Encounters.Where(e => e.CampaignId == campaignId && e.Tokens.Any(t => t.CharacterId == characterId)),
+                table,
+                cancellationToken);
+        }
 
         return TypedResults.Ok(await LoadAsync(db, campaignId, character.Id, userId, cancellationToken));
     }

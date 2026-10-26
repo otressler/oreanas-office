@@ -56,7 +56,13 @@ const hexed: StatusDefinition = {
 }
 
 function applied(statusId: string, by: string, level: number | null = null): BoardTokenStatus {
-  return { statusId, level, appliedByUserId: by, appliedAt: '2026-10-16T18:00:00Z' }
+  return {
+    statusId,
+    level,
+    appliedByUserId: by,
+    appliedAt: '2026-10-16T18:00:00Z',
+    fromSharedScreen: false,
+  }
 }
 
 /** Mira's character on the clearing's top-left cell. */
@@ -76,6 +82,7 @@ const hero: BoardToken = {
   imageUrl: null,
   color: null,
   statuses: [],
+  hidden: false,
 }
 /** Someone else's character next to Mira's. */
 const friend: BoardToken = {

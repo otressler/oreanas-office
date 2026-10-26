@@ -18,9 +18,10 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T21:55:33Z }
 | `name` | string | e.g. "Goblin ambush" |
 | `status` | enum `draft` \| `ready` \| `active` \| `ended` | |
 | `layout` | JSON document, nullable | A copy of the battle map's layout, saved when the encounter starts. The live fight and the ended encounter use this copy, so later edits to the map never change them |
-| `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The map's picked background, saved together with `layout` when the encounter starts. Picking another version on the map later doesn't change a running or ended fight. Empty when the map had no usable background |
+| `backgroundAssetId` | → [Asset](/domain/asset.md), nullable | The map's picked background, saved together with `layout`, the map's background placement and grid style when the encounter starts. Picking or placing another version on the map later doesn't change a running or ended fight. Empty when the map had no usable background |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the encounter |
 | `fog`, `fogVersion` | JSON document, nullable; int | Later: hidden cells and named areas ([fog of war](/features/fog-of-war.md)) |
+| `initiative`, `initiativeVersion` | JSON document, nullable; int | The session DM's initiative list in turn order, null while off; the version is raised by every change ([initiative](/features/initiative.md)) |
 
 # Contains
 
@@ -37,7 +38,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T21:55:33Z }
 
 - The session DM prepares the session's encounters: adds them, places creatures, marks them ready, archives them and moves them to another session they run. Other `dm` members see them read-only. Prepared encounters are visible only to `dm` members.
 - Maps stay campaign-wide: any `dm` member edits them ([battle map](/domain/battle-map.md)), which changes every draft and ready encounter on them.
-- Encounters are never deleted. The session DM archives one and can bring it back. An archived encounter can't be started.
+- The session DM archives an encounter and can bring it back. An archived encounter can't be started. Encounters aren't deleted one by one; deleting an archived map deletes its draft and ready encounters with it, and a map that an active or ended encounter uses can't be deleted ([battle map](/domain/battle-map.md), "Deleting").
 - **When the map changes:** draft and ready encounters use the current map. The editor marks creatures that now stand where they may not, and the encounter can't be marked ready or started until they're moved. Active and ended encounters keep their own copy of the layout and background.
 - Only the session DM starts and ends an encounter ([session](/domain/session.md)).
 - A session has at most one active encounter. Like the active session, it isn't stored as a column: it is the encounter with `status: active`, and a unique index allows at most one per session.

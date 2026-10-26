@@ -1,5 +1,6 @@
 // Battle maps in the browser (knowledge/domain/battle-map.md, "Map list, archive and
-// store"). Every change marks the map as not synced; nothing is ever deleted.
+// store"). Every change marks the map as not synced. Deleting needs the server, so it is in
+// the sync client (deleteMap).
 import type { OfflineDb } from '../offline/db'
 import { markChanged, newSyncState } from '../offline/sync'
 import { LOCAL_MAP_RECORD_VERSION, type EditorMap, type LocalMap } from './model'
@@ -54,11 +55,12 @@ export async function saveMap(db: OfflineDb, id: string, map: EditorMap): Promis
 export async function duplicateMap(db: OfflineDb, id: string, name: string): Promise<LocalMap> {
   const source = await db.maps.get(id)
   if (!source) throw new Error(`Map ${id} not found`)
-  const { name: _, width, height, layout, scene, vibe, lighting } = source
+  // The picked background stays with the server's map, so its placement stays behind too.
+  const { name: _, width, height, layout, scene, vibe, lighting, gridStyle = 'normal' } = source
   return createMap(
     db,
     source.campaignId,
-    { name, width, height, layout, scene, vibe, lighting },
+    { name, width, height, layout, scene, vibe, lighting, backgroundPlacement: null, gridStyle },
     id,
   )
 }

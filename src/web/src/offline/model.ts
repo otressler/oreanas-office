@@ -1,6 +1,13 @@
 // Creature types and encounters kept in the browser, next to the maps in editor/model.ts
 // (knowledge/decisions/offline-prep-pwa.md, "Items").
-import type { CreatureSize, EncounterMapCopy, EncounterStatus, SessionStatus } from '../api/types'
+import type {
+  CreatureSize,
+  EncounterMapCopy,
+  EncounterStatus,
+  FogDocument,
+  InitiativeRollMode,
+  SessionStatus,
+} from '../api/types'
 import type { SyncState } from './sync'
 
 export interface LocalCreatureType {
@@ -10,6 +17,10 @@ export interface LocalCreatureType {
   size: CreatureSize
   appearance: string
   notes: string
+  /** What the type's creatures roll initiative with (knowledge/features/initiative.md). Absent means 0. */
+  initiativeModifier?: number
+  /** Normal, advantage or disadvantage; absent means normal. */
+  initiativeRollMode?: InitiativeRollMode
   archivedAt: string | null
   createdAt: string
   updatedAt: string
@@ -28,6 +39,11 @@ export interface LocalCreatureToken {
   y: number
   /** Copied from the type when placed; changing the type later doesn't change it. */
   size: CreatureSize
+  /** Only the session DM sees it until revealed (fog of war). Absent means false. */
+  hidden?: boolean
+  /** This creature's own initiative modifier and roll mode; absent or null takes the type's. */
+  initiativeModifier?: number | null
+  initiativeRollMode?: InitiativeRollMode | null
 }
 
 export interface LocalEncounter {
@@ -42,6 +58,8 @@ export interface LocalEncounter {
   /** The session the fight is planned for and runs in; changes only while draft or ready. */
   sessionId: string
   mapCopy: EncounterMapCopy | null
+  /** The encounter's fog (fog of war); absent or null while fog is off. */
+  fog?: FogDocument | null
   createdAt: string
   updatedAt: string
   sync: SyncState

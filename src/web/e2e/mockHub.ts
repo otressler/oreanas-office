@@ -11,12 +11,14 @@ import { randomUUID } from 'node:crypto'
 import type { BrowserContext, WebSocketRoute } from '@playwright/test'
 import type { components } from '../src/api/schema.js'
 import type { MockBackend } from './mockBackend.ts'
+import { fogCall } from './mockFog.ts'
+import { initiativeCall } from './mockInitiative.ts'
 
 type S = components['schemas']
 
 const RS = '\u001e'
 
-interface Client {
+export interface Client {
   context: BrowserContext
   socket: WebSocketRoute
   handshaken: boolean
@@ -42,6 +44,14 @@ export class MockHub {
   down = false
   /** When set, every MoveToken is turned down with this code instead of being checked. */
   refuseMoves: S['ApiErrorCode'] | null = null
+  /**
+   * Hub methods that other specs' mocks answer or take over (spectatorMock.ts: WatchSession,
+   * and JoinEncounter for session spectators). The handler returns the invocation's result.
+   */
+  readonly handlers = new Map<
+    string,
+    (call: { client: Client; userId: string | null; args: unknown[] }) => unknown
+  >()
   private readonly clients = new Set<Client>()
   private readonly backend: MockBackend
 
@@ -87,6 +97,13 @@ export class MockHub {
     return result.move
   }
 
+  /** Who is connected changed: sent to every device joined to the encounter. */
+  presenceChanged(encounterId: string, presence: S['PresenceState']) {
+    const encounter = this.backend.encounters.find((e) => e.id === encounterId)
+    if (encounter) encounter.presence = presence
+    this.sendToEncounter(encounterId, 'PresenceChanged', { encounterId, presence })
+  }
+
   /** Drops every connection; with `down` they can't come back until it is false again. */
   dropAll({ down = true } = {}) {
     this.down = down
@@ -127,6 +144,12 @@ export class MockHub {
     const userId = this.backend.userId(client.context)
     const args = message.arguments ?? []
     this.calls.push({ context: client.context, method: message.target, args })
+    const custom = this.handlers.get(message.target)
+    if (custom) {
+      const handled = custom({ client, userId, args })
+      if (message.invocationId === undefined) return
+      return this.send(client, { type: 3, invocationId: message.invocationId, result: handled })
+    }
     let result: unknown
     switch (message.target) {
       case 'JoinEncounter': {
@@ -168,6 +191,19 @@ export class MockHub {
       case 'RemoveToken':
       case 'RestoreToken':
         result = this.statusOrRemoval(userId, message.target, args)
+        break
+      // ---- Fog, hidden creatures and spawn (stage 10, fog frontend lane): mockFog.ts ----
+      case 'ChangeFog':
+      case 'SetTokensHidden':
+      case 'SpawnCreatures':
+      case 'UndoChange':
+        result = fogCall(this.backend, this, userId, message.target, args)
+        break
+      // ---- The session DM's initiative list: mockInitiative.ts ----
+      case 'RollInitiative':
+      case 'SetInitiative':
+      case 'ClearInitiative':
+        result = initiativeCall(this.backend, this, userId, message.target, args)
         break
       default:
         throw new Error(`Unknown hub method ${message.target}`)
@@ -252,6 +288,18 @@ export class MockHub {
     }
   }
 
+  /**
+   * A server message built for each device joined to the encounter by who is on it (null to
+   * skip it): the fog filter sends the session DM and the players different events.
+   */
+  sendEach(encounterId: string, target: string, build: (userId: string | null) => unknown) {
+    for (const client of this.clients) {
+      if (client.encounterId !== encounterId) continue
+      const event = build(this.backend.userId(client.context))
+      if (event !== null) this.send(client, { type: 1, target, arguments: [event] })
+    }
+  }
+
   /** A server message to every device joined to the encounter. */
   private sendToEncounter(encounterId: string, target: string, event: unknown) {
     for (const client of this.clients) {
@@ -261,7 +309,8 @@ export class MockHub {
     }
   }
 
-  private send(client: Client, message: object) {
+  /** A raw hub message to one device. */
+  send(client: Client, message: object) {
     client.socket.send(JSON.stringify(message) + RS)
   }
 }

@@ -20,7 +20,7 @@ const text = {
   picked: 'Ausgewählt',
   spent: 'Diesen Monat: 0,47 $ von 20,00 $',
   offline:
-    'Hintergründe brauchen eine Verbindung: zum Erzeugen, für die Versionen und zum Auswählen.',
+    'Hintergründe brauchen eine Verbindung: zum Erzeugen, Hochladen, für die Versionen und zum Auswählen.',
 }
 
 const CAMPAIGN = 'Die Rabenküste'

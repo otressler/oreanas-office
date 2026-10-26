@@ -24,7 +24,7 @@ internal static class SyncItems
             .ToListAsync(cancellationToken);
         var encounters = await db.Encounters.AsNoTracking()
             .Where(e => e.CampaignId == campaignId && ids.Contains(e.Id))
-            .Include(e => e.Tokens.Where(t => t.Kind == TokenKind.Creature))
+            .Include(e => e.Tokens.Where(t => t.Kind == TokenKind.Creature)).ThenInclude(t => t.CreatureType)
             .ToListAsync(cancellationToken);
 
         var userIds = types.Select(t => t.UpdatedByUserId)
@@ -58,7 +58,8 @@ internal static class SyncItems
         type.UpdatedAt,
         updatedBy,
         null,
-        new SyncCreatureTypeData(type.Name, type.Size, type.Appearance, type.Notes, type.ArchivedAt),
+        new SyncCreatureTypeData(
+            type.Name, type.Size, type.Appearance, type.Notes, type.ArchivedAt, type.InitiativeModifier, type.InitiativeRollMode),
         null,
         null);
 
@@ -72,7 +73,8 @@ internal static class SyncItems
         null,
         null,
         new SyncMapData(
-            map.Name, map.Width, map.Height, map.Layout, map.Scene, map.Vibe, map.Lighting, map.ArchivedAt, map.CopiedFromMapId),
+            map.Name, map.Width, map.Height, map.Layout, map.Scene, map.Vibe, map.Lighting, map.ArchivedAt, map.CopiedFromMapId,
+            map.BackgroundPlacement, map.GridStyle),
         null);
 
     // Creature tokens only: character tokens exist once the encounter has started, and a
@@ -97,8 +99,18 @@ internal static class SyncItems
                     .Where(t => t.Kind == TokenKind.Creature)
                     .OrderBy(t => t.CreatedAt)
                     .ThenBy(t => t.Id)
-                    .Select(t => new SyncCreatureToken(t.Id, t.CreatureTypeId!.Value, t.Label ?? "", t.X, t.Y, t.Size)),
+                    .Select(t => new SyncCreatureToken(
+                        t.Id,
+                        t.CreatureTypeId!.Value,
+                        CreatureLabels.Display(t.CreatureType!.Name, t.Number, t.Label),
+                        t.X,
+                        t.Y,
+                        t.Size,
+                        t.Hidden,
+                        t.InitiativeModifier,
+                        t.InitiativeRollMode)),
             ],
             encounter.SessionId,
-            encounter.MapCopy));
+            encounter.MapCopy,
+            encounter.Fog));
 }

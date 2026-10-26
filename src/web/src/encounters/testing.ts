@@ -49,6 +49,7 @@ export function smallBoard(fields: Partial<BoardState> = {}): BoardState {
         imageUrl: null,
         color: null,
         statuses: [],
+        hidden: false,
       },
     ],
     isSessionDm: false,
@@ -56,6 +57,10 @@ export function smallBoard(fields: Partial<BoardState> = {}): BoardState {
     removedTokens: [],
     statuses: [],
     people: [],
+    viewer: 'dm',
+    fog: null,
+    playMode: 'byod',
+    presence: { people: [], sharedScreen: false },
     ...fields,
   }
 }
@@ -90,6 +95,8 @@ export function session(fields: Partial<Session> = {}): Session {
     activeEncounter: null,
     interruptedEncounter: null,
     encounters: [],
+    playMode: 'byod',
+    characterPlayers: [],
     ...fields,
   }
 }

@@ -1,6 +1,7 @@
-// Icons of creature types, portraits of characters and (stage 9) icons of custom statuses
-// from the server (knowledge/features/token-icons.md, knowledge/features/statuses.md
-// "Custom statuses"): one TanStack query per owner, the calls that change
+// Icons of creature types, portraits of characters, (stage 9) icons of custom statuses and
+// campaign covers from the server (knowledge/features/token-icons.md,
+// knowledge/features/statuses.md "Custom statuses", knowledge/domain/campaign.md): one
+// TanStack query per owner, the calls that change
 // them, the campaign's icon list for the bestiary, and the pure rules on top. Everything
 // here needs a connection; callers ask only while online.
 import { useQuery } from '@tanstack/react-query'
@@ -17,7 +18,10 @@ import { campaignKeys } from '../campaigns/queries'
 import { useOnline } from '../editor/encounter/useOnline'
 import { statusKeys } from '../statuses/queries'
 
-/** Whose icon or portrait: a creature type's, a character's or a custom status's. */
+/**
+ * Whose icon, portrait or cover: a creature type's, a character's, a custom status's, or a
+ * campaign's (its id is the campaign's).
+ */
 export interface TokenImageOwner {
   type: TokenImageOwnerType
   id: string
@@ -30,7 +34,8 @@ export const creatureIconsKey = (campaignId: string) => ['creature-icons', campa
 
 /**
  * What else shows the owner's picked image and must be asked for again after a pick: the
- * character list, the bestiary's icons, or (custom statuses, stage 9) the status lists.
+ * character list, the bestiary's icons, (custom statuses, stage 9) the status lists, or the
+ * campaign and the home page's cards.
  */
 export function pickedImageKeys(campaignId: string, owner: TokenImageOwner) {
   switch (owner.type) {
@@ -40,6 +45,8 @@ export function pickedImageKeys(campaignId: string, owner: TokenImageOwner) {
       return [creatureIconsKey(campaignId)]
     case 'status':
       return [statusKeys.campaign(campaignId)]
+    case 'campaign':
+      return [campaignKeys.detail(campaignId), campaignKeys.list]
   }
 }
 
@@ -63,13 +70,17 @@ export function fetchTokenImages(campaignId: string, owner: TokenImageOwner): Pr
           params: { path: { campaignId, statusId: owner.id } },
         }),
       )
+    case 'campaign':
+      return unwrap(
+        api.GET('/api/campaigns/{campaignId}/covers', { params: { path: { campaignId } } }),
+      )
   }
 }
 
 /**
  * Queues a job, only after a person confirmed it. Creature types send the version they
  * were synced at (`itemVersion`); characters may name an uploaded version to restyle.
- * Custom statuses send nothing.
+ * Custom statuses and campaigns send nothing.
  */
 export function generateTokenImage(
   campaignId: string,
@@ -98,10 +109,17 @@ export function generateTokenImage(
           body,
         }),
       )
+    case 'campaign':
+      return unwrap(
+        api.POST('/api/campaigns/{campaignId}/covers', { params: { path: { campaignId } }, body }),
+      )
   }
 }
 
-/** Picks a done version, or (null) none: the token (or status) shows its letter. */
+/**
+ * Picks a done version, or (null) none: the token (or status) shows its letter, a campaign
+ * the default cover.
+ */
 export async function pickTokenImage(
   campaignId: string,
   owner: TokenImageOwner,
@@ -131,21 +149,46 @@ export async function pickTokenImage(
           body: { assetId },
         }),
       )
+      return
+    case 'campaign':
+      await unwrap(
+        api.PUT('/api/campaigns/{campaignId}/cover', {
+          params: { path: { campaignId } },
+          body: { assetId },
+        }),
+      )
+  }
+}
+
+/** Where a picture for the owner is uploaded; custom statuses only generate their icons. */
+function uploadPath(owner: TokenImageOwner): string {
+  const id = encodeURIComponent(owner.id)
+  switch (owner.type) {
+    case 'character':
+      return `characters/${id}/portraits/upload`
+    case 'creatureType':
+      return `creature-types/${id}/icons/upload`
+    case 'status':
+      throw new Error('Status icons cannot be uploaded.')
+    case 'campaign':
+      return 'covers/upload'
   }
 }
 
 /**
- * Uploads a picture as the character's portrait: the raw body with its type, not a form.
- * The server answers with the new version, already done and picked.
+ * Uploads a picture as the character's portrait, the creature type's icon or the campaign's
+ * cover: the raw body with its type, not a form. The server answers with the new version, already done and
+ * picked.
  */
-export async function uploadPortrait(
+export async function uploadTokenImage(
   campaignId: string,
-  characterId: string,
+  owner: TokenImageOwner,
   picture: Blob,
 ): Promise<TokenImage> {
   const base = globalThis.location?.origin ?? ''
+  const path = uploadPath(owner)
   const response = await globalThis.fetch(
-    `${base}/api/campaigns/${encodeURIComponent(campaignId)}/characters/${encodeURIComponent(characterId)}/portraits/upload`,
+    `${base}/api/campaigns/${encodeURIComponent(campaignId)}/${path}`,
     {
       method: 'POST',
       body: picture,

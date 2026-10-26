@@ -33,6 +33,13 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T21:55:33Z }
 - The session DM plans the session: adds fights, edits and archives them, moves draft and ready fights to another planned or running session they run, and edits the title and date. Other `dm` members, the default DM included, see the planned fights but don't change them. When the DM role is handed over, the new DM takes over the fights. Fights are added only to planned and running sessions; an ended one must be continued first.
 - Only the session DM can start and end encounters, move creature tokens and other players' characters, and see hidden tokens.
 - Everyone else in the campaign is a player for this session, including the default DM and other `dm` members. The campaign role doesn't grant any action at the table.
+- The session DM decides who plays which character in the session (see below).
+
+# Who plays which character
+
+Added on 2026-10-24, draft. By default a character's owner plays it ([character](/domain/character.md), "Who plays it"). The session DM can hand a character to any other member of the campaign for this session only, and give it back to its owner, while the session is planned or running; an ended session must be continued first. Each hand-over is a **session character player** entry: `sessionId`, `characterId`, `userId`, at most one per character and session. Giving a character back to its owner removes the entry, so the session follows the campaign again, including a later change of owner. Other sessions aren't affected.
+
+Everyone in the campaign sees on the session page who plays which character in the session ("Wer spielt wen"); the session DM changes it there. A running fight of the session reloads its boards on every change.
 
 # Spectators (stage 10)
 

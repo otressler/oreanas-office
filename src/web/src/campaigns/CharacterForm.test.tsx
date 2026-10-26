@@ -8,7 +8,7 @@ import { json, mockApi } from '../test/api'
 import { fakeImages } from '../editor/background/testing'
 import { de } from '../text/de'
 import { tokenImage, tokenImagesOf } from '../tokenImages/testing'
-import { CharacterForm } from './CharacterForm'
+import { CharacterForm, type OwnerChoice } from './CharacterForm'
 
 // The factory must not import the fake hub's module: that pulls in the app's routes, which
 // import this module again and would wait on themselves.
@@ -24,14 +24,23 @@ beforeEach(() => {
   fakeImages.hub.reset()
 })
 
-function renderForm(character?: Character) {
+function renderForm(character?: Character, owners?: OwnerChoice) {
   const onDone = vi.fn()
   render(
     <QueryClientProvider client={createQueryClient()}>
-      <CharacterForm campaignId={CAMPAIGN} character={character} onDone={onDone} />
+      <CharacterForm campaignId={CAMPAIGN} character={character} owners={owners} onDone={onDone} />
     </QueryClientProvider>,
   )
   return onDone
+}
+
+/** What a `dm` member gets: the campaign's members to give characters to. */
+const OWNERS: OwnerChoice = {
+  me: 'u-dm',
+  members: [
+    { userId: 'u-dm', displayName: 'Oreana', role: 'dm', joinedAt: '2026-10-01T00:00:00Z' },
+    { userId: 'u1', displayName: 'Mira', role: 'player', joinedAt: '2026-10-02T00:00:00Z' },
+  ],
 }
 
 describe('CharacterForm', () => {
@@ -91,6 +100,62 @@ describe('CharacterForm', () => {
     const put = calls.find((c) => c.method === 'PUT')
     expect(put?.path).toBe(`/api/campaigns/${CAMPAIGN}/characters/ch1`)
     expect(put?.body).toEqual({ name: 'Brom', size: 'large', appearance: '', color: null })
+  })
+
+  it('shows players no owner field and sends no owner', async () => {
+    const calls = mockApi({
+      'POST /api/campaigns/:id/characters': (call) => json(201, call.body),
+    })
+    const onDone = renderForm()
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText(de.characters.name), 'Brom')
+    expect(screen.queryByLabelText(de.characters.ownerField)).toBeNull()
+    await user.click(screen.getByRole('button', { name: de.common.create }))
+
+    await vi.waitFor(() => expect(onDone).toHaveBeenCalled())
+    expect(calls.find((c) => c.method === 'POST')?.body).not.toHaveProperty('ownerUserId')
+  })
+
+  it('lets a dm create a character for a player', async () => {
+    const calls = mockApi({
+      'POST /api/campaigns/:id/characters': (call) => json(201, call.body),
+    })
+    const onDone = renderForm(undefined, OWNERS)
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText(de.characters.name), 'Brom')
+    // A new character is the DM's own until someone else is picked.
+    expect(screen.getByLabelText(de.characters.ownerField)).toHaveValue('u-dm')
+    await user.selectOptions(screen.getByLabelText(de.characters.ownerField), 'Mira')
+    await user.click(screen.getByRole('button', { name: de.common.create }))
+
+    await vi.waitFor(() => expect(onDone).toHaveBeenCalled())
+    expect(calls.find((c) => c.method === 'POST')?.body).toMatchObject({ ownerUserId: 'u1' })
+  })
+
+  it('lets a dm give an existing character to another member', async () => {
+    const calls = mockApi({
+      'PUT /api/campaigns/:id/characters/:characterId': (call) => json(200, call.body),
+    })
+    const character: Character = {
+      id: 'ch1',
+      ownerUserId: 'u1',
+      ownerDisplayName: 'Mira',
+      colorIndex: 0,
+      color: null,
+      appearance: '',
+      portraitUrl: null,
+      name: 'Brom',
+      size: 'medium',
+      canEdit: true,
+    }
+    const onDone = renderForm(character, OWNERS)
+    const user = userEvent.setup()
+    expect(screen.getByLabelText(de.characters.ownerField)).toHaveValue('u1')
+    await user.selectOptions(screen.getByLabelText(de.characters.ownerField), 'Oreana')
+    await user.click(screen.getByRole('button', { name: de.common.save }))
+
+    await vi.waitFor(() => expect(onDone).toHaveBeenCalled())
+    expect(calls.find((c) => c.method === 'PUT')?.body).toMatchObject({ ownerUserId: 'u-dm' })
   })
 
   it('saves a typed colour code as #rrggbb in lower case', async () => {

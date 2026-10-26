@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import '@fontsource-variable/cinzel'
 import './index.css'
 import App from './App.tsx'
 import { listenForInstall } from './pwa/install'

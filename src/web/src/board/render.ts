@@ -518,10 +518,10 @@ export function drawGrid(
   ctx: CanvasRenderingContext2D,
   scene: MapScene,
   dpr: number,
-  { onPicture = false }: { onPicture?: boolean } = {},
+  { onPicture = false, strength = 1 }: { onPicture?: boolean; strength?: number } = {},
 ): void {
   const m = ctx.getTransform()
-  const alpha = gridAlpha(m.a * CELL, dpr)
+  const alpha = gridAlpha(m.a * CELL, dpr) * strength
   if (alpha <= 0) return
   const { width: cw, height: ch } = ctx.canvas
   const sx = (cellX: number) => Math.round(m.a * cellX * CELL + m.e)
@@ -630,7 +630,12 @@ export interface TokenDrawOptions {
   statuses?: StatusLook
   /** Tokens fading in or out, with their opacity (0–1); the rest are opaque. */
   alpha?: ReadonlyMap<string, number>
+  /** Tokens drawn see-through without a mark: spawn previews (knowledge/features/creature-spawn.md). */
+  faint?: ReadonlySet<string>
 }
+
+/** How see-through a hidden creature or a spawn preview is drawn. */
+const SEE_THROUGH = 0.5
 
 /** Someone else's move preview: the token's target top-left cell. */
 export interface MoveArrow {
@@ -767,6 +772,39 @@ function drawNumberBadge(
   ctx.textBaseline = 'middle'
   ctx.fillStyle = PARCHMENT
   ctx.fillText(number, x, y + radius * 0.06)
+}
+
+/** A closed eye on a dark disc at the token's upper right: "only the DM sees this creature". */
+export function drawHiddenMark(
+  ctx: CanvasRenderingContext2D,
+  token: { x: number; y: number },
+  n: number,
+  cssScale: number,
+): void {
+  const radius = Math.max(CELL * 0.17, 9 / cssScale)
+  const cx = (token.x + n) * CELL - radius * 1.05
+  const cy = token.y * CELL + radius * 1.05
+  ctx.save()
+  ctx.globalAlpha = 1
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+  ctx.fillStyle = 'rgba(10, 11, 14, 0.92)'
+  ctx.fill()
+  ctx.strokeStyle = '#ece6d8'
+  ctx.lineWidth = Math.max(1.5 / cssScale, CELL * 0.025)
+  ctx.lineCap = 'round'
+  ctx.stroke()
+  // The closed lid: an arc curving downwards, with three lashes under it.
+  const w = radius * 0.62
+  ctx.beginPath()
+  ctx.moveTo(cx - w, cy - radius * 0.1)
+  ctx.quadraticCurveTo(cx, cy + radius * 0.5, cx + w, cy - radius * 0.1)
+  for (const k of [-0.55, 0, 0.55]) {
+    ctx.moveTo(cx + k * w, cy + radius * 0.18 + Math.abs(k) * -radius * 0.08)
+    ctx.lineTo(cx + k * w * 1.15, cy + radius * 0.5)
+  }
+  ctx.stroke()
+  ctx.restore()
 }
 
 /** The stack badge's radius in world units. */
@@ -956,6 +994,7 @@ export function drawTokens(
     images,
     statuses,
     alpha,
+    faint,
   }: TokenDrawOptions,
 ): void {
   ctx.save()
@@ -965,14 +1004,18 @@ export function drawTokens(
     if (count) drawStackBadge(ctx, token, count, cssScale)
     if (statuses) drawStatusBadges(ctx, token, statuses, !!count, cssScale)
   }
+  // A hidden creature (only the session DM has it) and a spawn preview are see-through.
   const faded = (token: BoardToken, draw: () => void) => {
-    const opacity = alpha?.get(token.id)
-    if (opacity === undefined) return draw()
+    const fade = alpha?.get(token.id)
+    const seeThrough = token.hidden || faint?.has(token.id)
+    if (fade === undefined && !seeThrough) return draw()
+    const opacity = (fade ?? 1) * (seeThrough ? SEE_THROUGH : 1)
     if (opacity <= 0) return
     ctx.save()
     ctx.globalAlpha = opacity
     draw()
     ctx.restore()
+    if (token.hidden) drawHiddenMark(ctx, token, footprint(token.size), cssScale)
   }
   let selected: BoardToken | undefined
   for (const token of tokens) {

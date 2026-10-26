@@ -1,8 +1,8 @@
 // Stage 8: token icons and portraits. A DM generates a creature icon from the editor's
-// bestiary after confirming it; a player uploads a portrait through the crop step and sees
+// bestiary after confirming it, or uploads one through the crop step; a player uploads a portrait through the crop step and sees
 // it in the characters panel; a board with an image token draws without errors.
 import { fileURLToPath } from 'node:url'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 import { MockBackend, sampleMap } from './mockBackend.ts'
 import { MockHub, MockImageHub } from './mockHub.ts'
 
@@ -18,6 +18,7 @@ const text = {
   upload: 'Bild hochladen',
   cropTitle: 'Bildausschnitt wählen',
   cropOk: 'Hochladen',
+  restyle: 'Im Token-Stil umwandeln',
   uploaded: 'Das Bild ist hochgeladen und ausgewählt.',
   portraitAlt: 'Porträt: Brom',
 }
@@ -45,12 +46,8 @@ function watchErrors(page: Page): string[] {
   return errors
 }
 
-test('a DM generates a creature icon in the editor after confirming, and it is picked', async ({
-  page,
-  context,
-  isMobile,
-}) => {
-  test.skip(isMobile, 'The editor is for laptops')
+/** Creates a map and the creature type Goblin in the editor, and opens its icon section. */
+async function openGoblinIcon(page: Page, context: BrowserContext) {
   const jennie = backend.addUser({ displayName: 'Jennie', email: 'jennie@example.org' })
   const campaign = backend.addCampaign(CAMPAIGN, jennie)
   backend.addSession(campaign, jennie, 'planned')
@@ -85,6 +82,16 @@ test('a DM generates a creature icon in the editor after confirming, and it is p
   // The editor's own sync can win the race and replace the button while it is clicked.
   if (await syncNow.isVisible()) await syncNow.click({ timeout: 3000 }).catch(() => {})
   await expect(generate).toBeEnabled()
+  return { icon, generate }
+}
+
+test('a DM generates a creature icon in the editor after confirming, and it is picked', async ({
+  page,
+  context,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'The editor is for laptops')
+  const { icon, generate } = await openGoblinIcon(page, context)
 
   // Nothing happens before the confirm.
   await generate.click()
@@ -105,6 +112,37 @@ test('a DM generates a creature icon in the editor after confirming, and it is p
   // The bestiary's row shows the icon too.
   await page.getByRole('button', { name: 'Abbrechen' }).first().click()
   await expect(page.getByRole('img', { name: text.iconAlt })).toBeVisible()
+})
+
+test('a DM uploads a creature icon through the crop step, and it is picked', async ({
+  page,
+  context,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'The editor is for laptops')
+  const errors = watchErrors(page)
+  const { icon } = await openGoblinIcon(page, context)
+
+  await icon.getByTestId('portrait-file').setInputFiles(PICTURE)
+  const crop = page.getByRole('dialog', { name: text.cropTitle })
+  await expect(crop.getByTestId('crop-box').getByRole('img')).toBeVisible()
+  await crop.getByRole('button', { name: text.cropOk }).click()
+
+  await expect(crop).toBeHidden()
+  await expect(icon.getByText(text.uploaded)).toBeVisible()
+  expect(backend.tokenImages).toHaveLength(1)
+  const uploaded = backend.tokenImages[0]!
+  expect(uploaded).toMatchObject({
+    contentType: 'image/jpeg',
+    image: { ownerType: 'creatureType', origin: 'uploaded', status: 'done' },
+  })
+  expect(backend.pickedTokenImages.get(uploaded.image.ownerId)).toBe(uploaded.image.id)
+  // Creature icons can't be restyled.
+  await expect(icon.getByRole('button', { name: text.restyle })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Abbrechen' }).first().click()
+  await expect(page.getByRole('img', { name: text.iconAlt })).toBeVisible()
+  expect(errors).toEqual([])
 })
 
 test('a player uploads a portrait through the crop step and sees it in the list', async ({

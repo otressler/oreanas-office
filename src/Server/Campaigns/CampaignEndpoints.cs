@@ -5,6 +5,7 @@ using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Encounters;
+using OreanasOffice.Server.Images;
 using OreanasOffice.Server.Sessions;
 
 namespace OreanasOffice.Server.Campaigns;
@@ -26,6 +27,7 @@ public static class CampaignEndpoints
 
         var campaign = campaigns.MapGroup("/{campaignId:guid}");
         campaign.MapGet("/", GetCampaign).RequireAuthorization(Policies.CampaignMember);
+        campaign.MapPut("/", UpdateCampaign).RequireAuthorization(Policies.CampaignDm);
         campaign.MapPost("/join-code", ReplaceJoinCode).RequireAuthorization(Policies.CampaignDm);
         campaign.MapPost("/members/{userId:guid}/promote", PromoteMember).RequireAuthorization(Policies.CampaignDm);
 
@@ -36,9 +38,9 @@ public static class CampaignEndpoints
         ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken)
     {
         var userId = user.GetUserId();
-        var campaigns = await Summaries(db.CampaignMembers.Where(m => m.UserId == userId).OrderBy(m => m.Campaign.Name))
+        var rows = await Summaries(db.CampaignMembers.Where(m => m.UserId == userId).OrderBy(m => m.Campaign.Name))
             .ToListAsync(cancellationToken);
-        return TypedResults.Ok(campaigns);
+        return TypedResults.Ok(await WithCharactersAsync(db, rows, userId, cancellationToken));
     }
 
     // The creator becomes the default DM and a member with role `dm`.
@@ -112,14 +114,41 @@ public static class CampaignEndpoints
             }
         }
 
-        var summary = await Summaries(db.CampaignMembers.Where(m => m.CampaignId == id && m.UserId == userId))
+        var row = await Summaries(db.CampaignMembers.Where(m => m.CampaignId == id && m.UserId == userId))
             .SingleAsync(cancellationToken);
-        return TypedResults.Ok(summary);
+        return TypedResults.Ok((await WithCharactersAsync(db, [row], userId, cancellationToken))[0]);
     }
 
     private static async Task<Ok<CampaignResponse>> GetCampaign(
         Guid campaignId, ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken) =>
         TypedResults.Ok(await LoadCampaignAsync(db, campaignId, user.GetUserId(), cancellationToken));
+
+    // Name and description; the cover has its own endpoints (CampaignCoverEndpoints).
+    private static async Task<Results<Ok<CampaignResponse>, BadRequest<ApiError>>> UpdateCampaign(
+        Guid campaignId,
+        UpdateCampaignRequest request,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        CancellationToken cancellationToken)
+    {
+        var name = request.Name?.Trim();
+        if (string.IsNullOrEmpty(name) || name.Length > Campaign.NameMaxLength)
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.NameInvalid, "name"));
+        }
+
+        var description = request.Description?.Trim();
+        if (description?.Length > Campaign.DescriptionMaxLength)
+        {
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.DescriptionInvalid, "description"));
+        }
+
+        var campaign = await db.Campaigns.SingleAsync(c => c.Id == campaignId, cancellationToken);
+        campaign.Name = name;
+        campaign.Description = string.IsNullOrEmpty(description) ? null : description;
+        await db.SaveChangesAsync(cancellationToken);
+        return TypedResults.Ok(await LoadCampaignAsync(db, campaignId, user.GetUserId(), cancellationToken));
+    }
 
     // The old code stops working at once.
     private static async Task<Ok<JoinCodeResponse>> ReplaceJoinCode(
@@ -173,13 +202,15 @@ public static class CampaignEndpoints
     }
 
     // Constructor projections can't be filtered or sorted afterwards, so callers
-    // narrow the memberships first.
-    private static IQueryable<CampaignSummaryResponse> Summaries(IQueryable<CampaignMember> memberships) =>
+    // narrow the memberships first. WithCharactersAsync completes the rows.
+    private static IQueryable<SummaryRow> Summaries(IQueryable<CampaignMember> memberships) =>
         memberships
-            .Select(m => new CampaignSummaryResponse(
+            .Select(m => new SummaryRow(
                 m.CampaignId,
                 m.Campaign.Name,
                 m.Role,
+                m.Campaign.Description,
+                m.Campaign.CoverAssetId,
                 m.Campaign.Sessions
                     .Where(s => s.Status == SessionStatus.Active)
                     .Select(s => new ActiveSessionSummary(
@@ -194,6 +225,46 @@ public static class CampaignEndpoints
                             .FirstOrDefault()))
                     .FirstOrDefault()));
 
+    private sealed record SummaryRow(
+        Guid Id, string Name, CampaignRole MyRole, string? Description, Guid? CoverAssetId, ActiveSessionSummary? ActiveSession);
+
+    // The rows with their cards' characters, in one query for all campaigns. The colour index
+    // counts in the order characters were added, like CampaignQueries.CharacterColorIndexesAsync.
+    private static async Task<List<CampaignSummaryResponse>> WithCharactersAsync(
+        AppDbContext db, List<SummaryRow> rows, Guid userId, CancellationToken cancellationToken)
+    {
+        var ids = rows.Select(r => r.Id).ToList();
+        var characters = (await db.Characters.AsNoTracking()
+                .Where(c => ids.Contains(c.CampaignId))
+                .OrderBy(c => c.CreatedAt)
+                .ThenBy(c => c.Id)
+                .Select(c => new { c.CampaignId, c.Id, c.Name, c.Color, c.TokenAssetId, c.OwnerUserId })
+                .ToListAsync(cancellationToken))
+            .ToLookup(c => c.CampaignId);
+
+        return
+        [
+            .. rows.Select(row => new CampaignSummaryResponse(
+                row.Id,
+                row.Name,
+                row.MyRole,
+                row.ActiveSession,
+                row.Description,
+                row.CoverAssetId is { } cover ? MapBackgrounds.Url(cover) : null,
+                [
+                    .. characters[row.Id]
+                        .Select((c, index) => new CampaignCharacterSummary(
+                            c.Id,
+                            c.Name,
+                            index,
+                            c.Color,
+                            c.TokenAssetId is { } portrait ? MapBackgrounds.Url(portrait) : null,
+                            c.OwnerUserId == userId))
+                        .OrderBy(c => c.Mine ? 0 : 1),
+                ])),
+        ];
+    }
+
     // Only for members; the CampaignMember policy has checked that.
     private static async Task<CampaignResponse> LoadCampaignAsync(
         AppDbContext db, Guid campaignId, Guid userId, CancellationToken cancellationToken)
@@ -206,6 +277,8 @@ public static class CampaignEndpoints
                 c.Name,
                 c.DefaultDmUserId,
                 c.JoinCode,
+                c.Description,
+                c.CoverAssetId,
                 MyRole = c.Members.Where(m => m.UserId == userId).Select(m => m.Role).First(),
                 ActiveSessionId = c.Sessions
                     .Where(s => s.Status == SessionStatus.Active)
@@ -228,6 +301,8 @@ public static class CampaignEndpoints
             campaign.MyRole,
             campaign.MyRole == CampaignRole.Dm ? campaign.JoinCode : null,
             campaign.ActiveSessionId,
-            members);
+            members,
+            campaign.Description,
+            campaign.CoverAssetId is { } cover ? MapBackgrounds.Url(cover) : null);
     }
 }

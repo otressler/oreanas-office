@@ -1,11 +1,11 @@
 // Creates a character, or edits one: name, size, ring colour and the appearance that
-// feeds the portrait prompt. An existing character the user may edit also shows its portraits
+// feeds the portrait prompt; for `dm` members also whom it belongs to. An existing character the user may edit also shows its portraits
 // (knowledge/features/token-icons.md), outside the form element.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useId, useState, type FormEvent } from 'react'
 import { api } from '../api/client'
 import { errorMessage, unwrap } from '../api/errors'
-import type { Character, CharacterRequest, CreatureSize } from '../api/types'
+import type { Character, CharacterRequest, CreatureSize, Member } from '../api/types'
 import { CHARACTER_RINGS, defaultRingColor, parseHexColor, ringColor } from '../board/palette'
 import { Button, ErrorAlert, SelectField, TextField } from '../components/ui'
 import { inputClass } from '../components/styles'
@@ -20,14 +20,25 @@ export const CHARACTER_APPEARANCE_MAX = 500
 
 const t = de.characters
 
+/**
+ * Whom a character can be given to: only `dm` members get the field
+ * (knowledge/domain/character.md). `me` owns a new character unless another is picked.
+ */
+export interface OwnerChoice {
+  members: Member[]
+  me: string
+}
+
 /** Creates a character, or edits one when `character` is given. */
 export function CharacterForm({
   campaignId,
   character,
+  owners,
   onDone,
 }: {
   campaignId: string
   character?: Character
+  owners?: OwnerChoice
   onDone: () => void
 }) {
   const queryClient = useQueryClient()
@@ -38,6 +49,7 @@ export function CharacterForm({
   const [appearance, setAppearance] = useState(character?.appearance ?? '')
   const [color, setColor] = useState(character?.color ?? '')
   const [colorTouched, setColorTouched] = useState(false)
+  const [owner, setOwner] = useState(character?.ownerUserId ?? owners?.me ?? '')
   // Empty means the default colour; anything else must be a hex code.
   const pickedColor = parseHexColor(color)
   const colorInvalid = color.trim() !== '' && pickedColor === null
@@ -64,6 +76,8 @@ export function CharacterForm({
     size,
     appearance: appearance.trim(),
     color: pickedColor,
+    // Without the field the server keeps the owner, or makes a new character the user's.
+    ...(owners && { ownerUserId: owner }),
   })
 
   function submit(event: FormEvent) {
@@ -83,7 +97,8 @@ export function CharacterForm({
       body.name !== character.name ||
       body.size !== character.size ||
       body.appearance !== character.appearance ||
-      body.color !== character.color
+      body.color !== character.color ||
+      (body.ownerUserId ?? character.ownerUserId) !== character.ownerUserId
     if (changed) {
       if (!body.name) return { error: de.errors.nameInvalid }
       if (colorInvalid) return { error: de.errors.colorInvalid }
@@ -123,6 +138,7 @@ export function CharacterForm({
             </option>
           ))}
         </SelectField>
+        {owners && <OwnerField members={owners.members} value={owner} onChange={setOwner} />}
         <ColorField
           value={color}
           fallback={character ? defaultRingColor(character.colorIndex) : null}
@@ -168,15 +184,52 @@ export function CharacterForm({
             campaignId={campaignId}
             owner={{ type: 'character', id: character.id }}
             name={character.name}
-            ring={ringColor({ kind: 'character', colorIndex: character.colorIndex, color: pickedColor })}
+            ring={ringColor({
+              kind: 'character',
+              colorIndex: character.colorIndex,
+              color: pickedColor,
+            })}
             generateLabel={t.portrait.generate}
             regenerateLabel={t.portrait.regenerate}
             generateHint={appearance.trim() ? null : t.portrait.needsAppearance}
             prepare={prepare}
             uploads
+            restyles
           />
         </section>
       )}
+    </div>
+  )
+}
+
+/** Whom the character belongs to, picked from the campaign's members. */
+function OwnerField({
+  members,
+  value,
+  onChange,
+}: {
+  members: Member[]
+  value: string
+  onChange: (value: string) => void
+}) {
+  const hintId = useId()
+  return (
+    <div className="flex flex-col gap-1">
+      <SelectField
+        label={t.ownerField}
+        value={value}
+        aria-describedby={hintId}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {members.map((member) => (
+          <option key={member.userId} value={member.userId}>
+            {member.displayName}
+          </option>
+        ))}
+      </SelectField>
+      <p id={hintId} className="text-sm text-dim">
+        {t.ownerHint}
+      </p>
     </div>
   )
 }

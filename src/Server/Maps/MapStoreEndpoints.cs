@@ -96,9 +96,10 @@ public static class MapStoreEndpoints
             }
             else
             {
-                // A copy takes name, size, layout, scene, vibe, lighting and the picked
-                // background while it fits (the same asset, not a copy of the image);
-                // encounters and creatures stay behind. A revived copy keeps its own.
+                // A copy takes name, size, layout, scene, vibe, lighting, the grid style and
+                // the picked background while it fits (the same asset, not a copy of the
+                // image) with its placement; encounters and creatures stay behind. A revived
+                // copy keeps its own.
                 var background = await MapBackgrounds.UsableAsync(
                     db, source.BackgroundAssetId, (source.Width, source.Height), cancellationToken);
                 copy = db.BattleMaps.Add(new BattleMap
@@ -115,6 +116,8 @@ public static class MapStoreEndpoints
                     CreatedAt = now,
                     CopiedFromMapId = mapId,
                     BackgroundAssetId = background?.Id,
+                    BackgroundPlacement = background is null ? null : source.BackgroundPlacement,
+                    GridStyle = source.GridStyle,
                 }).Entity;
             }
 

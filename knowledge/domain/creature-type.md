@@ -16,8 +16,10 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `name` | string | e.g. "Goblin" |
 | `size` | enum | Sets the token footprint ([creature size](/rules/creature-size.md)) |
 | `appearance` | text | Short visual description that feeds the icon prompt |
-| `iconAssetId` | → [Asset](/domain/asset.md), nullable | The picked icon version. Regenerating adds versions to pick from ([token icons](/features/token-icons.md)) |
+| `iconAssetId` | → [Asset](/domain/asset.md), nullable | The picked icon version. Generating or uploading adds versions to pick from ([token icons](/features/token-icons.md)) |
 | `notes` | text | DM-only notes |
+| `initiativeModifier` | int | Added to the d20 when its creatures roll initiative, −10 to +20, default 0 ([initiative](/features/initiative.md)) |
+| `initiativeRollMode` | enum `normal` \| `advantage` \| `disadvantage` | How its creatures roll initiative: one d20, or two keeping the higher or the lower; default `normal` |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the type. Archived types can't be picked for new tokens; placed tokens keep them. Types are never deleted and can be brought back |
 
 # Notes

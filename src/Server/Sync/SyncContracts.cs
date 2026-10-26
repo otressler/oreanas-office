@@ -31,8 +31,19 @@ public enum SyncOutcome
 // The data of each kind, as a device pushes it and the server sends it back.
 public record SyncCampaignData(string Name);
 
-public record SyncCreatureTypeData(string Name, CreatureSize Size, string Appearance, string Notes, DateTimeOffset? ArchivedAt);
+// InitiativeModifier and InitiativeRollMode: what the type's creatures roll initiative with
+// (knowledge/features/initiative.md); older devices leave them out.
+public record SyncCreatureTypeData(
+    string Name,
+    CreatureSize Size,
+    string Appearance,
+    string Notes,
+    DateTimeOffset? ArchivedAt,
+    int InitiativeModifier = 0,
+    InitiativeRollMode InitiativeRollMode = InitiativeRollMode.Normal);
 
+// BackgroundPlacement and GridStyle: the DM's adjustment of the picked background and how
+// the grid is drawn over it (knowledge/domain/battle-map.md); older devices leave them out.
 public record SyncMapData(
     string Name,
     int Width,
@@ -42,7 +53,9 @@ public record SyncMapData(
     string Vibe,
     string Lighting,
     DateTimeOffset? ArchivedAt,
-    Guid? CopiedFromMapId);
+    Guid? CopiedFromMapId,
+    BackgroundPlacement? BackgroundPlacement = null,
+    MapGridStyle GridStyle = MapGridStyle.Normal);
 
 // Status: a device pushes only Draft or Ready. SessionId: the session the fight is planned
 // for; a different one moves it (knowledge/domain/session.md).
@@ -52,10 +65,23 @@ public record SyncEncounterData(
     EncounterStatus Status,
     DateTimeOffset? ArchivedAt,
     List<SyncCreatureToken> Tokens,
-    Guid SessionId);
+    Guid SessionId,
+    FogDocument? Fog = null);
 
 // Elevation is not pushed: the server takes the highest elevation under the footprint.
-public record SyncCreatureToken(Guid Id, Guid CreatureTypeId, string Label, int X, int Y, CreatureSize Size);
+// Hidden: only the session DM sees it until revealed (knowledge/features/fog-of-war.md).
+// InitiativeModifier and InitiativeRollMode: this creature's own; null takes the type's
+// (knowledge/features/initiative.md).
+public record SyncCreatureToken(
+    Guid Id,
+    Guid CreatureTypeId,
+    string Label,
+    int X,
+    int Y,
+    CreatureSize Size,
+    bool Hidden = false,
+    int? InitiativeModifier = null,
+    InitiativeRollMode? InitiativeRollMode = null);
 
 // What the server sends back for an encounter: the pushed fields plus the server-only ones.
 public record SyncEncounterServerData(
@@ -65,7 +91,8 @@ public record SyncEncounterServerData(
     DateTimeOffset? ArchivedAt,
     List<SyncCreatureToken> Tokens,
     Guid SessionId,
-    EncounterMapCopy? MapCopy);
+    EncounterMapCopy? MapCopy,
+    FogDocument? Fog = null);
 
 // POST /api/sync/push. Items are handled in request order, each in its own transaction.
 public record SyncPushRequest(List<SyncPushItem> Items);

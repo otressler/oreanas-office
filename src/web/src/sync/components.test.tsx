@@ -7,7 +7,7 @@ import { offlineDb } from '../offline/db'
 import { newSyncState } from '../offline/sync'
 import { renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
-import { fakeServer, serverMap, type FakeServer } from './testing'
+import { NO_CARD, fakeServer, serverMap, type FakeServer } from './testing'
 import { resetSyncState } from './state'
 
 const t = de.sync
@@ -26,7 +26,7 @@ beforeEach(() => {
   resetSyncState()
   server = fakeServer()
   server.campaigns = [
-    { id: CAMPAIGN_ID, name: 'Die Rabenküste', myRole: 'dm', activeSession: null },
+    { id: CAMPAIGN_ID, name: 'Die Rabenküste', myRole: 'dm', activeSession: null, ...NO_CARD },
   ]
 })
 
@@ -276,7 +276,8 @@ describe('campaigns made offline', () => {
     })
     renderApp('/')
 
+    // The mark sits over the card's cover, next to the role.
     const link = await screen.findByRole('link', { name: /Die Nebelinsel/ })
-    expect(link).toHaveTextContent(de.maps.localOnly)
+    expect(link.closest('article')).toHaveTextContent(de.maps.localOnly)
   })
 })

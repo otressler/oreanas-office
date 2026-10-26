@@ -93,13 +93,13 @@ export function createStatus(
 }
 
 /** The picker of a running fight; asked for again every time it opens. */
-export function useStatusPicker(campaignId: string, encounterId: string) {
+export function useStatusPicker(campaignId: string, encounterId: string, sharedScreen = false) {
   return useQuery({
-    queryKey: statusKeys.picker(campaignId, encounterId),
+    queryKey: [...statusKeys.picker(campaignId, encounterId), sharedScreen],
     queryFn: () =>
       unwrap(
         api.GET('/api/campaigns/{campaignId}/encounters/{encounterId}/status-picker', {
-          params: { path: { campaignId, encounterId } },
+          params: { path: { campaignId, encounterId }, query: { sharedScreen } },
         }),
       ),
     refetchOnMount: 'always',

@@ -27,7 +27,8 @@ public sealed class SessionTests(AppFixture fixture) : IClassFixture<AppFixture>
         Assert.Equal(
             new SessionResponse(
                 session.Id, "Die Seilbrücke", Saturday, SessionStatus.Planned, table.Dm.Id, "Oreana", table.SecondDm.Id,
-                CanManage: false, IsSessionDm: false, ActiveEncounter: null, InterruptedEncounter: null, Encounters: session.Encounters),
+                CanManage: false, IsSessionDm: false, ActiveEncounter: null, InterruptedEncounter: null, Encounters: session.Encounters, PlayMode: PlayMode.Byod,
+                CharacterPlayers: session.CharacterPlayers),
             session);
     }
 

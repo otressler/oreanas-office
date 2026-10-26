@@ -24,6 +24,7 @@ function character(id: string, label: string, colorIndex: number, owner = me): B
     imageUrl: null,
     color: null,
     statuses: [],
+    hidden: false,
   }
 }
 
@@ -36,7 +37,7 @@ const goblin: BoardToken = {
 
 function setup(tokens: BoardToken[], removedTokens: BoardToken[] = []) {
   const centerOn = vi.fn<BoardHandle['centerOn']>()
-  const board = { current: { centerOn } }
+  const board = { current: { centerOn, fit: vi.fn() } }
   const view = render(
     <MyCharacterButton tokens={tokens} removedTokens={removedTokens} userId={me} board={board} />,
   )

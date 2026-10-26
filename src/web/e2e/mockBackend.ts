@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import type { BrowserContext, Request, Route } from '@playwright/test'
 import type { components } from '../src/api/schema.js'
+import { fogView } from './mockFog.ts'
 
 type S = components['schemas']
 type ErrorCode = S['ApiErrorCode']
@@ -33,6 +34,8 @@ interface Campaign {
   defaultDmUserId: string
   joinCode: string
   members: { userId: string; role: S['CampaignRole']; joinedAt: string }[]
+  /** Cover uploads and generation aren't mocked: always the default picture. */
+  description?: string | null
 }
 
 interface Character {
@@ -64,6 +67,8 @@ interface Session {
   createdByUserId: string
   /** The fight that ending the session cut off; continuing brings it back. */
   interruptedEncounterId: string | null
+  /** "Spielweise"; byod when unset. */
+  playMode?: S['PlayMode']
 }
 
 interface CreatureType {
@@ -87,6 +92,8 @@ interface Token {
   statuses?: S['BoardTokenStatus'][]
   /** Stage 9: set while the token is off the board (knowledge/features/removing-tokens.md). */
   removedAt?: string | null
+  /** Stage 10: only the session DM sees a hidden creature (fog.ts holds the rest of fog). */
+  hidden?: boolean
 }
 
 /**
@@ -165,6 +172,10 @@ interface Encounter {
   map: S['BoardMap']
   tokens: Token[]
   createdAt: string
+  /** Who is connected, as the board lists it; nobody when unset (shared-table specs set it). */
+  presence?: S['PresenceState']
+  /** The session DM's initiative list (mockInitiative.ts); off when unset. */
+  initiative?: S['InitiativeView']
 }
 
 /** Reads one of the app's sample maps (src/samples/maps), e.g. "gorge-crossing". */
@@ -329,10 +340,28 @@ export class MockBackend {
     return this.signedIn.get(context) ?? null
   }
 
-  /** Answers /api/** for this context (pages and service worker). */
-  async attach(context: BrowserContext) {
+  /**
+   * Answers /api/** for this context (pages and service worker). The context counts as
+   * a device someone signed in on before, so `/` asks the server instead of showing the
+   * landing page; `newDevice` leaves it a fresh device (src/landing/WelcomeNewDevices.tsx).
+   */
+  async attach(context: BrowserContext, { newDevice = false }: { newDevice?: boolean } = {}) {
     if (!this.signedIn.has(context)) this.signedIn.set(context, null)
     await context.route('**/api/**', (route) => this.handle(context, route))
+    if (newDevice) return
+    // Only once per context: the app replaces this with GET /api/auth/me's answer and
+    // clears it on sign-out, which later page loads must see. Tests often sign in after
+    // attaching, so a placeholder stands in when nobody is signed in yet.
+    const id = this.signedIn.get(context)
+    const user = id ? this.users.find((u) => u.id === id) : undefined
+    const remembered = user
+      ? meResponse(user)
+      : { id: 'e2e-device', displayName: 'Testgerät', email: '', isAdmin: false }
+    await context.addInitScript((me) => {
+      if (localStorage.getItem('e2e.deviceSeeded')) return
+      localStorage.setItem('e2e.deviceSeeded', '1')
+      localStorage.setItem('oreana.lastUser', JSON.stringify(me))
+    }, remembered)
   }
 
   // ---- Request handling -----------------------------------------------------
@@ -426,6 +455,7 @@ export class MockBackend {
         id: randomUUID(),
         mapId: item.id,
         status: 'queued',
+        origin: 'generated',
         url: null,
         gridWidth: map.width,
         gridHeight: map.height,
@@ -516,15 +546,21 @@ export class MockBackend {
 
   private dispatchTokenImages(context: BrowserContext, request: Request, url: URL): Reply | null {
     const list = matchPath('/api/campaigns/:campaignId/creature-types/icons', url.pathname)
+    const iconUpload = matchPath(
+      '/api/campaigns/:campaignId/creature-types/:ownerId/icons/upload',
+      url.pathname,
+    )
     const icon =
+      iconUpload ??
       matchPath('/api/campaigns/:campaignId/creature-types/:ownerId/icons', url.pathname) ??
       matchPath('/api/campaigns/:campaignId/creature-types/:ownerId/icon', url.pathname)
-    const upload = matchPath(
+    const portraitUpload = matchPath(
       '/api/campaigns/:campaignId/characters/:ownerId/portraits/upload',
       url.pathname,
     )
+    const upload = iconUpload ?? portraitUpload
     const portrait =
-      upload ??
+      portraitUpload ??
       matchPath('/api/campaigns/:campaignId/characters/:ownerId/portraits', url.pathname) ??
       matchPath('/api/campaigns/:campaignId/characters/:ownerId/portrait', url.pathname)
     // Stage 9: a custom status's icons (src/Server/Statuses/StatusEndpoints.cs).
@@ -595,7 +631,7 @@ export class MockBackend {
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(contentType) || !bytes?.length) {
         return error('uploadInvalid')
       }
-      const image = this.newTokenImage('character', ownerId, 'uploaded', null)
+      const image = this.newTokenImage(ownerType, ownerId, 'uploaded', null)
       this.finishTokenImage(image)
       store(image, bytes, contentType)
       return [201, { ...image }]
@@ -985,6 +1021,16 @@ export class MockBackend {
     if (statusReply) return statusReply
 
     if (path === base && method === 'GET') return [200, this.campaignResponse(campaign, me.id)]
+    if (path === base && method === 'PUT') {
+      if (!isDm) return [403]
+      const name = String(body.name ?? '').trim()
+      if (!name) return error('nameInvalid', 'name')
+      const description = String(body.description ?? '').trim()
+      if (description.length > 300) return error('descriptionInvalid', 'description')
+      campaign.name = name
+      campaign.description = description || null
+      return [200, this.campaignResponse(campaign, me.id)]
+    }
     if (path === `${base}/join-code` && method === 'POST') {
       if (!isDm) return [403]
       campaign.joinCode = this.newJoinCode()
@@ -1127,6 +1173,16 @@ export class MockBackend {
         return [200, this.encounterSummary(encounter)]
       }
       return [404]
+    }
+    if ((params = match(`${base}/sessions/:sessionId/play-mode`)) && method === 'PUT') {
+      const session = this.sessions.find(
+        (s) => s.id === params!.sessionId && s.campaignId === campaign.id,
+      )
+      if (!session) return [404]
+      if (session.dmUserId !== me.id) return [403]
+      if (session.status === 'ended') return error('sessionEnded', undefined, 409)
+      session.playMode = body.playMode === 'local' ? 'local' : 'byod'
+      return [200, this.sessionResponse(session, campaign, me.id)]
     }
     if ((params = match(`${base}/sessions/:sessionId/:action`))) {
       const session = this.sessions.find(
@@ -1387,7 +1443,8 @@ export class MockBackend {
     const used = new Set(
       [...onBoard, ...removed].flatMap((t) => (t.statuses ?? []).map((s) => s.statusId)),
     )
-    return {
+    // Stage 10: for an encounter with fog (mockFog.ts) the view is filtered per viewer.
+    return fogView(encounter, isSessionDm, {
       encounterId: encounter.id,
       campaignId: encounter.campaignId,
       sessionId: encounter.sessionId,
@@ -1400,7 +1457,12 @@ export class MockBackend {
       removedTokens: removed.map((token) => this.boardToken(encounter, token)),
       statuses: this.statusDefinitions.filter((s) => used.has(s.id)).map((s) => this.statusView(s)),
       people: this.boardPeople(encounter),
-    }
+      viewer: 'dm',
+      fog: null,
+      playMode: session?.playMode ?? 'byod',
+      presence: encounter.presence ?? { people: [], sharedScreen: false },
+      initiative: isSessionDm ? (encounter.initiative ?? { version: 0, entries: null }) : null,
+    })
   }
 
   /** A token as the board shows it: size, owner, ring, picture and statuses. */
@@ -1417,6 +1479,7 @@ export class MockBackend {
       imageUrl: this.pickedTokenImageUrl(token.characterId ?? token.creatureTypeId),
       color: character?.color ?? null,
       statuses: [...(statuses ?? [])],
+      hidden: token.hidden ?? false,
       ...(removedAt ? { removedAt } : {}),
     }
   }
@@ -1631,7 +1694,13 @@ export class MockBackend {
     const status = this.statusDefinitions.find((s) => s.libraryKey === libraryKey)!
     token.statuses = [
       ...(token.statuses ?? []),
-      { statusId: status.id, level, appliedByUserId: userId, appliedAt: new Date().toISOString() },
+      {
+        statusId: status.id,
+        level,
+        appliedByUserId: userId,
+        appliedAt: new Date().toISOString(),
+        fromSharedScreen: false,
+      },
     ]
   }
 
@@ -1700,6 +1769,7 @@ export class MockBackend {
         level: status.hasLevels ? (level ?? 1) : null,
         appliedByUserId: userId!,
         appliedAt: new Date().toISOString(),
+        fromSharedScreen: false,
       },
     ]
     return this.statusesChanged(encounter, token)
@@ -1910,6 +1980,8 @@ export class MockBackend {
       joinCode: myRole === 'dm' ? campaign.joinCode : null,
       activeSessionId: this.activeSession(campaign)?.id ?? null,
       members: campaign.members.map((m) => this.memberResponse(m)),
+      description: campaign.description ?? null,
+      coverUrl: null,
     }
   }
 
@@ -1929,6 +2001,19 @@ export class MockBackend {
             activeEncounter: this.activeEncounterSummary(active),
           }
         : null,
+      description: campaign.description ?? null,
+      coverUrl: null,
+      characters: this.characters
+        .filter((c) => c.campaignId === campaign.id)
+        .map((c, colorIndex) => ({
+          id: c.id,
+          name: c.name,
+          colorIndex,
+          color: c.color,
+          portraitUrl: this.pickedTokenImageUrl(c.id),
+          mine: c.ownerUserId === userId,
+        }))
+        .sort((a, b) => Number(b.mine) - Number(a.mine)),
     }
   }
 
@@ -1969,6 +2054,8 @@ export class MockBackend {
       activeEncounter: this.activeEncounterSummary(session),
       interruptedEncounter: interrupted ? { id: interrupted.id, name: interrupted.name } : null,
       encounters: memberOf(campaign, userId)?.role === 'dm' ? this.sessionEncounters(session) : [],
+      playMode: session.playMode ?? 'byod',
+      characterPlayers: [],
     }
   }
 

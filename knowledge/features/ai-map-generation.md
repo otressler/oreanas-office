@@ -47,6 +47,16 @@ Generation runs as a background job (expect 10–60 s). The editor stays usable 
 - **Live updates:** the editor connects to the image hub only while one of its map's jobs is queued or running.
 - **Limits:** the monthly limit is checked when a job is queued. Jobs queued on several maps just before the limit can still finish, so the month can end a few cents over. A store copy shares its source's picked picture only while it stays picked: after the copy picks another version, the shared one is no longer listed.
 
+# Uploads (2026-10-25)
+
+At the project owner's request the DM can also upload their own background, for example a bought battle map, and the editor's placing tools fix the small misalignments of generated images ([DM map editor](/features/dm-map-editor.md), "Background").
+
+- **Formats.** PNG, WebP or JPEG, up to 25 MB and 8192 pixels per edge. JPEG was added to the requested PNG and WebP because most bought maps are JPEGs. The app sends the file as the raw body with its type, like portrait uploads; a map only on the device is synced first.
+- **Stored.** The server checks the bytes against the type, turns the picture the right way up, shrinks it so its long edge is at most 4096 pixels (never enlarged) and keeps it as WebP with its alpha channel, without the original's metadata. It is a new `uploaded` version of the map, picked at once. It costs nothing and isn't counted against the [image budget](/decisions/image-budget.md).
+- **First placement.** As large as fits into the map it was uploaded for, centred, keeping its aspect. The DM then places it by hand or by two grid points.
+- **Never outdated, never refined.** An upload fits every map size ([battle map](/domain/battle-map.md), "Background image"). It can't be refined, because the model paints from the layout and an upload wasn't made from it. The gallery marks it "Hochgeladen".
+- **Grid style.** For a picture with its own grid, the map's grid can be drawn "Dezent" or "Aus" over it ([battle map](/domain/battle-map.md)).
+
 See [image generation approach](/decisions/image-generation-approach.md) for the reasoning.
 
 [^brief]: Original project brief

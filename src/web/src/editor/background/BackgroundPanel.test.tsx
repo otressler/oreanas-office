@@ -28,14 +28,20 @@ let online: boolean
 let list: MapBackgrounds
 let calls: ApiCall[]
 
-/** Answers the background endpoints from `list`; `post` and `put` can be replaced. */
+/** Answers the background endpoints from `list`; `post`, `upload` and `put` can be replaced. */
 function serve({
   post = () => json(202, version({ status: 'queued' })),
+  upload = () => json(201, version({ origin: 'uploaded' })),
   put = () => json(204),
-}: { post?: (call: ApiCall) => Response; put?: (call: ApiCall) => Response } = {}) {
+}: {
+  post?: (call: ApiCall) => Response
+  upload?: (call: ApiCall) => Response
+  put?: (call: ApiCall) => Response
+} = {}) {
   calls = mockApi({
     'GET /api/campaigns/:c/maps/:m/backgrounds': () => json(200, list),
     'POST /api/campaigns/:c/maps/:m/backgrounds': post,
+    'POST /api/campaigns/:c/maps/:m/backgrounds/upload': upload,
     'PUT /api/campaigns/:c/maps/:m/background': put,
   })
 }
@@ -315,6 +321,112 @@ describe('the gallery', () => {
     expect(dialog).toHaveTextContent('2 von 2')
     expect(within(dialog).getByTestId('compare-grid')).toHaveAttribute('viewBox', '0 0 10 8')
     expect(within(dialog).getByRole('button', { name: t.compare.next })).toBeDisabled()
+  })
+})
+
+describe('uploading', () => {
+  it('uploads a picture as the raw body, picks it and says what to do next', async () => {
+    const uploaded = version({ origin: 'uploaded' })
+    const user = userEvent.setup()
+    const { mapId } = await renderInMapEditor(<BackgroundPanel />)
+    await screen.findByText(t.empty)
+    serve({
+      upload: () => {
+        list = backgroundsOf([uploaded], { pickedAssetId: uploaded.id })
+        return json(201, uploaded)
+      },
+    })
+
+    await user.upload(
+      screen.getByLabelText(t.upload.button, { selector: 'input' }),
+      new File(['png-bytes'], 'karte.png', { type: 'image/png' }),
+    )
+
+    expect(await screen.findByText(t.upload.done)).toBeVisible()
+    expect(posts()).toEqual([
+      expect.objectContaining({
+        path: `/api/campaigns/c1/maps/${mapId}/backgrounds/upload`,
+        body: 'png-bytes',
+      }),
+    ])
+    // A synced map needs no sync first.
+    expect(syncMapBeforeGenerate).not.toHaveBeenCalled()
+    const item = await screen.findByRole('listitem')
+    expect(within(item).getByText(t.uploaded)).toBeVisible()
+    expect(within(item).getByText(t.picked)).toBeVisible()
+    // Nothing for the model to refine.
+    expect(within(item).queryByRole('button', { name: t.refine.button })).not.toBeInTheDocument()
+  })
+
+  it('syncs a map that is only on this device first', async () => {
+    const user = userEvent.setup()
+    await renderInMapEditor(<BackgroundPanel />, { baseVersion: 0 })
+    await user.upload(
+      screen.getByLabelText(t.upload.button, { selector: 'input' }),
+      new File(['x'], 'karte.webp', { type: 'image/webp' }),
+    )
+    await screen.findByText(t.upload.done)
+    expect(syncMapBeforeGenerate).toHaveBeenCalledOnce()
+  })
+
+  it('refuses other picture types without asking the server', async () => {
+    const user = userEvent.setup({ applyAccept: false })
+    await renderInMapEditor(<BackgroundPanel />)
+    await screen.findByText(t.empty)
+    await user.upload(
+      screen.getByLabelText(t.upload.button, { selector: 'input' }),
+      new File(['gif'], 'karte.gif', { type: 'image/gif' }),
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent(t.upload.wrongType)
+    expect(posts()).toEqual([])
+  })
+
+  it('shows a refused upload in German', async () => {
+    const user = userEvent.setup()
+    await renderInMapEditor(<BackgroundPanel />)
+    await screen.findByText(t.empty)
+    serve({ upload: () => json(400, { code: 'uploadInvalid' }) })
+    await user.upload(
+      screen.getByLabelText(t.upload.button, { selector: 'input' }),
+      new File(['broken'], 'karte.png', { type: 'image/png' }),
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent(de.errors.uploadInvalid)
+  })
+})
+
+describe('placing and the grid', () => {
+  it('sets the grid style on the map as one undo step, also offline', async () => {
+    online = false
+    const user = userEvent.setup()
+    const { store } = await renderInMapEditor(<BackgroundPanel />)
+    await user.selectOptions(screen.getByLabelText(t.grid.label), t.grid.faint)
+    expect(store.getState().doc.gridStyle).toBe('faint')
+    store.getState().undo()
+    expect(store.getState().doc.gridStyle).toBe('normal')
+  })
+
+  it('offers calibration and a reset once the picked picture is shown', async () => {
+    const picked = version()
+    const user = userEvent.setup()
+    const { store } = await renderInMapEditor(<BackgroundPanel />)
+    expect(screen.queryByRole('region', { name: t.place.title })).not.toBeInTheDocument()
+
+    act(() => store.getState().setBackground(picked))
+    const reset = screen.getByRole('button', { name: t.place.reset })
+    expect(reset).toBeDisabled()
+    act(() =>
+      store.getState().apply((doc) => ({
+        ...doc,
+        backgroundPlacement: { assetId: picked.id, x: 1, y: 0, width: 10, height: 8, rotation: 0 },
+      })),
+    )
+    await user.click(reset)
+    expect(store.getState().doc.backgroundPlacement).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: t.place.calibrate }))
+    expect(screen.getByRole('status')).toHaveTextContent(t.place.steps[0]!)
+    await user.click(screen.getByRole('button', { name: t.place.cancel }))
+    expect(screen.getByRole('button', { name: t.place.calibrate })).toBeVisible()
   })
 })
 

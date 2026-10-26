@@ -44,6 +44,6 @@ Each player uses their own device, sees the current board and moves their charac
 
 # Not included
 
-Initiative, turn order and movement limits.
+A turn order players see, and movement limits. The session DM's own initiative list is built ([initiative](/features/initiative.md)).
 
 [^brief]: Original project brief

@@ -4,8 +4,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { api } from '../../api/client'
-import { unwrap } from '../../api/errors'
-import type { BoardBackground, ImageBudget, MapBackground, MapBackgrounds } from '../../api/types'
+import { ApiRequestError, isApiErrorCode, unwrap } from '../../api/errors'
+import type {
+  BackgroundPlacement,
+  BoardBackground,
+  ImageBudget,
+  MapBackground,
+  MapBackgrounds,
+} from '../../api/types'
 import { useLocalUser } from '../../offline/localUser'
 import { useOnline } from '../encounter/useOnline'
 
@@ -45,6 +51,40 @@ export function generateBackground(
     }),
   )
 }
+
+/**
+ * Uploads the DM's own picture (PNG, WebP or JPEG) as a new version, which the server picks
+ * at once: the raw body with its type, not a form, like portrait uploads.
+ */
+export async function uploadBackground(
+  campaignId: string,
+  mapId: string,
+  picture: Blob,
+): Promise<MapBackground> {
+  const base = globalThis.location?.origin ?? ''
+  const response = await globalThis.fetch(
+    `${base}/api/campaigns/${encodeURIComponent(campaignId)}/maps/${encodeURIComponent(mapId)}/backgrounds/upload`,
+    {
+      method: 'POST',
+      body: picture,
+      headers: { 'Content-Type': picture.type || 'application/octet-stream' },
+      credentials: 'same-origin',
+    },
+  )
+  const json = response.headers.get('Content-Type')?.includes('json')
+    ? ((await response.json()) as unknown)
+    : undefined
+  if (response.ok) return json as MapBackground
+  const body = json as { code?: unknown; field?: unknown } | undefined
+  throw new ApiRequestError(
+    response.status,
+    isApiErrorCode(body?.code) ? body.code : null,
+    typeof body?.field === 'string' ? body.field : null,
+  )
+}
+
+/** The picture types an upload may have. */
+export const UPLOAD_TYPES = ['image/png', 'image/webp', 'image/jpeg'] as const
 
 /** Picks a done version that fits the map, or (null) none: the plain rendering. */
 export async function pickBackground(
@@ -114,6 +154,8 @@ export interface MapSize {
  * image back.
  */
 export function isOutdated(version: MapBackground, size: MapSize): boolean {
+  // Uploads fit every size: the DM places them by hand.
+  if (version.origin === 'uploaded') return false
   return version.outdated || version.gridWidth !== size.width || version.gridHeight !== size.height
 }
 
@@ -128,21 +170,38 @@ export function pickedVersion(data: MapBackgrounds | undefined): MapBackground |
   return data.versions.find((v) => v.id === data.pickedAssetId) ?? null
 }
 
+/** The picked version while the board can show it: done and fitting the map. */
+export function shownVersion(
+  data: MapBackgrounds | undefined,
+  size: MapSize,
+): MapBackground | null {
+  const picked = pickedVersion(data)
+  return picked && canPick(picked, size) ? picked : null
+}
+
+/**
+ * Where a version lies: the DM's placement while it was made for this version, else the
+ * version's own frame, unturned.
+ */
+export function placementFor(
+  version: Pick<MapBackground, 'id' | 'x' | 'y' | 'width' | 'height'>,
+  placement: BackgroundPlacement | null | undefined,
+): BackgroundPlacement {
+  if (placement && placement.assetId === version.id) return placement
+  const { x, y, width, height } = version
+  return { assetId: version.id, x, y, width, height, rotation: 0 }
+}
+
 /** What the board draws for the picked version, or null for the plain rendering. */
 export function pickedBoardBackground(
   data: MapBackgrounds | undefined,
   size: MapSize,
+  placement: BackgroundPlacement | null = null,
 ): BoardBackground | null {
-  const picked = pickedVersion(data)
-  if (!picked || !canPick(picked, size)) return null
-  return {
-    assetId: picked.id,
-    url: picked.url!,
-    x: picked.x,
-    y: picked.y,
-    width: picked.width,
-    height: picked.height,
-  }
+  const picked = shownVersion(data, size)
+  if (!picked) return null
+  const { x, y, width, height, rotation } = placementFor(picked, placement)
+  return { assetId: picked.id, url: picked.url!, x, y, width, height, rotation }
 }
 
 /** The list with one version replaced (or added, newest first) after a hub message. */

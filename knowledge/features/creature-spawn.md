@@ -42,3 +42,7 @@ Proposals the project owner hasn't confirmed yet are marked with their question 
 - [ ] The DM spawns a creature with "Verborgen"; phones and the spectator screen don't get it, also in their network traffic, until the DM reveals it.
 - [ ] The DM makes a new type "Schattenwesen" in the picker with only a name and a size and spawns it; it shows its letter until it gets an icon in the bestiary.
 - [ ] A player has no "Kreatur hinzufügen".
+
+# As built (stage 10)
+
+`SpawnCreatures` on the table hub saves all creatures and one undo row in a single step, then sends `TokensAdded` to the DM group (all) and to the players' group (the ones they may see). A quick creature type is made with the sync push (name and size), as the bestiary form does. The picker lists the types from the sync copy; there is no separate online bestiary endpoint.

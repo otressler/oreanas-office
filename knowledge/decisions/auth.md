@@ -16,7 +16,7 @@ Users sign in with a **local account** (email and password) or with **Google**. 
 
 - Only the site admin creates invite links.
 - A link is valid for a fixed **4 hours** and can be used by any number of people in that time, so one link can be posted in a group chat. The admin can revoke it early.
-- The link is needed for both kinds of account: registering locally, and the first Google sign-in that would create a new account. Signing in to an existing account never needs a link. The one exception is the configured admin address: its first Google sign-in creates the account without a link, otherwise nobody could create the first invite.
+- The link is needed for both kinds of account: registering locally, and the first Google sign-in that would create a new account. Signing in to an existing account never needs a link. The one exception is the configured admin address: its first Google sign-in creates the account without a link, otherwise nobody could create the first invite. For the Playwright tests and local development only, the backend hands out invites without an admin at `/api/testing/invites`, mapped in the E2E and Development environments and never in production; `scripts/dev-user.ps1` uses it to create local dev accounts (2026-10-25).
 - An invite only creates the account. Joining a campaign still uses the campaign's join code.
 - An expired or revoked link shows a German message asking the user to request a new one.
 

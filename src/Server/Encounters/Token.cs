@@ -38,8 +38,19 @@ public class Token
     // Meters, one decimal. The highest elevation under the footprint when placed.
     public decimal Elevation { get; set; }
 
-    // Later: visible only to the session DM until revealed.
+    // Visible only to the session DM until revealed (knowledge/features/fog-of-war.md).
     public bool Hidden { get; set; }
+
+    // A creature's number ("Goblin 3"), given the first time players see it in an encounter
+    // with fog, in the same save that makes it visible; null until then and for renamed
+    // creatures. Label then holds only the DM's own name (knowledge/domain/token.md).
+    public int? Number { get; set; }
+
+    // A creature's own initiative modifier and roll mode; null takes the creature type's
+    // (knowledge/features/initiative.md). Always null for characters, whose players roll.
+    public int? InitiativeModifier { get; set; }
+
+    public InitiativeRollMode? InitiativeRollMode { get; set; }
 
     // Counts moves and undos, starting at 0 when placed. Devices keep the position with
     // the higher version; saving a move requires the version it read (last move wins,

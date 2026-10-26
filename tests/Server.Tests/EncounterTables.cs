@@ -42,9 +42,16 @@ public static class EncounterTables
         return new EncounterTable(dm, secondDm, player, campaign.Id, session, encounter);
     }
 
-    public static async Task<RunningFight> StartFightAsync(this AppFactory app)
+    // `prepare` runs on the Ready encounter before it starts (pushes to the bestiary or the
+    // encounter's creatures).
+    public static async Task<RunningFight> StartFightAsync(this AppFactory app, Func<EncounterTable, Task>? prepare = null)
     {
         var table = await app.CreateEncounterTableAsync();
+        if (prepare is not null)
+        {
+            await prepare(table);
+        }
+
         var thorin = await table.Player.CreateCharacterAsync(table.CampaignId, "Thorin");
         var aria = await table.SecondDm.CreateCharacterAsync(table.CampaignId, "Aria");
         var started = await table.Dm.StartEncounterAsync(

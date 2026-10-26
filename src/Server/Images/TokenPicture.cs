@@ -6,6 +6,8 @@ namespace OreanasOffice.Server.Images;
 // is kept as a square WebP of ImageOptions.TokenPixels with its alpha channel. An upload is
 // turned the right way up (EXIF orientation), cropped to its middle square and scaled to
 // exactly that size, larger or smaller; the model's transparent PNG goes the same way.
+// Campaign covers (knowledge/domain/campaign.md) go the same way to a 3:2 WebP of
+// ImageOptions.CoverWidth × CoverHeight, cropped to their middle 3:2 instead.
 // The WebP is encoded from the pixels alone, so nothing of the original file's metadata
 // (EXIF, GPS position, XMP, ICC) reaches it.
 public static class TokenPicture
@@ -48,12 +50,17 @@ public static class TokenPicture
     // WebP that decodes completely, or an edge is longer than maxPixels. The size is read from
     // the header before any pixels are decoded.
     public static byte[]? FromUpload(byte[] bytes, int size, int maxPixels) =>
-        Identify(bytes) is { } format ? Square(bytes, format, size, maxPixels) : null;
+        FromUpload(bytes, size, size, maxPixels);
 
-    // The model's picture (a transparent PNG) as the stored square WebP. Throws when it
-    // can't be read, which the worker treats like any failed attempt.
-    public static byte[] FromModel(byte[] bytes, int size) =>
-        (Identify(bytes) is { } format ? Square(bytes, format, size, int.MaxValue) : null)
+    // The same for a picture of width × height: a cover.
+    public static byte[]? FromUpload(byte[] bytes, int width, int height, int maxPixels) =>
+        Identify(bytes) is { } format ? Fill(bytes, format, width, height, maxPixels) : null;
+
+    // The model's picture (a transparent PNG, or a JPEG for a cover) as the stored WebP of
+    // width × height. Throws when it can't be read, which the worker treats like any failed
+    // attempt.
+    public static byte[] FromModel(byte[] bytes, int width, int height) =>
+        (Identify(bytes) is { } format ? Fill(bytes, format, width, height, int.MaxValue) : null)
         ?? throw new InvalidOperationException("The image model's picture couldn't be read.");
 
     // A stored version as PNG, the input image of a restyle (the edits endpoint takes PNG
@@ -67,7 +74,8 @@ public static class TokenPicture
         return png.ToArray();
     }
 
-    private static byte[]? Square(byte[] bytes, SKEncodedImageFormat format, int size, int maxPixels)
+    // The upright picture's middle part of the target's aspect, scaled to width × height.
+    private static byte[]? Fill(byte[] bytes, SKEncodedImageFormat format, int width, int height, int maxPixels)
     {
         using var data = SKData.CreateCopy(bytes);
         using var codec = SKCodec.Create(data);
@@ -83,7 +91,8 @@ public static class TokenPicture
         }
 
         // A large JPEG decodes straight at a smaller scale, as long as its short edge still
-        // covers the target size.
+        // covers the target's long edge.
+        var size = Math.Max(width, height);
         var scale = (float)size / Math.Min(info.Width, info.Height);
         var decoded = codec.GetScaledDimensions(Math.Min(scale, 1f));
         if (Math.Min(decoded.Width, decoded.Height) < Math.Min(size, Math.Min(info.Width, info.Height)))
@@ -98,31 +107,32 @@ public static class TokenPicture
         }
 
         using var image = SKImage.FromBitmap(source);
-        using var square = new SKBitmap(new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul));
-        using (var canvas = new SKCanvas(square))
+        using var target = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
+        using (var canvas = new SKCanvas(target))
         {
             canvas.Clear(SKColors.Transparent);
 
-            // Upright size, then the middle square of it scaled to size × size.
+            // Upright size, then its middle part of the target's aspect scaled to width × height.
             var origin = codec.EncodedOrigin;
             var swaps = origin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop
                 or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom;
-            var (width, height) = swaps ? (source.Height, source.Width) : (source.Width, source.Height);
-            var side = Math.Min(width, height);
-            canvas.Scale((float)size / side);
-            canvas.Translate(-(width - side) / 2f, -(height - side) / 2f);
+            var (uprightWidth, uprightHeight) = swaps ? (source.Height, source.Width) : (source.Width, source.Height);
+            var fit = Math.Max((float)width / uprightWidth, (float)height / uprightHeight);
+            canvas.Translate(width / 2f, height / 2f);
+            canvas.Scale(fit);
+            canvas.Translate(-uprightWidth / 2f, -uprightHeight / 2f);
             Orient(canvas, origin, source.Width, source.Height);
             canvas.DrawImage(image, 0, 0, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
         }
 
-        using var pixmap = square.PeekPixels();
+        using var pixmap = target.PeekPixels();
         using var webp = pixmap.Encode(new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossy, WebpQuality));
         return webp?.ToArray();
     }
 
     // Maps the stored pixels (width × height) onto the upright picture (TIFF orientation
     // tags 2–8). The last transform set is applied first.
-    private static void Orient(SKCanvas canvas, SKEncodedOrigin origin, int width, int height)
+    internal static void Orient(SKCanvas canvas, SKEncodedOrigin origin, int width, int height)
     {
         switch (origin)
         {

@@ -55,14 +55,29 @@ export function isPushableRecord(
 }
 
 function pushTokens(encounter: LocalEncounter): SyncCreatureToken[] {
-  return encounter.tokens.map(({ id, creatureTypeId, label, x, y, size }) => ({
-    id,
-    creatureTypeId,
-    label,
-    x,
-    y,
-    size,
-  }))
+  return encounter.tokens.map(
+    ({
+      id,
+      creatureTypeId,
+      label,
+      x,
+      y,
+      size,
+      hidden = false,
+      initiativeModifier = null,
+      initiativeRollMode = null,
+    }) => ({
+      id,
+      creatureTypeId,
+      label,
+      x,
+      y,
+      size,
+      hidden,
+      initiativeModifier,
+      initiativeRollMode,
+    }),
+  )
 }
 
 const empty = { campaign: null, creatureType: null, map: null, encounter: null }
@@ -95,6 +110,8 @@ export function recordPushItem(kind: ItemKind, record: ItemRecord): SyncPushItem
           appearance: r.appearance,
           notes: r.notes,
           archivedAt: r.archivedAt,
+          initiativeModifier: r.initiativeModifier ?? 0,
+          initiativeRollMode: r.initiativeRollMode ?? 'normal',
         },
       }
     }
@@ -113,6 +130,8 @@ export function recordPushItem(kind: ItemKind, record: ItemRecord): SyncPushItem
           lighting: r.lighting,
           archivedAt: r.archivedAt,
           copiedFromMapId: r.copiedFromMapId,
+          backgroundPlacement: r.backgroundPlacement ?? null,
+          gridStyle: r.gridStyle ?? 'normal',
         },
       }
     }
@@ -129,6 +148,7 @@ export function recordPushItem(kind: ItemKind, record: ItemRecord): SyncPushItem
           archivedAt: r.archivedAt,
           tokens: pushTokens(r),
           sessionId: r.sessionId,
+          fog: r.fog ?? null,
         },
       }
     }
@@ -153,6 +173,9 @@ export function recordFromServer(item: SyncServerItem, existing?: ItemRecord): I
       size: d.size,
       appearance: d.appearance,
       notes: d.notes,
+      // Absent from servers older than the initiative list.
+      initiativeModifier: d.initiativeModifier ?? 0,
+      initiativeRollMode: d.initiativeRollMode ?? 'normal',
       archivedAt: d.archivedAt,
       recordVersion: LOCAL_CREATURE_TYPE_RECORD_VERSION,
     }
@@ -170,6 +193,9 @@ export function recordFromServer(item: SyncServerItem, existing?: ItemRecord): I
       lighting: d.lighting,
       archivedAt: d.archivedAt,
       copiedFromMapId: d.copiedFromMapId,
+      // Absent from servers older than background uploads.
+      backgroundPlacement: d.backgroundPlacement ?? null,
+      gridStyle: d.gridStyle ?? 'normal',
       recordVersion: LOCAL_MAP_RECORD_VERSION,
     }
   }
@@ -184,6 +210,7 @@ export function recordFromServer(item: SyncServerItem, existing?: ItemRecord): I
       tokens: d.tokens.map((token) => ({ ...token })),
       sessionId: d.sessionId,
       mapCopy: d.mapCopy,
+      fog: d.fog ?? null,
       recordVersion: LOCAL_ENCOUNTER_RECORD_VERSION,
     }
   }
@@ -244,6 +271,9 @@ function comparable(
       return canonical({
         ...d,
         archivedAt: time(d.archivedAt),
+        // Left out by servers and records older than background uploads.
+        backgroundPlacement: d.backgroundPlacement ?? null,
+        gridStyle: d.gridStyle ?? 'normal',
         layout: {
           ...d.layout,
           cells: byKey(d.layout.cells, (c) => c.y * 1000 + c.x),
@@ -264,6 +294,7 @@ function comparable(
         status: d.status,
         archivedAt: time(d.archivedAt),
         tokens: byKey(d.tokens, (t) => t.id),
+        fog: d.fog ?? null,
       })
     }
   }

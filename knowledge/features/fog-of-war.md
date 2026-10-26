@@ -142,3 +142,12 @@ The project owner confirmed all six on 2026-10-16.
 - [ ] A player can't move into the fog, and the rejection looks the same for a wall and a floor.
 - [ ] The DM moves a revealed creature into the fog; players see it fade out where it stood.
 - [ ] "Spieleransicht" on the DM's device matches a player's phone.
+
+# As built (stage 10)
+
+- The server filters in one place, `TableVisibility`; every board load and every hub fan-out goes through it. The hub has two groups per encounter (the session DM's player connections, and everyone else, spectator and shared screens always among the others). `GET board?view=player` returns the players' board whoever is signed in.
+- Fog lives in `Encounter.Fog` and `FogVersion`; "fog is on" means the document exists, even without hidden cells. It is switched on in the editor only, so the DM's fog button on the board is disabled for an encounter without fog.
+- Undo uses a saved `EncounterChange` row per fog change, reveal or spawn, so it survives a cold start. "Rückgängig" takes back the DM's latest change; undoing a spawn removes the tokens like "removing tokens" does.
+- Numbering at first sight is saved in the same save that makes a creature visible, also on a move across the fog boundary, on restore and at the start of a fight. Without fog the editor's numbers stay. A creature that becomes visible by a move reaches the DM as a `TokenRevealed` for a token it already has.
+- A player's move into fog is refused with the same `targetInvalid` as a wall.
+- Known gaps: `TokenRevealed`, `TokensAdded` and `FogChanged.Appeared` carry no status definitions, so a newly visible creature with a custom status can't be drawn until the board reloads; the editor's "Bezeichnung" field still shows the stored numbered label in an encounter with fog (only the canvas drops the number); the DM's brush on the board is tap-per-cell.

@@ -117,6 +117,9 @@ export function parseMapFile(text: string): EditorMap {
     scene: description('scene'),
     vibe: description('vibe'),
     lighting: description('lighting'),
+    // The file carries no background: an imported map starts without one.
+    backgroundPlacement: null,
+    gridStyle: 'normal',
   }
 }
 

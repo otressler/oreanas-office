@@ -62,6 +62,16 @@ public static class CampaignTestApi
         return (await response.Content.ReadFromJsonAsync<CampaignResponse>(Json))!;
     }
 
+    public static async Task<CampaignResponse> UpdateCampaignAsync(this Person dm, Guid campaignId, string name, string? description) =>
+        await (await dm.Client.PutAsJsonAsync($"/api/campaigns/{campaignId}", new UpdateCampaignRequest(name, description), Json))
+            .ReadAsync<CampaignResponse>(HttpStatusCode.OK);
+
+    // The campaign's card on the person's home page.
+    public static async Task<CampaignSummaryResponse> CampaignSummaryAsync(this Person person, Guid campaignId) =>
+        Assert.Single(
+            await (await person.Client.GetAsync("/api/campaigns")).ReadAsync<List<CampaignSummaryResponse>>(HttpStatusCode.OK),
+            c => c.Id == campaignId);
+
     public static async Task PromoteAsync(this Person dm, Guid campaignId, Guid userId)
     {
         var response = await dm.Client.PostAsync($"/api/campaigns/{campaignId}/members/{userId}/promote", null);

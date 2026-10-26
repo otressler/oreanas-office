@@ -192,6 +192,57 @@ public sealed class CampaignTests(AppFixture fixture) : IClassFixture<AppFixture
     }
 
     [Fact]
+    public async Task A_card_lists_every_character_with_mine_first()
+    {
+        var dm = await fixture.App.CreatePersonAsync("Oreana");
+        var player = await fixture.App.CreatePersonAsync("Brom");
+        var campaign = await dm.CreateCampaignAsync();
+        await player.JoinAsync(campaign.JoinCode!);
+        var mira = await dm.CreateCharacterAsync(campaign.Id, "Mira");
+        var thorin = await (await player.Client.PostAsJsonAsync(
+                $"/api/campaigns/{campaign.Id}/characters", new CharacterRequest("Thorin", CreatureSize.Medium, Color: "#AA0000"), Json))
+            .ReadAsync<CharacterResponse>(HttpStatusCode.Created);
+        var kel = await dm.CreateCharacterAsync(campaign.Id, "Kel");
+
+        var card = await player.CampaignSummaryAsync(campaign.Id);
+
+        Assert.Equal(
+            [
+                new CampaignCharacterSummary(thorin.Id, "Thorin", 1, "#aa0000", null, Mine: true),
+                new CampaignCharacterSummary(mira.Id, "Mira", 0, null, null, Mine: false),
+                new CampaignCharacterSummary(kel.Id, "Kel", 2, null, null, Mine: false),
+            ],
+            card.Characters);
+        Assert.Equal((null, null), (card.Description, card.CoverUrl));
+    }
+
+    [Fact]
+    public async Task A_dm_changes_the_name_and_description()
+    {
+        var dm = await fixture.App.CreatePersonAsync("Oreana");
+        var player = await fixture.App.CreatePersonAsync("Brom");
+        var campaign = await dm.CreateCampaignAsync();
+        await player.JoinAsync(campaign.JoinCode!);
+
+        var updated = await dm.UpdateCampaignAsync(campaign.Id, "  Der Fluch  ", "  Nebel über Barovia.  ");
+
+        Assert.Equal(("Der Fluch", "Nebel über Barovia."), (updated.Name, updated.Description));
+        var card = await player.CampaignSummaryAsync(campaign.Id);
+        Assert.Equal(("Der Fluch", "Nebel über Barovia."), (card.Name, card.Description));
+        Assert.Null((await dm.UpdateCampaignAsync(campaign.Id, "Der Fluch", "   ")).Description);
+
+        var byPlayer = await player.Client.PutAsJsonAsync(
+            $"/api/campaigns/{campaign.Id}", new UpdateCampaignRequest("Meins", null), Json);
+        Assert.Equal(HttpStatusCode.Forbidden, byPlayer.StatusCode);
+        var tooLong = await dm.Client.PutAsJsonAsync(
+            $"/api/campaigns/{campaign.Id}", new UpdateCampaignRequest("Der Fluch", new string('a', Campaign.DescriptionMaxLength + 1)), Json);
+        await tooLong.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.DescriptionInvalid, "description");
+        var noName = await dm.Client.PutAsJsonAsync($"/api/campaigns/{campaign.Id}", new UpdateCampaignRequest(" ", null), Json);
+        await noName.AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.NameInvalid, "name");
+        Assert.Equal("Der Fluch", (await dm.GetCampaignAsync(campaign.Id)).Name);
+    }
+
+    [Fact]
     public async Task A_new_join_code_replaces_the_old_one()
     {
         var dm = await fixture.App.CreatePersonAsync("Oreana");

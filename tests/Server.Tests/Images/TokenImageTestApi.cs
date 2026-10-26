@@ -87,6 +87,17 @@ public static class TokenImageTestApi
         await (await person.UploadAsync(campaignId, characterId, picture ?? TestPictures.SplitJpeg(300, 200), "image/jpeg"))
             .ReadAsync<TokenImage>(HttpStatusCode.Created);
 
+    public static Task<HttpResponseMessage> UploadIconAsync(this Person person, Guid campaignId, Guid typeId, byte[] picture, string contentType)
+    {
+        var content = new ByteArrayContent(picture);
+        content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        return person.Client.PostAsync($"{IconsUrl(campaignId, typeId)}/upload", content);
+    }
+
+    public static async Task<TokenImage> UploadIconOkAsync(this Person person, Guid campaignId, Guid typeId) =>
+        await (await person.UploadIconAsync(campaignId, typeId, TestPictures.SplitJpeg(300, 200), "image/jpeg"))
+            .ReadAsync<TokenImage>(HttpStatusCode.Created);
+
     public static async Task<TokenImagesResponse> ListIconsAsync(this Person person, Guid campaignId, Guid typeId) =>
         await (await person.Client.GetAsync(IconsUrl(campaignId, typeId))).ReadAsync<TokenImagesResponse>(HttpStatusCode.OK);
 

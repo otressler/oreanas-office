@@ -14,6 +14,7 @@ import {
 import { pull } from './pull'
 import {
   CAMPAIGN,
+  NO_CARD,
   SESSION,
   fakeServer,
   seedCampaign,
@@ -40,7 +41,9 @@ beforeEach(async () => {
   resetSyncState()
   db = offlineDb('user-1')
   server = fakeServer()
-  server.campaigns = [{ id: CAMPAIGN, name: 'Die Rabenküste', myRole: 'dm', activeSession: null }]
+  server.campaigns = [
+    { id: CAMPAIGN, name: 'Die Rabenküste', myRole: 'dm', activeSession: null, ...NO_CARD },
+  ]
   await seedCampaign(db)
 })
 
@@ -457,7 +460,7 @@ describe('pull', () => {
 
   it('pulls only the campaign list as a player', async () => {
     server.campaigns = [
-      { id: CAMPAIGN, name: 'Die Rabenküste', myRole: 'player', activeSession: null },
+      { id: CAMPAIGN, name: 'Die Rabenküste', myRole: 'player', activeSession: null, ...NO_CARD },
     ]
     server.put(serverMap('secret-map', 1))
 

@@ -1,5 +1,7 @@
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Rules;
+using OreanasOffice.Server.Sessions;
+using OreanasOffice.Server.Table;
 using OreanasOffice.Server.Statuses;
 
 namespace OreanasOffice.Server.Encounters;
@@ -50,7 +52,43 @@ public record BoardStateResponse(
     UndoableMove? UndoableMove,
     List<BoardToken> RemovedTokens,
     List<StatusDefinitionView> Statuses,
-    List<BoardPerson> People);
+    List<BoardPerson> People,
+    BoardViewer Viewer,
+    FogView? Fog,
+    PlayMode PlayMode,
+    PresenceState Presence,
+    InitiativeView? Initiative = null);
+
+// The initiative list on the session DM's board (knowledge/features/initiative.md); null on
+// every other board. Version: InitiativeVersion; devices keep the list with the higher
+// version. Entries: in turn order, null while initiative is off. Entries of removed tokens
+// stay listed; devices leave them out until the token is back.
+public record InitiativeView(int Version, List<InitiativeEntry>? Entries);
+
+// Who the board was built for (knowledge/features/fog-of-war.md, "Keeping secrets on the
+// wire"). Dm: the session DM's own device, which sees everything. Player: everyone else, and
+// any connection that asked for the players' view (?view=player: spectator and shared
+// screens, also when signed in as the session DM). A Player board has no hidden creature,
+// no layout of a hidden cell, no areas and no removed tokens, and IsSessionDm is false.
+public enum BoardViewer
+{
+    Dm,
+    Player,
+}
+
+// Fog as a device gets it. Version: FogVersion; devices keep the fog with the higher
+// version. HiddenCells: the DM's and the players' alike. Areas: the DM only (empty for
+// players).
+public record FogView(int Version, List<BoardCell> HiddenCells, List<FogArea> Areas);
+
+// Who is connected to the fight right now (knowledge/features/shared-table.md), built from
+// live connections and never stored. SharedScreen: a spectator screen is connected to the
+// session (the table icon).
+public record PresenceState(List<PresentPerson> People, bool SharedScreen);
+
+// A person (campaign member) in the row of avatars; Connected is false when none of their
+// devices is, for longer than the 10-second grace. IsSessionDm: the avatar gets the gold ring.
+public record PresentPerson(Guid UserId, bool Connected, bool IsSessionDm);
 
 // PingColor: "#rrggbb" (knowledge/features/pings-and-arrows.md, "Colours"): the session
 // DM's fixed gold; a player's first character in this fight (by the order characters were
@@ -64,23 +102,34 @@ public record UndoableMove(Guid TokenId, int Version);
 
 // Background: the picture to draw under the grid, null for the plain rendering. For an
 // active or ended encounter the one saved when it started, otherwise the map's picked
-// background while it fits the map's size.
-public record BoardMap(Guid Id, string Name, int Width, int Height, MapLayout Layout, BoardBackground? Background);
+// background while it fits the map's size. Grid: how the grid is drawn over the picture.
+public record BoardMap(
+    Guid Id,
+    string Name,
+    int Width,
+    int Height,
+    MapLayout Layout,
+    BoardBackground? Background,
+    MapGridStyle Grid = MapGridStyle.Normal);
 
-// Url: /api/assets/{id}, cacheable for good. X, Y, Width, Height: where the picture lies
-// in cells, relative to the map's top-left cell (Asset.FrameX…). Padding of a map wider
-// than 3:1 lies outside the map.
-public record BoardBackground(Guid AssetId, string Url, int X, int Y, int Width, int Height);
+// Url: /api/assets/{id}, cacheable for good. X, Y, Width, Height: where the unturned picture
+// lies in cells, relative to the map's top-left cell (the DM's BackgroundPlacement, or the
+// asset's frame). Rotation: degrees clockwise around the picture's centre. Padding of a map
+// wider than 3:1 lies outside the map.
+public record BoardBackground(Guid AssetId, string Url, double X, double Y, double Width, double Height, double Rotation);
 
-// Label: the character's name or the creature's label. OwnerUserId: the character's
-// owner, null for creatures. ColorIndex: characters get a fixed ring colour by the
+// Label: the character's name or the creature's label. OwnerUserId: who plays the
+// character in this session, its owner unless the session DM handed it to someone else
+// (CharacterPlayers); null for creatures. ColorIndex: characters get a fixed ring colour by the
 // order they were added to the campaign (0, 1, 2…); null for creatures, which share
 // one colour. Color: the ring colour the character's player picked ("#rrggbb"), which
 // replaces the one ColorIndex gives; null for that default and for creatures. Size
 // comes from the character or creature type. Version: see
 // Token.Version; devices keep the position with the higher version. ImageUrl: the
 // character's or creature type's picked portrait or icon as it is now, also in a running
-// fight (knowledge/features/token-icons.md); null for the letter. Statuses: in the order
+// fight (knowledge/features/token-icons.md); null for the letter. Label of a creature:
+// CreatureLabels.Display, the type name and number or the DM's own name; an unseen creature
+// has no number (knowledge/features/fog-of-war.md). Hidden: only on a Dm board. Statuses: in the order
 // they were put on (knowledge/features/statuses.md). RemovedAt: set only on
 // BoardStateResponse.RemovedTokens.
 public record BoardToken(
@@ -99,8 +148,11 @@ public record BoardToken(
     string? ImageUrl,
     string? Color,
     List<BoardTokenStatus> Statuses,
-    DateTimeOffset? RemovedAt = null);
+    DateTimeOffset? RemovedAt = null,
+    bool Hidden = false);
 
 // A status on a token. Level: 1-6 for statuses with levels, else null. AppliedByUserId:
-// who put it on (the card's "von Eli"); a player may remove only their own.
-public record BoardTokenStatus(Guid StatusId, int? Level, Guid AppliedByUserId, DateTimeOffset AppliedAt);
+// who put it on (the card's "von Eli"); a player may remove only their own. FromSharedScreen:
+// put on from a shared screen (the card says "Tisch"); only a shared screen removes it
+// (knowledge/features/shared-table.md).
+public record BoardTokenStatus(Guid StatusId, int? Level, Guid AppliedByUserId, DateTimeOffset AppliedAt, bool FromSharedScreen);

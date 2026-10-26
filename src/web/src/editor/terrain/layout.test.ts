@@ -220,6 +220,15 @@ describe('floodArea', () => {
 })
 
 describe('resizeMap', () => {
+  it('shifts the background placement with columns and rows added or removed at the left and top', () => {
+    const placement = { assetId: 'a', x: 0.5, y: -1, width: 12, height: 9, rotation: 2 }
+    const doc = resizeMap(
+      { ...emptyMap('Klamm', 10, 8), backgroundPlacement: placement },
+      { left: 2, right: 1, top: -1, bottom: 0 },
+    )
+    expect(doc.backgroundPlacement).toEqual({ ...placement, x: 2.5, y: -2 })
+  })
+
   const gorge = () =>
     mapWith([cell(0, 0), cell(5, 2, 'water', -3), cell(9, 7, 'wall')], {
       features: [feature('f1', 4, 2, 3, 1), feature('f2', 8, 6, 2, 2)],

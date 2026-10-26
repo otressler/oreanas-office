@@ -8,10 +8,13 @@ import { de } from '../text/de'
 export function Modal({
   title,
   onClose,
+  size = 'wide',
   children,
 }: {
   title: string
   onClose: () => void
+  /** "narrow" for a small tool such as the dice tray. */
+  size?: 'wide' | 'narrow'
   children: ReactNode
 }) {
   const titleId = useId()
@@ -34,7 +37,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="flex w-full max-w-3xl flex-col gap-4 rounded-xl border border-line bg-panel p-4 text-parchment shadow-xl outline-none"
+        className={`flex w-full ${size === 'narrow' ? 'max-w-lg' : 'max-w-3xl'} flex-col gap-4 rounded-xl border border-line bg-panel p-4 text-parchment shadow-xl outline-none`}
       >
         <div className="flex items-start gap-2">
           <h2 id={titleId} className="min-w-0 text-xl font-semibold break-words">

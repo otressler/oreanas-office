@@ -53,13 +53,15 @@ app.MapSessionEndpoints();
 app.MapEncounterEndpoints();
 app.MapSyncEndpoints();
 app.MapMapStoreEndpoints();
+app.MapMapEndpoints();
 app.MapImageEndpoints();
 app.MapTokenImageEndpoints();
+app.MapCampaignCoverEndpoints();
 app.MapStatusEndpoints();
 app.MapTableHub();
 app.MapImageHub();
 
-if (app.Environment.IsEnvironment(TestingEndpoints.Environment))
+if (TestingEndpoints.IsMappedIn(app.Environment))
 {
     app.MapTestingEndpoints();
 }
