@@ -156,8 +156,8 @@ function useLandOnFight(campaigns: CampaignSummary[] | undefined) {
 
 /**
  * A card's frame: the cover on top fading into the panel, a double gold edge, and the
- * title as a link that covers the whole card. Links can't nest, so the fight's button
- * sits above that link (z-10).
+ * title as a link that covers the whole card, cover included. Links can't nest, so the
+ * fight's button sits above that link (z-10).
  */
 function CardFrame({
   to,
@@ -187,8 +187,11 @@ function CardFrame({
         />
         <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2">{corner}</div>
       </div>
-      <div className="relative -mt-14 flex flex-1 flex-col gap-4 px-5 pb-5">
-        <h2 className="font-display text-2xl leading-tight font-semibold text-parchment drop-shadow-[0_2px_8px_rgb(0_0_0/0.9)]">
+      {/* Over the cover by z-index, which a flex item takes without `relative`: positioned,
+          it would hold the title's link to this part of the card and leave the cover dead. */}
+      <div className="z-[1] -mt-14 flex flex-1 flex-col gap-4 px-5 pb-5">
+        {/* A text shadow, not drop-shadow: a filter would hold the link to the title, too. */}
+        <h2 className="font-display text-2xl leading-tight font-semibold text-parchment text-shadow-[0_2px_8px_rgb(0_0_0/0.9)]">
           <Link
             to={to}
             className="outline-none after:absolute after:inset-0 after:content-[''] hover:text-candle-strong"

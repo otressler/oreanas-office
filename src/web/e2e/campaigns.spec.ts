@@ -40,6 +40,16 @@ test('creates a campaign and becomes its DM', async ({ page }) => {
   await expect(card).toContainText(text.roleDm)
 })
 
+test('a campaign card opens the campaign from its cover, not just its name', async ({ page }) => {
+  await createCampaign(page, 'Die Rabenküste')
+  const campaign = backend.campaigns[0]!
+
+  await page.getByRole('link', { name: 'Alle Kampagnen' }).click()
+  // The middle of the cover, below the role's label.
+  await campaignCard(page, 'Die Rabenküste').click({ position: { x: 150, y: 80 } })
+  await expect(page).toHaveURL(`/kampagnen/${campaign.id}`)
+})
+
 test('joins a campaign with its code, ignoring case and dashes', async ({ page }) => {
   const dm = backend.addUser({ displayName: 'Oreana', email: 'oreana@example.org' })
   const campaign = backend.addCampaign('Das Grab der Annihilation', dm, 'KX7PQ2')
