@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { Outlet } from 'react-router'
 import { OfflineMapsLink } from '../maps/OfflineMapsLink'
 import { de } from '../text/de'
+import { D20Spinner } from './D20Spinner'
 import { startServerGate, useServerStatus } from './serverStatus'
 
 /** Route element: the child routes need the server (everything but the offline map pages). */
@@ -82,14 +83,11 @@ function GateMessage({
       data-testid={testId}
       className="mx-auto flex max-w-md flex-col items-center gap-4 px-2 py-16 text-center"
     >
-      <span
-        aria-hidden="true"
-        className={
-          busy
-            ? 'size-3 rounded-full bg-candle shadow-[0_0_18px_4px] shadow-candle/50 motion-safe:animate-pulse'
-            : 'size-3 rounded-full border-2 border-dim'
-        }
-      />
+      {busy ? (
+        <D20Spinner className="size-24" />
+      ) : (
+        <span aria-hidden="true" className="size-3 rounded-full border-2 border-dim" />
+      )}
       <h1 className="text-2xl font-semibold text-parchment">{title}</h1>
       <p className="text-base text-dim">{body}</p>
       {action && (

@@ -15,6 +15,19 @@
   --color-candle-strong: #f0c46e;
 
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* The golden glow behind the waking screen's d20 (server/D20Spinner.tsx). */
+  --animate-d20-glow: d20-glow 2.2s ease-in-out infinite;
+
+  @keyframes d20-glow {
+    0%,
+    100% {
+      opacity: 0.2;
+    }
+    50% {
+      opacity: 0.95;
+    }
+  }
 }
 
 @layer base {
