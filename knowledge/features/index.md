@@ -26,4 +26,5 @@
 # Around the app
 
 - [Campaign overview](campaign-overview.md) - Home shows campaigns as cards with cover, description and characters, and joining and creating side by side, in the landing page's look and at desktop width
+- [Campaign page](campaign-page.md) - Cover banner with a pencil, sessions, characters as tall portrait cards, and the maps and bestiary as picture panels; the bestiary gets a page of its own
 - [Landing page](landing-page.md) - Public page at /willkommen showing what the app does; home sends devices nobody has signed in on there without waking the server

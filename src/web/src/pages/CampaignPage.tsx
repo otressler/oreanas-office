@@ -1,15 +1,18 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import type { Campaign } from '../api/types'
-import { CampaignCardPanel } from '../campaigns/CampaignCardPanel'
+import { CampaignCardEditor } from '../campaigns/CampaignCardEditor'
 import { CampaignCover } from '../campaigns/CampaignCover'
+import { CampaignPrep } from '../campaigns/CampaignPrep'
 import { useLocalCampaign } from '../campaigns/localCampaigns'
 import { CharactersPanel } from '../campaigns/CharactersPanel'
 import { MembersPanel } from '../campaigns/MembersPanel'
 import { useCampaign } from '../campaigns/queries'
 import { SessionsPanel } from '../campaigns/SessionsPanel'
 import { DmStatusListPanel } from '../statuses/DmStatusListPanel'
+import { PencilIcon } from '../components/icons'
+import { CoverLabel } from '../components/ornaments'
 import { Badge, LoadError, Loading, PageTitle } from '../components/ui'
-import { CampaignMapsLink } from '../maps/CampaignMapsLink'
 import { useKeepCampaignCopy } from '../maps/campaignCopy'
 import { SyncMark } from '../maps/SyncMark'
 import type { CampaignCopy } from '../offline/db'
@@ -18,7 +21,9 @@ import { de } from '../text/de'
 
 /**
  * /kampagnen/:campaignId — the sessions with their fights first, since that's what game
- * night needs (knowledge/features/session-planning.md); `dm` members also find the maps.
+ * night needs (knowledge/features/session-planning.md), then the characters as tall cards;
+ * `dm` members also find the maps and the bestiary (knowledge/features/campaign-page.md).
+ * Uses a desktop's width, like home.
  */
 export function CampaignPage() {
   const { campaignId = '' } = useParams()
@@ -35,48 +40,77 @@ export function CampaignPage() {
     return <LoadError error={campaign.error} onRetry={() => void campaign.refetch()} />
   }
 
+  const dm = campaign.data.myRole === 'dm'
   return (
-    <div className="flex flex-col pb-8">
+    <div className="flex flex-col pb-12">
       <Link to="/" className="pt-4 text-sm text-candle underline-offset-4 hover:underline">
         <span aria-hidden="true">← </span>
         {de.campaign.back}
       </Link>
       <CampaignHeader campaign={campaign.data} />
       <SessionsPanel campaign={campaign.data} />
-      {campaign.data.myRole === 'dm' && <CampaignMapsLink campaignId={campaign.data.id} />}
       <CharactersPanel campaign={campaign.data} />
-      {campaign.data.myRole === 'dm' && <DmStatusListPanel campaignId={campaign.data.id} />}
-      {campaign.data.myRole === 'dm' && <CampaignCardPanel campaign={campaign.data} />}
-      <MembersPanel campaign={campaign.data} />
+      {dm && <CampaignPrep campaignId={campaign.data.id} />}
+      <div className="mt-12 grid items-start gap-x-6 lg:grid-cols-2">
+        <MembersPanel campaign={campaign.data} />
+        {dm && <DmStatusListPanel campaignId={campaign.data.id} />}
+      </div>
     </div>
   )
 }
 
-/** The cover with the name over it, as on the home page's card, and the description. */
+/**
+ * The cover with the name over it, as on the home page's card, and the description. `dm`
+ * members open the cover and description's editor with the pencil in its corner.
+ */
 function CampaignHeader({ campaign }: { campaign: Campaign }) {
+  const [editing, setEditing] = useState(false)
   return (
-    <header className="mt-4 flex flex-col gap-3">
-      <div className="relative overflow-hidden rounded-sm border border-candle/25">
+    <header className="mt-4 flex flex-col gap-4">
+      <div className="relative overflow-hidden rounded-sm border border-candle/25 shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]">
         <CampaignCover
           url={campaign.coverUrl}
           alt=""
-          sizes="(min-width: 768px) 736px, 100vw"
-          className="aspect-[3/1] w-full sm:aspect-[4/1]"
+          sizes="(min-width: 1152px) 1120px, 100vw"
+          className="aspect-[2/1] w-full sm:aspect-[3/1] lg:aspect-[4/1]"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-table via-table/50 to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-table via-table/40 to-transparent"
         />
-        <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end gap-3 px-4 pb-3">
-          <h1 className="font-display text-2xl font-semibold text-parchment drop-shadow-[0_2px_8px_rgb(0_0_0/0.9)] sm:text-3xl">
+        <div className="absolute top-3 left-3">
+          <CoverLabel>{de.roles[campaign.myRole]}</CoverLabel>
+        </div>
+        {campaign.myRole === 'dm' && (
+          <button
+            type="button"
+            aria-label={de.campaign.editCard}
+            title={de.campaign.editCard}
+            aria-expanded={editing}
+            onClick={() => setEditing((open) => !open)}
+            className={`absolute top-2 right-2 flex size-11 items-center justify-center rounded-full border bg-table/75 backdrop-blur-sm transition-colors ${
+              editing
+                ? 'border-candle text-candle-strong'
+                : 'border-candle/40 text-parchment hover:border-candle hover:text-candle-strong'
+            }`}
+          >
+            <PencilIcon className="size-5" />
+          </button>
+        )}
+        <div className="absolute inset-x-0 bottom-0 px-5 pb-4 sm:px-8 sm:pb-6">
+          <h1 className="font-display text-3xl font-semibold text-parchment drop-shadow-[0_2px_8px_rgb(0_0_0/0.9)] sm:text-5xl">
             {campaign.name}
           </h1>
-          <span className="mb-1">
-            <Badge>{de.roles[campaign.myRole]}</Badge>
-          </span>
         </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-1.5 rounded-sm border border-candle/10"
+        />
       </div>
-      {campaign.description && <p className="text-parchment/85">{campaign.description}</p>}
+      {campaign.description && (
+        <p className="max-w-3xl text-lg text-parchment/85">{campaign.description}</p>
+      )}
+      {editing && <CampaignCardEditor campaign={campaign} onDone={() => setEditing(false)} />}
     </header>
   )
 }
@@ -102,7 +136,7 @@ function LocalCampaignPage({ copy }: { copy: CampaignCopy }) {
       <div className="mt-3">
         <SyncStatusView />
       </div>
-      <CampaignMapsLink campaignId={copy.id} />
+      <CampaignPrep campaignId={copy.id} />
     </div>
   )
 }

@@ -34,11 +34,14 @@ export function CharacterForm({
   campaignId,
   character,
   owners,
+  className = 'flex flex-col gap-3 rounded-lg border border-line p-3',
   onDone,
 }: {
   campaignId: string
   character?: Character
   owners?: OwnerChoice
+  /** The frame around form and portraits. */
+  className?: string
   onDone: () => void
 }) {
   const queryClient = useQueryClient()
@@ -115,9 +118,9 @@ export function CharacterForm({
   const appearanceLength = Array.from(appearance).length
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+    <div className={className}>
       <form onSubmit={submit} aria-labelledby={`${formId}-title`} className="flex flex-col gap-3">
-        <h3 id={`${formId}-title`} className="font-semibold text-parchment">
+        <h3 id={`${formId}-title`} className="font-display text-xl font-semibold text-parchment">
           {character ? t.editTitle(character.name) : t.add}
         </h3>
         <TextField

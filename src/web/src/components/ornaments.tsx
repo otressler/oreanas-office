@@ -1,7 +1,7 @@
 // Gold line ornaments from the landing page, also used in the app: frames with corner fans,
 // rules with a diamond, buttons with pointed ends. Drawn in SVG and CSS, so they stay sharp
 // at any size.
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { useId, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { Link } from 'react-router'
 
 export function Diamond({ className = '' }: { className?: string }) {
@@ -41,6 +41,95 @@ export function Kicker({ children, className = '' }: { children: ReactNode; clas
     >
       {children}
     </p>
+  )
+}
+
+/** A kicker, the heading in engraved capitals and a gold rule, as on the landing page. */
+export function SectionHeading({
+  id,
+  kicker,
+  level,
+  children,
+}: {
+  id?: string
+  kicker: string
+  level: 1 | 2
+  children: ReactNode
+}) {
+  const Heading = level === 1 ? 'h1' : 'h2'
+  return (
+    <div>
+      <Kicker>{kicker}</Kicker>
+      <Heading
+        id={id}
+        className="mt-3 bg-gradient-to-b from-parchment to-candle-strong bg-clip-text font-display text-3xl font-semibold text-transparent sm:text-5xl"
+      >
+        {children}
+      </Heading>
+      <Rule className="mt-4 w-56" />
+    </div>
+  )
+}
+
+/** A small engraved label over a picture. */
+export function CoverLabel({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-sm border border-candle/40 bg-table/80 px-2 py-0.5 font-display text-[0.65rem] font-semibold tracking-[0.2em] text-parchment uppercase backdrop-blur-sm">
+      {children}
+    </span>
+  )
+}
+
+/**
+ * A panel with a picture on top fading into it, then the title, a line and its content,
+ * all in a double gold edge: home's joining and creating, the campaign page's maps and bestiary.
+ */
+export function PicturePanel({
+  title,
+  body,
+  image,
+  children,
+}: {
+  title: string
+  body: string
+  image: { src: string; srcSet: string }
+  children: ReactNode
+}) {
+  const id = useId()
+  return (
+    <section
+      aria-labelledby={id}
+      className="group relative flex flex-col overflow-hidden rounded-sm border border-candle/25 bg-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]"
+    >
+      <div className="relative h-44 overflow-hidden sm:h-56">
+        <img
+          src={image.src}
+          srcSet={image.srcSet}
+          sizes="(min-width: 768px) 560px, 100vw"
+          alt=""
+          className="size-full object-cover"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-panel via-panel/60 to-transparent"
+        />
+      </div>
+      <div className="relative -mt-12 flex flex-1 flex-col gap-3 px-5 pb-6">
+        <h3
+          id={id}
+          className="font-display text-2xl font-semibold text-parchment drop-shadow-[0_2px_8px_rgb(0_0_0/0.9)]"
+        >
+          {title}
+        </h3>
+        <Rule className="w-32" />
+        <p className="text-sm text-dim">{body}</p>
+        {children}
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-1.5 rounded-sm border border-candle/10"
+      />
+    </section>
   )
 }
 

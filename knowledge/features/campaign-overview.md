@@ -37,7 +37,7 @@ Decided by the project owner on 2026-10-25:
 - **The cover** is uploaded through the crop step or generated from the campaign's name and description, like a character's portrait: versions in a gallery, one picked, generating confirmed first and paid from the shared [image budget](/decisions/image-budget.md). Only `dm` members see the gallery. Generating needs a description. Picking none brings back the default cover.
 - **Characters on the card**: all of them, the viewer's own first.
 
-`dm` members find both under "Titelbild und Beschreibung" on the campaign page, where they can also rename the campaign. The campaign page shows the cover as a banner with the name over it, and the description below, to every member.
+`dm` members find both under "Titelbild und Beschreibung", behind the pencil on the campaign page's cover, where they can also rename the campaign ([campaign page](/features/campaign-page.md)). The campaign page shows the cover as a banner with the name over it, and the description below, to every member.
 
 # As built
 

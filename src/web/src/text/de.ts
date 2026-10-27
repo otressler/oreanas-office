@@ -643,7 +643,6 @@ export const de = {
     descriptionHint:
       'Ein, zwei Sätze für die Karte auf der Startseite, höchstens 300 Zeichen. Daraus wird auch das Titelbild gemalt.',
     saving: 'Die Änderungen an der Kampagne werden gespeichert…',
-    edit: 'Bearbeiten',
     coverTitle: 'Titelbild',
     generateCover: 'Titelbild erzeugen',
     regenerateCover: 'Neues Titelbild erzeugen',
@@ -654,10 +653,18 @@ export const de = {
       'Das Bildmodell hat dieses Bild abgelehnt. Versuch es mit einer anderen Beschreibung.',
     /** The cover's alt text, e.g. "Titelbild von Die Rabenküste". */
     coverAlt: (name: string) => `Titelbild von ${name}`,
+    /** The pencil on the cover that opens the panel above. */
+    editCard: 'Titelbild und Beschreibung bearbeiten',
+    /** The `dm` members' maps and bestiary (knowledge/features/campaign-page.md). */
+    prepKicker: 'Hinter dem Schirm',
+    prepTitle: 'Vorbereitung',
   },
 
   characters: {
+    kicker: 'Die Gefährten',
     title: 'Charaktere',
+    /** The label over the viewer's own character's card. */
+    mine: 'Dein Charakter',
     empty: 'Noch keine Charaktere.',
     add: 'Neuer Charakter',
     name: 'Name',
@@ -1318,9 +1325,17 @@ export const de = {
     title: (campaign: string) => `Karten – ${campaign}`,
     back: 'Zur Kampagne',
     intro: 'Karten entstehen in diesem Browser und lassen sich auch ohne Verbindung bearbeiten.',
-    /** The link on the campaign page. */
+    /** The panel on the campaign page. */
     campaignLink: 'Karten',
-    campaignLinkHint: 'Karten anlegen und bearbeiten, auch ohne Verbindung.',
+    campaignLinkHint:
+      'Bau Schlachtfelder Feld für Feld, lass ihren Hintergrund malen und stell die Kämpfe darauf vor. Bearbeiten geht auch ohne Verbindung.',
+    campaignOpen: 'Karten öffnen',
+    /** How many maps this browser has, e.g. "3 Karten · 1 archiviert". */
+    campaignCount: (active: number, archived: number) =>
+      [
+        active === 0 ? 'Noch keine Karten' : active === 1 ? 'Eine Karte' : `${active} Karten`,
+        ...(archived > 0 ? [`${archived} archiviert`] : []),
+      ].join(' · '),
     activeTitle: 'Karten',
     empty: 'Noch keine Karten. Lege eine neue an oder importiere eine Kartendatei.',
     archivedTitle: (count: number) => `Archiviert (${count})`,
@@ -1823,6 +1838,25 @@ export const de = {
   /** Creature types and the bestiary (lane: bestiary). */
   bestiary: {
     title: 'Bestiarium',
+    /** The bestiary's own page (knowledge/features/campaign-page.md). */
+    pageTitle: (campaign: string) => `Bestiarium – ${campaign}`,
+    pageIntro:
+      'Die Kreaturenarten dieser Kampagne. Sie entstehen in diesem Browser und lassen sich auch ohne Verbindung bearbeiten; Symbole malen und hochladen braucht eine Verbindung.',
+    notDmBody:
+      'Das Bestiarium einer Kampagne sehen und bearbeiten nur Mitglieder der Spielleitung.',
+    unknownBody:
+      'Öffne die Liste deiner Kampagnen einmal mit Verbindung. Danach lässt sich ihr Bestiarium auch ohne Verbindung bearbeiten.',
+    /** The panel on the campaign page. */
+    campaignBody:
+      'Goblins, Oger und was sonst im Dunkeln lauert: jede Kreaturenart mit Größe, Initiative und gemaltem Symbol, bereit für jeden Kampf.',
+    campaignOpen: 'Bestiarium öffnen',
+    /** How many creature types this browser has, e.g. "12 Kreaturenarten". */
+    campaignCount: (count: number) =>
+      count === 0
+        ? 'Noch keine Kreaturenarten'
+        : count === 1
+          ? 'Eine Kreaturenart'
+          : `${count} Kreaturenarten`,
     empty: 'Noch keine Kreaturenarten. Lege die erste an.',
     newType: 'Neue Kreaturenart',
     newTitle: 'Neue Kreaturenart',

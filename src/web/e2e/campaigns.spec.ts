@@ -118,8 +118,8 @@ test('a DM describes the campaign, and its card on home shows the description', 
 }) => {
   await createCampaign(page, 'Die Rabenküste')
 
+  await page.getByRole('button', { name: 'Titelbild und Beschreibung bearbeiten' }).click()
   const editor = panel(page, 'Titelbild und Beschreibung')
-  await editor.getByRole('button', { name: 'Bearbeiten' }).click()
   await editor.getByLabel('Beschreibung').fill('Schmugglerbuchten und ein grünes Leuchtfeuer.')
   await editor.getByRole('button', { name: 'Speichern' }).click()
   await expect(page.getByText('Schmugglerbuchten und ein grünes Leuchtfeuer.')).toBeVisible()
