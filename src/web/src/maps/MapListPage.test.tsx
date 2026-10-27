@@ -127,7 +127,8 @@ describe('MapListPage', () => {
     expect(await screen.findByText(t.duplicated('Klamm (Kopie)'))).toBeInTheDocument()
     const copy = (await listMaps(db(), CAMPAIGN_ID)).find((m) => m.name === 'Klamm (Kopie)')!
     expect(copy).toMatchObject({ copiedFromMapId: original.id, width: 10, height: 8 })
-    expect(within(activeList()).getByText('Klamm (Kopie)')).toBeInTheDocument()
+    // The list follows the browser's copy a moment later.
+    expect(await within(activeList()).findByText('Klamm (Kopie)')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: t.archiveMap('Klamm (Kopie)') }))
     expect(await screen.findByText(t.archived('Klamm (Kopie)'))).toBeInTheDocument()
@@ -184,7 +185,7 @@ describe('MapListPage', () => {
     const [map] = await listMaps(db(), CAMPAIGN_ID)
     expect(map).toMatchObject({ name: 'Furt', width: 12, height: 6, scene: 'eine Furt' })
     expect(map).not.toHaveProperty('creatures')
-    expect(within(activeList()).getByText('Furt')).toBeInTheDocument()
+    expect(await within(activeList()).findByText('Furt')).toBeInTheDocument()
     await waitFor(() => expect(persist).toHaveBeenCalledTimes(1))
   })
 

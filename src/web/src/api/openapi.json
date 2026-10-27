@@ -898,6 +898,82 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/characters/importable": {
+      "get": {
+        "tags": [
+          "Characters"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ImportableCharacterResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/characters/import": {
+      "post": {
+        "tags": [
+          "Characters"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportCharacterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/sessions": {
       "get": {
         "tags": [
@@ -5081,6 +5157,73 @@
           "WatchTokenImages"
         ],
         "type": "string"
+      },
+      "ImportableCharacterResponse": {
+        "required": [
+          "id",
+          "campaignId",
+          "campaignName",
+          "name",
+          "size",
+          "tagline",
+          "characterClass",
+          "species",
+          "color",
+          "portraitUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignName": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "$ref": "#/components/schemas/CreatureSize"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "characterClass": {
+            "type": "string"
+          },
+          "species": {
+            "type": "string"
+          },
+          "color": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "portraitUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ImportCharacterRequest": {
+        "required": [
+          "characterId"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       },
       "ImportCreature": {
         "required": [

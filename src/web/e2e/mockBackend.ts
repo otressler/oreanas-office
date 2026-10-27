@@ -1088,6 +1088,55 @@ export class MockBackend {
       this.characters.push(character)
       return [201, this.characterResponse(character, me.id, isDm)]
     }
+    // Follows src/Server/Characters/CharacterImport.cs.
+    const importable = () =>
+      this.characters.filter((c) => {
+        const from = this.campaigns.find((other) => other.id === c.campaignId)
+        return (
+          c.ownerUserId === me.id &&
+          c.campaignId !== campaign.id &&
+          from !== undefined &&
+          memberOf(from, me.id) !== undefined
+        )
+      })
+    if (path === `${base}/characters/importable` && method === 'GET') {
+      const campaignName = (c: Character) =>
+        this.campaigns.find((other) => other.id === c.campaignId)!.name
+      return [
+        200,
+        importable()
+          .sort(
+            (a, b) =>
+              campaignName(a).localeCompare(campaignName(b)) || a.name.localeCompare(b.name),
+          )
+          .map((c) => ({
+            id: c.id,
+            campaignId: c.campaignId,
+            campaignName: campaignName(c),
+            name: c.name,
+            size: c.size,
+            tagline: c.tagline,
+            characterClass: c.characterClass,
+            species: c.species,
+            color: c.color,
+            portraitUrl: this.pickedTokenImageUrl(c.id),
+          })),
+      ]
+    }
+    if (path === `${base}/characters/import` && method === 'POST') {
+      const source = importable().find((c) => c.id === body.characterId)
+      if (!source) return [404]
+      const copy: Character = { ...source, id: randomUUID(), campaignId: campaign.id }
+      this.characters.push(copy)
+      const pickedId = this.pickedTokenImages.get(source.id)
+      const picked = pickedId && this.tokenImages.find((t) => t.image.id === pickedId)
+      if (picked) {
+        const image = this.newTokenImage('character', copy.id, picked.image.origin, null)
+        this.tokenImages.push({ ...picked, image, campaignId: campaign.id })
+        this.finishTokenImage(image)
+      }
+      return [201, this.characterResponse(copy, me.id, isDm)]
+    }
     if ((params = match(`${base}/characters/:characterId`)) && method === 'PUT') {
       const character = this.characters.find(
         (c) => c.id === params!.characterId && c.campaignId === campaign.id,

@@ -45,4 +45,6 @@ Added on 2026-10-24 at the project owner's request ("assign characters to player
 
 The texts `appearance`, `background`, `personality` and `bonds` are shown and edited on the character's [page](/features/character-page.md); every member of the campaign can read them (project owner, 2026-10-27).
 
+A player can copy one of their characters from another campaign into this one ([character import](/features/character-import.md)); the copy is a new, independent character.
+
 Deliberately thin: only what the board needs. Speed is out until the [distance rules](/backlog.md) come back (project owner, 2026-10-14). Full character sheets are part of the campaign management focus area in the [backlog](/backlog.md).

@@ -39,3 +39,23 @@ public record CharacterResponse(
     string CharacterClass,
     string Species,
     string Age);
+
+// One of the signed-in user's characters in another campaign they belong to, to take into
+// this one (knowledge/features/character-import.md). Color: the ring colour its player
+// picked, which the copy keeps; null for the default. PortraitUrl: its picked portrait, null
+// for the letter.
+public record ImportableCharacterResponse(
+    Guid Id,
+    Guid CampaignId,
+    string CampaignName,
+    string Name,
+    CreatureSize Size,
+    string Tagline,
+    string CharacterClass,
+    string Species,
+    string? Color,
+    string? PortraitUrl);
+
+// CharacterId: one of the user's characters from GET characters/importable. The copy belongs
+// to the signed-in user; 404 for anything else.
+public record ImportCharacterRequest(Guid CharacterId);

@@ -2,22 +2,16 @@ import { useId } from 'react'
 import type { Campaign, Character } from '../api/types'
 import { useCurrentUser } from '../auth/auth'
 import { ringColor } from '../board/palette'
+import { ImportIcon } from '../components/icons'
 import { SectionHeading } from '../components/ornaments'
-import { AddCard, SheetCard, type Backdrop } from '../components/SheetCard'
+import { AddCard, SheetCard } from '../components/SheetCard'
 import { LoadError, Loading } from '../components/ui'
 import { de } from '../text/de'
-import { characterPath, newCharacterPath } from './paths'
-import { useCharacters } from './queries'
+import { CHARACTER_BACKDROP } from './backdrop'
+import { characterPath, importCharacterPath, newCharacterPath } from './paths'
+import { useCharacters, useImportableCharacters } from './queries'
 
 const t = de.characters
-
-/** The alcove every card's portrait stands in (public/campaign/). */
-const BACKDROP: Backdrop = {
-  src: '/campaign/character-backdrop-1024.webp',
-  srcSet:
-    '/campaign/character-backdrop-512.webp 512w, /campaign/character-backdrop-1024.webp 1024w',
-  sizes: '(min-width: 1024px) 270px, (min-width: 640px) 33vw, 50vw',
-}
 
 /**
  * The campaign's characters as tall cards, the viewer's own first
@@ -30,6 +24,8 @@ export function CharactersPanel({ campaign }: { campaign: Campaign }) {
   const campaignId = campaign.id
   const me = useCurrentUser()
   const characters = useCharacters(campaignId)
+  // Only to offer the import tile; the list waits on its own page.
+  const importable = useImportableCharacters(campaignId)
   const headingId = useId()
   const ordered = characters.data ? mineFirst(characters.data, me.id) : []
 
@@ -59,6 +55,15 @@ export function CharactersPanel({ campaign }: { campaign: Campaign }) {
               <li className="flex">
                 <AddCard to={newCharacterPath(campaignId)} label={t.add} />
               </li>
+              {importable.data && importable.data.length > 0 && (
+                <li className="flex">
+                  <AddCard
+                    to={importCharacterPath(campaignId)}
+                    label={t.import.title}
+                    icon={<ImportIcon className="size-7" />}
+                  />
+                </li>
+              )}
             </ul>
           </>
         )}
@@ -90,7 +95,7 @@ function CharacterCard({
       to={characterPath(campaignId, character.id)}
       label={t.page.open(character.name)}
       ring={ringColor({ kind: 'character', ...character })}
-      backdrop={BACKDROP}
+      backdrop={CHARACTER_BACKDROP}
       portraitUrl={character.portraitUrl}
       portraitAlt={t.portraitAlt(character.name)}
       name={character.name}

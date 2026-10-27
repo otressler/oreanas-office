@@ -5,6 +5,7 @@ import { WelcomeNewDevices } from './landing/WelcomeNewDevices'
 import { RequireLocalUser } from './offline/RequireLocalUser'
 import { AdminPage } from './pages/AdminPage'
 import { CampaignPage } from './pages/CampaignPage'
+import { CharacterImportPage } from './pages/CharacterImportPage'
 import { CharacterPage } from './pages/CharacterPage'
 import { HomePage } from './pages/HomePage'
 import { ImprintPage } from './pages/ImprintPage'
@@ -77,6 +78,11 @@ export const routes: RouteObject[] = [
                   {
                     path: 'kampagnen/:campaignId/charaktere/neu',
                     element: <CharacterPage isNew />,
+                    handle: { wide: true } satisfies LayoutHandle,
+                  },
+                  {
+                    path: 'kampagnen/:campaignId/charaktere/uebernehmen',
+                    element: <CharacterImportPage />,
                     handle: { wide: true } satisfies LayoutHandle,
                   },
                   {

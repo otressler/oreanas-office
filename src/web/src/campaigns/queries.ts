@@ -11,6 +11,8 @@ export const campaignKeys = {
   list: ['campaigns'] as const,
   detail: (campaignId: string) => ['campaign', campaignId] as const,
   characters: (campaignId: string) => ['campaign', campaignId, 'characters'] as const,
+  /** Under the characters, so a change to them refreshes what can still be imported. */
+  importable: (campaignId: string) => ['campaign', campaignId, 'characters', 'importable'] as const,
   sessions: (campaignId: string) => ['campaign', campaignId, 'sessions'] as const,
   session: (campaignId: string, sessionId: string) =>
     ['campaign', campaignId, 'sessions', sessionId] as const,
@@ -50,6 +52,15 @@ export function useCharacters(campaignId: string) {
   return useQuery({
     queryKey: campaignKeys.characters(campaignId),
     queryFn: () => unwrap(api.GET('/api/campaigns/{campaignId}/characters', path(campaignId))),
+  })
+}
+
+/** The viewer's characters in their other campaigns (knowledge/features/character-import.md). */
+export function useImportableCharacters(campaignId: string) {
+  return useQuery({
+    queryKey: campaignKeys.importable(campaignId),
+    queryFn: () =>
+      unwrap(api.GET('/api/campaigns/{campaignId}/characters/importable', path(campaignId))),
   })
 }
 

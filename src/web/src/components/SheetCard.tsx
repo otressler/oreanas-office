@@ -17,6 +17,7 @@ export interface Backdrop {
  * A tall card, as a whole a link: the portrait as painted, not cut to the token's circle,
  * standing in the backdrop lit in the ring colour, with the ring colour as a bar along the
  * top; below it the name, `meta` and the `tagline` (three lines at most, two when `compact`).
+ * Without `to` it is no link, and `action` (a button) stands at its foot.
  */
 export function SheetCard({
   to,
@@ -29,10 +30,11 @@ export function SheetCard({
   meta,
   tagline,
   compact = false,
+  action,
 }: {
-  to: string
+  to?: string
   /** The link's accessible name. */
-  label: string
+  label?: string
   ring: string
   backdrop: Backdrop
   portraitUrl: string | null | undefined
@@ -42,60 +44,66 @@ export function SheetCard({
   tagline?: string
   /** For the denser grid of a bestiary. */
   compact?: boolean
+  action?: ReactNode
 }) {
-  return (
-    <Link to={to} aria-label={label} className="flex w-full">
-      <article
-        style={{ '--ring': ring } as CSSProperties}
-        className="group relative flex w-full flex-col overflow-hidden rounded-sm border border-candle/25 bg-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)] transition-colors hover:border-candle/60"
-      >
-        <div className="relative aspect-[4/5] overflow-hidden">
-          <img
-            src={backdrop.src}
-            srcSet={backdrop.srcSet}
-            sizes={backdrop.sizes}
-            alt=""
-            decoding="async"
-            className="absolute inset-0 size-full object-cover object-[50%_35%] opacity-75"
-          />
-          {/* The backdrop's light in the ring colour. */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-[radial-gradient(60%_45%_at_50%_45%,color-mix(in_srgb,var(--ring)_40%,transparent),transparent_75%)]"
-          />
-          <Figure url={portraitUrl} alt={portraitAlt} name={name} ring={ring} compact={compact} />
-          <div
-            aria-hidden="true"
-            className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-panel via-panel/70 to-transparent"
-          />
-          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[var(--ring)]" />
-        </div>
-        <div
-          className={`relative z-[1] flex flex-1 flex-col gap-2 ${compact ? '-mt-9 px-3 pb-3' : '-mt-12 px-4 pb-4'}`}
-        >
-          <h3
-            className={`font-display leading-tight font-semibold break-words text-parchment text-shadow-[0_2px_8px_rgb(0_0_0/0.9)] ${compact ? 'text-lg' : 'text-xl'}`}
-          >
-            {name}
-          </h3>
-          <div
-            aria-hidden="true"
-            className="h-px w-24 bg-gradient-to-r from-[var(--ring)] to-transparent"
-          />
-          <p className="text-sm text-dim">{meta}</p>
-          {tagline && (
-            <p
-              className={`text-sm text-parchment/75 italic ${compact ? 'line-clamp-2' : 'line-clamp-3'}`}
-            >
-              {tagline}
-            </p>
-          )}
-        </div>
+  const card = (
+    <article
+      style={{ '--ring': ring } as CSSProperties}
+      className="group relative flex w-full flex-col overflow-hidden rounded-sm border border-candle/25 bg-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)] transition-colors hover:border-candle/60"
+    >
+      <div className="relative aspect-[4/5] overflow-hidden">
+        <img
+          src={backdrop.src}
+          srcSet={backdrop.srcSet}
+          sizes={backdrop.sizes}
+          alt=""
+          decoding="async"
+          className="absolute inset-0 size-full object-cover object-[50%_35%] opacity-75"
+        />
+        {/* The backdrop's light in the ring colour. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-1.5 rounded-sm border border-candle/10"
+          className="absolute inset-0 bg-[radial-gradient(60%_45%_at_50%_45%,color-mix(in_srgb,var(--ring)_40%,transparent),transparent_75%)]"
         />
-      </article>
+        <Figure url={portraitUrl} alt={portraitAlt} name={name} ring={ring} compact={compact} />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-panel via-panel/70 to-transparent"
+        />
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[var(--ring)]" />
+      </div>
+      <div
+        className={`relative z-[1] flex flex-1 flex-col gap-2 ${compact ? '-mt-9 px-3 pb-3' : '-mt-12 px-4 pb-4'}`}
+      >
+        <h3
+          className={`font-display leading-tight font-semibold break-words text-parchment text-shadow-[0_2px_8px_rgb(0_0_0/0.9)] ${compact ? 'text-lg' : 'text-xl'}`}
+        >
+          {name}
+        </h3>
+        <div
+          aria-hidden="true"
+          className="h-px w-24 bg-gradient-to-r from-[var(--ring)] to-transparent"
+        />
+        <p className="text-sm text-dim">{meta}</p>
+        {tagline && (
+          <p
+            className={`text-sm text-parchment/75 italic ${compact ? 'line-clamp-2' : 'line-clamp-3'}`}
+          >
+            {tagline}
+          </p>
+        )}
+        {action && <div className="mt-auto pt-2">{action}</div>}
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-1.5 rounded-sm border border-candle/10"
+      />
+    </article>
+  )
+  if (!to) return card
+  return (
+    <Link to={to} aria-label={label} className="flex w-full">
+      {card}
     </Link>
   )
 }
@@ -143,8 +151,8 @@ function Figure({
   )
 }
 
-/** The last tile of a grid: something new, in the shape of a card. */
-export function AddCard({ to, label }: { to: string; label: string }) {
+/** The last tile of a grid: something new, in the shape of a card; a "+" unless `icon` is given. */
+export function AddCard({ to, label, icon }: { to: string; label: string; icon?: ReactNode }) {
   return (
     <Link
       to={to}
@@ -154,7 +162,7 @@ export function AddCard({ to, label }: { to: string; label: string }) {
         aria-hidden="true"
         className="flex size-16 items-center justify-center rounded-full border border-candle/50 font-display text-3xl text-candle transition-colors group-hover:border-candle group-hover:text-candle-strong"
       >
-        +
+        {icon ?? '+'}
       </span>
       <span className="font-display text-sm font-semibold tracking-[0.15em] text-parchment uppercase">
         {label}

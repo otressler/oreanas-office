@@ -24,6 +24,7 @@ public static class CharacterEndpoints
         characters.MapGet("/", ListCharacters);
         characters.MapPost("/", CreateCharacter);
         characters.MapPut("/{characterId:guid}", UpdateCharacter);
+        CharacterImport.Map(characters);
 
         return app;
     }
@@ -210,7 +211,7 @@ public static class CharacterEndpoints
     private static bool IsHexColor(string color) =>
         color.Length == Character.ColorLength && color[0] == '#' && color[1..].All(char.IsAsciiHexDigitLower);
 
-    private static async Task<CharacterResponse> LoadAsync(
+    internal static async Task<CharacterResponse> LoadAsync(
         AppDbContext db, Guid campaignId, Guid characterId, Guid userId, CancellationToken cancellationToken)
     {
         var isDm = await db.IsCampaignDmAsync(campaignId, userId, cancellationToken);

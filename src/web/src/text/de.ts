@@ -667,6 +667,20 @@ export const de = {
     mine: 'Dein Charakter',
     empty: 'Noch keine Charaktere.',
     add: 'Neuer Charakter',
+    /** Taking a character from another campaign (knowledge/features/character-import.md). */
+    import: {
+      /** The tile beside "Neuer Charakter", and the page's title. */
+      title: 'Charakter übernehmen',
+      kicker: 'Aus deinen anderen Kampagnen',
+      intro:
+        'Übernimm einen deiner Charaktere aus einer anderen Kampagne. Texte, Größe, Farbe und Porträt werden kopiert; danach sind beide unabhängig, und was du hier änderst, bleibt in der anderen Kampagne, wie es war.',
+      empty: 'In deinen anderen Kampagnen hast du keine Charaktere.',
+      button: 'Übernehmen',
+      /** Accessible name of a card's button, e.g. "Thorin übernehmen". */
+      buttonLabel: (name: string) => `${name} übernehmen`,
+      /** On a card whose name one of the viewer's characters here already has. */
+      alreadyHere: 'Gibt es hier schon',
+    },
     name: 'Name',
     size: 'Größe',
     /** Free-text facts under the name on a character's page. */
