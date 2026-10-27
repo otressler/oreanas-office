@@ -95,7 +95,8 @@ export default defineConfig(({ mode }) => ({
   },
   test: {
     environment: 'jsdom',
-    // pool: "vmThreads", /* performance optimization, but causes issues with some tests, so it is disabled for now */
+    // Much faster than the default forks pool; each test file still gets its own context.
+    pool: 'vmThreads',
     // isolate: false, /* performance optimization, but causes issues with some tests, so it is disabled for now */
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],

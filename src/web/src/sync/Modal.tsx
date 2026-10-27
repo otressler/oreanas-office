@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useEffectEvent, useId, useRef, type ReactNode } from 'react'
 import { de } from '../text/de'
 
 /**
@@ -20,14 +20,18 @@ export function Modal({
   const titleId = useId()
   const panel = useRef<HTMLDivElement>(null)
 
+  // Callers pass a new onClose on every render; it must not move focus again, or a
+  // re-render of the page behind the dialog pulls focus out of the field being typed in.
+  const onEscape = useEffectEvent((event: KeyboardEvent) => {
+    if (event.key === 'Escape') onClose()
+  })
+
   useEffect(() => {
     panel.current?.focus()
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
+    const onKey = (event: KeyboardEvent) => onEscape(event)
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [])
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-3 sm:p-6">
