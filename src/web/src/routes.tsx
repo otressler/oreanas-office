@@ -139,6 +139,21 @@ export const routes: RouteObject[] = [
                 lazy: async () => ({
                   Component: (await import('./bestiary/BestiaryPage')).BestiaryPage,
                 }),
+                handle: { wide: true } satisfies LayoutHandle,
+              },
+              {
+                path: 'kampagnen/:campaignId/bestiarium/neu',
+                lazy: async () => ({
+                  Component: (await import('./bestiary/CreaturePage')).NewCreaturePage,
+                }),
+                handle: { wide: true } satisfies LayoutHandle,
+              },
+              {
+                path: 'kampagnen/:campaignId/bestiarium/:typeId',
+                lazy: async () => ({
+                  Component: (await import('./bestiary/CreaturePage')).CreaturePage,
+                }),
+                handle: { wide: true } satisfies LayoutHandle,
               },
               {
                 path: 'kampagnen/:campaignId/karten/:mapId',

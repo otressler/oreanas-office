@@ -130,7 +130,7 @@ describe('CharacterPage', () => {
     await user.click(await pencil())
     await user.clear(screen.getByLabelText(t.age))
     await user.type(screen.getByLabelText(t.age), ' Mitte zwanzig ')
-    await user.click(screen.getByRole('button', { name: p.saveChanges }))
+    await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
 
     await vi.waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
     expect(calls.find((c) => c.method === 'PUT')?.body).toMatchObject({
@@ -144,7 +144,7 @@ describe('CharacterPage', () => {
     open([character({ bonds: '' })])
 
     await screen.findByRole('heading', { level: 1, name: 'Liriel' })
-    expect(screen.getAllByText(p.empty)).toHaveLength(1)
+    expect(screen.getAllByText(de.sheet.empty)).toHaveLength(1)
     expect(screen.getByRole('region', { name: de.statuses.list.show('Liriel') })).toBeVisible()
   })
 
@@ -181,9 +181,9 @@ describe('CharacterPage', () => {
     const user = userEvent.setup()
 
     await user.click(await pencil())
-    expect(screen.queryByText(p.unsaved)).not.toBeInTheDocument()
+    expect(screen.queryByText(de.sheet.unsaved)).not.toBeInTheDocument()
     await user.type(screen.getByLabelText(p.sections.personality.title), '!')
-    expect(screen.getByText(p.unsaved)).toBeVisible()
+    expect(screen.getByText(de.sheet.unsaved)).toBeVisible()
   })
 
   it('turns the page itself into the editor behind the pencil and saves every field at once', async () => {
@@ -200,10 +200,10 @@ describe('CharacterPage', () => {
     await user.clear(screen.getByLabelText(p.tagline.label))
     await user.type(screen.getByLabelText(p.tagline.label), ' Sucht ihren Bruder. ')
     await user.selectOptions(screen.getByLabelText(t.size), de.sizes.small)
-    await user.click(screen.getByRole('button', { name: p.saveChanges }))
+    await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
 
     await vi.waitFor(() =>
-      expect(screen.queryByRole('button', { name: p.saveChanges })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('button', { name: de.sheet.saveChanges })).not.toBeInTheDocument(),
     )
     const put = calls.find((c) => c.method === 'PUT')
     expect(put?.path).toBe(`/api/campaigns/${CAMPAIGN}/characters/ch1`)
@@ -257,7 +257,7 @@ describe('CharacterPage', () => {
     await user.click(await pencil())
     expect(screen.getByLabelText(t.ownerField)).toHaveValue(testUser.id)
     await user.selectOptions(screen.getByLabelText(t.ownerField), 'Oreana')
-    await user.click(screen.getByRole('button', { name: p.saveChanges }))
+    await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
 
     await vi.waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
     expect(calls.find((c) => c.method === 'PUT')?.body).toMatchObject({ ownerUserId: 'u-dm' })
@@ -272,7 +272,7 @@ describe('CharacterPage', () => {
     expect(field).toHaveValue('#123abc')
     await user.clear(field)
     await user.type(field, 'rot')
-    await user.click(screen.getByRole('button', { name: p.saveChanges }))
+    await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
 
     expect(field).toHaveAttribute('aria-invalid', 'true')
     expect(calls.filter((c) => c.method === 'PUT')).toHaveLength(0)
@@ -289,7 +289,7 @@ describe('CharacterPage', () => {
     const user = userEvent.setup()
 
     await user.click(await pencil())
-    await user.click(screen.getByRole('button', { name: p.saveChanges }))
+    await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
 
     const bar = await screen.findByRole('group', { name: p.edit('Liriel') })
     expect(await within(bar).findByRole('alert')).toBeVisible()
@@ -329,7 +329,7 @@ describe('CharacterPage', () => {
       background: 'Späherin an einer Karawanenstraße.',
     })
     // Still editing.
-    expect(screen.getByRole('button', { name: p.saveChanges })).toBeVisible()
+    expect(screen.getByRole('button', { name: de.sheet.saveChanges })).toBeVisible()
   })
 
   describe('a new character', () => {
@@ -360,7 +360,7 @@ describe('CharacterPage', () => {
       expect(await screen.findByLabelText(t.name)).toHaveValue('')
       expect(screen.getByText(p.portraitAfterSave)).toBeVisible()
       expect(screen.queryByRole('region', { name: t.portrait.title })).not.toBeInTheDocument()
-      expect(screen.queryByText(p.unsaved)).not.toBeInTheDocument()
+      expect(screen.queryByText(de.sheet.unsaved)).not.toBeInTheDocument()
     })
 
     it('needs a name', async () => {
@@ -368,7 +368,7 @@ describe('CharacterPage', () => {
       const user = userEvent.setup()
 
       await user.type(await screen.findByLabelText(p.sections.background.title), 'Aus dem Norden')
-      await user.click(screen.getByRole('button', { name: p.saveChanges }))
+      await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
 
       expect(await screen.findByRole('alert')).toHaveTextContent(de.errors.nameInvalid)
       expect(calls.filter((c) => c.method === 'POST')).toHaveLength(0)
@@ -382,7 +382,7 @@ describe('CharacterPage', () => {
       await user.type(screen.getByLabelText(t.characterClass), 'Duellantin')
       await user.click(screen.getByRole('button', { name: t.color.addCustom }))
       await user.type(screen.getByLabelText(t.color.custom), 'A1B2C3')
-      await user.click(screen.getByRole('button', { name: p.saveChanges }))
+      await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
 
       expect(await screen.findByRole('heading', { level: 1, name: 'Ireena' })).toBeVisible()
       const post = calls.find((c) => c.method === 'POST')
@@ -403,7 +403,7 @@ describe('CharacterPage', () => {
       await user.type(await screen.findByLabelText(t.name), 'Brom')
       expect(screen.getByLabelText(t.ownerField)).toHaveValue(testUser.id)
       await user.selectOptions(screen.getByLabelText(t.ownerField), 'Oreana')
-      await user.click(screen.getByRole('button', { name: p.saveChanges }))
+      await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
 
       await vi.waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
       expect(calls.find((c) => c.method === 'POST')?.body).toMatchObject({ ownerUserId: 'u-dm' })

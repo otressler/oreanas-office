@@ -1,7 +1,8 @@
-// The campaign's creature types as a list: pick one (when `onPick` is given), edit it,
-// create a new one, and bring archived ones back. Archived types are in a collapsed
-// part and can't be picked (knowledge/domain/creature-type.md). Online, a row shows the
-// type's picked icon (knowledge/features/token-icons.md).
+// The campaign's creature types as a compact list for the editor's side panel: pick one,
+// edit it, create a new one, and bring archived ones back. The bestiary's own page shows
+// them as cards instead (knowledge/features/creature-page.md). Archived types are in a
+// collapsed part and can't be picked (knowledge/domain/creature-type.md). Online, a row
+// shows the type's picked icon (knowledge/features/token-icons.md).
 import { useState } from 'react'
 import { CREATURE_RING, tokenFill } from '../board/palette'
 import { Button } from '../components/ui'
@@ -23,8 +24,8 @@ export function BestiaryList({
 }: {
   campaignId: string
   pickedId?: string | null
-  /** Makes the rows pickable. Called with null when the picked type was archived. */
-  onPick?: (type: LocalCreatureType | null) => void
+  /** Called with null when the picked type was archived. */
+  onPick: (type: LocalCreatureType | null) => void
 }) {
   const { db } = useLocalUser()
   const types = useCreatureTypes(db, campaignId)
@@ -44,30 +45,23 @@ export function BestiaryList({
       <ul className="flex flex-col gap-1">
         {active.map((type) => (
           <li key={type.id} className="flex items-center gap-1">
-            {onPick ? (
-              <button
-                type="button"
-                aria-pressed={type.id === pickedId}
-                aria-label={t.pick(type.name)}
-                onClick={() => onPick(type)}
-                className={`flex min-h-9 min-w-0 flex-1 items-center justify-between gap-2 rounded-lg border px-3 text-left text-sm ${
-                  type.id === pickedId
-                    ? 'border-candle bg-candle/15 text-candle'
-                    : 'border-line text-parchment hover:border-candle'
-                }`}
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <Icon url={icons.get(type.id)?.url} name={type.name} />
-                  <span className="truncate">{type.name}</span>
-                </span>
-                <span className="shrink-0 text-xs text-dim">{de.sizes[type.size]}</span>
-              </button>
-            ) : (
-              <span className="flex min-w-0 flex-1 items-center gap-2 px-1 text-sm">
+            <button
+              type="button"
+              aria-pressed={type.id === pickedId}
+              aria-label={t.pick(type.name)}
+              onClick={() => onPick(type)}
+              className={`flex min-h-9 min-w-0 flex-1 items-center justify-between gap-2 rounded-lg border px-3 text-left text-sm ${
+                type.id === pickedId
+                  ? 'border-candle bg-candle/15 text-candle'
+                  : 'border-line text-parchment hover:border-candle'
+              }`}
+            >
+              <span className="flex min-w-0 items-center gap-2">
                 <Icon url={icons.get(type.id)?.url} name={type.name} />
                 <span className="truncate">{type.name}</span>
               </span>
-            )}
+              <span className="shrink-0 text-xs text-dim">{de.sizes[type.size]}</span>
+            </button>
             <button
               type="button"
               aria-label={t.edit(type.name)}
@@ -86,7 +80,7 @@ export function BestiaryList({
           campaignId={campaignId}
           onSaved={(type) => {
             setForm({ kind: 'closed' })
-            onPick?.(type)
+            onPick(type)
           }}
           onCancel={() => setForm({ kind: 'closed' })}
         />
@@ -99,12 +93,12 @@ export function BestiaryList({
           type={editing}
           onSaved={(type) => {
             setForm({ kind: 'closed' })
-            if (type.id === pickedId) onPick?.(type)
+            if (type.id === pickedId) onPick(type)
           }}
           onCancel={() => setForm({ kind: 'closed' })}
           onArchived={(type) => {
             setForm({ kind: 'closed' })
-            if (type.id === pickedId) onPick?.(null)
+            if (type.id === pickedId) onPick(null)
           }}
         />
       )}

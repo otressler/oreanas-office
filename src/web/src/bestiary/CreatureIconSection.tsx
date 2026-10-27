@@ -18,12 +18,15 @@ export function CreatureIconSection({
   campaignId,
   type,
   saveDraft,
+  layout = 'inline',
 }: {
   campaignId: string
   /** The stored type, kept up to date. */
   type: LocalCreatureType
   /** Writes the form's unsaved edits to the device; false when they can't be saved. */
   saveDraft: () => Promise<boolean>
+  /** Under the portrait on the type's page, or below the fields of the editor's form. */
+  layout?: 'inline' | 'sidebar'
 }) {
   const { db } = useLocalUser()
   const online = useOnline()
@@ -49,7 +52,10 @@ export function CreatureIconSection({
   }
 
   return (
-    <section aria-label={t.title} className="flex flex-col gap-2 border-t border-line pt-3">
+    <section
+      aria-label={t.title}
+      className={`flex flex-col gap-2 ${layout === 'inline' ? 'border-t border-line pt-3' : ''}`}
+    >
       <h4 className="font-semibold text-parchment">{t.title}</h4>
       <p className="text-sm text-dim">{t.help}</p>
       {!online ? (
@@ -66,6 +72,7 @@ export function CreatureIconSection({
           regenerateLabel={t.regenerate}
           prepare={prepare}
           uploads
+          layout={layout}
         />
       )}
     </section>

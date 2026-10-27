@@ -25,7 +25,7 @@ A campaign made offline shows the same two panels under its offline note.
 
 # Bestiary page
 
-Before, the bestiary was only reachable from the editor's creature tool. `/kampagnen/:campaignId/bestiarium` now shows the same list outside any map: create, edit and archive creature types, and their icons. Like the map list it is an offline page (`RequireLocalUser`): it reads the campaign's copy, is for `dm` members only, and generating or uploading icons still needs a connection ([token icons](/features/token-icons.md)).
+Before, the bestiary was only reachable from the editor's creature tool. `/kampagnen/:campaignId/bestiarium` now shows the campaign's creature types outside any map, since 2026-10-27 as cards with a page per type ([creature page](/features/creature-page.md)). Like the map list it is an offline page (`RequireLocalUser`): it reads the campaign's copy, is for `dm` members only, and generating or uploading icons still needs a connection ([token icons](/features/token-icons.md)).
 
 # As built
 

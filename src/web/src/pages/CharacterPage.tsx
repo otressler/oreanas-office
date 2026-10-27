@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { Link, useBlocker, useNavigate, useParams } from 'react-router'
+import { useId, useRef, useState, type CSSProperties } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { errorMessage } from '../api/errors'
 import type { Character, CharacterRequest, CreatureSize } from '../api/types'
 import { useCurrentUser } from '../auth/auth'
@@ -9,23 +9,22 @@ import { characterPath } from '../campaigns/paths'
 import { useCampaign, useCharacters } from '../campaigns/queries'
 import { useSaveCharacter } from '../campaigns/useSaveCharacter'
 import { PencilIcon } from '../components/icons'
-import { Markdown } from '../components/Markdown'
-import { Kicker, Rule, SectionHeading } from '../components/ornaments'
-import { inputClass } from '../components/styles'
+import { Kicker, SectionHeading } from '../components/ornaments'
 import {
-  Button,
-  ErrorAlert,
-  LoadError,
-  Loading,
-  PageTitle,
-  SelectField,
-  TextField,
-} from '../components/ui'
+  BackLink,
+  EditBar,
+  Facts,
+  Portrait,
+  SectionTitle,
+  Story,
+  TextArea,
+} from '../components/sheet'
+import { useLeaveWarning } from '../components/useLeaveWarning'
+import { Button, LoadError, Loading, PageTitle, SelectField, TextField } from '../components/ui'
 import { limits } from '../lib/limits'
 import { StatusListEditor } from '../statuses/StatusListEditor'
 import { de } from '../text/de'
 import { TokenImageGallery, type Prepared } from '../tokenImages/TokenImageGallery'
-import { TokenPicture } from '../tokenImages/TokenPicture'
 
 const t = de.characters
 const p = t.page
@@ -255,19 +254,7 @@ function CharacterView({
   }
 
   const dirty = draft !== null && JSON.stringify(draft) !== JSON.stringify(draftOf(character))
-  // Leaving with typed-in changes asks first: closing the tab, and moving to another page.
-  const blocker = useBlocker(() => dirty && !save.isPending && !leaving.current)
-  useEffect(() => {
-    if (!dirty) return
-    const warn = (event: BeforeUnloadEvent) => event.preventDefault()
-    window.addEventListener('beforeunload', warn)
-    return () => window.removeEventListener('beforeunload', warn)
-  }, [dirty])
-  useEffect(() => {
-    if (blocker.state !== 'blocked') return
-    if (window.confirm(p.leave)) blocker.proceed()
-    else blocker.reset()
-  }, [blocker])
+  useLeaveWarning(dirty, () => save.isPending || leaving.current)
 
   const portraitTools = draft && !isNew && (
     <section aria-label={t.portrait.title} className="flex flex-col gap-2">
@@ -297,7 +284,12 @@ function CharacterView({
       <BackLink to={`/kampagnen/${campaignId}`} label={campaignName} />
       <div className="mt-6 grid items-start gap-8 lg:grid-cols-[18rem_1fr] lg:gap-12">
         <aside className="flex flex-col gap-4">
-          <Portrait character={character} ring={ring} />
+          <Portrait
+            url={character.portraitUrl}
+            alt={t.portraitAlt(character.name)}
+            name={character.name}
+            ring={ring}
+          />
           {portraitTools}
           {isNew && <p className="text-sm text-dim">{p.portraitAfterSave}</p>}
         </aside>
@@ -380,7 +372,7 @@ function CharacterView({
                 {character.canEdit && (
                   <Button aria-label={p.edit(character.name)} onClick={open} className="gap-2">
                     <PencilIcon className="size-4" />
-                    {p.editButton}
+                    {de.sheet.editButton}
                   </Button>
                 )}
               </div>
@@ -420,65 +412,15 @@ function CharacterView({
       </div>
 
       {draft && (
-        <div
-          role="group"
-          aria-label={isNew ? t.add : p.edit(character.name)}
-          className="sticky bottom-0 z-10 -mx-4 mt-10 flex flex-col gap-2 border-t border-candle/25 bg-table/90 px-4 py-3 backdrop-blur-sm"
-        >
-          <ErrorAlert error={nameMissing ? de.errors.nameInvalid : save.error} />
-          <div className="flex flex-wrap items-center gap-2">
-            {dirty && (
-              <p role="status" className="mr-auto text-sm text-candle">
-                {p.unsaved}
-              </p>
-            )}
-            <Button variant="quiet" className="ml-auto" onClick={cancel}>
-              {de.common.cancel}
-            </Button>
-            <Button variant="primary" busy={save.isPending} onClick={submit}>
-              {p.saveChanges}
-            </Button>
-          </div>
-        </div>
+        <EditBar
+          label={isNew ? t.add : p.edit(character.name)}
+          error={nameMissing ? de.errors.nameInvalid : save.error}
+          dirty={dirty}
+          busy={save.isPending}
+          onCancel={cancel}
+          onSave={submit}
+        />
       )}
-    </div>
-  )
-}
-
-/** The short facts under the name: label over value, those left empty are skipped. */
-function Facts({ facts }: { facts: [label: string, value: string][] }) {
-  return (
-    <dl className="mt-2 flex flex-wrap gap-x-8 gap-y-3">
-      {facts
-        .filter(([, value]) => value)
-        .map(([label, value]) => (
-          <div key={label} className="flex flex-col gap-0.5">
-            <dt className="font-display text-xs font-semibold tracking-[0.2em] text-candle uppercase">
-              {label}
-            </dt>
-            <dd className="text-lg text-parchment">{value}</dd>
-          </div>
-        ))}
-    </dl>
-  )
-}
-
-function BackLink({ to, label }: { to: string; label: string }) {
-  return (
-    <Link to={to} className="pt-4 text-sm text-candle underline-offset-4 hover:underline">
-      <span aria-hidden="true">← </span>
-      {label}
-    </Link>
-  )
-}
-
-function SectionTitle({ id, children }: { id?: string; children: ReactNode }) {
-  return (
-    <div>
-      <h2 id={id} className="font-display text-2xl font-semibold text-parchment">
-        {children}
-      </h2>
-      <Rule className="mt-2 w-32" />
     </div>
   )
 }
@@ -516,126 +458,5 @@ function StatusListSection({
         </div>
       )}
     </section>
-  )
-}
-
-/** A multi-line field that grows with its text, with its hint and a counter on the right. */
-function TextArea({
-  label,
-  hint,
-  rows,
-  max,
-  value,
-  onChange,
-  id: given,
-}: {
-  label: string
-  hint: ReactNode
-  rows: number
-  max: number
-  value: string
-  onChange: (value: string) => void
-  id?: string
-}) {
-  const generated = useId()
-  const id = given ?? generated
-  const length = Array.from(value).length
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm text-dim">
-        {label}
-      </label>
-      <textarea
-        id={id}
-        rows={rows}
-        value={value}
-        maxLength={max}
-        aria-describedby={`${id}-hint`}
-        className={`${inputClass} w-full field-sizing-content resize-none`}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      <div id={`${id}-hint`} className="flex flex-wrap justify-between gap-x-4 text-sm text-dim">
-        <span>{hint}</span>
-        <span className={`tabular-nums ${length >= max * 0.9 ? 'text-candle' : 'text-dim/70'}`}>
-          ({length}/{max})
-        </span>
-      </div>
-    </div>
-  )
-}
-
-/** One text about the character: read as formatted text, or a box while editing. */
-function Story({
-  title,
-  hint,
-  value,
-  max,
-  rows,
-  editing,
-  onChange,
-}: {
-  title: string
-  hint: string
-  value: string
-  max: number
-  rows: number
-  editing: boolean
-  onChange: (value: string) => void
-}) {
-  const id = useId()
-  return (
-    <section aria-labelledby={editing ? undefined : `${id}-title`} className="flex flex-col gap-3">
-      {editing ? (
-        <TextArea
-          id={id}
-          label={title}
-          hint={`${hint} ${p.markdownHint}`}
-          rows={rows}
-          max={max}
-          value={value}
-          onChange={onChange}
-        />
-      ) : (
-        <>
-          <SectionTitle id={`${id}-title`}>{title}</SectionTitle>
-          {value ? <Markdown>{value}</Markdown> : <p className="text-dim">{p.empty}</p>}
-        </>
-      )}
-    </section>
-  )
-}
-
-/** The portrait as painted in the ring's light; the token's letter without one. */
-function Portrait({ character, ring }: { character: Character; ring: string }) {
-  const [failed, setFailed] = useState<string | null>(null)
-  const url =
-    character.portraitUrl && failed !== character.portraitUrl ? character.portraitUrl : null
-  return (
-    <div className="relative mx-auto aspect-square w-full max-w-72 overflow-hidden rounded-sm border border-candle/25 bg-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]">
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_50%,color-mix(in_srgb,var(--ring)_40%,transparent),transparent_80%)]"
-      />
-      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[var(--ring)]" />
-      {url ? (
-        <img
-          src={url}
-          alt={t.portraitAlt(character.name)}
-          decoding="async"
-          onError={() => setFailed(url)}
-          className="absolute inset-0 size-full object-contain p-3 drop-shadow-[0_12px_24px_rgb(0_0_0/0.85)]"
-        />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <TokenPicture
-            url={null}
-            label={character.name}
-            ring={ring}
-            alt=""
-            className="size-28 text-5xl"
-          />
-        </div>
-      )}
-    </div>
   )
 }

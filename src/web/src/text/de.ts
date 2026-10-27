@@ -710,15 +710,8 @@ export const de = {
       unknownTitle: 'Charakter nicht gefunden',
       unknownBody: 'Diesen Charakter gibt es in der Kampagne nicht (mehr).',
       edit: (name: string) => `${name} bearbeiten`,
-      /** The labelled button by the name; its accessible name is `edit`. */
-      editButton: 'Bearbeiten',
-      /** In the bar that sticks to the bottom while editing. */
-      unsaved: 'Ungespeicherte Änderungen',
       portraitAfterSave:
         'Ein Porträt lässt sich erzeugen oder hochladen, sobald der Charakter gespeichert ist.',
-      leave: 'Ungespeicherte Änderungen gehen verloren. Die Seite trotzdem verlassen?',
-      saveChanges: 'Änderungen speichern',
-      empty: 'Noch nichts eingetragen.',
       /** The sentence under the portrait on the campaign page's card. */
       tagline: {
         label: 'Kurzer Satz',
@@ -727,8 +720,6 @@ export const de = {
       /** Over the portrait pictures, in edit mode. */
       portraitHint:
         'Nutzt den aktuellen Text aus den Feldern; Ungespeichertes wird dabei gespeichert.',
-      /** Under each text's box: what the text may contain. */
-      markdownHint: 'Formatierung: **fett**, *kursiv*, „- “ für Listen.',
       /** The texts about a character, in reading order. */
       sections: {
         appearance: {
@@ -749,6 +740,19 @@ export const de = {
         },
       },
     },
+  },
+
+  /** What the sheet pages of characters and creature types share (src/components/sheet.tsx). */
+  sheet: {
+    /** The labelled button by the name; its accessible name says what it edits. */
+    editButton: 'Bearbeiten',
+    /** In the bar that sticks to the bottom while editing. */
+    unsaved: 'Ungespeicherte Änderungen',
+    saveChanges: 'Änderungen speichern',
+    leave: 'Ungespeicherte Änderungen gehen verloren. Die Seite trotzdem verlassen?',
+    empty: 'Noch nichts eingetragen.',
+    /** Under each text's box: what the text may contain. */
+    markdownHint: 'Formatierung: **fett**, *kursiv*, „- “ für Listen.',
   },
 
   sizes: {
@@ -1908,6 +1912,31 @@ export const de = {
           ? 'Eine Kreaturenart'
           : `${count} Kreaturenarten`,
     empty: 'Noch keine Kreaturenarten. Lege die erste an.',
+    /** Over the cards from a dozen types on (knowledge/features/creature-page.md). */
+    filter: 'Nach Namen filtern',
+    noMatch: 'Keine Kreaturenart passt zu diesem Namen.',
+    /** Accessible name of a card, e.g. "Goblin ansehen". */
+    open: (name: string) => `${name} ansehen`,
+    /** The initiative on a card, e.g. "Ini +2". */
+    initiativeShort: (modifier: string) => `Ini ${modifier}`,
+    /** A creature type's own page (knowledge/features/creature-page.md). */
+    page: {
+      kicker: 'Kreaturenart',
+      archivedKicker: 'Archivierte Kreaturenart',
+      unknownTitle: 'Kreaturenart nicht gefunden',
+      unknownBody: 'Diese Kreaturenart gibt es in diesem Browser nicht.',
+      footprint: 'Platz',
+      /** The squares a size takes, e.g. "2 × 2 Felder". */
+      footprintValue: (cells: number) => `${cells} × ${cells} Felder`,
+      initiative: 'Initiative',
+      /** The initiative fact, e.g. "+2" or "+2 mit Vorteil". */
+      initiativeValue: (modifier: string, withMode: string) =>
+        withMode ? `${modifier} ${withMode}` : modifier,
+      archivedNote:
+        'Archiviert: Sie lässt sich auf Karten nicht mehr wählen. Bereits gesetzte Kreaturen behalten sie.',
+      iconAfterSave:
+        'Ein Symbol lässt sich erzeugen oder hochladen, sobald die Kreaturenart gespeichert ist.',
+    },
     newType: 'Neue Kreaturenart',
     newTitle: 'Neue Kreaturenart',
     /** The form's title when editing, e.g. "Goblin bearbeiten". */

@@ -49,7 +49,7 @@ Confirmed by the project owner on 2026-10-15, at the start of stage 8:
 
 Built on `stage/8-token-icons`.
 
-- **Where.** The bestiary's edit form has an "Symbol" section, and its rows show the picked icon. The character form has the "Aussehen" field and, for the owner and `dm` members, a "Porträt" section; the characters panel shows each portrait. The board, the setup screen, the editor's preview and the encounter editor's canvas draw the picked image, cropped to a circle inside the ring. With an image, a creature's number ("G1") becomes a small badge on the token's lower-right edge.
+- **Where.** A creature type's page ([creature page](/features/creature-page.md)) and the editor's form for a type have a "Symbol" section; the bestiary's cards and the editor's list show the picked icon. The character form has the "Aussehen" field and, for the owner and `dm` members, a "Porträt" section; the characters panel shows each portrait. The board, the setup screen, the editor's preview and the encounter editor's canvas draw the picked image, cropped to a circle inside the ring. With an image, a creature's number ("G1") becomes a small badge on the token's lower-right edge.
 - **A creature type the server doesn't have yet** gets no gallery, only a note and "Jetzt synchronisieren". Generating first saves the form, syncs the type and sends its server version (`itemVersion`), because the server paints from its own copy.
 - **Saving before a portrait job.** A changed name, size or any of a character's texts is saved before its portrait is generated. Restyling doesn't save the form.
 - **One job at a time per owner.** While an icon or portrait is queued or being painted, generating and restyling wait; uploading still works.
