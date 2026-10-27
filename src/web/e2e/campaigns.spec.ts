@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { MockBackend } from './mockBackend.ts'
-import { text } from './support.ts'
+import { addCharacter, text } from './support.ts'
 
 let backend: MockBackend
 
@@ -77,10 +77,7 @@ test('creates a character with a name and size', async ({ page }) => {
   await createCampaign(page, 'Die Rabenküste')
 
   const characters = panel(page, text.charactersTitle)
-  await characters.getByRole('button', { name: text.newCharacter }).click()
-  await characters.getByLabel(text.characterName).fill('Ilse Eisenhut')
-  await characters.getByLabel('Größe').selectOption('small')
-  await characters.getByRole('button', { name: text.create }).click()
+  await addCharacter(page, 'Ilse Eisenhut', 'small')
 
   await expect(characters.getByText('Ilse Eisenhut')).toBeVisible()
   await expect(characters).toContainText('Klein')

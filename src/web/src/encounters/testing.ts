@@ -76,6 +76,13 @@ export function character(name: string, fields: Partial<Character> = {}): Charac
     colorIndex: 0,
     color: null,
     appearance: '',
+    background: '',
+    personality: '',
+    bonds: '',
+    tagline: '',
+    characterClass: '',
+    species: '',
+    age: '',
     portraitUrl: null,
     ...fields,
   }

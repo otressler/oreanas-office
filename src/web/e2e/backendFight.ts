@@ -3,7 +3,7 @@
 // (0, 5). Each call makes new accounts and a new campaign, so specs don't share state.
 import { randomUUID } from 'node:crypto'
 import { expect, type Browser, type Page } from '@playwright/test'
-import { tapCell, text } from './support.ts'
+import { addCharacter, tapCell, text } from './support.ts'
 
 export async function registerOnNewDevice(
   browser: Browser,
@@ -44,9 +44,7 @@ export async function startFight(browser: Browser, page: Page) {
   await mira.getByRole('button', { name: text.joinButton }).click()
   await expect(mira.getByRole('heading', { name: campaignName })).toBeVisible()
   const characters = panel(mira, text.charactersTitle)
-  await characters.getByRole('button', { name: text.newCharacter }).click()
-  await characters.getByLabel(text.characterName).fill('Ilse')
-  await characters.getByRole('button', { name: text.create }).click()
+  await addCharacter(mira, 'Ilse')
   await expect(characters).toContainText('Mittelgroß')
 
   await oreana.reload()

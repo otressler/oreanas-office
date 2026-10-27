@@ -1,6 +1,6 @@
 // Stage 8: token icons and portraits. A DM generates a creature icon from the editor's
 // bestiary after confirming it, or uploads one through the crop step; a player uploads a portrait through the crop step and sees
-// it in the characters panel; a board with an image token draws without errors.
+// it on the character's page; a board with an image token draws without errors.
 import { fileURLToPath } from 'node:url'
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 import { MockBackend, sampleMap } from './mockBackend.ts'
@@ -158,9 +158,9 @@ test('a player uploads a portrait through the crop step and sees it in the list'
   backend.signIn(context, mira)
 
   await page.goto(`/kampagnen/${campaign.id}`)
-  const characters = page.getByRole('region', { name: 'Charaktere' })
-  await characters.getByRole('button', { name: 'Brom bearbeiten' }).click()
-  const portrait = characters.getByRole('region', { name: 'Porträt' })
+  await page.getByRole('link', { name: 'Brom ansehen' }).click()
+  await page.getByRole('button', { name: 'Brom bearbeiten' }).click()
+  const portrait = page.getByRole('region', { name: 'Porträt' })
   await expect(portrait.getByRole('button', { name: text.upload })).toBeEnabled()
 
   await portrait.getByTestId('portrait-file').setInputFiles(PICTURE)
@@ -184,8 +184,8 @@ test('a player uploads a portrait through the crop step and sees it in the list'
     image: { origin: 'uploaded', status: 'done' },
   })
 
-  await characters.getByRole('button', { name: 'Abbrechen' }).click()
-  const thumbnail = characters.getByRole('img', { name: text.portraitAlt })
+  await page.getByRole('button', { name: 'Abbrechen' }).click()
+  const thumbnail = page.getByRole('img', { name: text.portraitAlt })
   await expect(thumbnail).toBeVisible()
   await expect
     .poll(() => thumbnail.evaluate((img: HTMLImageElement) => img.naturalWidth))

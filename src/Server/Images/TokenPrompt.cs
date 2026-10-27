@@ -29,15 +29,79 @@ public static partial class TokenPrompt
     public static string CreatureIcon(string name, string? appearance, string style) =>
         Lines($"{IconOpening} {Subject(name, appearance)}", IconFraming, Clean(style), IconEnding);
 
-    // A character's portrait from its name and appearance.
-    public static string CharacterPortrait(string name, string? appearance, string style) =>
-        Lines($"{PortraitOpening} {Subject(name, appearance)}", PortraitFraming, Clean(style), PortraitEnding);
+    // A character's portrait from its name and appearance, then its species, class and age
+    // when it has them, and its background and personality when it has them: a line after
+    // the subject asks to let those show.
+    public static string CharacterPortrait(
+        string name,
+        string? appearance,
+        string style,
+        string? background = null,
+        string? personality = null,
+        string? species = null,
+        string? characterClass = null,
+        string? age = null) =>
+        Lines(
+            [
+                $"{PortraitOpening} {Subject(name, appearance)}",
+                .. Facts(species, characterClass, age),
+                .. Story(background, personality),
+                PortraitFraming,
+                Clean(style),
+                PortraitEnding,
+            ]);
+
+    // "Species: Wood elf. Class: Ranger. Age: 112.", leaving out what is empty.
+    private static IEnumerable<string> Facts(string? species, string? characterClass, string? age)
+    {
+        var parts = new List<string>();
+        foreach (var (label, value) in new[] { ("Species", species), ("Class", characterClass), ("Age", age) })
+        {
+            if (Clean(value ?? "").TrimEnd('.', ' ') is { Length: > 0 } fact)
+            {
+                parts.Add($"{label}: {fact}.");
+            }
+        }
+
+        if (parts.Count > 0)
+        {
+            yield return string.Join(' ', parts);
+        }
+    }
+
+    // "Background: …. Personality: …. Let this show …", or nothing when both are empty.
+    private static IEnumerable<string> Story(string? background, string? personality)
+    {
+        var parts = new List<string>();
+        if (Clean(background ?? "").TrimEnd('.', ' ') is { Length: > 0 } past)
+        {
+            parts.Add($"Background: {past}.");
+        }
+
+        if (Clean(personality ?? "").TrimEnd('.', ' ') is { Length: > 0 } nature)
+        {
+            parts.Add($"Personality: {nature}.");
+        }
+
+        if (parts.Count > 0)
+        {
+            yield return $"{string.Join(' ', parts)} Let this show in the expression, clothing and bearing, without drawing scenes from it.";
+        }
+    }
 
     // An uploaded picture painted in the token style (requirement 4): the portrait template,
     // started with the sentence the skill gives for a reference picture. The appearance, if
     // any, tells the model about the character too.
-    public static string Restyle(string name, string? appearance, string style) =>
-        Lines(RestyleOpening, CharacterPortrait(name, appearance, style));
+    public static string Restyle(
+        string name,
+        string? appearance,
+        string style,
+        string? background = null,
+        string? personality = null,
+        string? species = null,
+        string? characterClass = null,
+        string? age = null) =>
+        Lines(RestyleOpening, CharacterPortrait(name, appearance, style, background, personality, species, characterClass, age));
 
     // A custom status's icon (knowledge/features/statuses.md, "Icons"): "Verhext, shown as a
     // purple eye inside a hand." from its name and icon description; the name alone when the

@@ -4344,6 +4344,48 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "background": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "personality": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bonds": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tagline": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "characterClass": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "species": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "age": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4358,7 +4400,14 @@
           "colorIndex",
           "appearance",
           "portraitUrl",
-          "color"
+          "color",
+          "background",
+          "personality",
+          "bonds",
+          "tagline",
+          "characterClass",
+          "species",
+          "age"
         ],
         "type": "object",
         "properties": {
@@ -4400,6 +4449,27 @@
               "null",
               "string"
             ]
+          },
+          "background": {
+            "type": "string"
+          },
+          "personality": {
+            "type": "string"
+          },
+          "bonds": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "characterClass": {
+            "type": "string"
+          },
+          "species": {
+            "type": "string"
+          },
+          "age": {
+            "type": "string"
           }
         }
       },

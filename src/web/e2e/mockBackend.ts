@@ -45,6 +45,13 @@ interface Character {
   name: string
   size: S['CreatureSize']
   appearance: string
+  background: string
+  personality: string
+  bonds: string
+  tagline: string
+  characterClass: string
+  species: string
+  age: string
   /** "#rrggbb", or null for the colour by order. */
   color: string | null
 }
@@ -293,6 +300,13 @@ export class MockBackend {
       name,
       size: 'medium',
       appearance: '',
+      background: '',
+      personality: '',
+      bonds: '',
+      tagline: '',
+      characterClass: '',
+      species: '',
+      age: '',
       color: null,
       ...fields,
     }
@@ -1062,6 +1076,13 @@ export class MockBackend {
         name: String(body.name).trim(),
         size: body.size as S['CreatureSize'],
         appearance: String(body.appearance ?? '').trim(),
+        background: String(body.background ?? '').trim(),
+        personality: String(body.personality ?? '').trim(),
+        bonds: String(body.bonds ?? '').trim(),
+        tagline: String(body.tagline ?? '').trim(),
+        characterClass: String(body.characterClass ?? '').trim(),
+        species: String(body.species ?? '').trim(),
+        age: String(body.age ?? '').trim(),
         color: characterColor(body),
       }
       this.characters.push(character)
@@ -1078,6 +1099,13 @@ export class MockBackend {
       character.name = String(body.name).trim()
       character.size = body.size as S['CreatureSize']
       character.appearance = String(body.appearance ?? '').trim()
+      character.background = String(body.background ?? '').trim()
+      character.personality = String(body.personality ?? '').trim()
+      character.bonds = String(body.bonds ?? '').trim()
+      character.tagline = String(body.tagline ?? '').trim()
+      character.characterClass = String(body.characterClass ?? '').trim()
+      character.species = String(body.species ?? '').trim()
+      character.age = String(body.age ?? '').trim()
       character.color = characterColor(body)
       return [200, this.characterResponse(character, me.id, isDm)]
     }

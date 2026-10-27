@@ -48,7 +48,7 @@ public static class CharacterEndpoints
         TimeProvider time,
         CancellationToken cancellationToken)
     {
-        if (Validate(request, out var name, out var appearance, out var color) is { } error)
+        if (Validate(request, out var texts) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
@@ -72,10 +72,17 @@ public static class CharacterEndpoints
         {
             CampaignId = campaignId,
             OwnerUserId = ownerUserId,
-            Name = name,
+            Name = texts.Name,
             Size = request.Size,
-            Appearance = appearance,
-            Color = color,
+            Appearance = texts.Appearance,
+            Background = texts.Background,
+            Personality = texts.Personality,
+            Bonds = texts.Bonds,
+            Tagline = texts.Tagline,
+            CharacterClass = texts.CharacterClass,
+            Species = texts.Species,
+            Age = texts.Age,
+            Color = texts.Color,
             CreatedAt = time.GetUtcNow(),
         };
         db.Characters.Add(character);
@@ -111,7 +118,7 @@ public static class CharacterEndpoints
             return TypedResults.Forbid();
         }
 
-        if (Validate(request, out var name, out var appearance, out var color) is { } error)
+        if (Validate(request, out var texts) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
@@ -132,10 +139,17 @@ public static class CharacterEndpoints
             character.OwnerUserId = newOwner.Value;
         }
 
-        character.Name = name;
+        character.Name = texts.Name;
         character.Size = request.Size;
-        character.Appearance = appearance;
-        character.Color = color;
+        character.Appearance = texts.Appearance;
+        character.Background = texts.Background;
+        character.Personality = texts.Personality;
+        character.Bonds = texts.Bonds;
+        character.Tagline = texts.Tagline;
+        character.CharacterClass = texts.CharacterClass;
+        character.Species = texts.Species;
+        character.Age = texts.Age;
+        character.Color = texts.Color;
         await db.SaveChangesAsync(cancellationToken);
         if (newOwner is not null)
         {
@@ -148,23 +162,43 @@ public static class CharacterEndpoints
         return TypedResults.Ok(await LoadAsync(db, campaignId, character.Id, userId, cancellationToken));
     }
 
-    private static ApiError? Validate(
-        CharacterRequest request, out string name, out string appearance, out string? color)
+    private static ApiError? Validate(CharacterRequest request, out Texts texts)
     {
-        name = request.Name?.Trim() ?? "";
-        appearance = request.Appearance?.Trim() ?? "";
-        color = request.Color?.Trim().ToLowerInvariant() is { Length: > 0 } picked ? picked : null;
-        if (name.Length is 0 or > Character.NameMaxLength)
+        texts = new Texts(
+            request.Name?.Trim() ?? "",
+            request.Appearance?.Trim() ?? "",
+            request.Background?.Trim() ?? "",
+            request.Personality?.Trim() ?? "",
+            request.Bonds?.Trim() ?? "",
+            request.Tagline?.Trim() ?? "",
+            request.CharacterClass?.Trim() ?? "",
+            request.Species?.Trim() ?? "",
+            request.Age?.Trim() ?? "",
+            request.Color?.Trim().ToLowerInvariant() is { Length: > 0 } picked ? picked : null);
+        if (texts.Name.Length is 0 or > Character.NameMaxLength)
         {
             return new ApiError(ApiErrorCode.NameInvalid, "name");
         }
 
-        if (appearance.Length > Character.AppearanceMaxLength)
+        foreach (var (text, max, field) in new[]
         {
-            return new ApiError(ApiErrorCode.TextTooLong, "appearance");
+            (texts.Appearance, Character.AppearanceMaxLength, "appearance"),
+            (texts.Background, Character.BackgroundMaxLength, "background"),
+            (texts.Personality, Character.PersonalityMaxLength, "personality"),
+            (texts.Bonds, Character.BondsMaxLength, "bonds"),
+            (texts.Tagline, Character.TaglineMaxLength, "tagline"),
+            (texts.CharacterClass, Character.FactMaxLength, "characterClass"),
+            (texts.Species, Character.FactMaxLength, "species"),
+            (texts.Age, Character.FactMaxLength, "age"),
+        })
+        {
+            if (text.Length > max)
+            {
+                return new ApiError(ApiErrorCode.TextTooLong, field);
+            }
         }
 
-        if (color is not null && !IsHexColor(color))
+        if (texts.Color is not null && !IsHexColor(texts.Color))
         {
             return new ApiError(ApiErrorCode.ColorInvalid, "color");
         }
@@ -198,7 +232,14 @@ public static class CharacterEndpoints
                 0,
                 c.Appearance,
                 null,
-                c.Color),
+                c.Color,
+                c.Background,
+                c.Personality,
+                c.Bonds,
+                c.Tagline,
+                c.CharacterClass,
+                c.Species,
+                c.Age),
             c.TokenAssetId));
 
     private static async Task<List<CharacterResponse>> WithColorsAsync(
@@ -214,6 +255,10 @@ public static class CharacterEndpoints
             }),
         ];
     }
+
+    private sealed record Texts(
+        string Name, string Appearance, string Background, string Personality, string Bonds, string Tagline,
+        string CharacterClass, string Species, string Age, string? Color);
 
     private sealed record Row(CharacterResponse Response, Guid? TokenAssetId);
 }

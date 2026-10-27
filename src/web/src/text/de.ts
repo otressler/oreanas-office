@@ -669,35 +669,85 @@ export const de = {
     add: 'Neuer Charakter',
     name: 'Name',
     size: 'Größe',
+    /** Free-text facts under the name on a character's page. */
+    characterClass: 'Klasse',
+    species: 'Spezies',
+    age: 'Alter',
     owner: (name: string) => `Gehört ${name}`,
     /** The DM's field for whom a character belongs to (knowledge/domain/character.md). */
-    ownerField: 'Gehört',
-    ownerHint:
-      'Wem der Charakter gehört, der spielt ihn. Für eine einzelne Sitzung kann ihre Spielleitung ihn jemand anderem geben.',
-    editTitle: (name: string) => `${name} bearbeiten`,
+    ownerField: 'Gespielt von',
+    ownerHint: 'Für eine Sitzung kann die Spielleitung den Charakter weitergeben.',
     appearance: 'Aussehen',
     appearanceHint: 'Kurze Beschreibung, aus der ein Porträt gemalt werden kann.',
     /** The ring colour (knowledge/domain/character.md): a hex code, or empty for the default. */
     color: {
-      label: 'Farbe',
-      hint: 'Ein Farbcode wie #4da3ff, oder eine der Farben unten. Leer lassen für die Farbe nach Reihenfolge.',
+      label: 'Farbe auf dem Brett',
       invalid: 'Ein Farbcode ist # und sechs Zeichen aus 0–9 und a–f, etwa #4da3ff.',
-      automatic: 'automatisch',
-      reset: 'Farbe nach Reihenfolge',
+      /** The "+" swatch that opens the hex field. */
+      addCustom: 'Eigene Farbe',
+      custom: 'Eigener Farbcode',
+      automaticHint: 'Automatisch nach Reihenfolge gewählt.',
+      reset: 'Farbe nach Reihenfolge wählen',
       /** Names of the default ring colours, in the order of CHARACTER_RINGS. */
       swatches: ['Blau', 'Grün', 'Orange', 'Lila', 'Türkis', 'Pink', 'Zitronengelb', 'Weiß'],
       pick: (name: string) => `Farbe ${name}`,
     },
     /** The alt text of a character's picked portrait, e.g. "Porträt: Brom". */
     portraitAlt: (name: string) => `Porträt: ${name}`,
-    /** The portrait part of an existing character's form (knowledge/features/token-icons.md). */
+    /** The portrait part of a character's page in edit mode (knowledge/features/token-icons.md). */
     portrait: {
       title: 'Porträt',
-      help: 'Lade ein Bild hoch oder lass eins aus dem Aussehen malen. Die Figur auf dem Brett zeigt das ausgewählte Bild.',
+      help: 'Lade ein Bild hoch oder lass eins aus Aussehen, Hintergrund und Persönlichkeit malen. Die Figur auf dem Brett zeigt das ausgewählte Bild.',
       generate: 'Porträt erzeugen',
       regenerate: 'Neues Porträt erzeugen',
       needsAppearance: 'Beschreib oben das Aussehen, dann lässt sich ein Porträt erzeugen.',
       saving: 'Die Änderungen am Charakter werden gespeichert…',
+    },
+    /** /kampagnen/:id/charaktere/:characterId (knowledge/features/character-page.md). */
+    page: {
+      open: (name: string) => `${name} ansehen`,
+      back: 'Zur Kampagne',
+      unknownTitle: 'Charakter nicht gefunden',
+      unknownBody: 'Diesen Charakter gibt es in der Kampagne nicht (mehr).',
+      edit: (name: string) => `${name} bearbeiten`,
+      /** The labelled button by the name; its accessible name is `edit`. */
+      editButton: 'Bearbeiten',
+      /** In the bar that sticks to the bottom while editing. */
+      unsaved: 'Ungespeicherte Änderungen',
+      portraitAfterSave:
+        'Ein Porträt lässt sich erzeugen oder hochladen, sobald der Charakter gespeichert ist.',
+      leave: 'Ungespeicherte Änderungen gehen verloren. Die Seite trotzdem verlassen?',
+      saveChanges: 'Änderungen speichern',
+      empty: 'Noch nichts eingetragen.',
+      /** The sentence under the portrait on the campaign page's card. */
+      tagline: {
+        label: 'Kurzer Satz',
+        hint: 'Steht unter dem Porträt auf der Kampagnenseite.',
+      },
+      /** Over the portrait pictures, in edit mode. */
+      portraitHint:
+        'Nutzt den aktuellen Text aus den Feldern; Ungespeichertes wird dabei gespeichert.',
+      /** Under each text's box: what the text may contain. */
+      markdownHint: 'Formatierung: **fett**, *kursiv*, „- “ für Listen.',
+      /** The texts about a character, in reading order. */
+      sections: {
+        appearance: {
+          title: 'Aussehen',
+          hint: 'Wie die Figur aussieht. Daraus wird das Porträt gemalt.',
+        },
+        background: {
+          title: 'Hintergrund',
+          hint: 'Woher die Figur kommt und was sie erlebt hat. Fließt ins Porträt ein.',
+        },
+        personality: {
+          title: 'Persönlichkeit',
+          hint: 'Wie die Figur ist und auftritt. Fließt ins Porträt ein.',
+        },
+        bonds: {
+          title: 'Verbindungen',
+          hint: 'Zu Menschen und Orten. Das lesen die anderen Spieler; ins Porträt fließt es nicht ein.',
+        },
+      },
     },
   },
 

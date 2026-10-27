@@ -5,6 +5,7 @@ import { WelcomeNewDevices } from './landing/WelcomeNewDevices'
 import { RequireLocalUser } from './offline/RequireLocalUser'
 import { AdminPage } from './pages/AdminPage'
 import { CampaignPage } from './pages/CampaignPage'
+import { CharacterPage } from './pages/CharacterPage'
 import { HomePage } from './pages/HomePage'
 import { ImprintPage } from './pages/ImprintPage'
 import { InvitePage } from './pages/InvitePage'
@@ -71,6 +72,16 @@ export const routes: RouteObject[] = [
                   {
                     path: 'kampagnen/:campaignId',
                     element: <CampaignPage />,
+                    handle: { wide: true } satisfies LayoutHandle,
+                  },
+                  {
+                    path: 'kampagnen/:campaignId/charaktere/neu',
+                    element: <CharacterPage isNew />,
+                    handle: { wide: true } satisfies LayoutHandle,
+                  },
+                  {
+                    path: 'kampagnen/:campaignId/charaktere/:characterId',
+                    element: <CharacterPage />,
                     handle: { wide: true } satisfies LayoutHandle,
                   },
                   { path: 'kampagnen/:campaignId/sitzungen/:sessionId', element: <SessionPage /> },

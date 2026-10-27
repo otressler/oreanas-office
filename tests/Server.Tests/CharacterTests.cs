@@ -24,7 +24,7 @@ public sealed class CharacterTests(AppFixture fixture) : IClassFixture<AppFixtur
         var character = await response.ReadAsync<CharacterResponse>(HttpStatusCode.Created);
         Assert.Equal($"/api/campaigns/{campaignId}/characters/{character.Id}", response.Headers.Location?.OriginalString);
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null, Background: "", Personality: "", Bonds: "", Tagline: "", CharacterClass: "", Species: "", Age: ""),
             character);
     }
 
@@ -91,7 +91,7 @@ public sealed class CharacterTests(AppFixture fixture) : IClassFixture<AppFixtur
             .ReadAsync<CharacterResponse>(HttpStatusCode.OK);
 
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null, Background: "", Personality: "", Bonds: "", Tagline: "", CharacterClass: "", Species: "", Age: ""),
             updated);
         Assert.Equal(updated, Assert.Single(await ListAsync(player, campaignId)));
     }

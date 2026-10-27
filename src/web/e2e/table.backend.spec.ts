@@ -3,7 +3,7 @@
 // with its code, and they set up a character and a session together.
 import { randomUUID } from 'node:crypto'
 import { expect, test, type Browser, type Page } from '@playwright/test'
-import { text } from './support.ts'
+import { addCharacter, text } from './support.ts'
 
 /** An invite from the E2E-only endpoint; the token is the last part of its URL. */
 async function createInviteToken(page: Page) {
@@ -58,9 +58,7 @@ test('two people register, create and join a campaign, and run a session', async
 
   // Brom creates his character with 9 m; Mira sees it as 9 m too.
   const characters = panel(brom, text.charactersTitle)
-  await characters.getByRole('button', { name: text.newCharacter }).click()
-  await characters.getByLabel(text.characterName).fill('Brom Eisenbart')
-  await characters.getByRole('button', { name: text.create }).click()
+  await addCharacter(brom, 'Brom Eisenbart')
   await expect(characters).toContainText('Mittelgroß')
 
   await mira.reload()

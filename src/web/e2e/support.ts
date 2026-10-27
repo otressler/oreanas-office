@@ -28,6 +28,7 @@ export const text = {
   charactersTitle: 'Charaktere',
   newCharacter: 'Neuer Charakter',
   characterName: 'Name',
+  saveChanges: 'Änderungen speichern',
   sessionsTitle: 'Sitzungen',
   newSession: 'Neue Sitzung',
   sessionTitle: 'Titel',
@@ -68,6 +69,19 @@ export const text = {
  * The screen position of a cell's centre on the board (or, with `surface`, the map
  * editor's canvas), read from the newest Konva stage's transform.
  */
+/**
+ * "Neuer Charakter" opens the character page as the editor; saving shows the new page, and
+ * going back returns to the campaign page, whose cards then include it.
+ */
+export async function addCharacter(page: Page, name: string, size?: string) {
+  await page.getByRole('link', { name: text.newCharacter }).click()
+  await page.getByLabel(text.characterName, { exact: true }).fill(name)
+  if (size) await page.getByLabel('Größe').selectOption(size)
+  await page.getByRole('button', { name: text.saveChanges }).click()
+  await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+  await page.goBack()
+}
+
 export async function cellCentre(
   page: Page,
   x: number,

@@ -25,6 +25,13 @@ function character(id: string, fields: Partial<Character> = {}): Character {
     colorIndex: 0,
     color: null,
     appearance: '',
+    background: '',
+    personality: '',
+    bonds: '',
+    tagline: '',
+    characterClass: '',
+    species: '',
+    age: '',
     portraitUrl: null,
     ...fields,
   }

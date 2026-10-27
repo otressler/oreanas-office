@@ -18,7 +18,7 @@ Every enemy type has its own recognisable icon.[^brief] All goblins share one ic
 # Requirements
 
 1. Generate an icon for a [creature type](/domain/creature-type.md) from its `name` and `appearance`. Only `dm` members generate creature icons.
-2. Generate a portrait for a [character](/domain/character.md) from its `name` and `appearance`. The character's owner and every `dm` member of the campaign can do this. Generating is offered once `appearance` is filled in.
+2. Generate a portrait for a [character](/domain/character.md) from its `name` and `appearance`, and its `background` and `personality` when it has them: a line after the subject asks the model to let them show in the expression, clothing and bearing. `bonds` never reach the prompt (project owner, 2026-10-27). The character's owner and every `dm` member of the campaign can do this. Generating is offered once `appearance` is filled in.
 3. Upload a picture as a character's portrait or a creature type's icon, from a phone's photo library or a computer. The same people who generate one may upload one: the character's owner and `dm` members for portraits, `dm` members for creature icons. A crop step comes first: the person drags and zooms the picture inside the token circle, and only the chosen square is uploaded. The server checks the type and size, and saves it as a square WebP, which also turns it the right way up and drops the photo's metadata, including where it was taken.
 4. Restyle an uploaded portrait (characters only): the uploaded picture goes to the model as a reference, which paints a portrait of that person or figure in the shared token style. The result is a new version, and the uploaded one stays.
 5. Every generation, restyling included, is started by a person and confirmed first, never automatic. All of them count against the site-wide monthly limit ([image budget](/decisions/image-budget.md)).
@@ -51,7 +51,7 @@ Built on `stage/8-token-icons`.
 
 - **Where.** The bestiary's edit form has an "Symbol" section, and its rows show the picked icon. The character form has the "Aussehen" field and, for the owner and `dm` members, a "Porträt" section; the characters panel shows each portrait. The board, the setup screen, the editor's preview and the encounter editor's canvas draw the picked image, cropped to a circle inside the ring. With an image, a creature's number ("G1") becomes a small badge on the token's lower-right edge.
 - **A creature type the server doesn't have yet** gets no gallery, only a note and "Jetzt synchronisieren". Generating first saves the form, syncs the type and sends its server version (`itemVersion`), because the server paints from its own copy.
-- **Saving before a portrait job.** A changed name, size or appearance of a character is saved before its portrait is generated. Restyling doesn't save the form.
+- **Saving before a portrait job.** A changed name, size or any of a character's texts is saved before its portrait is generated. Restyling doesn't save the form.
 - **One job at a time per owner.** While an icon or portrait is queued or being painted, generating and restyling wait; uploading still works.
 - **A finished job is always picked**, also when someone picked another version by hand while it was running.
 - **Uploads.** The crop step sends the chosen square as a 1024 × 1024 JPEG, so a transparent PNG gets the board's dark background behind it. The server keeps every version, uploads included, as a 512 × 512 WebP.

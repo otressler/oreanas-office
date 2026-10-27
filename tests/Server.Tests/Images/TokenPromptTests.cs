@@ -48,6 +48,38 @@ public sealed class TokenPromptTests
     }
 
     [Fact]
+    public void A_portrait_names_species_class_and_age_after_the_subject_and_skips_empty_ones()
+    {
+        var prompt = TokenPrompt.CharacterPortrait(
+            "Ireena", "Tall, auburn hair.", Style, species: " Mensch ", characterClass: "", age: "Ende zwanzig.");
+
+        Assert.Contains("Ireena, Tall, auburn hair.\nSpecies: Mensch. Age: Ende zwanzig.\nHead and shoulders", prompt);
+        Assert.DoesNotContain("Class:", prompt);
+        Assert.Contains("Species: Mensch. Age: Ende zwanzig.", TokenPrompt.Restyle("Ireena", "", Style, species: "Mensch", age: "Ende zwanzig"));
+        Assert.DoesNotContain("Species:", TokenPrompt.CharacterPortrait("Ireena", "", Style));
+    }
+
+    [Fact]
+    public void A_portrait_lets_background_and_personality_show_after_the_subject()
+    {
+        var prompt = TokenPrompt.CharacterPortrait(
+            "Liriel", "Wood elf, silver braid.", Style, background: " Scout on a\ncaravan road. ", personality: "Dry humour");
+
+        Assert.Equal(
+            """
+            Portrait token for a tabletop battle map: Liriel, Wood elf, silver braid.
+            Background: Scout on a caravan road. Personality: Dry humour. Let this show in the expression, clothing and bearing, without drawing scenes from it.
+            Head and shoulders, facing the viewer at a slight angle, centred in the square frame.
+            Painterly fantasy illustration, strong silhouette, rich but not neon colours, soft rim light, readable at small size.
+            Transparent background. No text, no border, no ring.
+            """.ReplaceLineEndings("\n"),
+            prompt);
+        Assert.Contains("Personality: Dry humour. Let", TokenPrompt.CharacterPortrait("Liriel", "", Style, personality: "Dry humour"));
+        Assert.DoesNotContain("Background:", TokenPrompt.CharacterPortrait("Liriel", "", Style, personality: "Dry humour"));
+        Assert.Contains("Background: Scout.", TokenPrompt.Restyle("Liriel", "", Style, background: "Scout"));
+    }
+
+    [Fact]
     public void A_restyle_starts_with_the_reference_sentence()
     {
         var prompt = TokenPrompt.Restyle("Aria", "", Style);

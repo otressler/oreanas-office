@@ -17,6 +17,11 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `name` | string | |
 | `size` | enum | See [creature size](/rules/creature-size.md); usually Medium or Small |
 | `appearance` | text, nullable | Short visual description that feeds the portrait prompt, as on a [creature type](/domain/creature-type.md) |
+| `tagline` | text | One flavor sentence, up to 120 characters, shown under the portrait on the [campaign page](/features/campaign-page.md) and under the name on the character's page. Not in the portrait prompt (project owner, 2026-10-27) |
+| `background` | text | Where the character comes from and what it has lived through, up to 1,500 characters. Feeds the portrait prompt, like `appearance` |
+| `personality` | text | How the character is and acts, up to 750 characters. Feeds the portrait prompt |
+| `characterClass`, `species`, `age` | text | Free-text facts shown under the name ("Klasse", "Spezies", "Alter"), up to 40 characters each. Feed the portrait prompt after the appearance, as "Species: …. Class: …. Age: ….", leaving out empty ones |
+| `bonds` | text | Ties to people and places ("Verbindungen"), up to 1,500 characters. For the other players to read; never part of the portrait prompt |
 | `tokenAssetId` | → [Asset](/domain/asset.md), nullable | The picked portrait version: generated, uploaded or restyled from an upload ([token icons](/features/token-icons.md)) |
 | `color` | string, nullable | The ring colour its player picked, `#rrggbb` in lower case. Null keeps the default colour by the order characters were added ([token](/domain/token.md)). Characters may share a colour; the app doesn't check, and the DM sorts it out at the table (project owner, 2026-10-16). Added to stage 8 after its merge |
 
@@ -37,5 +42,7 @@ Added on 2026-10-24 at the project owner's request ("assign characters to player
 - A running fight with the character reloads its boards when its player changes, so the change applies at once.
 
 # Notes
+
+The texts `appearance`, `background`, `personality` and `bonds` are shown and edited on the character's [page](/features/character-page.md); every member of the campaign can read them (project owner, 2026-10-27).
 
 Deliberately thin: only what the board needs. Speed is out until the [distance rules](/backlog.md) come back (project owner, 2026-10-14). Full character sheets are part of the campaign management focus area in the [backlog](/backlog.md).

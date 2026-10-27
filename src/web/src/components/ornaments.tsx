@@ -52,14 +52,14 @@ export function SectionHeading({
   children,
 }: {
   id?: string
-  kicker: string
+  kicker?: string
   level: 1 | 2
   children: ReactNode
 }) {
   const Heading = level === 1 ? 'h1' : 'h2'
   return (
     <div>
-      <Kicker>{kicker}</Kicker>
+      {kicker && <Kicker>{kicker}</Kicker>}
       <Heading
         id={id}
         className="mt-3 bg-gradient-to-b from-parchment to-candle-strong bg-clip-text font-display text-3xl font-semibold text-transparent sm:text-5xl"

@@ -9,6 +9,18 @@ export const limits = {
   campaignDescription: 300,
   /** Character.NameMaxLength */
   characterName: 40,
+  /** Character.AppearanceMaxLength */
+  characterAppearance: 750,
+  /** Character.FactMaxLength: class, species and age */
+  characterFact: 40,
+  /** Character.TaglineMaxLength */
+  characterTagline: 120,
+  /** Character.BackgroundMaxLength */
+  characterBackground: 1500,
+  /** Character.PersonalityMaxLength */
+  characterPersonality: 750,
+  /** Character.BondsMaxLength */
+  characterBonds: 1500,
   /** GameSession.TitleMaxLength */
   sessionTitle: 100,
   /** AccountInput.PasswordMinLength */

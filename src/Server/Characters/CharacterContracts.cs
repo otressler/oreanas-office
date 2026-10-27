@@ -2,13 +2,19 @@ using OreanasOffice.Server.Rules;
 
 namespace OreanasOffice.Server.Characters;
 
-// Appearance: up to Character.AppearanceMaxLength characters; feeds the portrait prompt.
+// Appearance, Background, Personality, Bonds: up to the Character.*MaxLength characters
+// each, and Tagline up to Character.TaglineMaxLength (a flavor sentence for the card,
+// not in the prompt); the first three feed the portrait prompt, Bonds don't. Null saves an empty text.
+// CharacterClass, Species, Age: free text up to Character.FactMaxLength characters, shown under
+// the name; not in the portrait prompt. Null saves an empty text.
 // Color: the ring colour as "#rrggbb" (any case), or null or empty for the default.
 // OwnerUserId: the member the character belongs to. Null keeps the owner, or for a new
 // character makes it the signed-in user's. Only `dm` members give a character to someone
 // else (403); it must be a member of the campaign (NotAMember).
 public record CharacterRequest(
-    string Name, CreatureSize Size, string? Appearance = null, string? Color = null, Guid? OwnerUserId = null);
+    string Name, CreatureSize Size, string? Appearance = null, string? Color = null, Guid? OwnerUserId = null,
+    string? Background = null, string? Personality = null, string? Bonds = null, string? Tagline = null,
+    string? CharacterClass = null, string? Species = null, string? Age = null);
 
 // CanEdit: the signed-in user owns the character or is a `dm` member. ColorIndex: the
 // character's place in the order characters were added to the campaign (0, 1, 2…),
@@ -25,4 +31,11 @@ public record CharacterResponse(
     int ColorIndex,
     string Appearance,
     string? PortraitUrl,
-    string? Color);
+    string? Color,
+    string Background,
+    string Personality,
+    string Bonds,
+    string Tagline,
+    string CharacterClass,
+    string Species,
+    string Age);

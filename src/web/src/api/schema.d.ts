@@ -3654,6 +3654,13 @@ export interface components {
             color?: null | string;
             /** Format: uuid */
             ownerUserId?: null | string;
+            background?: null | string;
+            personality?: null | string;
+            bonds?: null | string;
+            tagline?: null | string;
+            characterClass?: null | string;
+            species?: null | string;
+            age?: null | string;
         };
         CharacterResponse: {
             /** Format: uuid */
@@ -3669,6 +3676,13 @@ export interface components {
             appearance: string;
             portraitUrl: null | string;
             color: null | string;
+            background: string;
+            personality: string;
+            bonds: string;
+            tagline: string;
+            characterClass: string;
+            species: string;
+            age: string;
         };
         CreateCampaignRequest: {
             name: string;

@@ -76,6 +76,11 @@ export interface TokenImageGalleryProps {
   rejectedHint?: string
   /** Campaigns: pictures are 3:2 covers instead of tokens. */
   shape?: CropShape
+  /**
+   * `sidebar`: a narrow column under a large picture of the owner (the character page). The
+   * picked image isn't repeated, generating is a secondary button and versions form a grid.
+   */
+  layout?: 'inline' | 'sidebar'
 }
 
 export function TokenImageGallery(props: TokenImageGalleryProps) {
@@ -101,7 +106,9 @@ function OnlineGallery({
   noneHint = t.noneHint,
   rejectedHint = t.rejected,
   shape = 'token',
+  layout = 'inline',
 }: TokenImageGalleryProps) {
+  const side = layout === 'sidebar'
   const queryClient = useQueryClient()
   const query = useTokenImages(campaignId, owner, true)
   const data = query.data
@@ -194,8 +201,8 @@ function OnlineGallery({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
-        {shape === 'cover' ? (
+      <div className={side ? 'flex flex-col gap-3' : 'flex flex-wrap items-center gap-3'}>
+        {side ? null : shape === 'cover' ? (
           <CampaignCover
             url={picked?.url}
             alt={t.pickedAlt(name)}
@@ -211,9 +218,9 @@ function OnlineGallery({
             className="h-20 w-20 text-3xl"
           />
         )}
-        <div className="flex min-w-0 flex-col items-start gap-2">
+        <div className={`flex min-w-0 gap-2 ${side ? 'flex-col' : 'flex-col items-start'}`}>
           <Button
-            variant="primary"
+            variant={side ? 'secondary' : 'primary'}
             busy={busy}
             disabled={!canGenerate}
             onClick={() => {
@@ -276,7 +283,7 @@ function OnlineGallery({
           {versions.length === 0 ? (
             <Help>{t.empty}</Help>
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className={side ? 'grid grid-cols-2 gap-2' : 'flex flex-col gap-2'}>
               {versions.map((version) => (
                 <Version
                   key={version.id}
@@ -284,6 +291,7 @@ function OnlineGallery({
                   name={name}
                   ring={ring}
                   shape={shape}
+                  stacked={side}
                   rejectedHint={rejectedHint}
                   picked={version.id === pickedId}
                   pickBusy={pick.isPending}
@@ -343,6 +351,7 @@ function Version({
   name,
   ring,
   shape,
+  stacked,
   rejectedHint,
   picked,
   pickBusy,
@@ -353,6 +362,7 @@ function Version({
   name: string
   ring: string
   shape: CropShape
+  stacked: boolean
   rejectedHint: string
   picked: boolean
   pickBusy: boolean
@@ -364,7 +374,7 @@ function Version({
   return (
     <li
       aria-label={t.versionAlt(time)}
-      className={`flex items-start gap-3 rounded-lg border p-2 ${picked ? 'border-candle' : 'border-line'}`}
+      className={`flex gap-3 rounded-lg border p-2 ${stacked ? 'flex-col items-center' : 'items-start'} ${picked ? 'border-candle' : 'border-line'}`}
     >
       {done && shape === 'cover' ? (
         <CampaignCover
@@ -379,7 +389,7 @@ function Version({
           label={name}
           ring={ring}
           alt={t.versionAlt(time)}
-          className="h-12 w-12 text-lg"
+          className={stacked ? 'h-16 w-16 text-xl' : 'h-12 w-12 text-lg'}
         />
       ) : (
         <span

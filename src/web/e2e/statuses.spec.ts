@@ -24,6 +24,7 @@ const t = {
   removedList: (count: number) => `Vom Feld genommen (${count})`,
   restoreRow: (label: string) => `${label} zurückholen`,
   statusList: (name: string) => `Zustandsliste von ${name}`,
+  showList: 'Zustandsliste zeigen',
   customOpen: 'Eigener Zustand',
   customName: 'Name',
   customDescription: 'Was das Symbol zeigen soll',
@@ -57,7 +58,7 @@ function fight() {
     characters: [{ characterId: hero.id, x: 0, y: 5 }],
   })
   const token = (label: string) => encounter.tokens.find((t) => t.label === label)!
-  return { dm, player, campaign, encounter, token }
+  return { dm, player, campaign, hero, encounter, token }
 }
 
 type Setup = ReturnType<typeof fight>
@@ -200,10 +201,9 @@ test('a player makes "Verhext" and generates its icon after confirming', async (
   const setup = fight()
   backend.signIn(context, setup.player)
 
-  await page.goto(`/kampagnen/${setup.campaign.id}`)
-  const characters = page.getByRole('region', { name: 'Charaktere' })
-  await characters.getByRole('button', { name: t.statusList('Held') }).click()
-  const list = characters.getByRole('region', { name: t.statusList('Held') })
+  await page.goto(`/kampagnen/${setup.campaign.id}/charaktere/${setup.hero.id}`)
+  const list = page.getByRole('region', { name: t.statusList('Held') })
+  await list.getByRole('button', { name: t.showList }).click()
   await expect(list.getByText('Liegend')).toBeVisible()
 
   await list.getByRole('button', { name: t.customOpen }).click()

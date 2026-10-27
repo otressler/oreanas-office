@@ -341,8 +341,12 @@ public sealed class ImageJobWorker(
                 AssetOwnerType.CreatureType => TokenPrompt.CreatureIcon(subject.Name, subject.Appearance, _options.TokenStyle),
                 AssetOwnerType.Status => TokenPrompt.StatusIcon(subject.Name, subject.Appearance, _options.TokenStyle),
                 AssetOwnerType.Campaign => TokenPrompt.CampaignCover(subject.Name, subject.Appearance, _options.CoverStyle),
-                _ when reference is null => TokenPrompt.CharacterPortrait(subject.Name, subject.Appearance, _options.TokenStyle),
-                _ => TokenPrompt.Restyle(subject.Name, subject.Appearance, _options.TokenStyle),
+                _ when reference is null => TokenPrompt.CharacterPortrait(
+                    subject.Name, subject.Appearance, _options.TokenStyle, subject.Background, subject.Personality,
+                    subject.Species, subject.CharacterClass, subject.Age),
+                _ => TokenPrompt.Restyle(
+                    subject.Name, subject.Appearance, _options.TokenStyle, subject.Background, subject.Personality,
+                    subject.Species, subject.CharacterClass, subject.Age),
             };
             asset.Prompt = TokenPrompt.ForStorage(prompt);
             await db.SaveChangesAsync(stoppingToken);
@@ -405,28 +409,42 @@ public sealed class ImageJobWorker(
     }
 
     // The owner's name and what the picture should show: a creature type's or character's
-    // appearance, a status's icon description, a campaign's description.
-    private static async Task<(string Name, string Appearance)?> TokenOwnerAsync(
+    // appearance, a status's icon description, a campaign's description. A character's
+    // background and personality come with it.
+    private static async Task<TokenSubject?> TokenOwnerAsync(
         AppDbContext db, Asset asset, CancellationToken cancellationToken) =>
         asset.OwnerType switch
         {
             AssetOwnerType.CreatureType => await db.CreatureTypes.AsNoTracking()
                 .Where(t => t.Id == asset.OwnerId)
                 .Select(t => new { t.Name, t.Appearance })
-                .SingleOrDefaultAsync(cancellationToken) is { } type ? (type.Name, type.Appearance) : null,
+                .SingleOrDefaultAsync(cancellationToken) is { } type ? new TokenSubject(type.Name, type.Appearance) : null,
             AssetOwnerType.Status => await db.StatusDefinitions.AsNoTracking()
                 .Where(s => s.Id == asset.OwnerId && s.CampaignId != null)
                 .Select(s => new { s.Name, s.IconDescription })
-                .SingleOrDefaultAsync(cancellationToken) is { } status ? (status.Name, status.IconDescription ?? "") : null,
+                .SingleOrDefaultAsync(cancellationToken) is { } status ? new TokenSubject(status.Name, status.IconDescription ?? "") : null,
             AssetOwnerType.Campaign => await db.Campaigns.AsNoTracking()
                 .Where(c => c.Id == asset.OwnerId)
                 .Select(c => new { c.Name, c.Description })
-                .SingleOrDefaultAsync(cancellationToken) is { } campaign ? (campaign.Name, campaign.Description ?? "") : null,
+                .SingleOrDefaultAsync(cancellationToken) is { } campaign ? new TokenSubject(campaign.Name, campaign.Description ?? "") : null,
             _ => await db.Characters.AsNoTracking()
                 .Where(c => c.Id == asset.OwnerId)
-                .Select(c => new { c.Name, c.Appearance })
-                .SingleOrDefaultAsync(cancellationToken) is { } character ? (character.Name, character.Appearance) : null,
+                .Select(c => new { c.Name, c.Appearance, c.Background, c.Personality, c.Species, c.CharacterClass, c.Age })
+                .SingleOrDefaultAsync(cancellationToken) is { } character
+                ? new TokenSubject(
+                    character.Name, character.Appearance, character.Background, character.Personality,
+                    character.Species, character.CharacterClass, character.Age)
+                : null,
         };
+
+    private sealed record TokenSubject(
+        string Name,
+        string Appearance,
+        string? Background = null,
+        string? Personality = null,
+        string? Species = null,
+        string? CharacterClass = null,
+        string? Age = null);
 
     // Stores the WebP (a square, or a cover) and makes it the owner's pick: the newest finished version
     // becomes the picked one (project owner, 2026-10-15).

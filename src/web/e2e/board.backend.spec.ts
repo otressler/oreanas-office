@@ -3,7 +3,7 @@
 // starts the fight; the player opens the app and lands on the board; the DM ends it.
 import { randomUUID } from 'node:crypto'
 import { expect, test, type Browser, type Page } from '@playwright/test'
-import { text } from './support.ts'
+import { addCharacter, text } from './support.ts'
 
 async function registerOnNewDevice(browser: Browser, inviteToken: string, displayName: string) {
   const context = await browser.newContext()
@@ -42,9 +42,7 @@ test('the DM starts a fight on the gorge crossing and a player lands on it', asy
   await mira.getByRole('button', { name: text.joinButton }).click()
   await expect(mira.getByRole('heading', { name: campaignName })).toBeVisible()
   const characters = panel(mira, text.charactersTitle)
-  await characters.getByRole('button', { name: text.newCharacter }).click()
-  await characters.getByLabel(text.characterName).fill('Ilse')
-  await characters.getByRole('button', { name: text.create }).click()
+  await addCharacter(mira, 'Ilse')
   await expect(characters).toContainText('Mittelgroß')
 
   // Oreana runs tonight's session and imports the gorge crossing.
