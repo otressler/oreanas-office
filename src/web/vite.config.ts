@@ -61,10 +61,16 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         // App shell and static files only. API calls, sign-in and SignalR are
         // never cached (knowledge/decisions/frontend-stack.md), except images below.
-        // The condition icons (statuses/<key>.webp) and the home page's pictures
-        // (home/*.webp: the default campaign cover, joining, a new campaign) are part of the
-        // app, so they work offline. The landing page's larger pictures are not.
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}', 'statuses/*.webp', 'home/*.webp'],
+        // The condition icons (statuses/<key>.webp), the home page's pictures (home/*.webp:
+        // the default campaign cover, joining, a new campaign) and the campaign page's
+        // (campaign/*.webp: maps, bestiary, the characters' alcove) are part of the app, so
+        // they work offline. The landing page's larger pictures are not.
+        globPatterns: [
+          '**/*.{js,css,html,svg,png,ico,woff2}',
+          'statuses/*.webp',
+          'home/*.webp',
+          'campaign/*.webp',
+        ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/hubs(\/|$)/, /^\/signin-/, /^\/signout/],
         cleanupOutdatedCaches: true,

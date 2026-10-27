@@ -1,5 +1,5 @@
-// The ways to the map pages: the campaign page for dm members, and the server gate's
-// offline and waking screens for a remembered user.
+// The ways to the map pages and the bestiary: the campaign page for dm members, and the
+// server gate's offline and waking screens for a remembered user.
 import { act, render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -35,15 +35,22 @@ describe('campaign page', () => {
     })
   }
 
-  it('links dm members to the map list and keeps the campaign for offline use', async () => {
+  it('links dm members to the map list and the bestiary and keeps the campaign for offline use', async () => {
     api('dm')
     rememberUser(testUser)
     renderApp('/kampagnen/c1')
 
-    expect(await screen.findByRole('link', { name: new RegExp(t.campaignLink) })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: t.campaignOpen })).toHaveAttribute(
       'href',
       '/kampagnen/c1/karten',
     )
+    expect(screen.getByRole('link', { name: de.bestiary.campaignOpen })).toHaveAttribute(
+      'href',
+      '/kampagnen/c1/bestiarium',
+    )
+    // Counted from this browser's copy.
+    expect(await screen.findByText(t.campaignCount(0, 0))).toBeInTheDocument()
+    expect(screen.getByText(de.bestiary.campaignCount(0))).toBeInTheDocument()
     await vi.waitFor(async () =>
       expect(await offlineDb(testUser.id).campaigns.get('c1')).toMatchObject({
         name: 'Die Rabenküste',
@@ -52,11 +59,12 @@ describe('campaign page', () => {
     )
   })
 
-  it('has no map link for players', async () => {
+  it('has no map or bestiary link for players', async () => {
     api('player')
     renderApp('/kampagnen/c1')
     expect(await screen.findByRole('heading', { name: 'Die Rabenküste' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: new RegExp(t.campaignLink) })).toBeNull()
+    expect(screen.queryByRole('link', { name: t.campaignOpen })).toBeNull()
+    expect(screen.queryByRole('link', { name: de.bestiary.campaignOpen })).toBeNull()
   })
 })
 

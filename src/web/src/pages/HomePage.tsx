@@ -8,9 +8,18 @@ import { ringColor } from '../board/palette'
 import { CampaignCover } from '../campaigns/CampaignCover'
 import { useLocalCampaigns } from '../campaigns/localCampaigns'
 import { campaignKeys, useCampaigns } from '../campaigns/queries'
-import { ChevronButton, ChevronLink, Diamond, Kicker, Rule } from '../components/ornaments'
+import {
+  ChevronButton,
+  ChevronLink,
+  CoverLabel,
+  Diamond,
+  PicturePanel,
+  Rule,
+  SectionHeading,
+} from '../components/ornaments'
 import { ErrorAlert, LoadError, Loading, TextField } from '../components/ui'
 import { formatDate } from '../lib/dates'
+import { picture } from '../lib/pictures'
 import { SyncMark } from '../maps/SyncMark'
 import type { CampaignCopy } from '../offline/db'
 import { cleanJoinCode } from '../spectator/joinCode'
@@ -20,16 +29,9 @@ import { de } from '../text/de'
 import { TokenPicture } from '../tokenImages/TokenPicture'
 import { limits } from '../lib/limits'
 
-/** A picture in public/home/, at two widths (knowledge/features/campaign-overview.md). */
-function picture(name: string) {
-  return {
-    src: `/home/${name}-1536.webp`,
-    srcSet: `/home/${name}-768.webp 768w, /home/${name}-1536.webp 1536w`,
-  }
-}
-
-const JOIN_PICTURE = picture('join')
-const CREATE_PICTURE = picture('create')
+// Pictures in public/home/ (knowledge/features/campaign-overview.md).
+const JOIN_PICTURE = picture('home/join')
+const CREATE_PICTURE = picture('home/create')
 
 /** How many characters a card shows before "+3". */
 const CARD_CHARACTERS = 6
@@ -96,33 +98,6 @@ export function HomePage() {
           <CreateForm />
         </div>
       </section>
-    </div>
-  )
-}
-
-/** A kicker, the heading in engraved capitals and a gold rule, as on the landing page. */
-function SectionHeading({
-  id,
-  kicker,
-  level,
-  children,
-}: {
-  id?: string
-  kicker: string
-  level: 1 | 2
-  children: ReactNode
-}) {
-  const Heading = level === 1 ? 'h1' : 'h2'
-  return (
-    <div>
-      <Kicker>{kicker}</Kicker>
-      <Heading
-        id={id}
-        className="mt-3 bg-gradient-to-b from-parchment to-candle-strong bg-clip-text font-display text-3xl font-semibold text-transparent sm:text-5xl"
-      >
-        {children}
-      </Heading>
-      <Rule className="mt-4 w-56" />
     </div>
   )
 }
@@ -207,15 +182,6 @@ function CardFrame({
         className="pointer-events-none absolute inset-1.5 rounded-sm border border-candle/10"
       />
     </article>
-  )
-}
-
-/** A small engraved label over a cover. */
-function CoverLabel({ children }: { children: ReactNode }) {
-  return (
-    <span className="rounded-sm border border-candle/40 bg-table/80 px-2 py-0.5 font-display text-[0.65rem] font-semibold tracking-[0.2em] text-parchment uppercase backdrop-blur-sm">
-      {children}
-    </span>
   )
 }
 
@@ -329,56 +295,6 @@ function ActiveSession({ campaign }: { campaign: CampaignSummary }) {
   )
 }
 
-/** Joining or creating: a picture on top, then the title, a line and the form. */
-function ActionPanel({
-  title,
-  body,
-  image,
-  children,
-}: {
-  title: string
-  body: string
-  image: { src: string; srcSet: string }
-  children: ReactNode
-}) {
-  const id = useId()
-  return (
-    <section
-      aria-labelledby={id}
-      className="relative flex flex-col overflow-hidden rounded-sm border border-candle/25 bg-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]"
-    >
-      <div className="relative h-44 sm:h-56">
-        <img
-          src={image.src}
-          srcSet={image.srcSet}
-          sizes="(min-width: 768px) 560px, 100vw"
-          alt=""
-          className="size-full object-cover"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-panel via-panel/60 to-transparent"
-        />
-      </div>
-      <div className="relative -mt-12 flex flex-1 flex-col gap-3 px-5 pb-6">
-        <h3
-          id={id}
-          className="font-display text-2xl font-semibold text-parchment drop-shadow-[0_2px_8px_rgb(0_0_0/0.9)]"
-        >
-          {title}
-        </h3>
-        <Rule className="w-32" />
-        <p className="text-sm text-dim">{body}</p>
-        {children}
-      </div>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-1.5 rounded-sm border border-candle/10"
-      />
-    </section>
-  )
-}
-
 function JoinForm() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -398,7 +314,7 @@ function JoinForm() {
   }
 
   return (
-    <ActionPanel title={de.home.joinTitle} body={de.home.joinBody} image={JOIN_PICTURE}>
+    <PicturePanel title={de.home.joinTitle} body={de.home.joinBody} image={JOIN_PICTURE}>
       <form onSubmit={submit} className="mt-2 flex flex-1 flex-col gap-4">
         <TextField
           label={de.home.joinCode}
@@ -426,7 +342,7 @@ function JoinForm() {
           </ChevronButton>
         </div>
       </form>
-    </ActionPanel>
+    </PicturePanel>
   )
 }
 
@@ -450,7 +366,7 @@ function CreateForm() {
   }
 
   return (
-    <ActionPanel title={de.home.createTitle} body={de.home.createBody} image={CREATE_PICTURE}>
+    <PicturePanel title={de.home.createTitle} body={de.home.createBody} image={CREATE_PICTURE}>
       <form onSubmit={submit} className="mt-2 flex flex-1 flex-col gap-4">
         <TextField
           label={de.home.createName}
@@ -467,6 +383,6 @@ function CreateForm() {
           </ChevronButton>
         </div>
       </form>
-    </ActionPanel>
+    </PicturePanel>
   )
 }

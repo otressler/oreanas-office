@@ -1,13 +1,15 @@
 // What the home page's card shows of a campaign (knowledge/features/campaign-overview.md):
-// `dm` members change its name and description and pick its cover here. Needs a connection,
-// like every campaign change but creating one.
+// `dm` members change its name and description and pick its cover here, opened with the
+// pencil on the campaign page's cover. Needs a connection, like every campaign change but
+// creating one.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useId, useState, type FormEvent } from 'react'
 import { api } from '../api/client'
 import { errorMessage, unwrap } from '../api/errors'
 import type { Campaign } from '../api/types'
 import { CANDLE } from '../board/palette'
-import { Button, ErrorAlert, Panel, TextField } from '../components/ui'
+import { Rule } from '../components/ornaments'
+import { Button, ErrorAlert, TextField } from '../components/ui'
 import { inputClass } from '../components/styles'
 import { limits } from '../lib/limits'
 import { de } from '../text/de'
@@ -16,25 +18,31 @@ import { campaignKeys } from './queries'
 
 const t = de.campaign
 
-export function CampaignCardPanel({ campaign }: { campaign: Campaign }) {
-  const [open, setOpen] = useState(false)
+export function CampaignCardEditor({
+  campaign,
+  onDone,
+}: {
+  campaign: Campaign
+  onDone: () => void
+}) {
+  const titleId = useId()
   return (
-    <Panel
-      title={t.cardTitle}
-      action={
-        !open && (
-          <Button variant="secondary" onClick={() => setOpen(true)}>
-            {t.edit}
-          </Button>
-        )
-      }
+    <section
+      aria-labelledby={titleId}
+      className="relative flex flex-col gap-4 rounded-sm border border-candle/25 bg-panel p-5 shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]"
     >
-      {open && <CardEditor campaign={campaign} onDone={() => setOpen(false)} />}
-    </Panel>
+      <div>
+        <h2 id={titleId} className="font-display text-xl font-semibold text-parchment">
+          {t.cardTitle}
+        </h2>
+        <Rule className="mt-2 w-32" />
+      </div>
+      <CardForm campaign={campaign} onDone={onDone} />
+    </section>
   )
 }
 
-function CardEditor({ campaign, onDone }: { campaign: Campaign; onDone: () => void }) {
+function CardForm({ campaign, onDone }: { campaign: Campaign; onDone: () => void }) {
   const queryClient = useQueryClient()
   const descriptionId = useId()
   const [name, setName] = useState(campaign.name)

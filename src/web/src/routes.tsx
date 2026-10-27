@@ -68,7 +68,11 @@ export const routes: RouteObject[] = [
                   },
                   { path: 'profil', element: <ProfilePage /> },
                   { path: 'beitreten/:joinCode', element: <JoinPage /> },
-                  { path: 'kampagnen/:campaignId', element: <CampaignPage /> },
+                  {
+                    path: 'kampagnen/:campaignId',
+                    element: <CampaignPage />,
+                    handle: { wide: true } satisfies LayoutHandle,
+                  },
                   { path: 'kampagnen/:campaignId/sitzungen/:sessionId', element: <SessionPage /> },
                   // The board pages load on demand: Konva alone would double the app shell.
                   {
@@ -117,6 +121,12 @@ export const routes: RouteObject[] = [
                 path: 'kampagnen/:campaignId/karten',
                 lazy: async () => ({
                   Component: (await import('./maps/MapListPage')).MapListPage,
+                }),
+              },
+              {
+                path: 'kampagnen/:campaignId/bestiarium',
+                lazy: async () => ({
+                  Component: (await import('./bestiary/BestiaryPage')).BestiaryPage,
                 }),
               },
               {
