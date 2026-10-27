@@ -32,7 +32,8 @@ public enum SyncOutcome
 public record SyncCampaignData(string Name);
 
 // InitiativeModifier and InitiativeRollMode: what the type's creatures roll initiative with
-// (knowledge/features/initiative.md); older devices leave them out.
+// (knowledge/features/initiative.md); older devices leave them out. HitPoints: its creatures'
+// default maximum, 1 to 999, or null (knowledge/features/hit-points.md).
 public record SyncCreatureTypeData(
     string Name,
     CreatureSize Size,
@@ -40,7 +41,8 @@ public record SyncCreatureTypeData(
     string Notes,
     DateTimeOffset? ArchivedAt,
     int InitiativeModifier = 0,
-    InitiativeRollMode InitiativeRollMode = InitiativeRollMode.Normal);
+    InitiativeRollMode InitiativeRollMode = InitiativeRollMode.Normal,
+    int? HitPoints = null);
 
 // BackgroundPlacement and GridStyle: the DM's adjustment of the picked background and how
 // the grid is drawn over it (knowledge/domain/battle-map.md); older devices leave them out.
@@ -71,7 +73,8 @@ public record SyncEncounterData(
 // Elevation is not pushed: the server takes the highest elevation under the footprint.
 // Hidden: only the session DM sees it until revealed (knowledge/features/fog-of-war.md).
 // InitiativeModifier and InitiativeRollMode: this creature's own; null takes the type's
-// (knowledge/features/initiative.md).
+// (knowledge/features/initiative.md). MaxHitPoints: the hit points it starts with, 1 to 999;
+// null takes the type's (knowledge/features/hit-points.md).
 public record SyncCreatureToken(
     Guid Id,
     Guid CreatureTypeId,
@@ -81,7 +84,8 @@ public record SyncCreatureToken(
     CreatureSize Size,
     bool Hidden = false,
     int? InitiativeModifier = null,
-    InitiativeRollMode? InitiativeRollMode = null);
+    InitiativeRollMode? InitiativeRollMode = null,
+    int? MaxHitPoints = null);
 
 // What the server sends back for an encounter: the pushed fields plus the server-only ones.
 public record SyncEncounterServerData(

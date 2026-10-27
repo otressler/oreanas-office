@@ -11,6 +11,8 @@
 //   header=1               puts the board under a 56 px bar, as on the app's pages
 //   statuses=1             puts 0–5 sample statuses (letters, one with a level) on the tokens
 //   inset=<px>             covers the board's bottom like the docked token card
+//   hp=<label>:<left>/<max> gives that token hit points, as on the session DM's board; repeatable
+//   dead=<label>           marks that token dead; repeatable
 // Double tap pings and double tap and drag draws an arrow (as "Mira"); the first
 // character is Mira's, for "Meine Figur".
 import { StrictMode } from 'react'

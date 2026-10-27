@@ -64,6 +64,41 @@ public sealed class TableVisibilityTests
         Assert.False(forPlayers.IsSessionDm);
     }
 
+    // knowledge/features/hit-points.md: hit points are the session DM's; dead shows to all.
+    [Fact]
+    public void Players_get_no_hit_points_but_see_a_creature_is_dead()
+    {
+        var hurt = Creature("Goblin 1", 1) with { HitPoints = 3, MaxHitPoints = 7, Dead = true };
+
+        var forPlayers = TableVisibility.ForPlayers(Board(hurt));
+
+        var token = Assert.Single(forPlayers.Tokens);
+        Assert.Equal((null, null, true), (token.HitPoints, token.MaxHitPoints, token.Dead));
+        Assert.Equal(hurt with { HitPoints = null, MaxHitPoints = null }, TableVisibility.ForPlayers(hurt));
+    }
+
+    [Theory]
+    [InlineData(null, null, null)]
+    [InlineData(null, 7, 7)]
+    [InlineData(3, 7, 3)]
+    [InlineData(9, 7, 7)]
+    [InlineData(3, null, null)]
+    public void What_is_left_is_the_noted_value_up_to_the_maximum_or_the_maximum(int? noted, int? max, int? expected) =>
+        Assert.Equal(expected, HitPointRules.Current(noted, max));
+
+    [Fact]
+    public void Hit_points_go_from_0_to_a_maximum_of_1_to_999()
+    {
+        Assert.True(HitPointRules.Valid(0, 1));
+        Assert.True(HitPointRules.Valid(999, 999));
+        Assert.False(HitPointRules.Valid(-1, 7));
+        Assert.False(HitPointRules.Valid(8, 7));
+        Assert.False(HitPointRules.Valid(0, 0));
+        Assert.False(HitPointRules.Valid(5, 1000));
+        Assert.True(HitPointRules.MaxValid(null));
+        Assert.False(HitPointRules.MaxValid(0));
+    }
+
     [Fact]
     public void A_layout_for_players_leaves_out_hidden_cells_but_keeps_those_under_characters()
     {

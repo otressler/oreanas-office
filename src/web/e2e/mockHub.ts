@@ -205,6 +205,26 @@ export class MockHub {
       case 'ClearInitiative':
         result = initiativeCall(this.backend, this, userId, message.target, args)
         break
+      // ---- Hit points and the dead mark (knowledge/features/hit-points.md) ----
+      case 'SetHitPoints': {
+        const hitPoints = this.backend.setHitPoints(userId, args[0] as S['SetHitPointsRequest'])
+        const change = hitPoints.change
+        // The session DM's devices only, as the server's DM group.
+        if (change) {
+          this.sendEach(change.encounterId, 'TokenHitPointsChanged', (viewer) =>
+            viewer === userId ? change : null,
+          )
+        }
+        result = hitPoints
+        break
+      }
+      case 'SetTokenDead': {
+        const dead = this.backend.setTokenDead(userId, args[0] as S['SetTokenDeadRequest'])
+        if (dead.change)
+          this.sendToEncounter(dead.change.encounterId, 'TokenDeadChanged', dead.change)
+        result = dead
+        break
+      }
       default:
         throw new Error(`Unknown hub method ${message.target}`)
     }

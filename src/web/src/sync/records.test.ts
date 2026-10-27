@@ -57,6 +57,38 @@ const server = (item: ReturnType<typeof recordPushItem>): SyncServerItem => ({
   encounter: item.encounter && { ...item.encounter, mapCopy: null },
 })
 
+describe('hit points in sync items', () => {
+  it('pushes a type’s default hit points, null for records without them', () => {
+    expect(recordPushItem('creatureType', type()).creatureType?.hitPoints).toBeNull()
+    const tough = recordPushItem('creatureType', type({ hitPoints: 59 }))
+    expect(tough.creatureType?.hitPoints).toBe(59)
+    expect(recordFromServer(server(tough))).toMatchObject({ hitPoints: 59 })
+    expect(sameData(tough, server(tough))).toBe(true)
+  })
+
+  it('pushes a creature’s own starting hit points, and null where it takes its type’s', () => {
+    const item = recordPushItem(
+      'encounter',
+      encounter([
+        { id: 't1', creatureTypeId: 'goblin', label: 'Goblin 1', x: 0, y: 0, size: 'small' },
+        {
+          id: 't2',
+          creatureTypeId: 'goblin',
+          label: 'Goblin 2',
+          x: 1,
+          y: 0,
+          size: 'small',
+          maxHitPoints: 12,
+        },
+      ]),
+    )
+    expect(item.encounter?.tokens.map((t) => t.maxHitPoints)).toEqual([null, 12])
+    expect(sameData(item, server(item))).toBe(true)
+    const pulled = recordFromServer(server(item)) as LocalEncounter
+    expect(pulled.tokens[1]).toMatchObject({ maxHitPoints: 12 })
+  })
+})
+
 describe('initiative in sync items', () => {
   it('pushes a type’s modifier and advantage, 0 and false for records without them', () => {
     expect(recordPushItem('creatureType', type()).creatureType).toMatchObject({

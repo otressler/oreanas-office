@@ -1760,6 +1760,7 @@ export const de = {
     notLocalMode: 'Ein gemeinsamer Bildschirm geht nur in der Spielweise „Gemeinsamer Bildschirm“.',
     initiativeInvalid:
       'Mit der Initiative stimmt etwas nicht: ein Wert außerhalb des Erlaubten, oder eine Figur, die nicht zum Kampf gehört.',
+    hitPointsInvalid: 'Die Trefferpunkte gehen von 0 bis zum Maximum, das Maximum von 1 bis 999.',
     notBuilt: 'Das gibt es noch nicht.',
   } satisfies Record<ApiErrorCode, string>,
 
@@ -1933,6 +1934,8 @@ export const de = {
     open: (name: string) => `${name} ansehen`,
     /** The initiative on a card, e.g. "Ini +2". */
     initiativeShort: (modifier: string) => `Ini ${modifier}`,
+    /** The hit points on a card, e.g. "12 TP". */
+    hitPointsShort: (hitPoints: number) => `${hitPoints} TP`,
     /** A creature type's own page (knowledge/features/creature-page.md). */
     page: {
       kicker: 'Kreaturenart',
@@ -1946,6 +1949,9 @@ export const de = {
       /** The initiative fact, e.g. "+2" or "+2 mit Vorteil". */
       initiativeValue: (modifier: string, withMode: string) =>
         withMode ? `${modifier} ${withMode}` : modifier,
+      hitPoints: 'Trefferpunkte',
+      /** No default hit points. */
+      noHitPoints: 'nicht festgelegt',
       archivedNote:
         'Archiviert: Sie lässt sich auf Karten nicht mehr wählen. Bereits gesetzte Kreaturen behalten sie.',
       iconAfterSave:
@@ -1974,6 +1980,10 @@ export const de = {
     initiativeModifierHint:
       'Wird zum W20 addiert, von −10 bis +20. Jede Kreatur auf einer Karte kann ihren eigenen haben.',
     initiativeRollMode: 'Initiative-Wurf',
+    /** The type's default maximum (knowledge/features/hit-points.md). */
+    hitPoints: 'Trefferpunkte',
+    hitPointsHint:
+      'Mit wie vielen Trefferpunkten ihre Kreaturen in den Kampf gehen, 1 bis 999. Leer lassen, wenn du sie nicht mitzählst. Jede Kreatur auf einer Karte kann eigene haben.',
     create: 'Anlegen',
     save: 'Speichern',
     cancel: 'Abbrechen',
@@ -1993,6 +2003,7 @@ export const de = {
       appearanceTooLong: 'Das Aussehen darf höchstens 500 Zeichen haben.',
       notesTooLong: 'Die Notizen dürfen höchstens 2000 Zeichen haben.',
       initiativeInvalid: 'Der Initiative-Modifikator ist eine ganze Zahl von −10 bis +20.',
+      hitPointsInvalid: 'Die Trefferpunkte sind eine ganze Zahl von 1 bis 999, oder leer.',
     } satisfies Record<import('../bestiary/creatureTypes').CreatureTypeProblem, string>,
     /** The icon part of an existing type's form (knowledge/features/token-icons.md). */
     icon: {
@@ -2144,6 +2155,13 @@ export const de = {
     initiativeRollMode: 'Initiative-Wurf',
     /** The empty choice, e.g. "Wie die Art (Vorteil)". */
     rollModeFromType: (mode: string) => `Wie die Art (${mode})`,
+    /** This creature's own starting hit points (knowledge/features/hit-points.md). */
+    hitPoints: 'Trefferpunkte',
+    /** The field's placeholder while empty, e.g. "Wie die Art (12)" or "Wie die Art (keine)". */
+    hitPointsFromType: (hitPoints: number | null) =>
+      `Wie die Art (${hitPoints === null ? 'keine' : hitPoints})`,
+    hitPointsHint: 'Leer lassen für den Wert der Kreaturenart.',
+    hitPointsInvalid: 'Eine ganze Zahl von 1 bis 999, oder leer.',
     type: 'Art',
     size: 'Größe',
     position: 'Feld',
@@ -2311,6 +2329,22 @@ export const de = {
     statusFailed: 'Der Zustand ist nicht angekommen. Versuch es bitte noch einmal.',
     removeFailed: 'Das Wegnehmen ist nicht angekommen. Versuch es bitte noch einmal.',
     restoreFailed: 'Das Zurückholen ist nicht angekommen. Versuch es bitte noch einmal.',
+    /** Hit points and the dead mark, the session DM's (knowledge/features/hit-points.md). */
+    hitPoints: 'Trefferpunkte',
+    /** Between what the creature has left and its maximum, as in "7 von 12". */
+    hitPointsMax: 'von',
+    hitPointsOf: (label: string) => `Trefferpunkte von ${label}`,
+    maxHitPointsOf: (label: string) => `Höchste Trefferpunkte von ${label}`,
+    /** A creature without a maximum yet. */
+    hitPointsNone: 'Noch keine Trefferpunkte. Trag ein Maximum ein, um sie zu zählen.',
+    hitPointsInvalid: 'Von 0 bis zum Maximum; das Maximum von 1 bis 999.',
+    hitPointsSave: 'Eintragen',
+    hitPointsFailed: 'Die Trefferpunkte sind nicht angekommen. Versuch es bitte noch einmal.',
+    markDead: 'Als tot markieren',
+    revive: 'Wiederbeleben',
+    /** Next to a dead creature's label, for everyone. */
+    dead: 'tot',
+    deadFailed: 'Das ist nicht angekommen. Versuch es bitte noch einmal.',
     /** The undo bar after removing (knowledge/features/removing-tokens.md). */
     removed: (label: string) => `${label} vom Feld genommen`,
     undo: 'Rückgängig',
@@ -2609,6 +2643,11 @@ export const de = {
     endConfirm: 'Ja, beenden',
     /** A row without a value yet. */
     noValue: '–',
+    /** A creature's hit points in its row, e.g. "7/12". */
+    hitPoints: (hitPoints: number, max: number) => `${hitPoints}/${max}`,
+    hitPointsLabel: (hitPoints: number, max: number) => `${hitPoints} von ${max} Trefferpunkten`,
+    /** A dead creature's row. */
+    dead: 'tot',
     empty: 'Niemand steht in der Liste.',
     /** The row's accessible name, e.g. "Goblin 2 auswählen, Initiative 14". */
     select: (label: string, value: number | null) =>

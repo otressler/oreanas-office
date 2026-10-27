@@ -34,6 +34,10 @@ public class CreatureType
 
     public InitiativeRollMode InitiativeRollMode { get; set; }
 
+    // The default maximum hit points of its creatures, 1 to 999; null when the DM doesn't
+    // track them (knowledge/features/hit-points.md). A placed token can start with its own.
+    public int? HitPoints { get; set; }
+
     // The picked icon version (knowledge/features/token-icons.md): a Done TokenIcon asset
     // owned by this type, or null for the letter. Online only and not part of the sync
     // item, like BattleMap.BackgroundAssetId, so picking never conflicts with offline edits.

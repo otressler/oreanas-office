@@ -21,6 +21,8 @@ export interface LocalCreatureType {
   initiativeModifier?: number
   /** Normal, advantage or disadvantage; absent means normal. */
   initiativeRollMode?: InitiativeRollMode
+  /** Its creatures' default maximum hit points, 1 to 999 (knowledge/features/hit-points.md); absent or null when not tracked. */
+  hitPoints?: number | null
   archivedAt: string | null
   createdAt: string
   updatedAt: string
@@ -44,6 +46,8 @@ export interface LocalCreatureToken {
   /** This creature's own initiative modifier and roll mode; absent or null takes the type's. */
   initiativeModifier?: number | null
   initiativeRollMode?: InitiativeRollMode | null
+  /** The hit points this creature starts with; absent or null takes the type's. */
+  maxHitPoints?: number | null
 }
 
 export interface LocalEncounter {

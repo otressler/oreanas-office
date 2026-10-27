@@ -23,7 +23,8 @@ Show who a token is and what is wrong with it, without getting in the way of mov
 - Portrait or icon, large ([token icons](/features/token-icons.md)), with its ring colour.
 - Label ("Goblin 3"), the creature type or "Charakter von Eli", size and elevation in meters.
 - **Statuses**: icon, name, level for Exhaustion, and who set it ("von Eli"). Tapping a status the person may remove offers "Entfernen" ([statuses](/features/statuses.md)).
-- **Buttons**, each only where the person may use it: "Status hinzufügen" ([statuses](/features/statuses.md)); "Zeigen", which pings the token ([pings and arrows](/features/pings-and-arrows.md)); "Abbrechen", which lets go of the token when it's selected for moving; "Vom Feld nehmen" for the session DM ([removing tokens](/features/removing-tokens.md)). Later, the session DM gets "Aufdecken" and "Verbergen" here ([fog of war](/features/fog-of-war.md)).
+- **Hit points**, for the session DM on creatures: what is left and the maximum, to write down new values. Everyone sees "tot" on a creature marked dead ([hit points](/features/hit-points.md)).
+- **Buttons**, each only where the person may use it: "Status hinzufügen" ([statuses](/features/statuses.md)); "Zeigen", which pings the token ([pings and arrows](/features/pings-and-arrows.md)); "Abbrechen", which lets go of the token when it's selected for moving; "Vom Feld nehmen" for the session DM ([removing tokens](/features/removing-tokens.md)); "Als tot markieren" or "Wiederbeleben" for the session DM on creatures ([hit points](/features/hit-points.md)). Later, the session DM gets "Aufdecken" and "Verbergen" here ([fog of war](/features/fog-of-war.md)).
 
 # A stack
 

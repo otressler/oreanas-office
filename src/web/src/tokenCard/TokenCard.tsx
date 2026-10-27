@@ -5,11 +5,14 @@
 // token on the cell. It folds to one line, and closes with "✕" (the page also closes it
 // with Escape and a tap on an empty cell). With nothing tapped but a cell, it shows the
 // cell's terrain and elevation instead. While a token is selected for moving, its first
-// line says what to do next, with "Hierhin" and "Abbrechen".
-import { useCallback, useEffect, useRef, useState } from 'react'
+// line says what to do next, with "Hierhin" and "Abbrechen". The session DM notes a
+// creature's hit points here and marks it dead (knowledge/features/hit-points.md).
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import type { BoardState, BoardToken, BoardTokenStatus } from '../api/types'
 import { ringColor } from '../board/palette'
+import { inputClass } from '../components/styles'
 import { Button } from '../components/ui'
+import { MAX_MAX, parseHitPoints } from '../hitPoints/hitPoints'
 import { statusName } from '../statuses/names'
 import {
   canAddStatus,
@@ -68,6 +71,15 @@ export interface TokenCardProps {
   onSize: (size: { width: number; height: number } | null) => void
   /** Stage 10, the session DM only: reveal and hide creatures (knowledge/features/fog-of-war.md). */
   fog?: CardFog
+  /** The session DM only: creatures' hit points and the dead mark (knowledge/features/hit-points.md). */
+  hitPoints?: CardHitPoints
+}
+
+export interface CardHitPoints {
+  /** Notes what the creature has left and its maximum. */
+  onSet: (token: BoardToken, hitPoints: number, maxHitPoints: number) => void
+  /** "Als tot markieren" or "Wiederbeleben". */
+  onSetDead: (token: BoardToken, dead: boolean) => void
 }
 
 export interface CardFog {
@@ -130,7 +142,10 @@ export function TokenCard(props: TokenCardProps) {
           </h2>
           {!folded && token && (
             <>
-              <p className="truncate text-sm text-dim">{tokenKind(token, props.board.people)}</p>
+              <p className="truncate text-sm text-dim">
+                {tokenKind(token, props.board.people)}
+                {token.dead && <span className="ml-2 text-candle">{t.dead}</span>}
+              </p>
               <p className="truncate text-sm text-dim">{tokenMeasures(token)}</p>
             </>
           )}
@@ -212,6 +227,7 @@ function StackRows({
                 {row.hidden && (
                   <span className="ml-2 text-xs text-candle">{de.fog.hiddenMark}</span>
                 )}
+                {row.dead && <span className="ml-2 text-xs text-candle">{t.dead}</span>}
                 {selected?.id === row.id && (
                   <span className="ml-2 text-xs text-candle">{de.tokenCard.selectedMark}</span>
                 )}
@@ -258,6 +274,7 @@ function TokenDetails({
   onSetLevel,
   sharedScreen,
   fog,
+  hitPoints,
 }: TokenCardProps & { token: BoardToken }) {
   const [open, setOpen] = useState<string | null>(null)
   const may = (status: BoardTokenStatus) => canRemoveStatus(status, board, userId, sharedScreen)
@@ -267,10 +284,21 @@ function TokenDetails({
   // Creatures can be hidden from the players; characters are always visible.
   const hideable = !!fog && live.running && board.isSessionDm && token.kind === 'creature'
   const hiddenHere = hideable && token.hidden ? fog.hiddenHere(token) : []
+  // Hit points and the dead mark are for creatures (knowledge/features/hit-points.md).
+  const tracked = !!hitPoints && live.running && board.isSessionDm && token.kind === 'creature'
 
   return (
     <>
       {hideable && token.hidden && <p className="text-sm text-dim">{de.fog.token.hiddenNote}</p>}
+      {tracked && (
+        <HitPointsFields
+          // Fresh fields whenever the noted values change, here or on another device.
+          key={`${token.hitPoints}/${token.maxHitPoints}`}
+          token={token}
+          off={off}
+          onSet={hitPoints.onSet}
+        />
+      )}
       <section aria-label={t.statuses} className="flex flex-col gap-1">
         {token.statuses.length === 0 ? (
           <p className="text-sm text-dim">{t.noStatuses}</p>
@@ -380,6 +408,11 @@ function TokenDetails({
               {`${de.fog.token.revealAllHere} (${hiddenHere.length})`}
             </Button>
           )}
+          {tracked && (
+            <Button disabled={off} onClick={() => hitPoints.onSetDead(token, !token.dead)}>
+              {token.dead ? t.revive : t.markDead}
+            </Button>
+          )}
           {removable && (
             <Button disabled={off} onClick={() => onRemoveToken(token)}>
               <RemoveIcon />
@@ -390,6 +423,76 @@ function TokenDetails({
       )}
       {live.running && off && <p className="text-sm text-dim">{t.needsConnection}</p>}
     </>
+  )
+}
+
+/**
+ * What a creature has left and its maximum, "7 von 12", for the session DM to write down.
+ * An empty first field means full; Enter or "Eintragen" sends both.
+ */
+function HitPointsFields({
+  token,
+  off,
+  onSet,
+}: {
+  token: BoardToken
+  off: boolean
+  onSet: CardHitPoints['onSet']
+}) {
+  const [left, setLeft] = useState(token.hitPoints == null ? '' : String(token.hitPoints))
+  const [max, setMax] = useState(token.maxHitPoints == null ? '' : String(token.maxHitPoints))
+  const parsed = parseHitPoints(left, max)
+  const unchanged =
+    parsed !== null &&
+    parsed.hitPoints === token.hitPoints &&
+    parsed.maxHitPoints === token.maxHitPoints
+  const invalid = parsed === null && max.trim() !== ''
+
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    if (parsed && !unchanged && !off) onSet(token, parsed.hitPoints, parsed.maxHitPoints)
+  }
+
+  const field = `${inputClass} w-20 px-2 text-right tabular-nums`
+  return (
+    <form aria-label={t.hitPoints} onSubmit={submit} className="flex flex-col gap-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-dim">{t.hitPoints}</span>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={MAX_MAX}
+          aria-label={t.hitPointsOf(token.label)}
+          aria-invalid={invalid || undefined}
+          value={left}
+          onChange={(event) => setLeft(event.target.value)}
+          onFocus={(event) => event.target.select()}
+          className={field}
+        />
+        <span className="text-sm text-dim">{t.hitPointsMax}</span>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={MAX_MAX}
+          aria-label={t.maxHitPointsOf(token.label)}
+          aria-invalid={invalid || undefined}
+          value={max}
+          onChange={(event) => setMax(event.target.value)}
+          onFocus={(event) => event.target.select()}
+          className={field}
+        />
+        <Button type="submit" disabled={off || !parsed || unchanged}>
+          {t.hitPointsSave}
+        </Button>
+      </div>
+      {invalid ? (
+        <p className="text-sm text-red-300">{t.hitPointsInvalid}</p>
+      ) : (
+        token.maxHitPoints == null && <p className="text-sm text-dim">{t.hitPointsNone}</p>
+      )}
+    </form>
   )
 }
 

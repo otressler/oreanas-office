@@ -27,8 +27,10 @@ import type {
   ApiErrorCode,
   ArrowDrawnEvent,
   ChangeFogRequest,
+  DeadResult,
   DrawArrowRequest,
   FogChangedEvent,
+  HitPointsResult,
   HubResult,
   InitiativeChangedEvent,
   InitiativeResult,
@@ -41,13 +43,17 @@ import type {
   PingedEvent,
   PresenceChangedEvent,
   RemoveStatusRequest,
+  SetHitPointsRequest,
   SetInitiativeRequest,
   SetStatusLevelRequest,
+  SetTokenDeadRequest,
   SetTokensHiddenRequest,
   SpawnCreaturesRequest,
   SpawnResult,
   StatusResult,
+  TokenDeadChangedEvent,
   TokenHiddenEvent,
+  TokenHitPointsChangedEvent,
   TokenMovedEvent,
   TokenRemovedEvent,
   TokenRestoredEvent,
@@ -121,6 +127,10 @@ export interface TableConnectionOptions {
   onTokensAdded?: (added: TokensAddedEvent) => void
   /** The initiative list changed (the session DM's devices only). */
   onInitiativeChanged?: (changed: InitiativeChangedEvent) => void
+  /** A creature's hit points were noted (the session DM's devices only). */
+  onHitPointsChanged?: (changed: TokenHitPointsChangedEvent) => void
+  /** A creature was marked dead or brought back. */
+  onDeadChanged?: (changed: TokenDeadChangedEvent) => void
 }
 
 /** A move or undo while the table isn't connected; moves are never queued. */
@@ -275,6 +285,15 @@ export class TableConnection {
     )
   }
 
+  /** Session DM only (knowledge/features/hit-points.md). */
+  setHitPoints(request: SetHitPointsRequest): Promise<HitPointsResult> {
+    return this.call((connection) => invokeHub(connection, 'SetHitPoints', request))
+  }
+
+  setTokenDead(request: SetTokenDeadRequest): Promise<DeadResult> {
+    return this.call((connection) => invokeHub(connection, 'SetTokenDead', request))
+  }
+
   private call<T>(send: (connection: HubConnection) => Promise<T>): Promise<T> {
     const connection = this.activeConnection()
     if (!connection) return Promise.reject(new NotConnectedError())
@@ -376,6 +395,12 @@ export class TableConnection {
     })
     onHubEvent(connection, 'InitiativeChanged', (changed) => {
       if (!stale()) this.options.onInitiativeChanged?.(changed)
+    })
+    onHubEvent(connection, 'TokenHitPointsChanged', (changed) => {
+      if (!stale()) this.options.onHitPointsChanged?.(changed)
+    })
+    onHubEvent(connection, 'TokenDeadChanged', (changed) => {
+      if (!stale()) this.options.onDeadChanged?.(changed)
     })
     // What this device may see changed (a hand-over): join again, then reload the board.
     onHubEvent(connection, 'ReloadBoard', () => {

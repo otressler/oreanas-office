@@ -229,6 +229,27 @@ export function setTokenInitiative(
   }
 }
 
+/**
+ * Gives a creature its own starting hit points, or (null) hands it back to its type's
+ * (knowledge/features/hit-points.md). Null is left out of the record.
+ */
+export function setTokenHitPoints(
+  doc: EncounterDoc,
+  id: string,
+  maxHitPoints: number | null,
+): EncounterDoc {
+  const token = doc.tokens.find((item) => item.id === id)
+  if (!token || maxHitPoints === (token.maxHitPoints ?? null)) return doc
+  return {
+    ...doc,
+    tokens: doc.tokens.map((item) => {
+      if (item.id !== id) return item
+      const { maxHitPoints: _h, ...rest } = item
+      return maxHitPoints === null ? rest : { ...rest, maxHitPoints }
+    }),
+  }
+}
+
 export function renameEncounter(doc: EncounterDoc, name: string): EncounterDoc {
   const clean = cleanEncounterName(name)
   return clean === null || clean === doc.name ? doc : { ...doc, name: clean }
@@ -291,5 +312,6 @@ export function toBoardToken(
     color: null,
     statuses: [],
     hidden: token.hidden ?? false,
+    dead: false,
   }
 }

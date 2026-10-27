@@ -199,6 +199,22 @@ describe('select panel', () => {
     expect(screen.getByLabelText(t.label)).toHaveValue('Goblin 1')
   })
 
+  it('gives the creature its own starting hit points, and empty hands them back', async () => {
+    const user = userEvent.setup()
+    const f = withGoblin()
+    renderInEncounter(<SelectCreaturePanel />, f)
+    act(() => f.encounter.getState().select('a'))
+    const field = screen.getByLabelText(t.hitPoints)
+    expect(field).toHaveValue(null)
+    await user.type(field, '1000')
+    expect(screen.getByText(t.hitPointsInvalid)).toBeInTheDocument()
+    await user.clear(field)
+    await user.type(field, '12')
+    expect(f.encounter.getState().doc.tokens[0]!.maxHitPoints).toBe(12)
+    await user.clear(field)
+    expect(f.encounter.getState().doc.tokens[0]).not.toHaveProperty('maxHitPoints')
+  })
+
   it('removes the token with the button', async () => {
     const user = userEvent.setup()
     const f = withGoblin()

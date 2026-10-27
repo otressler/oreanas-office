@@ -11,8 +11,10 @@ import type {
   ArrowDrawnEvent,
   BoardCell,
   BoardState,
+  DeadResult,
   DrawArrowRequest,
   FogChangedEvent,
+  HitPointsResult,
   HubResult,
   InitiativeChangedEvent,
   InitiativeEntry,
@@ -24,10 +26,13 @@ import type {
   PingRequest,
   PingedEvent,
   RemoveStatusRequest,
+  SetHitPointsRequest,
   SetStatusLevelRequest,
   SpawnCreaturesRequest,
   SpawnResult,
   StatusResult,
+  TokenDeadChangedEvent,
+  TokenHitPointsChangedEvent,
   TokenMovedEvent,
   TokenStatusesChangedEvent,
 } from '../api/types'
@@ -37,6 +42,8 @@ import { recheckServer } from '../server/serverStatus'
 import { NotConnectedError, TableConnection, type TableStatus } from './connection'
 import { createTableConnection } from './createConnection'
 import {
+  applyDead,
+  applyHitPoints,
   applyMove,
   applyRemoved,
   applyRestored,
@@ -105,6 +112,13 @@ export interface Table {
   setInitiative: (entries: InitiativeEntry[]) => Promise<InitiativeResult>
   /** Switches initiative off for the fight. */
   clearInitiative: () => Promise<InitiativeResult>
+
+  // ---- Hit points and the dead mark, for the session DM (knowledge/features/hit-points.md) ----
+
+  /** Notes a creature's hit points; the result's change is already taken into the board. */
+  setHitPoints: (request: SetHitPointsRequest) => Promise<HitPointsResult>
+  /** Marks a creature dead or alive again; the result's change is already taken into the board. */
+  setTokenDead: (tokenId: string, dead: boolean) => Promise<DeadResult>
 }
 
 /** Others' pings and arrows as they arrive; not kept anywhere, so the page keeps them. */
@@ -191,6 +205,15 @@ export function useTable(
     [encounterId, updateBoard],
   )
 
+  const takeHitPoints = useCallback(
+    (changed: TokenHitPointsChangedEvent) => updateBoard((board) => applyHitPoints(board, changed)),
+    [updateBoard],
+  )
+  const takeDead = useCallback(
+    (changed: TokenDeadChangedEvent) => updateBoard((board) => applyDead(board, changed)),
+    [updateBoard],
+  )
+
   const reload = useCallback(() => {
     void queryClient.invalidateQueries({
       queryKey: encounterKeys.board(campaignId, encounterId),
@@ -234,6 +257,8 @@ export function useTable(
       onTokenHidden: (hidden) => updateBoard((board) => applyTokenHidden(board, hidden)),
       onTokensAdded: (added) => updateBoard((board) => applyAdded(board, added)),
       onInitiativeChanged: takeInitiative,
+      onHitPointsChanged: takeHitPoints,
+      onDeadChanged: takeDead,
     })
     connection.current = table
     table.start()
@@ -250,6 +275,8 @@ export function useTable(
     takeStatuses,
     takeFog,
     takeInitiative,
+    takeHitPoints,
+    takeDead,
     updateBoard,
     isScreen,
   ])
@@ -352,6 +379,24 @@ export function useTable(
     [takeResult],
   )
 
+  // Like initiative: the result's change goes into the board at once.
+  const setHitPoints = useCallback(
+    (request: SetHitPointsRequest) =>
+      connection.current?.setHitPoints(request).then((result) => {
+        if (result.change) takeHitPoints(result.change)
+        return result
+      }) ?? Promise.reject(new NotConnectedError()),
+    [takeHitPoints],
+  )
+  const setTokenDead = useCallback(
+    (tokenId: string, dead: boolean) =>
+      connection.current?.setTokenDead({ tokenId, dead }).then((result) => {
+        if (result.change) takeDead(result.change)
+        return result
+      }) ?? Promise.reject(new NotConnectedError()),
+    [takeDead],
+  )
+
   return {
     status: running ? status : null,
     known,
@@ -379,5 +424,7 @@ export function useTable(
     rollInitiative,
     setInitiative,
     clearInitiative,
+    setHitPoints,
+    setTokenDead,
   }
 }

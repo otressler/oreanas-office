@@ -162,6 +162,9 @@ public enum ApiErrorCode
     // InitiativeInvalid: an initiative list names a token outside the encounter or twice, or
     // a value, modifier or d20 is out of range (knowledge/features/initiative.md).
     InitiativeInvalid,
+    // HitPointsInvalid: a maximum outside 1 to 999, or hit points below 0 or above the
+    // maximum (knowledge/features/hit-points.md).
+    HitPointsInvalid,
     // NotBuilt: a hub method of stage 10 whose lane has not been built yet. Removed with the
     // last stub.
     NotBuilt,

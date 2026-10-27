@@ -6,6 +6,8 @@
 import type {
   BoardState,
   BoardToken,
+  TokenDeadChangedEvent,
+  TokenHitPointsChangedEvent,
   TokenMovedEvent,
   TokenRemovedEvent,
   TokenRestoredEvent,
@@ -140,4 +142,41 @@ export function applyRestored(board: BoardState, restored: TokenRestoredEvent): 
     removedTokens: board.removedTokens.filter((candidate) => candidate.id !== token.id),
     statuses: withDefinitions(board.statuses, restored.definitions),
   }
+}
+
+// ---- Hit points and the dead mark (knowledge/features/hit-points.md) -----------------------
+// Each event carries the whole value, so the newest one replaces it; a board reload brings
+// the saved state. Removed tokens keep theirs for when they come back.
+
+/** The board with one token, on it or among the removed ones, changed by `change`. */
+function updateToken(
+  board: BoardState,
+  tokenId: string,
+  change: (token: BoardToken) => BoardToken,
+): BoardState {
+  const update = (tokens: BoardToken[]) =>
+    tokens.some((token) => token.id === tokenId)
+      ? tokens.map((token) => (token.id === tokenId ? change(token) : token))
+      : tokens
+  const tokens = update(board.tokens)
+  const removedTokens = update(board.removedTokens)
+  return tokens === board.tokens && removedTokens === board.removedTokens
+    ? board
+    : { ...board, tokens, removedTokens }
+}
+
+/** The board with a creature's newly noted hit points. */
+export function applyHitPoints(board: BoardState, changed: TokenHitPointsChangedEvent): BoardState {
+  if (changed.encounterId !== board.encounterId) return board
+  return updateToken(board, changed.tokenId, (token) => ({
+    ...token,
+    hitPoints: changed.hitPoints,
+    maxHitPoints: changed.maxHitPoints,
+  }))
+}
+
+/** The board with a creature marked dead or alive again. */
+export function applyDead(board: BoardState, changed: TokenDeadChangedEvent): BoardState {
+  if (changed.encounterId !== board.encounterId) return board
+  return updateToken(board, changed.tokenId, (token) => ({ ...token, dead: changed.dead }))
 }

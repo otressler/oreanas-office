@@ -24,6 +24,7 @@ function character(id: string, label: string, colorIndex: number, owner = me): B
     imageUrl: null,
     color: null,
     statuses: [],
+    dead: false,
     hidden: false,
   }
 }

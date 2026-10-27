@@ -13,6 +13,7 @@ import { Kicker, SectionHeading } from '../components/ornaments'
 import { BackLink, EditBar, Facts, Portrait, Story } from '../components/sheet'
 import { useRouteLeaveWarning, useUnloadWarning } from '../components/useLeaveWarning'
 import { Button, Loading, PageTitle, SelectField, TextField } from '../components/ui'
+import { MAX_MAX, MAX_MIN } from '../hitPoints/hitPoints'
 import { MODIFIER_MAX, MODIFIER_MIN, ROLL_MODES, formatModifier } from '../initiative/initiative'
 import { useLocalUser } from '../offline/localUser'
 import type { LocalCreatureType } from '../offline/model'
@@ -45,6 +46,8 @@ interface Draft {
   /** As typed: a whole number, or what isn't one yet. */
   initiative: string
   rollMode: InitiativeRollMode
+  /** As typed: a whole number, empty for none, or what isn't one yet. */
+  hitPoints: string
   appearance: string
   notes: string
 }
@@ -54,6 +57,7 @@ const draftOf = (type: LocalCreatureType): Draft => ({
   size: type.size,
   initiative: String(type.initiativeModifier ?? 0),
   rollMode: type.initiativeRollMode ?? 'normal',
+  hitPoints: type.hitPoints == null ? '' : String(type.hitPoints),
   appearance: type.appearance,
   notes: type.notes,
 })
@@ -65,6 +69,7 @@ const inputOf = (draft: Draft): CreatureTypeInput => ({
   notes: draft.notes,
   initiativeModifier: draft.initiative.trim() === '' ? Number.NaN : Number(draft.initiative),
   initiativeRollMode: draft.rollMode,
+  hitPoints: draft.hitPoints.trim() === '' ? null : Number(draft.hitPoints),
 })
 
 /** What "Neue Kreaturenart" edits until it is saved: nothing is stored before that. */
@@ -73,6 +78,7 @@ const BLANK: Draft = {
   size: 'medium',
   initiative: '0',
   rollMode: 'normal',
+  hitPoints: '',
   appearance: '',
   notes: '',
 }
@@ -390,6 +396,19 @@ function CreatureView({
                     ? t.problems.initiativeInvalid
                     : t.initiativeModifierHint}
                 </p>
+                <TextField
+                  label={t.hitPoints}
+                  type="number"
+                  inputMode="numeric"
+                  min={MAX_MIN}
+                  max={MAX_MAX}
+                  step={1}
+                  value={draft.hitPoints}
+                  invalid={has('hitPointsInvalid')}
+                  hint={has('hitPointsInvalid') ? t.problems.hitPointsInvalid : t.hitPointsHint}
+                  className="[&_input]:max-w-32"
+                  onChange={(event) => change({ hitPoints: event.target.value })}
+                />
               </div>
             ) : (
               type && (
@@ -431,6 +450,10 @@ function CreatureView({
                           formatModifier(type.initiativeModifier ?? 0),
                           de.dice.withMode[type.initiativeRollMode ?? 'normal'],
                         ),
+                      ],
+                      [
+                        p.hitPoints,
+                        type.hitPoints == null ? p.noHitPoints : String(type.hitPoints),
                       ],
                     ]}
                   />

@@ -3665,6 +3665,7 @@
           "spawnInvalid",
           "notLocalMode",
           "initiativeInvalid",
+          "hitPointsInvalid",
           "notBuilt"
         ]
       },
@@ -4129,6 +4130,24 @@
             "format": "date-time"
           },
           "hidden": {
+            "type": "boolean",
+            "default": false
+          },
+          "hitPoints": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "maxHitPoints": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "dead": {
             "type": "boolean",
             "default": false
           }
@@ -4666,6 +4685,109 @@
           }
         }
       },
+      "DeadResult": {
+        "required": [
+          "error",
+          "change"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "notAMember",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "hitPointsInvalid",
+              "notBuilt",
+              null
+            ]
+          },
+          "change": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TokenDeadChangedEvent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "DrawArrowRequest": {
         "required": [
           "encounterId",
@@ -5027,6 +5149,109 @@
           }
         }
       },
+      "HitPointsResult": {
+        "required": [
+          "error",
+          "change"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "enum": [
+              "inviteInvalid",
+              "emailInvalid",
+              "emailTaken",
+              "passwordTooShort",
+              "displayNameInvalid",
+              "invalidCredentials",
+              "lockedOut",
+              "resetLinkInvalid",
+              "googleFailed",
+              "googleNoInvite",
+              "googleEmailTaken",
+              "googleAccountInUse",
+              "googleAlreadyLinked",
+              "nameInvalid",
+              "joinCodeInvalid",
+              "dateInvalid",
+              "notADm",
+              "anotherSessionActive",
+              "sessionEnded",
+              "notSessionDm",
+              "sessionInvalid",
+              "colorInvalid",
+              "notAMember",
+              "textTooLong",
+              "mapSizeInvalid",
+              "layoutVersionUnsupported",
+              "cellInvalid",
+              "featureInvalid",
+              "entranceInvalid",
+              "creatureTypeInvalid",
+              "placementInvalid",
+              "characterInvalid",
+              "sessionNotActive",
+              "encounterNotReady",
+              "encounterNotActive",
+              "anotherEncounterActive",
+              "tokenNotFound",
+              "notYourToken",
+              "targetInvalid",
+              "nothingToUndo",
+              "syncOutdated",
+              "idTaken",
+              "itemNotFound",
+              "dependencyRejected",
+              "layoutInvalid",
+              "mapInvalid",
+              "creatureTypeNameTaken",
+              "statusInvalid",
+              "tokenInvalid",
+              "encounterArchived",
+              "creaturesMisplaced",
+              "mapNotInStore",
+              "mapNotArchived",
+              "mapPlayed",
+              "imagesUnavailable",
+              "imageBudgetExhausted",
+              "generationRunning",
+              "mapChanged",
+              "backgroundNotFound",
+              "backgroundOutdated",
+              "instructionInvalid",
+              "itemChanged",
+              "appearanceMissing",
+              "imageNotFound",
+              "uploadInvalid",
+              "uploadTooLarge",
+              "descriptionInvalid",
+              "descriptionMissing",
+              "statusNotFound",
+              "statusAlreadySet",
+              "levelInvalid",
+              "notYourStatus",
+              "fogInvalid",
+              "readOnlyConnection",
+              "spawnInvalid",
+              "notLocalMode",
+              "initiativeInvalid",
+              "hitPointsInvalid",
+              "notBuilt",
+              null
+            ]
+          },
+          "change": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TokenHitPointsChangedEvent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "HubResult": {
         "required": [
           "error"
@@ -5112,6 +5337,7 @@
               "spawnInvalid",
               "notLocalMode",
               "initiativeInvalid",
+              "hitPointsInvalid",
               "notBuilt",
               null
             ]
@@ -5459,6 +5685,7 @@
               "spawnInvalid",
               "notLocalMode",
               "initiativeInvalid",
+              "hitPointsInvalid",
               "notBuilt",
               null
             ]
@@ -5568,6 +5795,7 @@
               "spawnInvalid",
               "notLocalMode",
               "initiativeInvalid",
+              "hitPointsInvalid",
               "notBuilt",
               null
             ]
@@ -6529,6 +6757,7 @@
               "spawnInvalid",
               "notLocalMode",
               "initiativeInvalid",
+              "hitPointsInvalid",
               "notBuilt",
               null
             ]
@@ -6957,6 +7186,28 @@
           }
         }
       },
+      "SetHitPointsRequest": {
+        "required": [
+          "tokenId",
+          "hitPoints",
+          "maxHitPoints"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "hitPoints": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxHitPoints": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "SetInitiativeRequest": {
         "required": [
           "encounterId",
@@ -7021,6 +7272,22 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "SetTokenDeadRequest": {
+        "required": [
+          "tokenId",
+          "dead"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dead": {
+            "type": "boolean"
           }
         }
       },
@@ -7179,6 +7446,7 @@
               "spawnInvalid",
               "notLocalMode",
               "initiativeInvalid",
+              "hitPointsInvalid",
               "notBuilt",
               null
             ]
@@ -7461,6 +7729,7 @@
               "spawnInvalid",
               "notLocalMode",
               "initiativeInvalid",
+              "hitPointsInvalid",
               "notBuilt",
               null
             ]
@@ -7579,6 +7848,13 @@
                 "$ref": "#/components/schemas/InitiativeRollMode"
               }
             ]
+          },
+          "maxHitPoints": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -7618,6 +7894,13 @@
           },
           "initiativeRollMode": {
             "$ref": "#/components/schemas/InitiativeRollMode"
+          },
+          "hitPoints": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -8178,7 +8461,9 @@
           "PresenceChanged",
           "ReloadBoard",
           "SessionEnded",
+          "TokenDeadChanged",
           "TokenHidden",
+          "TokenHitPointsChanged",
           "TokenMoved",
           "TokenRemoved",
           "TokenRestored",
@@ -8204,8 +8489,10 @@
           "RemoveToken",
           "RestoreToken",
           "RollInitiative",
+          "SetHitPoints",
           "SetInitiative",
           "SetStatusLevel",
+          "SetTokenDead",
           "SetTokensHidden",
           "SpawnCreatures",
           "UndoChange",
@@ -8223,6 +8510,27 @@
           "wall"
         ]
       },
+      "TokenDeadChangedEvent": {
+        "required": [
+          "encounterId",
+          "tokenId",
+          "dead"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dead": {
+            "type": "boolean"
+          }
+        }
+      },
       "TokenHiddenEvent": {
         "required": [
           "encounterId",
@@ -8237,6 +8545,33 @@
           "tokenId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "TokenHitPointsChangedEvent": {
+        "required": [
+          "encounterId",
+          "tokenId",
+          "hitPoints",
+          "maxHitPoints"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "hitPoints": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxHitPoints": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -8778,6 +9113,7 @@
               "spawnInvalid",
               "notLocalMode",
               "initiativeInvalid",
+              "hitPointsInvalid",
               "notBuilt",
               null
             ]

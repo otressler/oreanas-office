@@ -139,7 +139,17 @@ export function useDmFog({
     [isDm, mode, spawn, board],
   )
   const shown = useMemo<BoardState>(() => {
-    if (showPlayerView) return { ...board, tokens: [...tokensForPlayers(board.tokens, hidden)] }
+    // Players never see hit points (knowledge/features/hit-points.md).
+    if (showPlayerView) {
+      return {
+        ...board,
+        tokens: tokensForPlayers(board.tokens, hidden).map((token) => ({
+          ...token,
+          hitPoints: null,
+          maxHitPoints: null,
+        })),
+      }
+    }
     if (previews.length === 0) return board
     return { ...board, tokens: [...board.tokens, ...previews] }
   }, [board, showPlayerView, hidden, previews])

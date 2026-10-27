@@ -33,7 +33,7 @@ public sealed class Delivery
 // Where a token stood before a move or undo, for TableFanOut.MovedAsync.
 public record MovedFrom(int X, int Y);
 
-// Sends the stage 4 to 9 events (moves, previews, pings, statuses, removals) through
+// Sends the stage 4 to 9 events (moves, previews, pings, statuses, removals) and the dead mark through
 // TableVisibility, one group at a time: a token players cannot see never reaches them, and
 // neither does a preview whose target they cannot see. The per-event decisions are the
 // static MoveFor and PreviewVisible functions, which the unit tests cover.
@@ -85,7 +85,7 @@ public sealed class TableFanOut(AppDbContext db, TableBroadcaster broadcaster)
             case MoveView.Revealed:
                 var token = await BoardTokenAsync(facts, move.TokenId);
                 await dm.TokenRevealed(new TokenRevealedEvent(move.EncounterId, token));
-                await players.TokenRevealed(new TokenRevealedEvent(move.EncounterId, token));
+                await players.TokenRevealed(new TokenRevealedEvent(move.EncounterId, TableVisibility.ForPlayers(token)));
                 break;
             case MoveView.Hidden:
                 await players.TokenHidden(new TokenHiddenEvent(move.EncounterId, move.TokenId));
@@ -186,7 +186,17 @@ public sealed class TableFanOut(AppDbContext db, TableBroadcaster broadcaster)
         var fog = await FogAsync(restored.EncounterId);
         if (TableVisibility.TokenVisible(fog, restored.Token))
         {
-            await broadcaster.Players(restored.EncounterId).TokenRestored(restored);
+            await broadcaster.Players(restored.EncounterId).TokenRestored(
+                restored with { Token = TableVisibility.ForPlayers(restored.Token) });
+        }
+    }
+
+    public async Task DeadChangedAsync(TokenDeadChangedEvent changed)
+    {
+        await broadcaster.Dm(changed.EncounterId).TokenDeadChanged(changed);
+        if (await TokenVisibleToPlayersAsync(changed.TokenId))
+        {
+            await broadcaster.Players(changed.EncounterId).TokenDeadChanged(changed);
         }
     }
 

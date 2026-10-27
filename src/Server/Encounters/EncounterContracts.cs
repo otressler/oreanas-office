@@ -131,7 +131,9 @@ public record BoardBackground(Guid AssetId, string Url, double X, double Y, doub
 // CreatureLabels.Display, the type name and number or the DM's own name; an unseen creature
 // has no number (knowledge/features/fog-of-war.md). Hidden: only on a Dm board. Statuses: in the order
 // they were put on (knowledge/features/statuses.md). RemovedAt: set only on
-// BoardStateResponse.RemovedTokens.
+// BoardStateResponse.RemovedTokens. HitPoints and MaxHitPoints: a creature's hit points
+// left and its maximum, only on a Dm board, both null when it has no maximum. Dead: the
+// session DM marked the creature dead; every board shows it (knowledge/features/hit-points.md).
 public record BoardToken(
     Guid Id,
     TokenKind Kind,
@@ -149,7 +151,10 @@ public record BoardToken(
     string? Color,
     List<BoardTokenStatus> Statuses,
     DateTimeOffset? RemovedAt = null,
-    bool Hidden = false);
+    bool Hidden = false,
+    int? HitPoints = null,
+    int? MaxHitPoints = null,
+    bool Dead = false);
 
 // A status on a token. Level: 1-6 for statuses with levels, else null. AppliedByUserId:
 // who put it on (the card's "von Eli"); a player may remove only their own. FromSharedScreen:

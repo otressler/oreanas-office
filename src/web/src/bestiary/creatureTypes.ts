@@ -2,6 +2,7 @@
 // bestiary. Every change marks the type as not synced; nothing is ever deleted.
 import { useLiveQuery } from 'dexie-react-hooks'
 import type { CreatureSize, InitiativeRollMode } from '../api/types'
+import { maxValid } from '../hitPoints/hitPoints'
 import { MODIFIER_MAX, MODIFIER_MIN } from '../initiative/initiative'
 import type { OfflineDb } from '../offline/db'
 import { LOCAL_CREATURE_TYPE_RECORD_VERSION, type LocalCreatureType } from '../offline/model'
@@ -30,6 +31,8 @@ export interface CreatureTypeInput {
   /** A whole number from MODIFIER_MIN to MODIFIER_MAX (knowledge/features/initiative.md); NaN for what isn't one. */
   initiativeModifier: number
   initiativeRollMode: InitiativeRollMode
+  /** The default maximum hit points, 1 to 999; absent or null for none (knowledge/features/hit-points.md), NaN for what isn't one. */
+  hitPoints?: number | null
 }
 
 export type CreatureTypeProblem =
@@ -39,6 +42,7 @@ export type CreatureTypeProblem =
   | 'appearanceTooLong'
   | 'notesTooLong'
   | 'initiativeInvalid'
+  | 'hitPointsInvalid'
 
 export type CreatureTypeResult =
   { ok: true; type: LocalCreatureType } | { ok: false; problems: CreatureTypeProblem[] }
@@ -90,6 +94,7 @@ export function checkCreatureType(
   const modifier = input.initiativeModifier
   if (!Number.isInteger(modifier) || modifier < MODIFIER_MIN || modifier > MODIFIER_MAX)
     problems.push('initiativeInvalid')
+  if (input.hitPoints != null && !maxValid(input.hitPoints)) problems.push('hitPointsInvalid')
   return problems
 }
 
@@ -113,6 +118,7 @@ export async function createCreatureType(
       notes: input.notes,
       initiativeModifier: input.initiativeModifier,
       initiativeRollMode: input.initiativeRollMode,
+      hitPoints: input.hitPoints ?? null,
       archivedAt: null,
       createdAt: time,
       updatedAt: time,
@@ -149,6 +155,7 @@ export async function saveCreatureType(
       notes: input.notes,
       initiativeModifier: input.initiativeModifier,
       initiativeRollMode: input.initiativeRollMode,
+      hitPoints: input.hitPoints ?? null,
       updatedAt: now(),
       sync: markChanged(stored.sync),
     }

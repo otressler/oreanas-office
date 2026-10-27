@@ -47,6 +47,13 @@ export function Lab() {
       }),
     )
     const withStatuses = params.get('statuses') === '1'
+    const hitPoints = new Map(
+      params.getAll('hp').map((value) => {
+        const [label, left, max] = value.split(/[:/]/)
+        return [label, { hitPoints: Number(left), maxHitPoints: Number(max) }] as const
+      }),
+    )
+    const dead = new Set(params.getAll('dead'))
     // The first character is the lab user's, for "Meine Figur".
     const mine = loaded.tokens.find((token) => token.kind === 'character')?.id
     return {
@@ -58,6 +65,8 @@ export function Lab() {
         return {
           ...token,
           ...moves.get(token.label),
+          ...hitPoints.get(token.label),
+          dead: dead.has(token.label),
           ownerUserId: own ? LAB_USER : token.ownerUserId,
           statuses: withStatuses
             ? SAMPLE_STATUSES.slice(0, i % 6).map((s) => ({

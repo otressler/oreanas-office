@@ -50,6 +50,7 @@ export function smallBoard(fields: Partial<BoardState> = {}): BoardState {
         color: null,
         statuses: [],
         hidden: false,
+        dead: false,
       },
     ],
     isSessionDm: false,

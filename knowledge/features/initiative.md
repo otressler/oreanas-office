@@ -37,7 +37,7 @@ The first DM tool at the table, asked for by the project owner on 2026-10-25. Th
 
 # The list
 
-- A panel over the board's top-left corner lists the tokens in turn order with value, picture and name; hidden creatures are drawn faint. The top bar's **"Initiative"** button and the panel's arrow fold it away; folded or not is remembered per device.
+- A panel over the board's top-left corner lists the tokens in turn order with value, picture and name; hidden creatures are drawn faint. Creatures with hit points show what they have left and their maximum ("7/12"), and dead ones are struck through ([hit points](/features/hit-points.md)). The top bar's **"Initiative"** button and the panel's arrow fold it away; folded or not is remembered per device.
 - A tap on an entry selects its token on the board, as a tap on the token would, and opens its card.
 - Entries are reordered at any time by dragging the handle, or with the arrow keys on it. The new order shows at once and is saved; values don't change.
 - A token taken off the board leaves the list and comes back at its old place when restored. Its entry stays saved.

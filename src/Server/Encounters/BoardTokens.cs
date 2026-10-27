@@ -42,6 +42,9 @@ public static class BoardTokens
                 Number = t.Number,
                 TypeName = t.CreatureType != null ? t.CreatureType.Name : null,
                 DmName = t.Label,
+                MaxHitPoints = t.MaxHitPoints ?? (t.CreatureType != null ? t.CreatureType.HitPoints : null),
+                HitPoints = t.HitPoints,
+                Dead = t.Dead,
             })
             .ToListAsync(cancellationToken);
         if (rows.Count == 0)
@@ -72,7 +75,10 @@ public static class BoardTokens
                 t.Color,
                 [.. statuses[t.Id]],
                 t.RemovedAt,
-                t.Hidden))
+                t.Hidden,
+                HitPointRules.Current(t.HitPoints, t.MaxHitPoints),
+                t.MaxHitPoints,
+                t.Dead))
             .ToList();
         var characters = board
             .Where(t => t is { Kind: TokenKind.Character, OwnerUserId: not null, ColorIndex: not null })
@@ -122,5 +128,12 @@ public static class BoardTokens
         public string? TypeName { get; init; }
 
         public string? DmName { get; init; }
+
+        // The creature's own maximum, or its type's.
+        public int? MaxHitPoints { get; init; }
+
+        public int? HitPoints { get; init; }
+
+        public bool Dead { get; init; }
     }
 }

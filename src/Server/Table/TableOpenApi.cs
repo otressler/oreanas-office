@@ -26,6 +26,8 @@ public sealed class TableOpenApi : IOpenApiDocumentTransformer
             typeof(SpawnResult), typeof(TokensAddedEvent),
             typeof(Encounters.InitiativeEntry), typeof(Encounters.InitiativeView), typeof(SetInitiativeRequest),
             typeof(InitiativeChangedEvent), typeof(InitiativeResult), typeof(InitiativeRollResult),
+            typeof(SetHitPointsRequest), typeof(TokenHitPointsChangedEvent), typeof(HitPointsResult),
+            typeof(SetTokenDeadRequest), typeof(TokenDeadChangedEvent), typeof(DeadResult),
         ];
 
     public async Task TransformAsync(

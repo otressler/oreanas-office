@@ -50,6 +50,7 @@ export function withPlacedCharacters(
       color: character.color,
       statuses: [],
       hidden: false,
+      dead: false,
     })
   }
   return { ...board, tokens: [...board.tokens, ...placed] }

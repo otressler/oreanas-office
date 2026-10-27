@@ -60,6 +60,7 @@ export function previewBoard(
           color: null,
           statuses: [],
           hidden: false,
+          dead: false,
         },
       ]
     : []

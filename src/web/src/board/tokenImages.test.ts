@@ -43,6 +43,7 @@ const token = (fields: Partial<BoardToken>): BoardToken => ({
   color: null,
   statuses: [],
   hidden: false,
+  dead: false,
   ...fields,
 })
 

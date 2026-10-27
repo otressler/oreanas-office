@@ -149,6 +149,13 @@ export type SetInitiativeRequest = Schemas['SetInitiativeRequest']
 export type InitiativeChangedEvent = Schemas['InitiativeChangedEvent']
 export type InitiativeResult = Schemas['InitiativeResult']
 export type InitiativeRollResult = Schemas['InitiativeRollResult']
+// Hit points and the dead mark (knowledge/features/hit-points.md).
+export type SetHitPointsRequest = Schemas['SetHitPointsRequest']
+export type TokenHitPointsChangedEvent = Schemas['TokenHitPointsChangedEvent']
+export type HitPointsResult = Schemas['HitPointsResult']
+export type SetTokenDeadRequest = Schemas['SetTokenDeadRequest']
+export type TokenDeadChangedEvent = Schemas['TokenDeadChangedEvent']
+export type DeadResult = Schemas['DeadResult']
 // Spectator join page and spectate endpoints.
 export type JoinLookupResponse = Schemas['JoinLookupResponse']
 export type JoinableSession = Schemas['JoinableSession']

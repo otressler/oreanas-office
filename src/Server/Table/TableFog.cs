@@ -225,7 +225,7 @@ public sealed class TableFog(AppDbContext db, TimeProvider time)
             reveal,
             boardCells,
             reveal ? NewLayout(fight, changed) : null,
-            [.. appeared.Select(t => labels[t.Id] with { Hidden = false })],
+            [.. appeared.Select(t => TableVisibility.ForPlayers(labels[t.Id]))],
             disappeared,
             [])));
         return outcome;
@@ -309,7 +309,8 @@ public sealed class TableFog(AppDbContext db, TimeProvider time)
             outcome.Delivery.Dm.Add(client => client.TokenRevealed(new TokenRevealedEvent(encounter.Id, token)));
             if (isVisible.Contains(creature.Id) && !wasVisible.Contains(creature.Id))
             {
-                outcome.Delivery.Players.Add(client => client.TokenRevealed(new TokenRevealedEvent(encounter.Id, token)));
+                outcome.Delivery.Players.Add(client => client.TokenRevealed(
+                    new TokenRevealedEvent(encounter.Id, TableVisibility.ForPlayers(token))));
             }
         }
 

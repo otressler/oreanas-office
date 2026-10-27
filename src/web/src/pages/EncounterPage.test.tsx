@@ -32,6 +32,7 @@ const hero: BoardToken = {
   imageUrl: null,
   color: null,
   statuses: [],
+  dead: false,
   hidden: false,
 }
 

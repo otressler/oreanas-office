@@ -55,6 +55,20 @@ describe('creature types', () => {
     expect(checkCreatureType(input('Wolf', { initiativeModifier: 20 }), [])).toEqual([])
   })
 
+  it('allows default hit points from 1 to 999, or none', async () => {
+    for (const hitPoints of [0, 1000, 2.5, Number.NaN]) {
+      expect(checkCreatureType(input('Wolf', { hitPoints }), [])).toEqual(['hitPointsInvalid'])
+    }
+    for (const hitPoints of [1, 999, null, undefined]) {
+      expect(checkCreatureType(input('Wolf', { hitPoints }), [])).toEqual([])
+    }
+    const created = await createCreatureType(db(), 'c-hp', input('Wolf', { hitPoints: 11 }))
+    expect(created.ok && created.type.hitPoints).toBe(11)
+    if (!created.ok) return
+    const saved = await saveCreatureType(db(), created.type.id, input('Wolf'))
+    expect(saved.ok && saved.type.hitPoints).toBeNull()
+  })
+
   it('lists a campaign’s types by name, archived ones included', async () => {
     await createCreatureType(db(), 'c1', input('Wolf'))
     await createCreatureType(db(), 'c1', input('Ork'))

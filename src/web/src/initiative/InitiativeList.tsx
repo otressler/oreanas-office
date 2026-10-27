@@ -1,7 +1,8 @@
 // The session DM's initiative list over the board (knowledge/features/initiative.md, "The
 // list"): the tokens in turn order with their values. A tap on an entry selects its token on
 // the board; the handle drags it to another place, or moves it with the arrow keys. Nothing
-// here is enforced: it only shows the order the DM keeps.
+// here is enforced: it only shows the order the DM keeps. Creatures show the hit points they
+// have left and their maximum, and dead ones are dimmed (knowledge/features/hit-points.md).
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { BoardToken, InitiativeEntry } from '../api/types'
 import { ringColor } from '../board/palette'
@@ -198,10 +199,23 @@ export function InitiativeList({
                         className="h-7 w-7 text-xs"
                       />
                       <span
-                        className={`min-w-0 flex-1 truncate ${token.hidden ? 'text-dim italic' : 'text-parchment'}`}
+                        className={`min-w-0 flex-1 truncate ${token.hidden ? 'text-dim italic' : token.dead ? 'text-dim line-through' : 'text-parchment'}`}
                       >
                         {token.label}
                       </span>
+                      {token.dead ? (
+                        <span className="shrink-0 text-xs text-candle">{t.dead}</span>
+                      ) : (
+                        token.hitPoints != null &&
+                        token.maxHitPoints != null && (
+                          <span
+                            aria-label={t.hitPointsLabel(token.hitPoints, token.maxHitPoints)}
+                            className={`shrink-0 text-xs tabular-nums ${token.hitPoints === 0 ? 'text-red-300' : 'text-dim'}`}
+                          >
+                            {t.hitPoints(token.hitPoints, token.maxHitPoints)}
+                          </span>
+                        )
+                      )}
                     </button>
                   </li>
                 )

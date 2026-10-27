@@ -83,6 +83,8 @@ interface CreatureType {
   campaignId: string
   name: string
   size: S['CreatureSize']
+  /** The default maximum hit points (knowledge/features/hit-points.md). */
+  hitPoints?: number | null
 }
 
 interface Token {
@@ -101,6 +103,10 @@ interface Token {
   removedAt?: string | null
   /** Stage 10: only the session DM sees a hidden creature (fog.ts holds the rest of fog). */
   hidden?: boolean
+  /** A creature's own maximum, the hit points noted for it, and the dead mark (knowledge/features/hit-points.md). */
+  maxHitPoints?: number | null
+  hitPoints?: number | null
+  dead?: boolean
 }
 
 /**
@@ -1528,7 +1534,10 @@ export class MockBackend {
       name: encounter.name,
       status: encounter.status,
       map: encounter.map,
-      tokens: onBoard.map((token) => this.boardToken(encounter, token)),
+      // Hit points are the session DM's alone, as the server's TableVisibility.ForPlayers.
+      tokens: onBoard
+        .map((token) => this.boardToken(encounter, token))
+        .map((token) => (isSessionDm ? token : { ...token, hitPoints: null, maxHitPoints: null })),
       isSessionDm,
       undoableMove: this.undoableMove(encounter, userId),
       removedTokens: removed.map((token) => this.boardToken(encounter, token)),
@@ -1546,7 +1555,9 @@ export class MockBackend {
   private boardToken(encounter: Encounter, token: Token): S['BoardToken'] {
     const campaignCharacters = this.characters.filter((c) => c.campaignId === encounter.campaignId)
     const character = campaignCharacters.find((c) => c.id === token.characterId)
-    const { statuses, removedAt, ...rest } = token
+    const { statuses, removedAt, maxHitPoints, hitPoints, ...rest } = token
+    const type = this.creatureTypes.find((t) => t.id === token.creatureTypeId)
+    const max = maxHitPoints ?? type?.hitPoints ?? null
     return {
       ...rest,
       ...this.tokenStats(token),
@@ -1557,6 +1568,9 @@ export class MockBackend {
       color: character?.color ?? null,
       statuses: [...(statuses ?? [])],
       hidden: token.hidden ?? false,
+      maxHitPoints: max,
+      hitPoints: max === null ? null : Math.min(hitPoints ?? max, max),
+      dead: token.dead ?? false,
       ...(removedAt ? { removedAt } : {}),
     }
   }
@@ -1913,6 +1927,46 @@ export class MockBackend {
         definitions: this.statusViews((token.statuses ?? []).map((s) => s.statusId)),
       },
     }
+  }
+
+  /** SetHitPoints (knowledge/features/hit-points.md): the session DM, creatures on the board. */
+  setHitPoints(userId: string | null, request: S['SetHitPointsRequest']): S['HitPointsResult'] {
+    const found = this.tableCreature(userId, request.tokenId)
+    if (found.error !== null) return { error: found.error, change: null }
+    const { hitPoints, maxHitPoints } = request
+    if (maxHitPoints < 1 || maxHitPoints > 999 || hitPoints < 0 || hitPoints > maxHitPoints) {
+      return { error: 'hitPointsInvalid', change: null }
+    }
+    Object.assign(found.token, { hitPoints, maxHitPoints })
+    return {
+      error: null,
+      change: {
+        encounterId: found.encounter.id,
+        tokenId: request.tokenId,
+        hitPoints,
+        maxHitPoints,
+      },
+    }
+  }
+
+  /** SetTokenDead: the session DM, creatures on the board. */
+  setTokenDead(userId: string | null, request: S['SetTokenDeadRequest']): S['DeadResult'] {
+    const found = this.tableCreature(userId, request.tokenId)
+    if (found.error !== null) return { error: found.error, change: null }
+    found.token.dead = request.dead
+    return {
+      error: null,
+      change: { encounterId: found.encounter.id, tokenId: request.tokenId, dead: request.dead },
+    }
+  }
+
+  private tableCreature(userId: string | null, tokenId: string) {
+    const found = this.tableToken(userId, tokenId)
+    if (found.error !== null) return found
+    if (found.token.kind !== 'creature' || found.token.removedAt) {
+      return { error: 'tokenNotFound' as const }
+    }
+    return found.isSessionDm ? found : { error: 'notSessionDm' as const }
   }
 
   // ---- Live table (the hub's checks; e2e/mockHub.ts carries the messages) -------

@@ -244,6 +244,11 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "initiativeModifier")), false);
         }
 
+        if (!HitPointRules.MaxValid(data.HitPoints))
+        {
+            return (Reject(item, new ApiError(ApiErrorCode.CreatureTypeInvalid, "hitPoints")), false);
+        }
+
         // The database collation ignores case, which is what makes names unique per campaign.
         var taken = await db.CreatureTypes
             .Where(t => t.CampaignId == item.CampaignId && t.Name == name && t.Id != item.Id)
@@ -268,6 +273,7 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
         type.Notes = notes;
         type.InitiativeModifier = data.InitiativeModifier;
         type.InitiativeRollMode = data.InitiativeRollMode;
+        type.HitPoints = data.HitPoints;
         type.ArchivedAt = data.ArchivedAt;
         type.UpdatedAt = now;
         type.UpdatedByUserId = userId;
@@ -454,6 +460,7 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
             token.Hidden = pushed.Hidden;
             token.InitiativeModifier = pushed.InitiativeModifier;
             token.InitiativeRollMode = pushed.InitiativeRollMode;
+            token.MaxHitPoints = pushed.MaxHitPoints;
             token.Size = pushed.Size;
             token.X = pushed.X;
             token.Y = pushed.Y;
@@ -518,7 +525,8 @@ internal sealed class SyncPusher(AppDbContext db, Guid userId, TimeProvider time
                 || (token.Label ?? "").Trim().Length is 0 or > Token.LabelMaxLength
                 || !Enum.IsDefined(token.Size)
                 || token.InitiativeModifier is < InitiativeRules.ModifierMin or > InitiativeRules.ModifierMax
-                || token.InitiativeRollMode is { } mode && !Enum.IsDefined(mode))
+                || token.InitiativeRollMode is { } mode && !Enum.IsDefined(mode)
+                || !HitPointRules.MaxValid(token.MaxHitPoints))
             {
                 return Reject(item, new ApiError(ApiErrorCode.TokenInvalid, field));
             }

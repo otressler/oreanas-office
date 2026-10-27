@@ -70,6 +70,7 @@ describe('withPlacedCharacters', () => {
       color: null,
       statuses: [],
       hidden: false,
+      dead: false,
     })
   })
 })

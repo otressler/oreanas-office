@@ -20,10 +20,11 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `notes` | text | DM-only notes |
 | `initiativeModifier` | int | Added to the d20 when its creatures roll initiative, −10 to +20, default 0 ([initiative](/features/initiative.md)) |
 | `initiativeRollMode` | enum `normal` \| `advantage` \| `disadvantage` | How its creatures roll initiative: one d20, or two keeping the higher or the lower; default `normal` |
+| `hitPoints` | int, nullable | Default maximum hit points of its creatures, 1 to 999; null when the DM doesn't count them ([hit points](/features/hit-points.md)) |
 | `archivedAt` | timestamp, nullable | Set when a `dm` member archives the type. Archived types can't be picked for new tokens; placed tokens keep them. Types are never deleted and can be brought back |
 
 # Notes
 
-Every goblin on the board is a [token](/domain/token.md) pointing to this type, labelled "Goblin 1", "Goblin 2" and so on. Stat blocks and HP are out of scope for now; HP is in the [backlog](/backlog.md). Speed is out until the [distance rules](/backlog.md) come back (project owner, 2026-10-14).
+Every goblin on the board is a [token](/domain/token.md) pointing to this type, labelled "Goblin 1", "Goblin 2" and so on. Stat blocks are out of scope for now; hit points are a number the DM notes ([hit points](/features/hit-points.md), 2026-10-27). Speed is out until the [distance rules](/backlog.md) come back (project owner, 2026-10-14).
 
 Names are unique per campaign, ignoring case. When a type created offline meets a taken name at sync, the DM chooses between using the existing type and renaming their own ([offline prep](/decisions/offline-prep-pwa.md)).

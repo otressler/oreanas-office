@@ -9313,7 +9313,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "85f8e63c-058a-5342-81e4-1c30b84acdf8",
@@ -9332,7 +9333,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "c675deb4-a808-5dc0-9eac-2c26798850f0",
@@ -9351,7 +9353,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "48b4053d-87e4-5831-b80e-5e087e139e37",
@@ -9370,7 +9373,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "9fae554e-84df-50b6-948f-9508c00041fc",
@@ -9389,7 +9393,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "2e210077-28c5-56c2-8a87-5d22fd87c582",
@@ -9408,7 +9413,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "82c01f66-1a71-5516-a3a4-5f43cdddf1ec",
@@ -9427,7 +9433,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "7032fd66-1251-5ada-a52e-8fcc373ee490",
@@ -9446,7 +9453,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "d0ec66bc-40f3-5d25-a302-6e4c9c31d3a8",
@@ -9465,7 +9473,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "41faa6fd-f493-5eae-a425-9359a2e8cc6d",
@@ -9484,7 +9493,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "c257125f-261a-5ad3-9682-d0d3b13494a7",
@@ -9503,7 +9513,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "6be42e24-e8f3-59fa-b3ed-a8948790d254",
@@ -9522,7 +9533,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "f689cc62-af5a-5f62-94d0-69c5815ba505",
@@ -9541,7 +9553,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "bb718c61-d212-5ccd-b761-504ce3ab1300",
@@ -9560,7 +9573,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "0f8bc96e-5f5b-59a9-89af-63e7a278f7be",
@@ -9579,7 +9593,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "1b9286bc-b8a8-5af9-80ec-95b2a9947a1a",
@@ -9598,7 +9613,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "f6956e88-7c8a-5a12-abba-0b87695084fd",
@@ -9617,7 +9633,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "fa475cf9-60ca-5843-81f3-8679cc95d18b",
@@ -9636,7 +9653,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "4d1b5317-fb7b-518a-95b7-ddb4d3a723f7",
@@ -9655,7 +9673,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "a5700716-ecd0-5329-be4d-4ab620376c3a",
@@ -9674,7 +9693,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     },
     {
       "id": "73a5243f-5ce7-5fb4-9965-a34c977073c4",
@@ -9693,7 +9713,8 @@
       "imageUrl": null,
       "color": null,
       "statuses": [],
-      "hidden": false
+      "hidden": false,
+      "dead": false
     }
   ],
   "isSessionDm": false,

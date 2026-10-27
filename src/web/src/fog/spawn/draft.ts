@@ -129,6 +129,7 @@ export function previewTokens(
       color: null,
       statuses: [],
       hidden: false,
+      dead: false,
     }
   })
 }

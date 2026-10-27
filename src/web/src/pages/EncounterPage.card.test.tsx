@@ -83,6 +83,7 @@ const hero: BoardToken = {
   color: null,
   statuses: [],
   hidden: false,
+  dead: false,
 }
 /** Someone else's character next to Mira's. */
 const friend: BoardToken = {
@@ -575,5 +576,125 @@ describe('taking tokens off the board', () => {
     openFight(runningBoard())
     await connected()
     expect(screen.queryByRole('button', { name: /^Vom Feld genommen/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('hit points and the dead mark (knowledge/features/hit-points.md)', () => {
+  /** The goblin with 7 hit points, as on the session DM's board. */
+  function dmBoard() {
+    const board = runningBoard({ isSessionDm: true })
+    return {
+      ...board,
+      tokens: board.tokens.map((token) =>
+        token.id === 't1' ? { ...token, hitPoints: 7, maxHitPoints: 7 } : token,
+      ),
+    }
+  }
+
+  it('lets the session DM note what a creature has left', async () => {
+    hub.respond = (method, args) => {
+      if (method !== 'SetHitPoints') return { error: null }
+      const request = args[0] as { tokenId: string; hitPoints: number; maxHitPoints: number }
+      return { error: null, change: { encounterId: ids.encounter, ...request } }
+    }
+    const { user } = openFight(dmBoard())
+    await connected()
+
+    await user.click(cell(3, 0))
+    const left = within(card()).getByRole('spinbutton', {
+      name: de.tokenCard.hitPointsOf('Goblin 1'),
+    })
+    const max = within(card()).getByRole('spinbutton', {
+      name: de.tokenCard.maxHitPointsOf('Goblin 1'),
+    })
+    expect(left).toHaveValue(7)
+    expect(max).toHaveValue(7)
+    const save = within(card()).getByRole('button', { name: de.tokenCard.hitPointsSave })
+    expect(save).toBeDisabled()
+
+    await user.clear(left)
+    await user.type(left, '9')
+    expect(within(card()).getByText(de.tokenCard.hitPointsInvalid)).toBeInTheDocument()
+    expect(save).toBeDisabled()
+
+    await user.clear(left)
+    await user.type(left, '3{Enter}')
+    expect(hub.calls('SetHitPoints')).toEqual([[{ tokenId: 't1', hitPoints: 3, maxHitPoints: 7 }]])
+    await vi.waitFor(() =>
+      expect(
+        within(card()).getByRole('spinbutton', { name: de.tokenCard.hitPointsOf('Goblin 1') }),
+      ).toHaveValue(3),
+    )
+  })
+
+  it('takes hit points noted on another of the DM’s devices', async () => {
+    const { user } = openFight(dmBoard())
+    await connected()
+    await user.click(cell(3, 0))
+    act(() =>
+      hub.latest.emit('TokenHitPointsChanged', {
+        encounterId: ids.encounter,
+        tokenId: 't1',
+        hitPoints: 2,
+        maxHitPoints: 9,
+      }),
+    )
+    await vi.waitFor(() =>
+      expect(
+        within(card()).getByRole('spinbutton', { name: de.tokenCard.maxHitPointsOf('Goblin 1') }),
+      ).toHaveValue(9),
+    )
+  })
+
+  it('marks a creature dead and brings it back', async () => {
+    hub.respond = (method, args) => {
+      if (method !== 'SetTokenDead') return { error: null }
+      const request = args[0] as { tokenId: string; dead: boolean }
+      return { error: null, change: { encounterId: ids.encounter, ...request } }
+    }
+    const { user } = openFight(dmBoard())
+    await connected()
+
+    await user.click(cell(3, 0))
+    await user.click(within(card()).getByRole('button', { name: de.tokenCard.markDead }))
+    expect(hub.calls('SetTokenDead')).toEqual([[{ tokenId: 't1', dead: true }]])
+    await vi.waitFor(() =>
+      expect(within(card()).getByRole('button', { name: de.tokenCard.revive })).toBeInTheDocument(),
+    )
+    expect(within(card()).getByText(de.tokenCard.dead)).toBeInTheDocument()
+
+    await user.click(within(card()).getByRole('button', { name: de.tokenCard.revive }))
+    expect(hub.calls('SetTokenDead')).toEqual([
+      [{ tokenId: 't1', dead: true }],
+      [{ tokenId: 't1', dead: false }],
+    ])
+  })
+
+  it('shows players a dead creature, but no hit points and no buttons for them', async () => {
+    const { user } = openFight()
+    await connected()
+    act(() =>
+      hub.latest.emit('TokenDeadChanged', {
+        encounterId: ids.encounter,
+        tokenId: 't1',
+        dead: true,
+      }),
+    )
+    await user.click(cell(3, 0))
+    expect(within(card()).getByText(de.tokenCard.dead)).toBeInTheDocument()
+    expect(within(card()).queryByRole('spinbutton')).not.toBeInTheDocument()
+    expect(
+      within(card()).queryByRole('button', { name: de.tokenCard.revive }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('offers neither on characters', async () => {
+    const { user } = openFight(dmBoard())
+    await connected()
+    await user.click(cell(1, 0))
+    expect(within(card()).queryByRole('spinbutton')).not.toBeInTheDocument()
+    expect(
+      within(card()).queryByRole('button', { name: de.tokenCard.markDead }),
+    ).not.toBeInTheDocument()
   })
 })

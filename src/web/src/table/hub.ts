@@ -10,9 +10,11 @@ import type {
   AddStatusRequest,
   ArrowDrawnEvent,
   ChangeFogRequest,
+  DeadResult,
   DrawArrowRequest,
   EncounterStartedEvent,
   FogChangedEvent,
+  HitPointsResult,
   HubResult,
   InitiativeChangedEvent,
   InitiativeResult,
@@ -26,15 +28,19 @@ import type {
   PlayModeChangedEvent,
   PresenceChangedEvent,
   RemoveStatusRequest,
+  SetHitPointsRequest,
   SetInitiativeRequest,
   SetStatusLevelRequest,
+  SetTokenDeadRequest,
   SetTokensHiddenRequest,
   SpawnCreaturesRequest,
   SpawnResult,
   StatusResult,
   TableClientMethod,
   TableHubMethod,
+  TokenDeadChangedEvent,
   TokenHiddenEvent,
+  TokenHitPointsChangedEvent,
   TokenMovedEvent,
   TokenRemovedEvent,
   TokenRestoredEvent,
@@ -107,6 +113,14 @@ export interface TableHubCalls {
   SetInitiative: { args: [request: SetInitiativeRequest]; result: InitiativeResult }
   /** Session DM only. Switches initiative off for the fight. */
   ClearInitiative: { args: [encounterId: string]; result: InitiativeResult }
+  /**
+   * Session DM only, creatures on the board (knowledge/features/hit-points.md). Notes what the
+   * creature has left and its maximum. Errors: tokenNotFound, encounterNotActive, notSessionDm,
+   * hitPointsInvalid. The session DM's devices get TokenHitPointsChanged.
+   */
+  SetHitPoints: { args: [request: SetHitPointsRequest]; result: HitPointsResult }
+  /** Session DM only, creatures on the board. Everyone who sees it gets TokenDeadChanged. */
+  SetTokenDead: { args: [request: SetTokenDeadRequest]; result: DeadResult }
 }
 
 /** Server → device messages and their arguments. */
@@ -151,6 +165,10 @@ export interface TableClientEvents {
   ReloadBoard: [encounterId: string]
   /** The session DM's group only: the initiative list changed; keep the higher version. */
   InitiativeChanged: [changed: InitiativeChangedEvent]
+  /** The session DM's group only: a creature's hit points were noted. */
+  TokenHitPointsChanged: [changed: TokenHitPointsChangedEvent]
+  /** A creature was marked dead or brought back. */
+  TokenDeadChanged: [changed: TokenDeadChangedEvent]
 }
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false

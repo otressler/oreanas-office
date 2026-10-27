@@ -66,6 +66,7 @@ function pushTokens(encounter: LocalEncounter): SyncCreatureToken[] {
       hidden = false,
       initiativeModifier = null,
       initiativeRollMode = null,
+      maxHitPoints = null,
     }) => ({
       id,
       creatureTypeId,
@@ -76,6 +77,7 @@ function pushTokens(encounter: LocalEncounter): SyncCreatureToken[] {
       hidden,
       initiativeModifier,
       initiativeRollMode,
+      maxHitPoints,
     }),
   )
 }
@@ -112,6 +114,7 @@ export function recordPushItem(kind: ItemKind, record: ItemRecord): SyncPushItem
           archivedAt: r.archivedAt,
           initiativeModifier: r.initiativeModifier ?? 0,
           initiativeRollMode: r.initiativeRollMode ?? 'normal',
+          hitPoints: r.hitPoints ?? null,
         },
       }
     }
@@ -176,6 +179,8 @@ export function recordFromServer(item: SyncServerItem, existing?: ItemRecord): I
       // Absent from servers older than the initiative list.
       initiativeModifier: d.initiativeModifier ?? 0,
       initiativeRollMode: d.initiativeRollMode ?? 'normal',
+      // Absent from servers older than hit points.
+      hitPoints: d.hitPoints ?? null,
       archivedAt: d.archivedAt,
       recordVersion: LOCAL_CREATURE_TYPE_RECORD_VERSION,
     }

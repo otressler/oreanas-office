@@ -20,6 +20,7 @@ function creature(id: string, x: number, y: number, extra: Partial<BoardToken> =
     color: null,
     statuses: [],
     hidden: true,
+    dead: false,
     ...extra,
   }
 }

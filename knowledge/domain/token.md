@@ -22,6 +22,9 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-14T07:50:00Z }
 | `elevation` | decimal, meters | Defaults to the cell's elevation. Changeable for flying or climbing |
 | `hidden` | bool | Later: visible only to the session DM until revealed ([fog of war](/features/fog-of-war.md)) |
 | `initiativeModifier`, `initiativeRollMode` | int, enum; nullable | A creature's own initiative settings, set in the map editor; null takes the creature type's. Always null for characters ([initiative](/features/initiative.md)) |
+| `maxHitPoints` | int, nullable | A creature's own maximum hit points, set in the map editor or on the token card; null takes the creature type's ([hit points](/features/hit-points.md)) |
+| `hitPoints` | int, nullable | What the session DM noted the creature has left; null means full. Only the session DM's board carries hit points |
+| `dead` | bool | The session DM marked the creature dead: greyed out on every board, nothing else changes. Always false for characters |
 | `removedAt`, `removedByUserId` | timestamp, → [User](/domain/user.md); nullable | Later (stage 9): set when the session DM takes the token off the board. It disappears from every board but is kept, and can be brought back ([removing tokens](/features/removing-tokens.md)) |
 
 The image comes from the linked character or creature type: always its currently picked version, also in a running fight. A changed image shows the next time a board loads ([token icons](/features/token-icons.md)). On the board, a character's token has a ring in the colour its player picked ([character](/domain/character.md) `color`), or else one of eight default colours picked by the order characters were added to the campaign, repeating from the ninth; creatures share one red ring. Until images arrive, a token shows the first letter of its label. Creatures that share a letter show it with a number instead (S1, S2, S3), counted in the natural order of their labels, so "Goblin 1" and "Goblin 2" become G1 and G2. Characters keep the plain letter; their ring colours tell them apart. Each player sees the characters they play in this session drawn on top of any other token.
@@ -40,7 +43,7 @@ Every move is recorded as `{ tokenId, from, to, byUserId, at, version }`, positi
 
 # Later
 
-Statuses and removing tokens come in stage 9 ([statuses](/features/statuses.md), [status](/domain/status.md), [removing tokens](/features/removing-tokens.md)), the hidden flag in stage 10 ([fog of war](/features/fog-of-war.md)). HP is in the [backlog](/backlog.md).
+Statuses and removing tokens come in stage 9 ([statuses](/features/statuses.md), [status](/domain/status.md), [removing tokens](/features/removing-tokens.md)), the hidden flag in stage 10 ([fog of war](/features/fog-of-war.md)). Hit points and the dead mark came on 2026-10-27 ([hit points](/features/hit-points.md)).
 
 # As built (stage 10)
 

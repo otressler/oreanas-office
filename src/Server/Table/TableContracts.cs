@@ -138,6 +138,19 @@ public interface ITableHub
     // Session DM only. Switches initiative off for the fight: the list is gone. Errors as
     // RollInitiative.
     Task<InitiativeResult> ClearInitiative(Guid encounterId);
+
+    // --- Hit points (knowledge/features/hit-points.md) ---
+
+    // Session DM only (from a player connection), creatures on the board only. Notes what the
+    // creature has left and its maximum; saved, then TokenHitPointsChanged to the session
+    // DM's group, the caller included. Players never hear of it. Errors: TokenNotFound (also
+    // for a character or a removed token), EncounterNotActive, NotSessionDm, HitPointsInvalid.
+    Task<HitPointsResult> SetHitPoints(SetHitPointsRequest request);
+
+    // Session DM only, creatures on the board only. Marks a creature dead or alive again;
+    // nothing else changes. Saved, then TokenDeadChanged to everyone who may see it, the
+    // caller included. Errors: TokenNotFound, EncounterNotActive, NotSessionDm.
+    Task<DeadResult> SetTokenDead(SetTokenDeadRequest request);
 }
 
 // What the server sends to devices.
@@ -210,6 +223,12 @@ public interface ITableClient
     // The session DM's group only: the initiative list changed (SetInitiative,
     // ClearInitiative, or creatures spawned into it). Devices keep the higher version.
     Task InitiativeChanged(InitiativeChangedEvent changed);
+
+    // The session DM's group only: a creature's hit points were noted.
+    Task TokenHitPointsChanged(TokenHitPointsChangedEvent changed);
+
+    // A creature was marked dead or brought back; devices grey it out or not.
+    Task TokenDeadChanged(TokenDeadChangedEvent changed);
 }
 
 // The top-left cell the token should stand on.
@@ -355,3 +374,20 @@ public record InitiativeResult(ApiErrorCode? Error, InitiativeChangedEvent? Chan
 
 // Entries: characters first, then creatures, each in the order they were placed. Null with an Error.
 public record InitiativeRollResult(ApiErrorCode? Error, List<InitiativeEntry>? Entries);
+
+// --- Hit points ---
+
+// HitPoints: what the creature has left, 0 to MaxHitPoints. MaxHitPoints: 1 to 999; it
+// becomes the creature's own maximum (HitPointRules).
+public record SetHitPointsRequest(Guid TokenId, int HitPoints, int MaxHitPoints);
+
+public record TokenHitPointsChangedEvent(Guid EncounterId, Guid TokenId, int HitPoints, int MaxHitPoints);
+
+// Change is the event sent to the group on success, null with an Error.
+public record HitPointsResult(ApiErrorCode? Error, TokenHitPointsChangedEvent? Change);
+
+public record SetTokenDeadRequest(Guid TokenId, bool Dead);
+
+public record TokenDeadChangedEvent(Guid EncounterId, Guid TokenId, bool Dead);
+
+public record DeadResult(ApiErrorCode? Error, TokenDeadChangedEvent? Change);

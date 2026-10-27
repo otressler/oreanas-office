@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import type { TokenMovedEvent } from '../api/types'
 import { ids, smallBoard } from '../encounters/testing'
-import { applyMove, mergeKnown, rememberMove, withPending, type KnownPositions } from './merge'
+import {
+  applyDead,
+  applyHitPoints,
+  applyMove,
+  mergeKnown,
+  rememberMove,
+  withPending,
+  type KnownPositions,
+} from './merge'
 
 const board = smallBoard({ status: 'active' })
 
@@ -73,5 +81,33 @@ describe('withPending', () => {
     const shown = withPending(board, new Map([['t1', { x: 0, y: 1, elevation: 0 }]]))
     expect(shown.tokens[0]).toMatchObject({ x: 0, y: 1, version: 0 })
     expect(withPending(board, new Map())).toBe(board)
+  })
+})
+
+describe('hit points and the dead mark', () => {
+  const noted = { encounterId: ids.encounter, tokenId: 't1', hitPoints: 3, maxHitPoints: 7 }
+
+  it('takes noted hit points into the token', () => {
+    const next = applyHitPoints(board, noted)
+    expect(next.tokens[0]).toMatchObject({ hitPoints: 3, maxHitPoints: 7 })
+    expect(board.tokens[0]?.hitPoints).toBeUndefined()
+  })
+
+  it('marks a token dead and alive again', () => {
+    const dead = applyDead(board, { encounterId: ids.encounter, tokenId: 't1', dead: true })
+    expect(dead.tokens[0]?.dead).toBe(true)
+    const alive = applyDead(dead, { encounterId: ids.encounter, tokenId: 't1', dead: false })
+    expect(alive.tokens[0]?.dead).toBe(false)
+  })
+
+  it('keeps them on a removed token for when it comes back', () => {
+    const removed = { ...board, tokens: [], removedTokens: board.tokens }
+    expect(applyHitPoints(removed, noted).removedTokens[0]).toMatchObject({ hitPoints: 3 })
+  })
+
+  it('ignores unknown tokens and other encounters', () => {
+    expect(applyHitPoints(board, { ...noted, tokenId: 'nope' })).toBe(board)
+    expect(applyHitPoints(board, { ...noted, encounterId: 'other' })).toBe(board)
+    expect(applyDead(board, { encounterId: 'other', tokenId: 't1', dead: true })).toBe(board)
   })
 })

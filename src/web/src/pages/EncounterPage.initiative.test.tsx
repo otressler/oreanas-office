@@ -237,3 +237,30 @@ describe('the initiative list', () => {
     expect(screen.getByRole('button', { name: t.roll })).toBeInTheDocument()
   })
 })
+
+describe('hit points in the list (knowledge/features/hit-points.md)', () => {
+  it('shows what creatures have left, and dead ones as dead', async () => {
+    const board = dmBoard({
+      version: 1,
+      entries: [entry('g2', 15), entry('t-hero', null), entry('g1', 9)],
+    })
+    openFight({
+      ...board,
+      tokens: board.tokens.map((token) =>
+        token.id === 'g1'
+          ? { ...token, hitPoints: 4, maxHitPoints: 12 }
+          : token.id === 'g2'
+            ? { ...token, hitPoints: 0, maxHitPoints: 7, dead: true }
+            : token,
+      ),
+    })
+    await connected()
+
+    expect(list().getByLabelText(t.hitPointsLabel(4, 12))).toHaveTextContent('4/12')
+    const dead = screen.getByTestId('initiative-g2')
+    expect(within(dead).getByText(t.dead)).toBeInTheDocument()
+    expect(within(dead).queryByText('0/7')).not.toBeInTheDocument()
+    // Characters and creatures without a maximum show none.
+    expect(within(screen.getByTestId('initiative-t-hero')).queryByText(/\//)).toBeNull()
+  })
+})

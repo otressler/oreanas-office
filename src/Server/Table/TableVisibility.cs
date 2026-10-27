@@ -25,15 +25,21 @@ public static class TableVisibility
     public static bool FootprintRevealed(HashSet<(int X, int Y)> fog, CreatureSize size, int x, int y) =>
         MapGrid.FootprintCells(size, x, y).All(cell => !fog.Contains(cell));
 
+    // A token as players may know it: never hidden, and without hit points, which are the
+    // session DM's alone (knowledge/features/hit-points.md). Whether it is dead stays.
+    public static BoardToken ForPlayers(BoardToken token) =>
+        token with { Hidden = false, HitPoints = null, MaxHitPoints = null };
+
     // The board as players get it. Hidden creatures and removed tokens are gone, the layout
     // keeps only revealed cells and the cells under characters, a feature stays only when
     // one of its cells is revealed (then whole), entrances keep only revealed cells, and
     // the fog lists hidden cells without areas. Statuses are cut to the visible tokens. The
-    // initiative list is the session DM's alone (knowledge/features/initiative.md).
+    // initiative list is the session DM's alone (knowledge/features/initiative.md), and so
+    // are hit points.
     public static BoardStateResponse ForPlayers(BoardStateResponse board)
     {
         var fog = FogSet(board.Fog);
-        var tokens = board.Tokens.Where(t => t.RemovedAt is null && TokenVisible(fog, t)).ToList();
+        var tokens = board.Tokens.Where(t => t.RemovedAt is null && TokenVisible(fog, t)).Select(ForPlayers).ToList();
         var used = tokens.SelectMany(t => t.Statuses).Select(s => s.StatusId).ToHashSet();
         var map = board.Map with { Layout = LayoutFor(board.Map.Layout, fog, tokens) };
         return board with

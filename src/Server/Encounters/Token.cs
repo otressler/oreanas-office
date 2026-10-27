@@ -52,6 +52,16 @@ public class Token
 
     public InitiativeRollMode? InitiativeRollMode { get; set; }
 
+    // A creature's own maximum hit points, set in the map editor or on the token card; null
+    // takes the creature type's. HitPoints: what the session DM noted it has left; null while
+    // nothing is noted, which means full. Dead: the DM marked it dead, which only greys it
+    // out (knowledge/features/hit-points.md). Always null and false for characters.
+    public int? MaxHitPoints { get; set; }
+
+    public int? HitPoints { get; set; }
+
+    public bool Dead { get; set; }
+
     // Counts moves and undos, starting at 0 when placed. Devices keep the position with
     // the higher version; saving a move requires the version it read (last move wins,
     // but two moves never interleave). See knowledge/decisions/realtime-sync.md.

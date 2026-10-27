@@ -83,6 +83,7 @@ const ALL_CODES = {
   spawnInvalid: true,
   notLocalMode: true,
   initiativeInvalid: true,
+  hitPointsInvalid: true,
   notBuilt: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 

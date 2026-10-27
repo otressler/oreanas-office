@@ -144,6 +144,7 @@ function token(extra: Partial<BoardToken> = {}): BoardToken {
     color: null,
     statuses: [],
     hidden: false,
+    dead: false,
     ...extra,
   }
 }

@@ -97,7 +97,7 @@ function Bestiary({ campaignId, campaignName }: { campaignId: string; campaignNa
   )
 }
 
-/** A type's card: its size and initiative under the name, then the start of its appearance. */
+/** A type's card: its size, initiative and hit points under the name, then the start of its appearance. */
 function CreatureCard({
   campaignId,
   type,
@@ -121,6 +121,12 @@ function CreatureCard({
           {de.sizes[type.size]}
           <span aria-hidden="true"> · </span>
           {t.initiativeShort(formatModifier(type.initiativeModifier ?? 0))}
+          {type.hitPoints != null && (
+            <>
+              <span aria-hidden="true"> · </span>
+              {t.hitPointsShort(type.hitPoints)}
+            </>
+          )}
         </>
       }
       tagline={plain(type.appearance)}

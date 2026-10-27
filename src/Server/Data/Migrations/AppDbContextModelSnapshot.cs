@@ -217,6 +217,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int?>("HitPoints")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("IconAssetId")
                         .HasColumnType("uniqueidentifier");
 
@@ -554,6 +557,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid?>("CreatureTypeId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("Dead")
+                        .HasColumnType("bit");
+
                     b.Property<decimal>("Elevation")
                         .HasPrecision(6, 1)
                         .HasColumnType("decimal(6,1)");
@@ -563,6 +569,9 @@ namespace OreanasOffice.Server.Data.Migrations
 
                     b.Property<bool>("Hidden")
                         .HasColumnType("bit");
+
+                    b.Property<int?>("HitPoints")
+                        .HasColumnType("int");
 
                     b.Property<int?>("InitiativeModifier")
                         .HasColumnType("int");
@@ -579,6 +588,9 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<string>("Label")
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
+
+                    b.Property<int?>("MaxHitPoints")
+                        .HasColumnType("int");
 
                     b.Property<int?>("Number")
                         .HasColumnType("int");

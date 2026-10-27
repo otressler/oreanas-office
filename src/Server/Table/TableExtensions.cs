@@ -20,6 +20,7 @@ public static class TableExtensions
         builder.Services.AddScoped<TableFog>();
         builder.Services.AddScoped<TableSpawns>();
         builder.Services.AddScoped<TableInitiative>();
+        builder.Services.AddScoped<TableHitPoints>();
         builder.Services.AddSingleton<TablePingLimiter>();
         builder.Services.AddSingleton<TableActivity>();
         builder.Services.AddSingleton<TablePreviews>();

@@ -50,6 +50,7 @@ function creature(id: string, label: string, typeId: string): BoardToken {
     color: null,
     statuses: [],
     hidden: false,
+    dead: false,
   }
 }
 

@@ -43,6 +43,7 @@ const hero: BoardToken = {
   color: null,
   statuses: [],
   hidden: false,
+  dead: false,
 }
 
 /** A creature standing on the clearing; `t1` is the board's goblin. */

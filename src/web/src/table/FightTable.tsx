@@ -435,6 +435,27 @@ export function FightTable({
 
   const hideJustRemoved = useCallback(() => setJustRemoved(null), [])
 
+  /** Hit points and the dead mark (knowledge/features/hit-points.md): the result lands on the board. */
+  async function setHitPoints(token: BoardToken, hitPoints: number, maxHitPoints: number) {
+    setNotice(null)
+    try {
+      const result = await table.setHitPoints({ tokenId: token.id, hitPoints, maxHitPoints })
+      if (result.error) fail(result.error, de.tokenCard.hitPointsFailed)
+    } catch {
+      fail(null, de.tokenCard.hitPointsFailed)
+    }
+  }
+
+  async function setTokenDead(token: BoardToken, dead: boolean) {
+    setNotice(null)
+    try {
+      const result = await table.setTokenDead(token.id, dead)
+      if (result.error) fail(result.error, de.tokenCard.deadFailed)
+    } catch {
+      fail(null, de.tokenCard.deadFailed)
+    }
+  }
+
   // Pings and arrows need the table, like moving; offline a double tap only says so.
   function pingTarget(target: PingTarget) {
     if (!connected) {
@@ -567,6 +588,14 @@ export function FightTable({
               fog={
                 board.isSessionDm && running
                   ? { onSetHidden: dmFog.setTokensHidden, hiddenHere: dmFog.hiddenHere }
+                  : undefined
+              }
+              hitPoints={
+                board.isSessionDm && running && !dmFog.playerView
+                  ? {
+                      onSet: (token, hitPoints, max) => void setHitPoints(token, hitPoints, max),
+                      onSetDead: (token, dead) => void setTokenDead(token, dead),
+                    }
                   : undefined
               }
               onRemoveStatus={(token, statusId) =>

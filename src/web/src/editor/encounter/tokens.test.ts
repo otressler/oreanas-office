@@ -15,6 +15,7 @@ import {
   setArchived,
   setReady,
   setTokenHidden,
+  setTokenHitPoints,
   setTokenInitiative,
   toBoardToken,
   encounterDocOf,
@@ -279,6 +280,16 @@ describe('hidden creatures', () => {
     const back = setTokenInitiative(both, 't1', { modifier: null, mode: null })
     expect(back.tokens[0]).not.toHaveProperty('initiativeModifier')
     expect(back.tokens[0]).not.toHaveProperty('initiativeRollMode')
+  })
+
+  it('gives a creature its own starting hit points and hands them back to its type', () => {
+    const doc = placeToken(empty(), goblin, { x: 0, y: 0 }, 't1')
+    expect(setTokenHitPoints(doc, 't1', null)).toBe(doc)
+    expect(setTokenHitPoints(doc, 'missing', 9)).toBe(doc)
+    const own = setTokenHitPoints(doc, 't1', 9)
+    expect(own.tokens[0]?.maxHitPoints).toBe(9)
+    expect(setTokenHitPoints(own, 't1', 9)).toBe(own)
+    expect(setTokenHitPoints(own, 't1', null).tokens[0]).not.toHaveProperty('maxHitPoints')
   })
 
   it('draws a hidden token as hidden (see-through with the eye mark)', () => {

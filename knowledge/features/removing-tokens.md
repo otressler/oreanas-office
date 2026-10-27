@@ -16,7 +16,7 @@ When the ghost is defeated, it leaves the board. Asked for by the project owner 
 - **Only the session DM** removes tokens, creatures and characters alike: a defeated monster, a summoned creature that vanishes, a character whose player goes home early. Players can't ([session](/domain/session.md)).
 - **Removing hides, it doesn't delete.** The token gets `removedAt` and stays in the database with its move history and statuses, so the fight's record stays whole and the token can come back ([token](/domain/token.md)).
 - **Labels aren't reused.** A new "Goblin" after a removed "Goblin 2" still gets the next number after the highest ([token](/domain/token.md)).
-- A creature that's down but still lies there, such as an unconscious character, keeps its token and gets the "Bewusstlos" status instead ([statuses](/features/statuses.md)). Removing is for tokens that leave the board.
+- A creature that's down but still lies there, such as an unconscious character, keeps its token and gets the "Bewusstlos" status instead ([statuses](/features/statuses.md)). Removing is for tokens that leave the board. A creature that died but stays where it fell can be marked dead instead, which greys it out ([hit points](/features/hit-points.md)).
 
 # At the table
 

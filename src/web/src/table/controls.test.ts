@@ -69,6 +69,7 @@ function token(id: string, fields: Partial<BoardToken> = {}): BoardToken {
     imageUrl: null,
     color: null,
     statuses: [],
+    dead: false,
     hidden: false,
     ...fields,
   }

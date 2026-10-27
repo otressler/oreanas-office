@@ -2,6 +2,7 @@
 // (no Konva node per cell). World-space passes draw in world units (CELL per cell);
 // the grid and labels draw in device pixels so lines stay one pixel wide and crisp.
 import type { BoardToken } from '../api/types'
+import { damageShare } from '../hitPoints/hitPoints'
 import { badgeLayout, drawBadges, type StatusLook } from './badges'
 import { footprint } from './geometry'
 import {
@@ -716,7 +717,7 @@ function drawToken(
 
   ctx.beginPath()
   ctx.arc(cx, cy, r, 0, Math.PI * 2)
-  ctx.fillStyle = dot ? ring : tokenFill(ring)
+  ctx.fillStyle = dot ? (token.dead ? DEAD_DOT : ring) : tokenFill(ring)
   ctx.fill()
   // A dark hairline outside, so light rings stand off light ground.
   ctx.strokeStyle = 'rgba(10, 11, 14, 0.85)'
@@ -727,12 +728,17 @@ function drawToken(
   const ringWidth = Math.max(r * 0.17, 2.5 * px)
   // The image lies inside the ring, which is drawn over its edge.
   if (image) drawCircleImage(ctx, image, cx, cy, r - ringWidth / 2)
+  // The hit points it has lost rise from the bottom, under the ring; only the session DM's
+  // board carries them (knowledge/features/hit-points.md). A dead creature is grey instead.
+  const damage = token.dead ? null : damageShare(token)
+  if (damage) drawDamage(ctx, cx, cy, r - ringWidth / 2, damage, cssScale)
 
   ctx.beginPath()
   ctx.arc(cx, cy, r - ringWidth / 2, 0, Math.PI * 2)
   ctx.strokeStyle = ring
   ctx.lineWidth = ringWidth
   ctx.stroke()
+  if (token.dead) drawDead(ctx, cx, cy, r)
 
   if (image) {
     // Creatures sharing a letter stay apart by their number, now on the edge.
@@ -748,6 +754,62 @@ function drawToken(
   ctx.textBaseline = 'middle'
   ctx.fillStyle = PARCHMENT
   ctx.fillText(mark, cx, cy + r * 0.05)
+}
+
+/** A dead creature drawn as a dot. */
+const DEAD_DOT = '#6b6b6b'
+
+/** The red of lost hit points, and the brighter line at its level. */
+const DAMAGE_COLOR = 'rgba(225, 29, 29, 0.55)'
+const DAMAGE_EDGE = 'rgba(255, 150, 150, 0.95)'
+
+/**
+ * A red fill rising from the bottom of the circle to `share` (0–1) of its height, with a
+ * bright line on top, so the level shows on a creature's own dark red too.
+ */
+function drawDamage(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  share: number,
+  cssScale: number,
+) {
+  const top = cy + radius - radius * 2 * share
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+  ctx.clip()
+  ctx.fillStyle = DAMAGE_COLOR
+  ctx.fillRect(cx - radius, top, radius * 2, cy + radius - top)
+  if (share < 1) {
+    ctx.beginPath()
+    ctx.moveTo(cx - radius, top)
+    ctx.lineTo(cx + radius, top)
+    ctx.strokeStyle = DAMAGE_EDGE
+    ctx.lineWidth = Math.max(CELL * 0.025, 1.5 / cssScale)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+/**
+ * A creature marked dead (knowledge/features/hit-points.md): its circle, ring and picture
+ * turned grey and a little darker. The letter or number drawn after it stays readable.
+ */
+function drawDead(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) {
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+  ctx.clip()
+  // Keeps what is there and takes its colour away.
+  ctx.globalCompositeOperation = 'saturation'
+  ctx.fillStyle = '#808080'
+  ctx.fill()
+  ctx.globalCompositeOperation = 'source-over'
+  ctx.fillStyle = 'rgba(16, 17, 20, 0.45)'
+  ctx.fill()
+  ctx.restore()
 }
 
 /** A numbered creature's number on its token's lower right edge: a dark disc in its ring colour. */

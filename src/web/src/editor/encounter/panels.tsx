@@ -25,6 +25,7 @@ import { pickType, usePickedState } from './picked'
 import { useEncounter, useEncounterStore } from './store'
 import { FogChecks } from '../fog/FogPanel'
 import { useFogOptions } from '../fog/options'
+import { MAX_MAX, MAX_MIN } from '../../hitPoints/hitPoints'
 import { useEditor } from '../store'
 import {
   cleanLabel,
@@ -34,6 +35,7 @@ import {
   removeToken,
   renameToken,
   setTokenHidden,
+  setTokenHitPoints,
   setTokenInitiative,
   setArchived,
   setReady,
@@ -111,6 +113,12 @@ export function SelectCreaturePanel() {
       <Help>{de.fog.editor.hiddenHelp}</Help>
       <InitiativeFields
         key={`initiative-${token.id}`}
+        token={token}
+        type={type}
+        disabled={readOnly}
+      />
+      <HitPointsField
+        key={`hit-points-${token.id}`}
         token={token}
         type={type}
         disabled={readOnly}
@@ -217,6 +225,59 @@ function InitiativeFields({
           ))}
         </select>
       </div>
+    </div>
+  )
+}
+
+/**
+ * The hit points the creature starts the fight with (knowledge/features/hit-points.md): empty
+ * takes the type's. Kept while the field is valid, like the initiative modifier.
+ */
+function HitPointsField({
+  token,
+  type,
+  disabled,
+}: {
+  token: LocalCreatureToken
+  type: LocalCreatureType | undefined
+  disabled: boolean
+}) {
+  const store = useEncounterStore()
+  const fieldId = useId()
+  const own = token.maxHitPoints ?? null
+  const [text, setText] = useState(own === null ? '' : String(own))
+  const invalid = text.trim() !== '' && parseWhole(text, MAX_MIN, MAX_MAX) === null
+
+  function change(value: string) {
+    setText(value)
+    const next = value.trim() === '' ? null : parseWhole(value, MAX_MIN, MAX_MAX)
+    if (value.trim() === '' || next !== null)
+      store.getState().apply((doc) => setTokenHitPoints(doc, token.id, next))
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={fieldId} className="text-sm text-dim">
+        {t.hitPoints}
+      </label>
+      <input
+        id={fieldId}
+        className={inputClass}
+        type="number"
+        inputMode="numeric"
+        min={MAX_MIN}
+        max={MAX_MAX}
+        step={1}
+        value={text}
+        placeholder={t.hitPointsFromType(type?.hitPoints ?? null)}
+        disabled={disabled}
+        aria-invalid={invalid || undefined}
+        aria-describedby={`${fieldId}-hint`}
+        onChange={(event) => change(event.target.value)}
+      />
+      <p id={`${fieldId}-hint`} className={`text-sm ${invalid ? 'text-red-300' : 'text-dim'}`}>
+        {invalid ? t.hitPointsInvalid : t.hitPointsHint}
+      </p>
     </div>
   )
 }

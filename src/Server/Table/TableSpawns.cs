@@ -115,7 +115,7 @@ public sealed class TableSpawns(TableFog fog, AppDbContext db, TimeProvider time
                 outcome.Delivery.Dm.Add(client => client.InitiativeChanged(initiative));
             }
 
-            var forPlayers = added.Where(t => TableVisibility.TokenVisible(hiddenCells, t)).ToList();
+            var forPlayers = added.Where(t => TableVisibility.TokenVisible(hiddenCells, t)).Select(TableVisibility.ForPlayers).ToList();
             if (forPlayers.Count > 0)
             {
                 outcome.Delivery.Players.Add(client => client.TokensAdded(new TokensAddedEvent(encounter.Id, forPlayers)));
