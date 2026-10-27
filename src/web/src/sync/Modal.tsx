@@ -1,6 +1,9 @@
 import { useEffect, useEffectEvent, useId, useRef, type ReactNode } from 'react'
 import { de } from '../text/de'
 
+/** The open dialogs, oldest first: Escape closes only the newest, e.g. a confirm over a page. */
+const open: object[] = []
+
 /**
  * A dialog over the page (the editor's full-screen frame is z-40). Escape and the close
  * button close it; focus moves into it when it opens.
@@ -13,8 +16,8 @@ export function Modal({
 }: {
   title: string
   onClose: () => void
-  /** "narrow" for a small tool such as the dice tray. */
-  size?: 'wide' | 'narrow'
+  /** "narrow" for a small tool such as the dice tray, "page" for a whole page's content. */
+  size?: 'wide' | 'narrow' | 'page'
   children: ReactNode
 }) {
   const titleId = useId()
@@ -28,9 +31,16 @@ export function Modal({
 
   useEffect(() => {
     panel.current?.focus()
-    const onKey = (event: KeyboardEvent) => onEscape(event)
+    const self = {}
+    open.push(self)
+    const onKey = (event: KeyboardEvent) => {
+      if (open.at(-1) === self) onEscape(event)
+    }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      open.splice(open.indexOf(self), 1)
+    }
   }, [])
 
   return (
@@ -41,7 +51,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`flex w-full ${size === 'narrow' ? 'max-w-lg' : 'max-w-3xl'} flex-col gap-4 rounded-xl border border-line bg-panel p-4 text-parchment shadow-xl outline-none`}
+        className={`flex w-full ${WIDTH[size]} flex-col gap-4 rounded-xl border border-line bg-panel p-4 text-parchment shadow-xl outline-none`}
       >
         <div className="flex items-start gap-2">
           <h2 id={titleId} className="min-w-0 text-xl font-semibold break-words">
@@ -61,3 +71,5 @@ export function Modal({
     </div>
   )
 }
+
+const WIDTH = { narrow: 'max-w-lg', wide: 'max-w-3xl', page: 'max-w-5xl' }

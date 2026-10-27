@@ -33,9 +33,11 @@ describe('placement panel', () => {
     expect(screen.getByText(t.placePickFirst)).toBeInTheDocument()
 
     await user.click(await screen.findByRole('button', { name: b.newType }))
-    await user.type(screen.getByLabelText(b.name), 'Goblin')
-    await user.selectOptions(screen.getByLabelText(b.size), b.sizeOption(de.sizes.small, 1))
-    await user.click(screen.getByRole('button', { name: b.create }))
+    const dialog = await screen.findByRole('dialog', { name: b.newTitle })
+    await user.type(within(dialog).getByLabelText(b.name), 'Goblin')
+    await user.selectOptions(within(dialog).getByLabelText(b.size), b.sizeOption(de.sizes.small, 1))
+    await user.click(within(dialog).getByRole('button', { name: de.sheet.saveChanges }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     await waitFor(() =>
       expect(screen.getByRole('button', { name: b.pick('Goblin') })).toHaveAttribute(
@@ -59,9 +61,10 @@ describe('placement panel', () => {
     })
     renderInEncounter(<PlacePanel />)
     await user.click(await screen.findByRole('button', { name: b.newType }))
-    await user.type(screen.getByLabelText(b.name), ' goblin')
-    expect(screen.getByText(b.problems.nameTaken)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: b.create }))
+    await user.type(await screen.findByLabelText(b.name), ' goblin')
+    expect(screen.getAllByText(b.problems.nameTaken).length).toBeGreaterThan(0)
+    await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
+    expect(screen.getByRole('dialog', { name: b.newTitle })).toBeInTheDocument()
     expect(await dbOf().creatureTypes.count()).toBe(1)
   })
 
@@ -91,15 +94,42 @@ describe('placement panel', () => {
     expect(pickedType.getState().type).toMatchObject({ name: 'Ork', size: 'large' })
 
     await user.click(screen.getByRole('button', { name: b.edit('Ork') }))
-    const name = screen.getByLabelText(b.name)
+    const dialog = await screen.findByRole('dialog', { name: b.editTitle('Ork') })
+    const name = within(dialog).getByLabelText(b.name)
     await user.clear(name)
     await user.type(name, 'Oger')
-    await user.selectOptions(screen.getByLabelText(b.size), b.sizeOption(de.sizes.huge, 3))
-    await user.click(screen.getByRole('button', { name: b.save }))
-    // The pick follows the type.
+    await user.selectOptions(within(dialog).getByLabelText(b.size), b.sizeOption(de.sizes.huge, 3))
+    await user.click(within(dialog).getByRole('button', { name: de.sheet.saveChanges }))
+    // The pick follows the type, and the dialog closes.
     await waitFor(() =>
       expect(pickedType.getState().type).toMatchObject({ name: 'Oger', size: 'huge' }),
     )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('asks before closing the dialog with unsaved changes', async () => {
+    const user = userEvent.setup()
+    await createCreatureType(dbOf(), CAMPAIGN_ID, {
+      name: 'Wolf',
+      size: 'medium',
+      appearance: '',
+      notes: '',
+      initiativeModifier: 0,
+      initiativeRollMode: 'normal',
+    })
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    renderInEncounter(<PlacePanel />)
+    await user.click(await screen.findByRole('button', { name: b.edit('Wolf') }))
+    const dialog = await screen.findByRole('dialog', { name: b.editTitle('Wolf') })
+    await user.type(within(dialog).getByLabelText(b.name), 'srudel')
+
+    await user.keyboard('{Escape}')
+    expect(confirm).toHaveBeenCalledWith(b.dialogDiscard)
+    expect(dialog).toBeInTheDocument()
+    confirm.mockReturnValue(true)
+    await user.click(within(dialog).getByRole('button', { name: de.sync.close }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect((await dbOf().creatureTypes.toArray())[0]?.name).toBe('Wolf')
   })
 
   it('archives a type: not pickable any more, and brought back from the collapsed part', async () => {
@@ -115,7 +145,9 @@ describe('placement panel', () => {
     renderInEncounter(<PlacePanel />)
     await user.click(await screen.findByRole('button', { name: b.pick('Wolf') }))
     await user.click(screen.getByRole('button', { name: b.edit('Wolf') }))
-    await user.click(screen.getByRole('button', { name: b.archive }))
+    const dialog = await screen.findByRole('dialog', { name: b.editTitle('Wolf') })
+    await user.click(within(dialog).getByRole('button', { name: b.archive }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: b.pick('Wolf') })).not.toBeInTheDocument(),

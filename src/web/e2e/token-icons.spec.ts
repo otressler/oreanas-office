@@ -14,7 +14,6 @@ const text = {
   confirm: 'Erzeugen',
   picked: 'Ausgewählt',
   iconAlt: 'Symbol: Goblin',
-  pickedIconAlt: 'Ausgewähltes Bild: Goblin',
   upload: 'Bild hochladen',
   cropTitle: 'Bildausschnitt wählen',
   cropOk: 'Hochladen',
@@ -71,7 +70,7 @@ async function openGoblinIcon(page: Page, context: BrowserContext) {
   await page.getByRole('button', { name: 'Neue Kreaturenart' }).click()
   await page.getByLabel('Name', { exact: true }).fill('Goblin')
   await page.getByLabel('Aussehen').fill('Kleiner grüner Kobold mit Krummsäbel')
-  await page.getByRole('button', { name: 'Anlegen' }).click()
+  await page.getByRole('button', { name: 'Änderungen speichern' }).click()
   await page.getByRole('button', { name: 'Goblin bearbeiten' }).click()
 
   // A type only on this device syncs first; the editor may have synced it already.
@@ -104,7 +103,9 @@ test('a DM generates a creature icon in the editor after confirming, and it is p
   await expect.poll(() => backend.tokenImages.length).toBe(1)
   const version = icon.getByRole('listitem')
   await expect(version.getByText(text.picked)).toBeVisible()
-  await expect(icon.getByRole('img', { name: text.pickedIconAlt })).toBeVisible()
+  // The creature page's portrait in the dialog shows it.
+  const portrait = page.getByRole('dialog', { name: 'Goblin bearbeiten' })
+  await expect(portrait.getByRole('img', { name: text.iconAlt })).toBeVisible()
   await expect.poll(() => images.open).toBe(0)
   const typeId = backend.tokenImages[0]!.image.ownerId
   expect(backend.pickedTokenImages.get(typeId)).toBe(backend.tokenImages[0]!.image.id)

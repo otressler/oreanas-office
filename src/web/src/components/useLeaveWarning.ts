@@ -8,16 +8,26 @@ import { de } from '../text/de'
  * `quiet` is asked at the moment of leaving, e.g. while saving or after a deliberate leave.
  */
 export function useLeaveWarning(dirty: boolean, quiet: () => boolean) {
+  useRouteLeaveWarning(dirty, quiet)
+  useUnloadWarning(dirty)
+}
+
+/** Moving to another page in the app with typed-in changes asks first. Needs a data router. */
+export function useRouteLeaveWarning(dirty: boolean, quiet: () => boolean) {
   const blocker = useBlocker(() => dirty && !quiet())
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return
+    if (window.confirm(de.sheet.leave)) blocker.proceed()
+    else blocker.reset()
+  }, [blocker])
+}
+
+/** Closing or reloading the tab with typed-in changes asks first. */
+export function useUnloadWarning(dirty: boolean) {
   useEffect(() => {
     if (!dirty) return
     const warn = (event: BeforeUnloadEvent) => event.preventDefault()
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
   }, [dirty])
-  useEffect(() => {
-    if (blocker.state !== 'blocked') return
-    if (window.confirm(de.sheet.leave)) blocker.proceed()
-    else blocker.reset()
-  }, [blocker])
 }

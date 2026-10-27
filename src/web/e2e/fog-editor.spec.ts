@@ -76,7 +76,7 @@ test('a DM prepares fog, an area and a hidden goblin offline, and it syncs later
   await page.getByRole('button', { name: 'Neue Kreaturenart' }).click()
   await page.getByLabel('Name', { exact: true }).fill('Goblin')
   await page.getByLabel('Größe').selectOption({ label: 'Klein (1 × 1 Felder)' })
-  await page.getByRole('button', { name: 'Anlegen' }).click()
+  await page.getByRole('button', { name: 'Änderungen speichern' }).click()
   await expect(page.getByRole('button', { name: 'Goblin wählen' })).toHaveAttribute(
     'aria-pressed',
     'true',

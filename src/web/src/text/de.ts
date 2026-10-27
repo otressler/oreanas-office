@@ -1978,6 +1978,8 @@ export const de = {
     save: 'Speichern',
     cancel: 'Abbrechen',
     archive: 'Archivieren',
+    /** Closing the creature dialog over the editor with unsaved changes. */
+    dialogDiscard: 'Ungespeicherte Änderungen gehen verloren. Trotzdem schließen?',
     restore: 'Zurückholen',
     /** Accessible name of the button that brings an archived type back, e.g. "Goblin zurückholen". */
     restoreLabel: (name: string) => `${name} zurückholen`,

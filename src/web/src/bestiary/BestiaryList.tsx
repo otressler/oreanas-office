@@ -1,5 +1,6 @@
 // The campaign's creature types as a compact list for the editor's side panel: pick one,
-// edit it, create a new one, and bring archived ones back. The bestiary's own page shows
+// edit it, create a new one, and bring archived ones back. Editing and creating open the
+// creature page as a dialog over the editor (CreatureDialog). The bestiary's own page shows
 // them as cards instead (knowledge/features/creature-page.md). Archived types are in a
 // collapsed part and can't be picked (knowledge/domain/creature-type.md). Online, a row
 // shows the type's picked icon (knowledge/features/token-icons.md).
@@ -10,12 +11,13 @@ import { useLocalUser } from '../offline/localUser'
 import type { LocalCreatureType } from '../offline/model'
 import { de } from '../text/de'
 import { useCreatureIcons } from '../tokenImages/queries'
+import { CreatureDialog } from './CreaturePage'
 import { setCreatureTypeArchived, useCreatureTypes } from './creatureTypes'
-import { CreatureTypeForm } from './CreatureTypeForm'
 
 const t = de.bestiary
 
-type FormState = { kind: 'closed' } | { kind: 'new' } | { kind: 'edit'; id: string }
+/** The type open in the dialog: undefined while it is closed, null for a new one. */
+type Open = string | null | undefined
 
 export function BestiaryList({
   campaignId,
@@ -30,18 +32,16 @@ export function BestiaryList({
   const { db } = useLocalUser()
   const types = useCreatureTypes(db, campaignId)
   const icons = useCreatureIcons(campaignId)
-  const [form, setForm] = useState<FormState>({ kind: 'closed' })
+  const [open, setOpen] = useState<Open>(undefined)
   if (types === undefined) return null
 
   const active = types.filter((type) => type.archivedAt === null)
   const archived = types.filter((type) => type.archivedAt !== null)
-  const editing = form.kind === 'edit' ? types.find((type) => type.id === form.id) : undefined
+  const close = () => setOpen(undefined)
 
   return (
     <div className="flex flex-col gap-3">
-      {active.length === 0 && form.kind === 'closed' && (
-        <p className="text-sm text-dim">{t.empty}</p>
-      )}
+      {active.length === 0 && <p className="text-sm text-dim">{t.empty}</p>}
       <ul className="flex flex-col gap-1">
         {active.map((type) => (
           <li key={type.id} className="flex items-center gap-1">
@@ -66,7 +66,7 @@ export function BestiaryList({
               type="button"
               aria-label={t.edit(type.name)}
               title={t.edit(type.name)}
-              onClick={() => setForm({ kind: 'edit', id: type.id })}
+              onClick={() => setOpen(type.id)}
               className="min-h-9 rounded-lg px-2 text-sm text-dim hover:text-parchment"
             >
               {t.editShort}
@@ -75,37 +75,24 @@ export function BestiaryList({
         ))}
       </ul>
 
-      {form.kind === 'new' && (
-        <CreatureTypeForm
+      <div>
+        <Button onClick={() => setOpen(null)}>{t.newType}</Button>
+      </div>
+      {open !== undefined && (
+        <CreatureDialog
           campaignId={campaignId}
+          typeId={open}
           onSaved={(type) => {
-            setForm({ kind: 'closed' })
-            onPick(type)
+            close()
+            // A new type becomes the pick; an edited one updates it.
+            if (open === null || type.id === pickedId) onPick(type)
           }}
-          onCancel={() => setForm({ kind: 'closed' })}
-        />
-      )}
-      {form.kind === 'edit' && editing && (
-        <CreatureTypeForm
-          // A fresh form per type, so its fields start from that type.
-          key={editing.id}
-          campaignId={campaignId}
-          type={editing}
-          onSaved={(type) => {
-            setForm({ kind: 'closed' })
-            if (type.id === pickedId) onPick(type)
-          }}
-          onCancel={() => setForm({ kind: 'closed' })}
           onArchived={(type) => {
-            setForm({ kind: 'closed' })
+            close()
             if (type.id === pickedId) onPick(null)
           }}
+          onClose={close}
         />
-      )}
-      {form.kind === 'closed' && (
-        <div>
-          <Button onClick={() => setForm({ kind: 'new' })}>{t.newType}</Button>
-        </div>
       )}
 
       {archived.length > 0 && (

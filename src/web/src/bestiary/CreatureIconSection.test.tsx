@@ -1,9 +1,10 @@
-// The icon part of the creature type form: offline it says so, a type the server has never
-// seen must be synced first, and generating saves the form, syncs the type and sends its
-// server version.
+// The icon part of the creature page, here in its dialog over the editor: offline it says
+// so, a type the server has never seen must be synced first, and generating saves the
+// unsaved edits, syncs the type and sends its server version.
 import { onlineManager, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createQueryClient } from '../api/queryClient'
 import { CAMPAIGN_ID, seedOffline } from '../editor/testing'
@@ -14,8 +15,8 @@ import { json, mockApi, testUser, type ApiCall } from '../test/api'
 import { fakeImages } from '../editor/background/testing'
 import { de } from '../text/de'
 import { tokenImage, tokenImagesOf } from '../tokenImages/testing'
+import { CreatureDialog } from './CreaturePage'
 import { createCreatureType } from './creatureTypes'
-import { CreatureTypeForm } from './CreatureTypeForm'
 
 const syncCreatureTypeBeforeGenerate = vi.hoisted(() => vi.fn())
 vi.mock('../sync/client', async (importOriginal) => ({
@@ -68,20 +69,23 @@ async function goblin(baseVersion: number): Promise<LocalCreatureType> {
   return type
 }
 
-function renderForm(type?: LocalCreatureType) {
+function renderDialog(type?: LocalCreatureType) {
   const queryClient = createQueryClient()
   queryClient.setDefaultOptions({ queries: { retry: false } })
   const db = offlineDb(testUser.id)
   render(
     <QueryClientProvider client={queryClient}>
-      <LocalUserContext.Provider value={{ user: testUser, db }}>
-        <CreatureTypeForm
-          campaignId={CAMPAIGN_ID}
-          type={type}
-          onSaved={() => {}}
-          onCancel={() => {}}
-        />
-      </LocalUserContext.Provider>
+      <MemoryRouter>
+        <LocalUserContext.Provider value={{ user: testUser, db }}>
+          <CreatureDialog
+            campaignId={CAMPAIGN_ID}
+            typeId={type?.id ?? null}
+            onSaved={() => {}}
+            onArchived={() => {}}
+            onClose={() => {}}
+          />
+        </LocalUserContext.Provider>
+      </MemoryRouter>
     </QueryClientProvider>,
   )
   return db
@@ -96,14 +100,15 @@ const generateButton = async () => {
 describe('the icon section', () => {
   it('is not part of a new type', async () => {
     await seedOffline()
-    renderForm()
+    renderDialog()
+    expect(await screen.findByLabelText(de.bestiary.name)).toHaveValue('')
     expect(screen.queryByRole('region', { name: t.title })).not.toBeInTheDocument()
   })
 
   it('says offline that icons need a connection, and asks for nothing', async () => {
     online = false
-    renderForm(await goblin(3))
-    expect(screen.getByText(de.tokenImages.offline)).toBeVisible()
+    renderDialog(await goblin(3))
+    expect(await screen.findByText(de.tokenImages.offline)).toBeVisible()
     expect(screen.queryByRole('button', { name: t.generate })).not.toBeInTheDocument()
     expect(calls).toEqual([])
   })
@@ -112,26 +117,27 @@ describe('the icon section', () => {
     const type = await goblin(0)
     syncCreatureTypeBeforeGenerate.mockResolvedValue({ result: 'blocked', version: null })
     const user = userEvent.setup()
-    renderForm(type)
-    expect(screen.getByText(t.notSynced)).toBeVisible()
+    renderDialog(type)
+    expect(await screen.findByText(t.notSynced)).toBeVisible()
     expect(screen.queryByRole('button', { name: t.generate })).not.toBeInTheDocument()
-    expect(calls).toEqual([])
+    // The portrait reads the campaign's icons; nothing is asked about this type.
+    expect(calls.filter((call) => call.path.includes(type.id))).toEqual([])
 
     await user.click(screen.getByRole('button', { name: t.syncNow }))
     expect(await screen.findByRole('alert')).toHaveTextContent(t.syncBlocked)
     expect(syncCreatureTypeBeforeGenerate).toHaveBeenCalledWith(expect.anything(), type.id)
   })
 
-  it('saves the form, syncs the type and sends its version after the confirm', async () => {
+  it('saves the edits, syncs the type and sends its version after the confirm', async () => {
     const type = await goblin(3)
     const user = userEvent.setup()
-    const db = renderForm(type)
+    const db = renderDialog(type)
     let synced: string | undefined
     syncCreatureTypeBeforeGenerate.mockImplementation(async () => {
       synced = (await db.creatureTypes.get(type.id))?.appearance
       return { result: 'ready', version: 4 }
     })
-    const appearance = screen.getByLabelText(de.bestiary.appearance)
+    const appearance = await screen.findByLabelText(de.bestiary.appearance)
     await user.clear(appearance)
     await user.type(appearance, 'grün, mit Kapuze')
 
@@ -156,7 +162,7 @@ describe('the icon section', () => {
       'GET /api/campaigns/:c/creature-types/:t/icons': () =>
         json(200, tokenImagesOf([uploaded], { pickedAssetId: uploaded.id })),
     })
-    renderForm(await goblin(3))
+    renderDialog(await goblin(3))
     await screen.findAllByRole('listitem')
     expect(screen.getByRole('button', { name: de.tokenImages.upload })).toBeEnabled()
     expect(screen.queryByRole('button', { name: de.tokenImages.restyle })).not.toBeInTheDocument()
@@ -166,7 +172,7 @@ describe('the icon section', () => {
     const type = await goblin(3)
     syncCreatureTypeBeforeGenerate.mockResolvedValue({ result: 'offline', version: null })
     const user = userEvent.setup()
-    renderForm(type)
+    renderDialog(type)
     await user.click(await generateButton())
     await user.click(screen.getByRole('button', { name: de.tokenImages.confirm.ok }))
     expect(await screen.findByRole('alert')).toHaveTextContent(

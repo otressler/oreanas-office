@@ -94,7 +94,7 @@ test('a DM prepares an encounter with goblins offline, and it survives a reload'
   await page.getByRole('button', { name: 'Neue Kreaturenart' }).click()
   await page.getByLabel('Name', { exact: true }).fill('Goblin')
   await page.getByLabel('Größe').selectOption({ label: 'Klein (1 × 1 Felder)' })
-  await page.getByRole('button', { name: 'Anlegen' }).click()
+  await page.getByRole('button', { name: 'Änderungen speichern' }).click()
   await expect(page.getByRole('button', { name: 'Goblin wählen' })).toHaveAttribute(
     'aria-pressed',
     'true',
