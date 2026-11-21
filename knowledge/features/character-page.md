@@ -21,6 +21,7 @@ On a wide screen the top row has the portrait on the left and the name, the edit
 - A portrait in the ring colour's light (the token's letter without one), the name, "Dein Charakter" or who plays it, and the **flavor sentence** ("Kurzer Satz", up to 120 characters) under the name. The same sentence stands under the portrait on the character's card on the campaign page.
 - The facts under the name: **Klasse**, **Spezies**, **Alter** (free text) and **Größe** (the creature size), each a small label over its value; an empty one is left out. The size is no longer next to the owner note.
 - The four texts, each under its own heading: **Aussehen**, **Hintergrund**, **Persönlichkeit**, **Verbindungen**. An empty one says "Noch nichts eingetragen." The texts take a little markdown: bold, italic, lists and line breaks. Headings, links, images and raw HTML are shown as plain text, so one player's text can't bring links or pictures onto another's page.
+- A **Zauber** section after the texts: the character's spells as small cards with "Vorbereitet" ([spell cards](/features/spell-cards.md), 2026-11-21).
 - Whoever may edit the character ([character](/domain/character.md), "Permissions") also sees its status list ([statuses](/features/statuses.md)), folded behind "Zustandsliste zeigen" because it is a combat setting, not part of the story.
 
 # Editing in place

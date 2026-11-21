@@ -8,6 +8,7 @@ using OreanasOffice.Server.Encounters;
 using OreanasOffice.Server.Images;
 using OreanasOffice.Server.Maps;
 using OreanasOffice.Server.Sessions;
+using OreanasOffice.Server.Spells;
 using OreanasOffice.Server.Statuses;
 using OreanasOffice.Server.Table;
 
@@ -52,6 +53,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityUser
     public DbSet<SessionSpectator> SessionSpectators => Set<SessionSpectator>();
 
     public DbSet<SessionCharacterPlayer> SessionCharacterPlayers => Set<SessionCharacterPlayer>();
+
+    public DbSet<Spell> Spells => Set<Spell>();
+
+    public DbSet<SpellVariant> SpellVariants => Set<SpellVariant>();
+
+    public DbSet<CharacterSpell> CharacterSpells => Set<CharacterSpell>();
+
+    public DbSet<SpellArtPrompt> SpellArtPrompts => Set<SpellArtPrompt>();
+
+    public DbSet<SpellArtEvent> SpellArtEvents => Set<SpellArtEvent>();
+
+    public DbSet<TextModelCall> TextModelCalls => Set<TextModelCall>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

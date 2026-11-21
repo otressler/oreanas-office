@@ -88,6 +88,25 @@ public static class CharacterImport
             await CopyPortraitAsync(db, store, portraitId, copy, userId, now, cancellationToken);
         }
 
+        // Spells are site-wide, so the copy points to the same variants
+        // (knowledge/domain/spell.md, "Character spell").
+        var spells = await db.CharacterSpells.AsNoTracking()
+            .Where(s => s.CharacterId == source.Id)
+            .ToListAsync(cancellationToken);
+        if (spells.Count > 0)
+        {
+            db.CharacterSpells.AddRange(spells.Select(s => new Spells.CharacterSpell
+            {
+                Id = Guid.NewGuid(),
+                CharacterId = copy.Id,
+                SpellId = s.SpellId,
+                VariantId = s.VariantId,
+                Prepared = s.Prepared,
+                AddedAt = now,
+            }));
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
         var response = await CharacterEndpoints.LoadAsync(db, campaignId, copy.Id, userId, cancellationToken);
         return TypedResults.Created($"/api/campaigns/{campaignId}/characters/{copy.Id}", response);
     }

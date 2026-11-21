@@ -5,6 +5,7 @@ import type { UserSummary } from '../api/types'
 import { CopyBox } from '../components/CopyBox'
 import { Badge, Button, ErrorAlert, LoadError, Loading, PageTitle, Panel } from '../components/ui'
 import { formatDateTime } from '../lib/dates'
+import { SeedSpells } from '../spells/SeedSpells'
 import { de } from '../text/de'
 
 const invitesKey = ['admin', 'invites'] as const
@@ -16,6 +17,7 @@ export function AdminPage() {
       <PageTitle>{de.admin.title}</PageTitle>
       <Invites />
       <Users />
+      <SeedSpells />
     </div>
   )
 }

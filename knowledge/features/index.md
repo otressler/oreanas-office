@@ -30,5 +30,6 @@
 - [Campaign page](campaign-page.md) - Cover banner with a pencil, sessions, characters as tall portrait cards, and the maps and bestiary as picture panels; the bestiary gets a page of its own
 - [Character page](character-page.md) - One page per character that every member reads and its player edits, in place, with appearance, background, personality and bonds
 - [Character import](character-import.md) - A player copies one of their characters from another campaign into this one, portrait included
+- [Spell cards](spell-cards.md) - A site-wide library of German tarot-style spell cards made by hand, from the 2024 wiki or a book photo, with variants and an art studio; characters prepare spells and flip through them at the table
 - [Creature page](creature-page.md) - The bestiary as cards like the characters', and a page per creature type that the DM reads and edits in place, offline
 - [Landing page](landing-page.md) - Public page at /willkommen showing what the app does; home sends devices nobody has signed in on there without waking the server

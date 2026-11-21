@@ -27,6 +27,10 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 
 Later (stage 9): a status list, the list of statuses its player picks from ([statuses](/features/statuses.md), [status](/domain/status.md)).
 
+# Spells
+
+A character keeps a list of [spells](/domain/spell.md), one variant each, and marks which are prepared. Whoever may edit the character changes the list; every member reads it ([spell cards](/features/spell-cards.md), 2026-11-21).
+
 # Permissions
 
 A player creates and edits their own characters, colour included. Every `dm` member of the campaign can edit any character in it ([campaign member](/domain/campaign-member.md)), and gives characters to members: they pick the owner when creating a character ("Gehört") and change it later, to any member of the campaign in either role. Players can't give their characters away. Whoever can edit a character can also upload, generate and pick its portrait; generating counts against the site-wide [image budget](/decisions/image-budget.md).

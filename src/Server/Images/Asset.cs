@@ -30,7 +30,9 @@ public class Asset
 
     // The owner's campaign. Its members may load the image, and so may members of
     // campaigns whose map or encounter points to it (knowledge/decisions/persistence.md).
-    public Guid CampaignId { get; set; }
+    // Null for spell art, which belongs to no campaign: every signed-in user may load it
+    // (knowledge/features/spell-cards.md).
+    public Guid? CampaignId { get; set; }
 
     public AssetOrigin Origin { get; set; }
 
@@ -95,6 +97,10 @@ public class Asset
     // reference (knowledge/features/token-icons.md, requirement 4).
     public Guid? SourceAssetId { get; set; }
 
+    // Spell art (knowledge/domain/spell.md, "Art studio"): the motif revision the picture
+    // was painted from, or null for an upload.
+    public Guid? SpellArtPromptId { get; set; }
+
     // Requests sent for this job, failed ones included; the worker gives up after
     // ImageOptions.MaxAttempts.
     public int Attempts { get; set; }
@@ -108,7 +114,7 @@ public class Asset
     // When the job ended, Done or Failed. The monthly limit counts Done jobs by this time.
     public DateTimeOffset? FinishedAt { get; set; }
 
-    public Campaign Campaign { get; set; } = null!;
+    public Campaign? Campaign { get; set; }
 }
 
 public enum AssetKind
@@ -118,6 +124,9 @@ public enum AssetKind
 
     // A campaign's cover for its card on the home page: a 3:2 picture, no transparency.
     CampaignCover,
+
+    // A spell card's front picture: 7:12 portrait, no transparency, no campaign.
+    SpellArt,
 }
 
 public enum AssetOwnerType
@@ -132,6 +141,9 @@ public enum AssetOwnerType
 
     // A campaign's cover (AssetKind.CampaignCover); OwnerId is the campaign's id.
     Campaign,
+
+    // A spell variant's card art (AssetKind.SpellArt).
+    SpellVariant,
 }
 
 public enum AssetOrigin
@@ -170,7 +182,7 @@ internal sealed class AssetConfiguration : IEntityTypeConfiguration<Asset>
         asset.Property(a => a.LayoutHash).HasMaxLength(64);
         asset.Property(a => a.Instruction).HasMaxLength(Asset.InstructionMaxLength);
         asset.Property(a => a.CostUsd).HasPrecision(10, 6);
-        asset.HasOne(a => a.Campaign).WithMany().HasForeignKey(a => a.CampaignId).OnDelete(DeleteBehavior.Cascade);
+        asset.HasOne(a => a.Campaign).WithMany().HasForeignKey(a => a.CampaignId).IsRequired(false).OnDelete(DeleteBehavior.Cascade);
         asset.HasOne<AppUser>().WithMany().HasForeignKey(a => a.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
 
         // The versions of one map, newest first; the queue in order; the month's spending.

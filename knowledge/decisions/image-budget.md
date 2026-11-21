@@ -28,6 +28,10 @@ Decided by the project owner on 2026-10-14:
 - Once the month's total reaches $20, new jobs are refused with a German message, and the board keeps the images it has. The plain rendering keeps every fight playable ([AI map generation](/features/ai-map-generation.md)).
 - The limit is a setting, not a constant in code.
 
+# Text model (2026-11-21)
+
+The limit now covers the [text model](/decisions/text-model.md) too: spell import adds each call's cost from its token use. A call costs well under a cent, so it hardly touches the month. Once the month's total reaches the limit, "Nach Name" and "Aus Foto" are refused like new images; spells by hand still work.
+
 # Affects
 
 - How many "regenerate" versions the [AI map generation](/features/ai-map-generation.md) allows: as many as the monthly limit covers.

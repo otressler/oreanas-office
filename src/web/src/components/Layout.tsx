@@ -35,6 +35,7 @@ export function Layout() {
           </Link>
           <div className="ml-auto flex min-w-0 items-center gap-2">
             <InstallButton />
+            <SpellsLink />
             <ProfileLink />
           </div>
         </div>
@@ -66,6 +67,21 @@ export function Layout() {
       </footer>
       <UpdatePrompt />
     </div>
+  )
+}
+
+/** The spell library (knowledge/features/spell-cards.md), for signed-in users. */
+function SpellsLink() {
+  const ready = useServerStatus((s) => s.status === 'ready')
+  const me = useMe({ enabled: ready })
+  if (!me.data) return null
+  return (
+    <Link
+      to="/zauber"
+      className="flex min-h-11 items-center rounded-lg px-2 text-sm text-parchment hover:text-candle"
+    >
+      {de.spells.nav}
+    </Link>
   )
 }
 

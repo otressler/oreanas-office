@@ -16,6 +16,7 @@ import type { PingTarget } from '../board/pings'
 import { buildScene } from '../board/scene'
 import { Button } from '../components/ui'
 import { DiceButton } from '../dice/DiceButton'
+import { SpellGalleryButton } from '../spells/SpellGalleryButton'
 import { FightScreen } from '../encounters/FightScreen'
 import { useDmFog } from '../fog/useDmFog'
 import { useInitiative } from '../initiative/useInitiative'
@@ -494,6 +495,13 @@ export function FightTable({
       actions={
         <>
           <DiceButton compact />
+          <SpellGalleryButton
+            compact
+            campaignId={campaignId}
+            characters={board.tokens
+              .filter((token) => token.characterId && token.ownerUserId === me.id)
+              .map((token) => ({ id: token.characterId!, name: token.label }))}
+          />
           {dmActions}
           {actions}
         </>

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ApiRequestError } from '../api/errors'
-import { useCampaign, useSession } from '../campaigns/queries'
+import { useCurrentUser } from '../auth/auth'
+import { useCampaign, useCharacters, useSession } from '../campaigns/queries'
 import { SessionControls, SessionDetailsForm } from '../campaigns/SessionControls'
 import { Badge, Button, ButtonLink, LoadError, Loading, PageTitle } from '../components/ui'
 import { DiceButton } from '../dice/DiceButton'
@@ -12,6 +13,7 @@ import { fightPath } from '../sessions/paths'
 import { SessionPlayersPanel } from '../sessions/SessionPlayersPanel'
 import { SessionTableControls } from '../sharedTable/SessionTableControls'
 import { SessionSpectatorControls } from '../spectator/SessionSpectatorControls'
+import { SpellGalleryButton } from '../spells/SpellGalleryButton'
 import { de } from '../text/de'
 
 const t = de.sessionPage
@@ -25,6 +27,8 @@ export function SessionPage() {
   const { campaignId = '', sessionId = '' } = useParams()
   const campaign = useCampaign(campaignId)
   const session = useSession(campaignId, sessionId)
+  const characters = useCharacters(campaignId)
+  const me = useCurrentUser()
   const [editing, setEditing] = useState(false)
 
   if (campaign.isPending || session.isPending) return <Loading />
@@ -46,6 +50,14 @@ export function SessionPage() {
 
   const s = session.data
   const isDmMember = campaign.data.myRole === 'dm'
+  // Who plays a character in this session: its stand-in if the session DM chose one, else
+  // its owner (knowledge/domain/character.md, "Who plays it").
+  const played = (characters.data ?? [])
+    .filter(
+      (c) =>
+        (s.characterPlayers.find((p) => p.characterId === c.id)?.userId ?? c.ownerUserId) === me.id,
+    )
+    .map((c) => ({ id: c.id, name: c.name }))
   return (
     <div className="flex flex-col pb-8">
       <Link
@@ -58,8 +70,9 @@ export function SessionPage() {
       <div className="flex flex-wrap items-center gap-3">
         <PageTitle>{s.title}</PageTitle>
         <Badge tone={s.status === 'active' ? 'candle' : 'dim'}>{de.sessionStatus[s.status]}</Badge>
-        <div className="ml-auto pt-4">
+        <div className="ml-auto flex gap-2 pt-4">
           <DiceButton />
+          <SpellGalleryButton campaignId={campaignId} characters={played} />
         </div>
       </div>
       <p className="text-sm text-dim">

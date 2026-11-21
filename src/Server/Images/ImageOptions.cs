@@ -93,4 +93,53 @@ public sealed class ImageOptions
     public int BackgroundUploadMaxBytes { get; set; } = 25 * 1024 * 1024;
 
     public int BackgroundPixels { get; set; } = 4096;
+
+    // The text and vision model for spell import (knowledge/decisions/text-model.md): a
+    // deployment on the same endpoint, signed in the same way. The project owner chose
+    // gpt-6-luna on 2026-11-21; an empty value turns spell import off.
+    public string? TextDeployment { get; set; } = "gpt-6-luna";
+
+    public bool TextConfigured => !string.IsNullOrWhiteSpace(Endpoint) && !string.IsNullOrWhiteSpace(TextDeployment);
+
+    // Sent as reasoning_effort; empty leaves it out for a model without reasoning. Medium
+    // since the project owner asked for it on 2026-11-21 (knowledge/decisions/text-model.md).
+    public string? TextReasoningEffort { get; set; } = "medium";
+
+    // Per million tokens (third-party price lists, 2026-11-21; the invoice confirms them).
+    public decimal TextModelInputUsdPerMillion { get; set; } = 0.10m;
+
+    public decimal TextModelOutputUsdPerMillion { get; set; } = 0.50m;
+
+    // A spell import waits this long for the wiki and for each model call.
+    public TimeSpan TextModelTimeout { get; set; } = TimeSpan.FromMinutes(2);
+
+    // The wiki spell import reads (knowledge/features/spell-cards.md).
+    public string SpellWikiBaseUrl { get; set; } = "https://dnd2024.wikidot.com";
+
+    // Book photos for spell import: the largest upload, and the long edge sent to the model.
+    public int SpellPhotoMaxBytes { get; set; } = 15 * 1024 * 1024;
+
+    public int SpellPhotoPixels { get; set; } = 2048;
+
+    // Spell card art (knowledge/features/spell-cards.md, "Art studio"): the model paints a
+    // 7:12 picture at SpellArtRequestWidth × SpellArtRequestHeight; the server keeps a WebP of
+    // SpellArtWidth × SpellArtHeight, enough for a card on a sharp phone screen.
+    public string SpellArtQuality { get; set; } = "high";
+
+    public int SpellArtRequestWidth { get; set; } = 1008;
+
+    public int SpellArtRequestHeight { get; set; } = 1728;
+
+    public int SpellArtWidth { get; set; } = 672;
+
+    public int SpellArtHeight { get; set; } = 1152;
+
+    // The spell-cards studio's style block (prompts/style.txt), word for word. The subject
+    // goes after its first line, as "Subject: …".
+    public string SpellArtStyle { get; set; } =
+        """
+        Digital fantasy concept art, painted with loose visible acrylic brush strokes, flat painterly shapes with simplified forms, minimal blending, matte finish, limited moody palette, bold value contrast, rough expressive edges like a production concept painting.
+        Vertical portrait 7:12 composition (tall tarot card format) with generous headroom: the top quarter of the image is calm, low-detail background (sky, treetops, haze or distant scenery) where a title will be overlaid, with no heads, faces, hands or key action in it. Place the main subject and the action in the middle band of the frame, roughly between 25 % and 85 % of the image height, and keep the bottom eighth simple ground. No text, no border, no fine detail rendering, no glossy highlights, no photorealism.
+        Optimised for professional print: slightly raise overall brightness (+10-15 %). Lift midtones and dark areas and keep detail readable in the shadows, no crushed blacks, no very harsh contrast. Natural, rich, print-friendly colours, no extremely saturated RGB or neon colours. Realistic CMYK colour feel, soft tonal gradients without banding, detailed midtones. No exaggerated HDR or over-sharpening. Maximum ink coverage 280 %.
+        """;
 }

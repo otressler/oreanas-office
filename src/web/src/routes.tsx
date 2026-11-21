@@ -110,6 +110,50 @@ export const routes: RouteObject[] = [
                       Component: (await import('./pages/MapImportPage')).MapImportPage,
                     }),
                   },
+                  // Spell cards (knowledge/features/spell-cards.md), loaded on demand.
+                  {
+                    path: 'zauber',
+                    handle: { wide: true } satisfies LayoutHandle,
+                    lazy: async () => ({
+                      Component: (await import('./spells/SpellLibraryPage')).SpellLibraryPage,
+                    }),
+                  },
+                  {
+                    path: 'zauber/neu',
+                    handle: { wide: true } satisfies LayoutHandle,
+                    lazy: async () => ({
+                      Component: (await import('./spells/SpellCreatePage')).SpellCreatePage,
+                    }),
+                  },
+                  {
+                    path: 'zauber/varianten/:variantId/bearbeiten',
+                    handle: { wide: true } satisfies LayoutHandle,
+                    lazy: async () => ({
+                      Component: (await import('./spells/SpellPage')).SpellVariantEditPage,
+                    }),
+                  },
+                  {
+                    path: 'zauber/varianten/:variantId/eigene',
+                    handle: { wide: true } satisfies LayoutHandle,
+                    lazy: async () => {
+                      const { SpellVariantEditPage } = await import('./spells/SpellPage')
+                      return { Component: () => <SpellVariantEditPage copy /> }
+                    },
+                  },
+                  {
+                    path: 'zauber/varianten/:variantId/studio',
+                    handle: { wide: true } satisfies LayoutHandle,
+                    lazy: async () => ({
+                      Component: (await import('./spells/SpellStudioPage')).SpellStudioPage,
+                    }),
+                  },
+                  {
+                    path: 'zauber/:spellId',
+                    handle: { wide: true } satisfies LayoutHandle,
+                    lazy: async () => ({
+                      Component: (await import('./spells/SpellPage')).SpellPage,
+                    }),
+                  },
                   {
                     element: <RequireAdmin />,
                     children: [{ path: 'admin', element: <AdminPage /> }],

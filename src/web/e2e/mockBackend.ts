@@ -1064,6 +1064,10 @@ export class MockBackend {
       return [200, this.memberResponse(member)]
     }
 
+    // Spell cards (knowledge/features/spell-cards.md): the mock's characters have none.
+    if (match(`${base}/characters/:characterId/spells`) && method === 'GET') return [200, []]
+    if (path === `${base}/character-spells` && method === 'GET') return [200, {}]
+
     if (path === `${base}/characters` && method === 'GET') {
       return [
         200,

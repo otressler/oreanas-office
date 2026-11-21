@@ -22,6 +22,7 @@ import {
 import { useLeaveWarning } from '../components/useLeaveWarning'
 import { Button, LoadError, Loading, PageTitle, SelectField, TextField } from '../components/ui'
 import { limits } from '../lib/limits'
+import { CharacterSpells } from '../spells/CharacterSpells'
 import { StatusListEditor } from '../statuses/StatusListEditor'
 import { de } from '../text/de'
 import { TokenImageGallery, type Prepared } from '../tokenImages/TokenImageGallery'
@@ -405,6 +406,14 @@ function CharacterView({
             onChange={(value) => change({ [key]: value } as Partial<Draft>)}
           />
         ))}
+
+        {!isNew && !editing && (
+          <CharacterSpells
+            campaignId={campaignId}
+            characterId={character.id}
+            canEdit={character.canEdit}
+          />
+        )}
 
         {character.canEdit && !editing && (
           <StatusListSection campaignId={campaignId} character={character} />

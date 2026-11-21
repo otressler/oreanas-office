@@ -85,6 +85,15 @@ const ALL_CODES = {
   initiativeInvalid: true,
   hitPointsInvalid: true,
   notBuilt: true,
+  spellInvalid: true,
+  spellNotFound: true,
+  notSpellAuthor: true,
+  variantInUse: true,
+  textModelUnavailable: true,
+  spellNotInWiki: true,
+  spellNotRecognized: true,
+  spellImportFailed: true,
+  artPromptInvalid: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

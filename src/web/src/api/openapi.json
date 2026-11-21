@@ -112,6 +112,71 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/character-spells": {
+      "get": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/CharacterSpellView"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/spells/seed": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeedSpellsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeedSpellsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/options": {
       "get": {
         "tags": [
@@ -3483,6 +3548,999 @@
           }
         }
       }
+    },
+    "/api/spells/import": {
+      "get": {
+        "tags": [
+          "Spells"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellImportStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/import/name": {
+      "post": {
+        "tags": [
+          "Spells"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportByNameRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportByNameResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/import/photo": {
+      "post": {
+        "tags": [
+          "Spells"
+        ],
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportByPhotoResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells": {
+      "get": {
+        "tags": [
+          "Spells"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SpellSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/{spellId}": {
+      "get": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "spellId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "spellId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSpellRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/variants": {
+      "post": {
+        "tags": [
+          "Spells"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVariantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellVariantView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/variants/{variantId}": {
+      "get": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellVariantView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVariantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellVariantView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/characters/{characterId}/spells": {
+      "get": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CharacterSpellView"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/characters/{characterId}/spells/{spellId}": {
+      "put": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "spellId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCharacterSpellRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterSpellView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "spellId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/spells/variants/{variantId}/studio": {
+      "get": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellStudio"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/spells/variants/{variantId}/studio/prompts": {
+      "post": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveArtPromptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveArtPromptResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/variants/{variantId}/studio/generate": {
+      "post": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateArtRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellArtImage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/variants/{variantId}/studio/upload": {
+      "post": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "letter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellArtImage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/variants/{variantId}/studio/art": {
+      "put": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickArtRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/variants/{variantId}/studio/approved": {
+      "put": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveArtRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/variants/{variantId}/studio/events": {
+      "post": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddArtEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellArtEventView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spells/variants/{variantId}/studio/requests/{assetId}": {
+      "delete": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3540,6 +4598,30 @@
               {
                 "$ref": "#/components/schemas/ActiveEncounterSummary"
               }
+            ]
+          }
+        }
+      },
+      "AddArtEventRequest": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SpellArtEventKind"
+          },
+          "assetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
             ]
           }
         }
@@ -3666,8 +4748,28 @@
           "notLocalMode",
           "initiativeInvalid",
           "hitPointsInvalid",
-          "notBuilt"
+          "notBuilt",
+          "spellInvalid",
+          "spellNotFound",
+          "notSpellAuthor",
+          "variantInUse",
+          "textModelUnavailable",
+          "spellNotInWiki",
+          "spellNotRecognized",
+          "spellImportFailed",
+          "artPromptInvalid"
         ]
+      },
+      "ApproveArtRequest": {
+        "required": [
+          "approved"
+        ],
+        "type": "object",
+        "properties": {
+          "approved": {
+            "type": "boolean"
+          }
+        }
       },
       "ArrowDrawnEvent": {
         "required": [
@@ -3736,7 +4838,8 @@
           "creatureType",
           "character",
           "status",
-          "campaign"
+          "campaign",
+          "spellVariant"
         ]
       },
       "AssetStatus": {
@@ -4568,6 +5671,31 @@
           }
         }
       },
+      "CharacterSpellView": {
+        "required": [
+          "spellId",
+          "prepared",
+          "addedAt",
+          "variant"
+        ],
+        "type": "object",
+        "properties": {
+          "spellId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "prepared": {
+            "type": "boolean"
+          },
+          "addedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "variant": {
+            "$ref": "#/components/schemas/SpellVariantView"
+          }
+        }
+      },
       "CreateCampaignRequest": {
         "required": [
           "name"
@@ -4646,6 +5774,40 @@
             "type": "boolean"
           },
           "characterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateVariantRequest": {
+        "required": [
+          "nameEn",
+          "level",
+          "school",
+          "card"
+        ],
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "school": {
+            "$ref": "#/components/schemas/SpellSchool"
+          },
+          "card": {
+            "$ref": "#/components/schemas/SpellCard"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/SpellVariantOrigin"
+          },
+          "basedOnVariantId": {
             "type": [
               "null",
               "string"
@@ -4773,6 +5935,15 @@
               "initiativeInvalid",
               "hitPointsInvalid",
               "notBuilt",
+              "spellInvalid",
+              "spellNotFound",
+              "notSpellAuthor",
+              "variantInUse",
+              "textModelUnavailable",
+              "spellNotInWiki",
+              "spellNotRecognized",
+              "spellImportFailed",
+              "artPromptInvalid",
               null
             ]
           },
@@ -5094,6 +6265,24 @@
           }
         }
       },
+      "GenerateArtRequest": {
+        "type": "object",
+        "properties": {
+          "letter": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "promptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "GenerateBackgroundRequest": {
         "required": [
           "mapVersion"
@@ -5237,6 +6426,15 @@
               "initiativeInvalid",
               "hitPointsInvalid",
               "notBuilt",
+              "spellInvalid",
+              "spellNotFound",
+              "notSpellAuthor",
+              "variantInUse",
+              "textModelUnavailable",
+              "spellNotInWiki",
+              "spellNotRecognized",
+              "spellImportFailed",
+              "artPromptInvalid",
               null
             ]
           },
@@ -5339,6 +6537,15 @@
               "initiativeInvalid",
               "hitPointsInvalid",
               "notBuilt",
+              "spellInvalid",
+              "spellNotFound",
+              "notSpellAuthor",
+              "variantInUse",
+              "textModelUnavailable",
+              "spellNotInWiki",
+              "spellNotRecognized",
+              "spellImportFailed",
+              "artPromptInvalid",
               null
             ]
           }
@@ -5380,6 +6587,7 @@
       "ImageHubMethod": {
         "enum": [
           "WatchMap",
+          "WatchSpellArt",
           "WatchTokenImages"
         ],
         "type": "string"
@@ -5436,6 +6644,65 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ImportByNameRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "force": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ImportByNameResponse": {
+        "required": [
+          "nameEn",
+          "existingSpellId",
+          "draft"
+        ],
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": "string"
+          },
+          "existingSpellId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "draft": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellDraft"
+              }
+            ]
+          }
+        }
+      },
+      "ImportByPhotoResponse": {
+        "required": [
+          "drafts"
+        ],
+        "type": "object",
+        "properties": {
+          "drafts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellDraft"
+            }
           }
         }
       },
@@ -5687,6 +6954,15 @@
               "initiativeInvalid",
               "hitPointsInvalid",
               "notBuilt",
+              "spellInvalid",
+              "spellNotFound",
+              "notSpellAuthor",
+              "variantInUse",
+              "textModelUnavailable",
+              "spellNotInWiki",
+              "spellNotRecognized",
+              "spellImportFailed",
+              "artPromptInvalid",
               null
             ]
           },
@@ -5797,6 +7073,15 @@
               "initiativeInvalid",
               "hitPointsInvalid",
               "notBuilt",
+              "spellInvalid",
+              "spellNotFound",
+              "notSpellAuthor",
+              "variantInUse",
+              "textModelUnavailable",
+              "spellNotInWiki",
+              "spellNotRecognized",
+              "spellImportFailed",
+              "artPromptInvalid",
               null
             ]
           },
@@ -6759,6 +8044,15 @@
               "initiativeInvalid",
               "hitPointsInvalid",
               "notBuilt",
+              "spellInvalid",
+              "spellNotFound",
+              "notSpellAuthor",
+              "variantInUse",
+              "textModelUnavailable",
+              "spellNotInWiki",
+              "spellNotRecognized",
+              "spellImportFailed",
+              "artPromptInvalid",
               null
             ]
           },
@@ -6793,6 +8087,18 @@
           "y": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "PickArtRequest": {
+        "required": [
+          "assetId"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -7056,6 +8362,141 @@
           }
         }
       },
+      "SaveArtPromptRequest": {
+        "required": [
+          "letter",
+          "subject"
+        ],
+        "type": "object",
+        "properties": {
+          "letter": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "generate": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "SaveArtPromptResponse": {
+        "required": [
+          "prompt",
+          "image"
+        ],
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "$ref": "#/components/schemas/SpellArtPromptView"
+          },
+          "image": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellArtImage"
+              }
+            ]
+          }
+        }
+      },
+      "SeedPrompt": {
+        "required": [
+          "letter",
+          "subject"
+        ],
+        "type": "object",
+        "properties": {
+          "letter": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          }
+        }
+      },
+      "SeedSpell": {
+        "required": [
+          "key",
+          "nameEn",
+          "level",
+          "school",
+          "card",
+          "prompts"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "school": {
+            "$ref": "#/components/schemas/SpellSchool"
+          },
+          "card": {
+            "$ref": "#/components/schemas/SpellCard"
+          },
+          "prompts": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SeedPrompt"
+            }
+          }
+        }
+      },
+      "SeedSpellsRequest": {
+        "required": [
+          "spells"
+        ],
+        "type": "object",
+        "properties": {
+          "spells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeedSpell"
+            }
+          }
+        }
+      },
+      "SeedSpellsResponse": {
+        "required": [
+          "variants",
+          "created",
+          "rejected"
+        ],
+        "type": "object",
+        "properties": {
+          "variants": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rejected": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "SessionCharacterPlayerResponse": {
         "required": [
           "characterId",
@@ -7183,6 +8624,24 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "SetCharacterSpellRequest": {
+        "required": [
+          "variantId"
+        ],
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "prepared": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -7448,6 +8907,15 @@
               "initiativeInvalid",
               "hitPointsInvalid",
               "notBuilt",
+              "spellInvalid",
+              "spellNotFound",
+              "notSpellAuthor",
+              "variantInUse",
+              "textModelUnavailable",
+              "spellNotInWiki",
+              "spellNotRecognized",
+              "spellImportFailed",
+              "artPromptInvalid",
               null
             ]
           },
@@ -7495,6 +8963,681 @@
             "type": "boolean"
           }
         }
+      },
+      "SpellArtEventKind": {
+        "enum": [
+          "comment",
+          "favorite",
+          "reject",
+          "dismiss"
+        ]
+      },
+      "SpellArtEventView": {
+        "required": [
+          "id",
+          "assetId",
+          "kind",
+          "value",
+          "createdAt",
+          "userName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SpellArtEventKind"
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "userName": {
+            "type": "string"
+          }
+        }
+      },
+      "SpellArtGenerator": {
+        "required": [
+          "available",
+          "model",
+          "quality",
+          "width",
+          "height"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "model": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quality": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SpellArtImage": {
+        "required": [
+          "id",
+          "letter",
+          "promptId",
+          "origin",
+          "status",
+          "url",
+          "failure",
+          "prompt",
+          "model",
+          "quality",
+          "attempts",
+          "queuePosition",
+          "createdAt",
+          "startedAt",
+          "finishedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "letter": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "promptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/AssetOrigin"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssetStatus"
+          },
+          "url": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "failure": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssetFailure"
+              }
+            ]
+          },
+          "prompt": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "model": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quality": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "queuePosition": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "SpellArtPromptSource": {
+        "enum": [
+          "studio",
+          "seed"
+        ]
+      },
+      "SpellArtPromptView": {
+        "required": [
+          "id",
+          "letter",
+          "subject",
+          "source",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "letter": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SpellArtPromptSource"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SpellAuthor": {
+        "required": [
+          "id",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "SpellCard": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "castingTime": {
+            "type": "string"
+          },
+          "range": {
+            "type": "string"
+          },
+          "components": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "concentration": {
+            "type": "boolean"
+          },
+          "ritual": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellEffect"
+            }
+          },
+          "icon": {
+            "type": "string"
+          },
+          "pips": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "higherLevels": {
+            "type": "string"
+          },
+          "tip": {
+            "type": "string"
+          },
+          "material": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "writeIns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellWriteIn"
+            }
+          }
+        }
+      },
+      "SpellChip": {
+        "required": [
+          "big"
+        ],
+        "type": "object",
+        "properties": {
+          "big": {
+            "type": "string"
+          },
+          "small": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kind": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellChipKind"
+              }
+            ]
+          }
+        }
+      },
+      "SpellChipKind": {
+        "enum": [
+          "acid",
+          "bludgeoning",
+          "cold",
+          "fire",
+          "force",
+          "lightning",
+          "necrotic",
+          "piercing",
+          "poison",
+          "psychic",
+          "radiant",
+          "slashing",
+          "thunder",
+          "heal",
+          null
+        ]
+      },
+      "SpellDetail": {
+        "required": [
+          "id",
+          "nameEn",
+          "level",
+          "school",
+          "canEditFacts",
+          "variants"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "school": {
+            "$ref": "#/components/schemas/SpellSchool"
+          },
+          "canEditFacts": {
+            "type": "boolean"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellVariantView"
+            }
+          }
+        }
+      },
+      "SpellDraft": {
+        "required": [
+          "nameEn",
+          "level",
+          "school",
+          "card",
+          "origin",
+          "existingSpellId"
+        ],
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "school": {
+            "$ref": "#/components/schemas/SpellSchool"
+          },
+          "card": {
+            "$ref": "#/components/schemas/SpellCard"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/SpellVariantOrigin"
+          },
+          "existingSpellId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "SpellEffect": {
+        "required": [
+          "icon",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "icon": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "tag": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "chip": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellChip"
+              }
+            ]
+          }
+        }
+      },
+      "SpellImportStatus": {
+        "required": [
+          "available",
+          "budget"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/ImageBudgetResponse"
+          }
+        }
+      },
+      "SpellSchool": {
+        "enum": [
+          "abjuration",
+          "conjuration",
+          "divination",
+          "enchantment",
+          "evocation",
+          "illusion",
+          "necromancy",
+          "transmutation"
+        ]
+      },
+      "SpellStudio": {
+        "required": [
+          "variant",
+          "canEdit",
+          "generator",
+          "budget",
+          "prompts",
+          "images",
+          "events"
+        ],
+        "type": "object",
+        "properties": {
+          "variant": {
+            "$ref": "#/components/schemas/SpellVariantView"
+          },
+          "canEdit": {
+            "type": "boolean"
+          },
+          "generator": {
+            "$ref": "#/components/schemas/SpellArtGenerator"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/ImageBudgetResponse"
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellArtPromptView"
+            }
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellArtImage"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellArtEventView"
+            }
+          }
+        }
+      },
+      "SpellSummary": {
+        "required": [
+          "id",
+          "nameEn",
+          "level",
+          "school",
+          "name",
+          "icon",
+          "variantCount",
+          "artUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "school": {
+            "$ref": "#/components/schemas/SpellSchool"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "variantCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "artUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SpellVariantOrigin": {
+        "enum": [
+          "manual",
+          "wiki",
+          "photo",
+          "seed"
+        ]
+      },
+      "SpellVariantView": {
+        "required": [
+          "id",
+          "spellId",
+          "nameEn",
+          "level",
+          "school",
+          "author",
+          "basedOnVariantId",
+          "origin",
+          "card",
+          "artAssetId",
+          "artUrl",
+          "artApproved",
+          "usedBy",
+          "canEdit",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "spellId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "school": {
+            "$ref": "#/components/schemas/SpellSchool"
+          },
+          "author": {
+            "$ref": "#/components/schemas/SpellAuthor"
+          },
+          "basedOnVariantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/SpellVariantOrigin"
+          },
+          "card": {
+            "$ref": "#/components/schemas/SpellCard"
+          },
+          "artAssetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "artUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "artApproved": {
+            "type": "boolean"
+          },
+          "usedBy": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "canEdit": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SpellWriteIn": {
+        "enum": [
+          "attack",
+          "saveDc",
+          "modifier"
+        ]
       },
       "StartEncounterRequest": {
         "required": [
@@ -7731,6 +9874,15 @@
               "initiativeInvalid",
               "hitPointsInvalid",
               "notBuilt",
+              "spellInvalid",
+              "spellNotFound",
+              "notSpellAuthor",
+              "variantInUse",
+              "textModelUnavailable",
+              "spellNotInWiki",
+              "spellNotRecognized",
+              "spellImportFailed",
+              "artPromptInvalid",
               null
             ]
           },
@@ -8919,6 +11071,37 @@
           }
         }
       },
+      "UpdateSpellRequest": {
+        "required": [
+          "nameEn",
+          "level",
+          "school"
+        ],
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "school": {
+            "$ref": "#/components/schemas/SpellSchool"
+          }
+        }
+      },
+      "UpdateVariantRequest": {
+        "required": [
+          "card"
+        ],
+        "type": "object",
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/SpellCard"
+          }
+        }
+      },
       "UserSummaryResponse": {
         "required": [
           "id",
@@ -9115,6 +11298,15 @@
               "initiativeInvalid",
               "hitPointsInvalid",
               "notBuilt",
+              "spellInvalid",
+              "spellNotFound",
+              "notSpellAuthor",
+              "variantInUse",
+              "textModelUnavailable",
+              "spellNotInWiki",
+              "spellNotRecognized",
+              "spellImportFailed",
+              "artPromptInvalid",
               null
             ]
           },
@@ -9166,10 +11358,13 @@
       "name": "Images"
     },
     {
-      "name": "Auth"
+      "name": "Spells"
     },
     {
       "name": "Admin"
+    },
+    {
+      "name": "Auth"
     },
     {
       "name": "Campaigns"

@@ -11,9 +11,10 @@
 - [Persistence](persistence.md) - Azure SQL Database (free offer) with EF Core, map layout as a JSON document, images in Blob Storage
 - [Realtime sync](realtime-sync.md) - The server holds the board state and pushes confirmed moves over in-process SignalR in a single, scale-to-zero instance
 - [Offline prep and PWA](offline-prep-pwa.md) - Installable PWA; the DM preps offline and syncs on demand, live play needs the server
-- [Image budget](image-budget.md) - Up to $20 a month for all image generation, at high quality
+- [Image budget](image-budget.md) - Up to $20 a month for all image generation and, since 2026-11-21, the text model, at high quality
 - [Image generation approach](image-generation-approach.md) - The grid is the source of truth; AI paints from a colour-coded guide image
 - [Image model](image-model.md) - gpt-image-2.5-sunburst on Microsoft Foundry, chosen over Flare for fewer artifacts in the guide's colours
+- [Text model](text-model.md) - gpt-6-luna on the same Foundry resource writes German spell cards from the wiki or a book photo; its cost counts against the same monthly budget
 - [Legal notice](legal-notice.md) - Impressum at /impressum and privacy policy at /datenschutz, the owner's details baked in from CI build variables so the address stays out of the public repo
 
 # Proposed

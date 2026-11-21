@@ -110,7 +110,8 @@ export type TokenImages = Schemas['TokenImagesResponse']
 export type TokenImage = Schemas['TokenImage']
 export type AssetOrigin = Schemas['AssetOrigin']
 /** Whose icon or portrait: never a battle map. */
-export type TokenImageOwnerType = Exclude<Schemas['AssetOwnerType'], 'battleMap'>
+// Spell art has its own studio (spells/), not the token image gallery.
+export type TokenImageOwnerType = Exclude<Schemas['AssetOwnerType'], 'battleMap' | 'spellVariant'>
 export type GenerateTokenImageRequest = Schemas['GenerateTokenImageRequest']
 export type PickTokenImageRequest = Schemas['PickTokenImageRequest']
 export type CreatureTypeIcon = Schemas['CreatureTypeIcon']
@@ -161,3 +162,23 @@ export type JoinLookupResponse = Schemas['JoinLookupResponse']
 export type JoinableSession = Schemas['JoinableSession']
 export type SpectateSessionRequest = Schemas['SpectateSessionRequest']
 export type SpectateSessionResponse = Schemas['SpectateSessionResponse']
+
+// Spell cards (knowledge/features/spell-cards.md).
+export type SpellSchool = Schemas['SpellSchool']
+export type SpellCard = Schemas['SpellCard']
+export type SpellEffect = Schemas['SpellEffect']
+export type SpellChip = Schemas['SpellChip']
+export type SpellChipKind = NonNullable<Schemas['SpellChipKind']>
+export type SpellWriteIn = Schemas['SpellWriteIn']
+export type SpellSummary = Schemas['SpellSummary']
+export type SpellDetail = Schemas['SpellDetail']
+export type SpellVariant = Schemas['SpellVariantView']
+export type SpellVariantOrigin = Schemas['SpellVariantOrigin']
+export type SpellDraft = Schemas['SpellDraft']
+export type CharacterSpell = Schemas['CharacterSpellView']
+export type SpellImportStatus = Schemas['SpellImportStatus']
+export type SpellStudio = Schemas['SpellStudio']
+export type SpellArtImage = Schemas['SpellArtImage']
+export type SpellArtPrompt = Schemas['SpellArtPromptView']
+export type SpellArtEvent = Schemas['SpellArtEventView']
+export type SpellArtEventKind = Schemas['SpellArtEventKind']

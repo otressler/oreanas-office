@@ -1,0 +1,336 @@
+// The "Zauber" section of the character page (knowledge/features/spell-cards.md, "A
+// character's spells"): the spells by level as small card fronts with "Vorbereitet", and for
+// whoever may edit the character adding, switching the variant and removing.
+import { useQueryClient } from '@tanstack/react-query'
+import { useDeferredValue, useState } from 'react'
+import type { CharacterSpell, SpellSummary, SpellVariant } from '../api/types'
+import { SectionTitle } from '../components/sheet'
+import { Button, ButtonLink, ErrorAlert, LoadError, Loading, TextField } from '../components/ui'
+import { Modal } from '../sync/Modal'
+import { de } from '../text/de'
+import { spellPaths } from './paths'
+import { FlipCard, SpellCardView } from './SpellCard'
+import { matchesSpell } from './model'
+import {
+  removeCharacterSpell,
+  setCharacterSpell,
+  spellKeys,
+  useCharacterSpells,
+  useSpell,
+  useSpellLibrary,
+} from './queries'
+
+const t = de.spells.character
+
+export function CharacterSpells({
+  campaignId,
+  characterId,
+  canEdit,
+}: {
+  campaignId: string
+  characterId: string
+  canEdit: boolean
+}) {
+  const spells = useCharacterSpells(campaignId, characterId)
+  const queries = useQueryClient()
+  const [adding, setAdding] = useState(false)
+  const [open, setOpen] = useState<CharacterSpell | null>(null)
+  const [error, setError] = useState<unknown>(null)
+
+  const refresh = () => {
+    void queries.invalidateQueries({ queryKey: spellKeys.character(campaignId, characterId) })
+    void queries.invalidateQueries({ queryKey: spellKeys.campaign(campaignId) })
+    void queries.invalidateQueries({ queryKey: spellKeys.all })
+  }
+  const run = async (action: () => Promise<unknown>) => {
+    setError(null)
+    try {
+      await action()
+      refresh()
+    } catch (err) {
+      setError(err)
+    }
+  }
+
+  const list = spells.data ?? []
+  const levels = [...new Set(list.map((s) => s.variant.level))].sort((a, b) => a - b)
+  const prepared = list.filter((s) => s.prepared).length
+
+  return (
+    <section aria-labelledby="spells" className="mt-10 flex flex-col gap-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <SectionTitle id="spells">{t.title}</SectionTitle>
+        {list.length > 0 && (
+          <span className="text-sm text-dim">{t.preparedCount(prepared, list.length)}</span>
+        )}
+        {canEdit && (
+          <span className="ml-auto flex flex-wrap gap-2">
+            <Button variant="primary" onClick={() => setAdding(true)}>
+              {t.add}
+            </Button>
+            <ButtonLink to={spellPaths.create({ campaignId, characterId })}>{t.create}</ButtonLink>
+          </span>
+        )}
+      </div>
+      <ErrorAlert error={error} />
+      {spells.isPending ? (
+        <Loading />
+      ) : spells.isError ? (
+        <LoadError error={spells.error} onRetry={() => void spells.refetch()} />
+      ) : list.length === 0 ? (
+        <p className="text-dim">{canEdit ? t.emptyEditable : t.empty}</p>
+      ) : (
+        levels.map((level) => (
+          <div key={level} className="flex flex-col gap-2">
+            <h3 className="font-display text-sm font-semibold tracking-[0.2em] text-candle uppercase">
+              {de.spells.levelGroup(level)}
+            </h3>
+            <ul className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-4">
+              {list
+                .filter((s) => s.variant.level === level)
+                .map((entry) => (
+                  <li
+                    key={entry.spellId}
+                    className="flex flex-col items-center gap-1.5 text-center"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpen(entry)}
+                      className={`transition-opacity ${entry.prepared ? '' : 'opacity-60 hover:opacity-90'}`}
+                      aria-label={entry.variant.card.name}
+                    >
+                      <SpellCardView zoom={0.48} spell={{ ...entry.variant }} />
+                    </button>
+                    <span className="text-sm font-semibold text-parchment">
+                      {entry.variant.card.name}
+                    </span>
+                    {canEdit ? (
+                      <label className="flex min-h-9 items-center gap-2 text-sm text-parchment">
+                        <input
+                          type="checkbox"
+                          className="size-5 accent-candle"
+                          checked={entry.prepared}
+                          onChange={(event) =>
+                            void run(() =>
+                              setCharacterSpell(
+                                campaignId,
+                                characterId,
+                                entry.spellId,
+                                entry.variant.id,
+                                event.target.checked,
+                              ),
+                            )
+                          }
+                        />
+                        {t.prepared}
+                      </label>
+                    ) : (
+                      entry.prepared && <span className="text-xs text-candle">{t.prepared}</span>
+                    )}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))
+      )}
+      {open && (
+        <SpellDialog
+          entry={open}
+          canEdit={canEdit}
+          onSwitch={(variant) =>
+            run(async () => {
+              await setCharacterSpell(campaignId, characterId, open.spellId, variant.id)
+              setOpen({ ...open, variant })
+            })
+          }
+          onRemove={() =>
+            run(async () => {
+              await removeCharacterSpell(campaignId, characterId, open.spellId)
+              setOpen(null)
+            })
+          }
+          onClose={() => setOpen(null)}
+        />
+      )}
+      {adding && (
+        <AddSpellDialog
+          has={new Set(list.map((s) => s.spellId))}
+          onAdd={(variant) =>
+            run(async () => {
+              await setCharacterSpell(campaignId, characterId, variant.spellId, variant.id, false)
+              setAdding(false)
+            })
+          }
+          createPath={spellPaths.create({ campaignId, characterId })}
+          onClose={() => setAdding(false)}
+        />
+      )}
+    </section>
+  )
+}
+
+/** One spell large, to turn over; for editors also another variant and removing. */
+function SpellDialog({
+  entry,
+  canEdit,
+  onSwitch,
+  onRemove,
+  onClose,
+}: {
+  entry: CharacterSpell
+  canEdit: boolean
+  onSwitch: (variant: SpellVariant) => Promise<void>
+  onRemove: () => Promise<void>
+  onClose: () => void
+}) {
+  const [switching, setSwitching] = useState(false)
+  return (
+    <Modal title={entry.variant.card.name} onClose={onClose} size="wide">
+      <p className="-mt-3 text-sm text-dim">{de.spells.spell.tapToFlip}</p>
+      <div className="flex justify-center">
+        <FlipCard zoom={1.25} spell={entry.variant} />
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        <ButtonLink to={spellPaths.spell(entry.variant.spellId)} variant="quiet">
+          {de.spells.spell.back.replace('← ', '')}
+        </ButtonLink>
+        {canEdit && (
+          <>
+            <Button onClick={() => setSwitching(!switching)} aria-expanded={switching}>
+              {de.spells.character.switchVariant}
+            </Button>
+            <Button
+              variant="quiet"
+              onClick={() => {
+                if (window.confirm(t.confirmRemove(entry.variant.card.name))) void onRemove()
+              }}
+            >
+              {t.remove}
+            </Button>
+          </>
+        )}
+      </div>
+      {switching && (
+        <VariantPicker
+          spellId={entry.spellId}
+          current={entry.variant.id}
+          onPick={(v) => void onSwitch(v)}
+        />
+      )}
+    </Modal>
+  )
+}
+
+function VariantPicker({
+  spellId,
+  current,
+  onPick,
+}: {
+  spellId: string
+  current?: string
+  onPick: (variant: SpellVariant) => void
+}) {
+  const spell = useSpell(spellId)
+  if (spell.isPending) return <Loading />
+  if (spell.isError) return <LoadError error={spell.error} onRetry={() => void spell.refetch()} />
+  return (
+    <ul className="flex flex-wrap justify-center gap-4">
+      {spell.data.variants.map((variant) => (
+        <li key={variant.id}>
+          <button
+            type="button"
+            aria-pressed={variant.id === current}
+            onClick={() => onPick(variant)}
+            className={`flex flex-col items-center gap-1 rounded-xl p-1 ${variant.id === current ? 'ring-2 ring-candle' : ''}`}
+          >
+            <SpellCardView zoom={0.6} side="back" spell={variant} />
+            <span className="text-sm text-parchment">
+              {de.spells.spell.by(variant.author.displayName)}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function AddSpellDialog({
+  has,
+  onAdd,
+  createPath,
+  onClose,
+}: {
+  has: ReadonlySet<string>
+  onAdd: (variant: SpellVariant) => Promise<void>
+  createPath: string
+  onClose: () => void
+}) {
+  const library = useSpellLibrary()
+  const [query, setQuery] = useState('')
+  const deferred = useDeferredValue(query)
+  const [picking, setPicking] = useState<SpellSummary | null>(null)
+
+  return (
+    <Modal title={t.pickTitle} onClose={onClose} size="wide">
+      {picking ? (
+        <div className="flex flex-col gap-3">
+          <p className="text-parchment">{t.pickVariant(picking.name)}</p>
+          <VariantPicker spellId={picking.id} onPick={(variant) => void onAdd(variant)} />
+          <Button variant="quiet" className="self-start" onClick={() => setPicking(null)}>
+            {t.back}
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <TextField
+            label={de.spells.library.search}
+            type="search"
+            autoFocus
+            placeholder={de.spells.library.searchPlaceholder}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          {library.isPending ? (
+            <Loading />
+          ) : library.isError ? (
+            <LoadError error={library.error} onRetry={() => void library.refetch()} />
+          ) : (
+            <ul className="flex max-h-[55dvh] flex-col divide-y divide-line overflow-y-auto">
+              {library.data
+                .filter((spell) => matchesSpell(spell, deferred))
+                .map((spell) => (
+                  <li key={spell.id}>
+                    <button
+                      type="button"
+                      disabled={has.has(spell.id)}
+                      onClick={() => setPicking(spell)}
+                      className="flex min-h-12 w-full items-center gap-3 px-2 py-2 text-left hover:bg-line/30 disabled:opacity-50"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold text-parchment">{spell.name}</span>
+                        <span className="block text-xs text-dim">
+                          {spell.nameEn} · {de.spells.level(spell.level)} ·{' '}
+                          {de.spells.schools[spell.school]}
+                        </span>
+                      </span>
+                      <span className="text-xs text-dim">
+                        {has.has(spell.id)
+                          ? t.alreadyHas
+                          : de.spells.library.variants(spell.variantCount)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          )}
+          <p className="text-sm text-dim">
+            {t.notFoundHint}{' '}
+            <ButtonLink to={createPath} variant="quiet">
+              {t.create}
+            </ButtonLink>
+          </p>
+        </div>
+      )}
+    </Modal>
+  )
+}

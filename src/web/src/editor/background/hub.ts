@@ -27,6 +27,11 @@ export interface ImageHubCalls {
     args: [campaignId: string, ownerType: TokenImageOwnerType, ownerId: string]
     result: HubResult
   }
+  /**
+   * Joins the group of a spell variant's art (knowledge/features/spell-cards.md, "Art studio"),
+   * any signed-in user. Updates come as TokenImageUpdated. Errors: itemNotFound.
+   */
+  WatchSpellArt: { args: [variantId: string]; result: HubResult }
 }
 
 /** Server → editor messages and their arguments. */

@@ -64,12 +64,15 @@ export default defineConfig(({ mode }) => ({
         // The condition icons (statuses/<key>.webp), the home page's pictures (home/*.webp:
         // the default campaign cover, joining, a new campaign) and the campaign page's
         // (campaign/*.webp: maps, bestiary, the characters' alcove) are part of the app, so
-        // they work offline. The landing page's larger pictures are not.
+        // they work offline. So do the spell cards' parchment and school patterns
+        // (spells/**/*.webp, knowledge/features/spell-cards.md). The landing page's larger
+        // pictures are not.
         globPatterns: [
           '**/*.{js,css,html,svg,png,ico,woff2}',
           'statuses/*.webp',
           'home/*.webp',
           'campaign/*.webp',
+          'spells/**/*.webp',
         ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/hubs(\/|$)/, /^\/signin-/, /^\/signout/],

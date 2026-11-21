@@ -339,7 +339,10 @@ public static class ImageEndpoints
         var watched = db.SessionSpectators.Where(p => p.UserId == userId).Select(p => p.SessionId);
         var asset = await db.Assets.AsNoTracking()
             .Where(a => a.Id == assetId && a.Status == AssetStatus.Done && a.BlobName != null)
-            .Where(a => campaigns.Contains(a.CampaignId)
+            // Spell art belongs to no campaign: every signed-in user may load it
+            // (knowledge/features/spell-cards.md).
+            .Where(a => a.Kind == AssetKind.SpellArt
+                || (a.CampaignId != null && campaigns.Contains(a.CampaignId.Value))
                 || db.BattleMaps.Any(m => m.BackgroundAssetId == a.Id && campaigns.Contains(m.CampaignId))
                 || db.Encounters.Any(e => e.BackgroundAssetId == a.Id && campaigns.Contains(e.CampaignId))
                 || db.Characters.Any(c => c.TokenAssetId == a.Id && db.Sessions.Any(s => watched.Contains(s.Id) && s.CampaignId == c.CampaignId))

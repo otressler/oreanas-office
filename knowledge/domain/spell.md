@@ -1,0 +1,81 @@
+---
+type: Domain Entity
+title: Spell
+description: A spell shared by the whole site, its variants (the German card text one user wrote), the spells a character has, and the art studio's prompts and reviews per variant.
+tags: [domain, spells, characters]
+status: draft
+generated: { by: claude-code/claude-opus-5-5, at: 2026-11-21T15:30:00Z }
+---
+
+# Spell
+
+Site-wide, not per campaign: every signed-in user sees every spell (project owner, 2026-11-21). One row per spell of the rules, identified by its English 2024 name.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | id | |
+| `nameEn` | string | The English name from the 2024 Player's Handbook ("Moonbeam"), up to 60 characters. Unique, ignoring case and surrounding spaces |
+| `level` | int | 0 (cantrip, "Zaubertrick") to 9 |
+| `school` | enum | `abjuration`, `conjuration`, `divination`, `enchantment`, `evocation`, `illusion`, `necromancy`, `transmutation` |
+| `createdAt`, `createdByUserId` | | Who added it first |
+
+The level and school belong to the spell, not to a variant, because they are rules facts that all variants share. Whoever made the spell's first variant sets them; an admin can correct them.
+
+# Spell variant
+
+The German card text for a spell as one user wrote it ("Variante"). A spell has one or more variants; a player who doesn't like the existing ones makes their own (project owner, 2026-11-21). Only its **author** edits a variant (and site admins), and their edits reach every character that uses it (project owner, 2026-11-21). Variants are never deleted while a character uses them.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | id | |
+| `spellId` | → Spell | |
+| `authorUserId` | → [User](/domain/user.md) | |
+| `basedOnVariantId` | → Spell variant, nullable | The variant it was copied from with "Eigene Variante" |
+| `origin` | enum | `manual`, `wiki` (dnd2024.wikidot.com), `photo` (a photographed book page), `seed` (the spell-cards import) |
+| `card` | document | The card's content, below |
+| `artAssetId` | → [Asset](/domain/asset.md), nullable | The picture picked in the studio for the card's front. Without one the front shows the school's pattern |
+| `artApproved` | bool | "Abgenommen" in the studio: the author is happy with the art |
+| `createdAt`, `updatedAt` | | |
+
+## The card
+
+Always German and in meters (1.5 m per 5 ft, [units](/rules/movement-distance.md)). The layout is the tarot card of the spell-cards app (70 × 120 mm, front with art, back with the text).
+
+| Field | Limit | On the card |
+|-------|-------|-------------|
+| `name` | 1–60 | German name, front and back |
+| `castingTime`, `range`, `components`, `duration` | 40 each | The four stats on the back ("Zeitaufwand", "Reichweite", "Komponenten", "Wirkungsdauer") |
+| `concentration`, `ritual` | bool | "K" and "R" badges |
+| `description` | 1,500 | The main text; `**bold**` is the only markup |
+| `effects` | up to 6 | Rows below the text: `icon`, `title` (30), optional `tag` (24, e.g. "Bonusaktion"), `text` (200) and an optional `chip` with `big` (10, e.g. "2W10"), `small` (14, e.g. "Gleißend") and a damage `kind` |
+| `icon` | | The flourish icon on the front and the divider |
+| `pips` | up to 2 icons | The front's corner icons; "K" and "R" take a corner first |
+| `higherLevels` | 300 | "Stärker auf Stufe …" for a cantrip, "Höherer Grad: …" otherwise |
+| `tip` | 200 | "Tipp: …" |
+| `material` | 120 | "M: …" in the footer |
+| `source` | 60 | The book, shown only when it isn't the Player's Handbook |
+| `writeIns` | `attack`, `saveDc`, `modifier` | Blank lines to write the character's numbers on ("Angr. +", "SG", "Mod +") |
+
+Icons and damage kinds come from a fixed list in the app (`src/web/src/spells/icons.ts`); the server checks the names.
+
+# Character spell
+
+The spells a [character](/domain/character.md) has: one variant per spell, and whether it is currently prepared ("vorbereitet").
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `characterId` | → Character | |
+| `spellId` | → Spell | Unique per character: switching the variant keeps the entry |
+| `variantId` | → Spell variant | |
+| `prepared` | bool | Only prepared spells appear in the gallery at the table |
+| `addedAt` | | |
+
+Whoever may edit the character ([character](/domain/character.md), Permissions) adds, removes, switches and prepares its spells. Every member of the campaign sees them on the character page. Copying a character into another campaign ([character import](/features/character-import.md)) copies its spells too.
+
+# Art studio
+
+Per variant, the spell-cards studio's history, kept append-only like there (project owner chose the full studio, 2026-11-21). Only the variant's author (and admins) changes it; every signed-in user can look.
+
+- **Art prompt** ("Motiv"): `variantId`, `letter` (`a`–`z`, one line of ideas each), `subject` (up to 1,500 characters), `createdAt`, `createdByUserId`. Each save adds a revision; the newest per letter is current. The app adds the style block (`ImageOptions.SpellArtStyle`) around the subject.
+- **Art picture**: an [asset](/domain/asset.md) of kind `SpellArt`, owned by the variant, with the prompt revision it came from (`spellArtPromptId`), or an upload. Generated pictures go through the site's one image queue and count against the [budget](/decisions/image-budget.md). The asset row is also the request: queued, running, done or failed.
+- **Art event**: `variantId`, optional `assetId`, `kind` (`comment`, `favorite`, `reject`, `dismiss`), `value`, `createdAt`, `userId`. The newest `favorite`/`reject` per picture counts ("1" or "0"); `dismiss` hides a failed request; a comment without a picture is a note on the variant.

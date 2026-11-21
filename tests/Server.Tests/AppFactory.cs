@@ -42,6 +42,7 @@ public sealed class AppFactory(
             services.AddTestAuth();
             services.AddFakeGoogleAnswers();
             services.AddFakeImageClient();
+            services.AddFakeTextModel();
             if (!runsImageJobs)
             {
                 services.Remove(services.Single(d => d.ImplementationType == typeof(ImageJobWorker)));

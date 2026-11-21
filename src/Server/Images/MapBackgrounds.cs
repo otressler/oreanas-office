@@ -109,11 +109,15 @@ public static class MapBackgrounds
         return new DateTimeOffset(utc.Year, utc.Month, 1, 0, 0, 0, TimeSpan.Zero);
     }
 
-    // What finished images have cost since monthStart, site-wide.
+    // What finished images and text model calls have cost since monthStart, site-wide: the
+    // monthly limit covers all AI use (knowledge/decisions/text-model.md).
     public static async Task<decimal> SpentSinceAsync(AppDbContext db, DateTimeOffset monthStart, CancellationToken cancellationToken) =>
         await db.Assets
             .Where(a => a.Status == AssetStatus.Done && a.FinishedAt >= monthStart && a.CostUsd != null)
-            .SumAsync(a => a.CostUsd ?? 0m, cancellationToken);
+            .SumAsync(a => a.CostUsd ?? 0m, cancellationToken)
+        + await db.TextModelCalls
+            .Where(c => c.CreatedAt >= monthStart)
+            .SumAsync(c => c.CostUsd, cancellationToken);
 
     // What the month has used, for the lists of backgrounds, icons and portraits.
     public static async Task<ImageBudgetResponse> BudgetAsync(

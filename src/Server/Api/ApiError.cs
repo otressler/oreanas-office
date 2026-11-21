@@ -168,4 +168,25 @@ public enum ApiErrorCode
     // NotBuilt: a hub method of stage 10 whose lane has not been built yet. Removed with the
     // last stub.
     NotBuilt,
+
+    // Spell cards (knowledge/features/spell-cards.md).
+    // SpellInvalid: the English name, level, school or a card field breaks its rules; Field
+    // names it ("nameEn", "card.effects[2]").
+    SpellInvalid,
+    // SpellNotFound: no spell or variant with this id, or the character has no such spell.
+    SpellNotFound,
+    // NotSpellAuthor: only a variant's author (and site admins) changes it or its art.
+    NotSpellAuthor,
+    // VariantInUse: a variant that characters use can't be deleted.
+    VariantInUse,
+    // TextModelUnavailable: the server has no text model configured.
+    TextModelUnavailable,
+    // SpellNotInWiki: dnd2024.wikidot.com has no page for the spell's English name.
+    SpellNotInWiki,
+    // SpellNotRecognized: the text model found no spell in the name or the photo.
+    SpellNotRecognized,
+    // SpellImportFailed: the wiki or the text model didn't answer; trying again may help.
+    SpellImportFailed,
+    // ArtPromptInvalid: a motif needs a letter a–z and a subject of 1 to 1,500 characters.
+    ArtPromptInvalid,
 }

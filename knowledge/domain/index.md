@@ -10,6 +10,7 @@
 - [Campaign member](campaign-member.md) - Links a user to a campaign with a role
 - [Character](character.md) - A player character owned by one user in one campaign
 - [Session](session.md) - One game night with its own DM; at most one is active per campaign
+- [Spell](spell.md) - Site-wide spells, their German card variants by different players, the spells a character has and prepares, and the art studio's history
 
 # Fights
 
@@ -18,4 +19,4 @@
 - [Creature type](creature-type.md) - Reusable monster template with size and icon
 - [Token](token.md) - A character or creature placed on an encounter's grid
 - [Status](status.md) - Condition and custom status definitions, status lists, and the statuses set on tokens
-- [Asset](asset.md) - A generated or uploaded image: map background or token icon
+- [Asset](asset.md) - A generated or uploaded image: map background, token icon, campaign cover or spell art

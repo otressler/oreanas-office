@@ -33,6 +33,12 @@ public interface IImageHub
     // Errors: NotADm (not allowed), ItemNotFound (no such creature type, character or custom
     // status in the campaign, a campaign id other than campaignId, or OwnerType BattleMap).
     Task<HubResult> WatchTokenImages(Guid campaignId, AssetOwnerType ownerType, Guid ownerId);
+
+    // Adds the connection to the group of a spell variant's art (knowledge/features/
+    // spell-cards.md, "Art studio"), for any signed-in user, since spells are site-wide.
+    // Updates arrive as TokenImageUpdated with OwnerType SpellVariant.
+    // Errors: ItemNotFound (no such variant).
+    Task<HubResult> WatchSpellArt(Guid variantId);
 }
 
 public interface IImageHubClient
@@ -154,6 +160,18 @@ public sealed class ImageHub(AppDbContext db) : Hub<IImageHubClient>, IImageHub
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, TokenGroupName(ownerType, ownerId), cancellationToken);
+        return new HubResult(null);
+    }
+
+    public async Task<HubResult> WatchSpellArt(Guid variantId)
+    {
+        var cancellationToken = Context.ConnectionAborted;
+        if (!await db.SpellVariants.AnyAsync(v => v.Id == variantId, cancellationToken))
+        {
+            return new HubResult(ApiErrorCode.ItemNotFound);
+        }
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, TokenGroupName(AssetOwnerType.SpellVariant, variantId), cancellationToken);
         return new HubResult(null);
     }
 }

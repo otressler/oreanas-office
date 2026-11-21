@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Images.Guide;
 using OreanasOffice.Server.Maps;
+using OreanasOffice.Server.Spells;
 
 namespace OreanasOffice.Server.Images;
 
@@ -167,6 +168,12 @@ public sealed class ImageJobWorker(
         var asset = await db.Assets.SingleAsync(a => a.Id == assetId, stoppingToken);
         if (asset.Status != AssetStatus.Queued)
         {
+            return;
+        }
+
+        if (asset is { Kind: AssetKind.SpellArt, OwnerType: AssetOwnerType.SpellVariant })
+        {
+            await RunSpellArtAsync(db, client, asset, stoppingToken);
             return;
         }
 
@@ -404,6 +411,105 @@ public sealed class ImageJobWorker(
             }
 
             await FinishTokenAsync(db, asset, result);
+            return;
+        }
+    }
+
+    // A spell card's art (knowledge/features/spell-cards.md, "Art studio"): text to image from
+    // the prompt saved when the request was queued (the motif revision with the style block),
+    // an opaque 7:12 JPEG kept as a WebP. The first finished picture of a variant without art
+    // becomes its art. Same spacing, 429 waits, retries and failures as the other jobs.
+    private async Task RunSpellArtAsync(AppDbContext db, IImageClient client, Asset asset, CancellationToken stoppingToken)
+    {
+        asset.Status = AssetStatus.Running;
+        asset.StartedAt = time.GetUtcNow();
+        asset.Attempts += 1;
+        await db.SaveChangesAsync(stoppingToken);
+        logger.LogInformation("Spell art job {AssetId} for variant {VariantId} started, attempt {Attempt}", asset.Id, asset.OwnerId, asset.Attempts);
+        await NotifyAsync(db, asset, null);
+
+        if (string.IsNullOrWhiteSpace(asset.Prompt))
+        {
+            await FailAsync(db, asset, AssetFailure.Error, null, "the job has no prompt");
+            return;
+        }
+
+        var rateLimitedWaits = 0;
+        while (true)
+        {
+            await WaitForRequestSlotAsync(stoppingToken);
+            if (!await db.SpellVariants.AnyAsync(v => v.Id == asset.OwnerId, stoppingToken))
+            {
+                await FailAsync(db, asset, AssetFailure.Error, null, "the spell variant is gone");
+                return;
+            }
+
+            ImageResult result;
+            try
+            {
+                _lastRequestAt = time.GetUtcNow();
+                result = await client.GenerateAsync(
+                    new ImageGenerateRequest(asset.Prompt, _options.SpellArtRequestWidth, _options.SpellArtRequestHeight, _options.SpellArtQuality, "opaque", "jpeg"),
+                    stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (ImageRateLimitedException ex) when (++rateLimitedWaits > MaxRateLimitedWaits)
+            {
+                await FailAsync(db, asset, AssetFailure.Error, null, $"the image model stayed busy after {MaxRateLimitedWaits} waits: {ex.Message}");
+                return;
+            }
+            catch (ImageRateLimitedException ex)
+            {
+                logger.LogWarning("Spell art job {AssetId}: the image model is busy, retrying after {RetryAfter}", asset.Id, ex.RetryAfter);
+                await Task.Delay(ex.RetryAfter, time, stoppingToken);
+                continue;
+            }
+            catch (ImageRejectedException ex)
+            {
+                await FailAsync(db, asset, AssetFailure.Rejected, null, $"the model rejected the request: {ex.Message}");
+                return;
+            }
+            catch (Exception ex)
+            {
+                if (asset.Attempts >= _options.MaxAttempts)
+                {
+                    logger.LogWarning(ex, "Spell art job {AssetId}: attempt {Attempt} failed", asset.Id, asset.Attempts);
+                    await FailAsync(db, asset, AssetFailure.Error, null, $"no image after {asset.Attempts} attempts");
+                    return;
+                }
+
+                logger.LogWarning(ex, "Spell art job {AssetId}: attempt {Attempt} failed; trying again", asset.Id, asset.Attempts);
+                asset.Status = AssetStatus.Queued;
+                await db.SaveChangesAsync(CancellationToken.None);
+                await NotifyAsync(db, asset, null);
+                return;
+            }
+
+            var webp = TokenPicture.FromModel(result.Image, _options.SpellArtWidth, _options.SpellArtHeight);
+            var cancellationToken = CancellationToken.None;
+            var blobName = SpellArt.BlobName(asset.OwnerId, asset.Id);
+            await store.SaveAsync(blobName, webp, TokenPicture.ContentType, cancellationToken);
+            asset.BlobName = blobName;
+            asset.ContentType = TokenPicture.ContentType;
+            asset.CostUsd = MapBackgrounds.Cost(result.Usage, _options);
+            asset.Status = AssetStatus.Done;
+            asset.Failure = null;
+            asset.FinishedAt = time.GetUtcNow();
+            await db.SaveChangesAsync(cancellationToken);
+            var picked = await db.SpellVariants
+                .Where(v => v.Id == asset.OwnerId && v.ArtAssetId == null)
+                .ExecuteUpdateAsync(set => set.SetProperty(v => v.ArtAssetId, asset.Id), cancellationToken) > 0;
+            logger.LogInformation(
+                "Spell art job {AssetId} for variant {VariantId} done: {CostUsd} USD, request {RequestId}{Picked}",
+                asset.Id,
+                asset.OwnerId,
+                asset.CostUsd,
+                result.RequestId,
+                picked ? ", picked" : "");
+            await NotifyAsync(db, asset, null);
             return;
         }
     }

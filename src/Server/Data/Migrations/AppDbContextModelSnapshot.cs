@@ -647,7 +647,7 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid>("CampaignId")
+                    b.Property<Guid?>("CampaignId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ContentType")
@@ -737,6 +737,9 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("SourceAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SpellArtPromptId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("StartedAt")
@@ -935,6 +938,256 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("SessionSpectators");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.CharacterSpell", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Prepared")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SpellId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("VariantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpellId");
+
+                    b.HasIndex("VariantId");
+
+                    b.HasIndex("CharacterId", "SpellId")
+                        .IsUnique();
+
+                    b.ToTable("CharacterSpells");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.Spell", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("NameKey")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("School")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("NameKey")
+                        .IsUnique();
+
+                    b.ToTable("Spells");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.SpellArtEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Value")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("VariantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("VariantId", "CreatedAt");
+
+                    b.ToTable("SpellArtEvents");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.SpellArtPrompt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Letter")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)");
+
+                    b.Property<Guid>("VariantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("VariantId", "Letter", "CreatedAt");
+
+                    b.ToTable("SpellArtPrompts");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.SpellVariant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("ArtApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ArtAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BasedOnVariantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Card")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("CardJson");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SeedKey")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<Guid>("SpellId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtAssetId");
+
+                    b.HasIndex("AuthorUserId");
+
+                    b.HasIndex("BasedOnVariantId");
+
+                    b.HasIndex("SeedKey")
+                        .IsUnique()
+                        .HasFilter("[SeedKey] IS NOT NULL");
+
+                    b.HasIndex("SpellId");
+
+                    b.ToTable("SpellVariants");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.TextModelCall", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CostUsd")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("decimal(10,6)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("InputTokens")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("OutputTokens")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TextModelCalls");
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusDefinition", b =>
@@ -1435,8 +1688,7 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasOne("OreanasOffice.Server.Campaigns.Campaign", "Campaign")
                         .WithMany()
                         .HasForeignKey("CampaignId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
                         .WithMany()
@@ -1529,6 +1781,104 @@ namespace OreanasOffice.Server.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.CharacterSpell", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Characters.Character", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Spells.Spell", "Spell")
+                        .WithMany()
+                        .HasForeignKey("SpellId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Spells.SpellVariant", "Variant")
+                        .WithMany()
+                        .HasForeignKey("VariantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("Spell");
+
+                    b.Navigation("Variant");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.Spell", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.SpellArtEvent", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Spells.SpellVariant", null)
+                        .WithMany()
+                        .HasForeignKey("VariantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.SpellArtPrompt", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Spells.SpellVariant", null)
+                        .WithMany()
+                        .HasForeignKey("VariantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.SpellVariant", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Spells.SpellVariant", null)
+                        .WithMany()
+                        .HasForeignKey("BasedOnVariantId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("OreanasOffice.Server.Spells.Spell", "Spell")
+                        .WithMany("Variants")
+                        .HasForeignKey("SpellId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Spell");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.TextModelCall", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusDefinition", b =>
@@ -1660,6 +2010,11 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("CharacterPlayers");
 
                     b.Navigation("Encounters");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Spells.Spell", b =>
+                {
+                    b.Navigation("Variants");
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Statuses.StatusList", b =>

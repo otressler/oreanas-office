@@ -12,8 +12,10 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T19:45:10Z }
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | id | |
-| `kind` | enum `map-background` \| `token-icon` \| `campaign-cover` | |
-| `ownerType`, `ownerId` | string, id | The [battle map](/domain/battle-map.md), [creature type](/domain/creature-type.md), [character](/domain/character.md), custom [status](/domain/status.md) or [campaign](/domain/campaign.md) it belongs to |
+| `kind` | enum `map-background` \| `token-icon` \| `campaign-cover` \| `spell-art` | |
+| `ownerType`, `ownerId` | string, id | The [battle map](/domain/battle-map.md), [creature type](/domain/creature-type.md), [character](/domain/character.md), custom [status](/domain/status.md), [campaign](/domain/campaign.md) or [spell variant](/domain/spell.md) it belongs to |
+| `campaignId` | → Campaign, nullable | The owner's campaign, whose members may load the image. Null for spell art, which every signed-in user may load (2026-11-21) |
+| `spellArtPromptId` | → Spell art prompt, nullable | For spell art: the motif revision it was painted from |
 | `origin` | enum `generated` \| `uploaded` | |
 | `prompt` | text, nullable | The full prompt sent to the model |
 | `sourceAssetId` | → Asset, nullable | For a portrait restyled from an upload: the uploaded version sent to the model as the reference |

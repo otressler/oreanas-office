@@ -78,6 +78,6 @@ Related ideas elsewhere: who's here in the [shared table](/features/shared-table
 
 **Decided for this area** (project owner, 2026-10-16):
 
-- **How smart is the character sheet?** Decided: it tracks basic stats and only works out the obvious (ability modifiers, proficiency bonus by level). Spells, attacks and the like are too complicated and stay out; nothing is automated ([play setting](/decisions/play-setting.md)).
+- **How smart is the character sheet?** Decided: it tracks basic stats and only works out the obvious (ability modifiers, proficiency bonus by level). Spells, attacks and the like are too complicated and stay out; nothing is automated ([play setting](/decisions/play-setting.md)). Changed on 2026-11-21 for spells only: characters keep [spell cards](/features/spell-cards.md) to read at the table, still without slots, class checks or anything automated.
 - **Offline.** Decided: notes and knowledge base entries can be read offline; writing needs a connection at first ([offline prep](/decisions/offline-prep-pwa.md)).
 - **Names.** Decided: the items a character carries are the "Inventar"; the statuses a person picks from are the "Zustandsliste" ("status list" in the knowledge base), renamed in the stage 9 concepts on 2026-10-16.
