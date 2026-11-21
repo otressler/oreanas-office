@@ -810,13 +810,25 @@
 .sc-flip .sc-face.sc-face-back {
   transform: rotateY(180deg);
 }
+/* WebKit and Firefox ignore backface-visibility for the front's positioned parts (title, gem,
+   pips, type bar) and draw them mirrored over the back. So the turned-away face is also hidden
+   outright, swapped when the card stands edge-on: with the turn's easing that is a fifth of
+   its 0.55 s. */
+.sc-flip .sc-face {
+  transition: visibility 0s linear 0.11s;
+}
+.sc-flip.sc-flipped .sc-face:not(.sc-face-back),
+.sc-flip:not(.sc-flipped) .sc-face-back {
+  visibility: hidden;
+}
 .sc-flip:focus-visible {
   outline: 2px solid var(--gold-light);
   outline-offset: 4px;
   border-radius: 5mm;
 }
 @media (prefers-reduced-motion: reduce) {
-  .sc-flip > .sc-zoom {
+  .sc-flip > .sc-zoom,
+  .sc-flip .sc-face {
     transition: none;
   }
 }
