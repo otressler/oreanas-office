@@ -451,7 +451,8 @@ export function SpellCardView({
   onOverflow?: (overflow: boolean) => void
   className?: string
 }) {
-  const ref = useCardFit(spell, onOverflow)
+  // The face shown is part of the key: switching it (the editor's preview) fits the new one.
+  const ref = useCardFit(spell, onOverflow, side)
   return (
     <div className={`sc-scale ${className}`} style={{ '--sc-zoom': zoom } as CSSProperties}>
       <div className="sc-zoom" ref={ref}>
@@ -527,9 +528,13 @@ export function FlipCard({
 }
 
 /** Shrinks the card's texts to fit after every change, when fonts load and when it gets a size. */
-function useCardFit(spell: CardSpell, onOverflow?: (overflow: boolean) => void) {
+function useCardFit(
+  spell: CardSpell,
+  onOverflow?: (overflow: boolean) => void,
+  side?: 'front' | 'back',
+) {
   const ref = useRef<HTMLDivElement>(null)
-  const key = JSON.stringify([spell.nameEn, spell.level, spell.school, spell.card])
+  const key = JSON.stringify([side, spell.nameEn, spell.level, spell.school, spell.card])
   const report = useEffectEvent((overflow: boolean) => onOverflow?.(overflow))
   useLayoutEffect(() => {
     if (!ref.current) return
