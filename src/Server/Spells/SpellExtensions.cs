@@ -35,6 +35,8 @@ public static class SpellExtensions
             http.DefaultRequestHeaders.UserAgent.ParseAdd("OreanasOffice-SpellImport/1.0");
         });
         builder.Services.AddScoped<SpellImport>();
+        builder.Services.AddSingleton<SpellJobQueue>();
+        builder.Services.AddHostedService<SpellJobWorker>();
         return builder;
     }
 
@@ -44,6 +46,7 @@ public static class SpellExtensions
         app.MapSpellEndpoints();
         app.MapCharacterSpellEndpoints();
         app.MapSpellArtEndpoints();
+        app.MapSpellJobEndpoints();
         app.MapPost("/api/admin/spells/seed", Seed).WithTags("Admin").RequireAuthorization(Policies.Admin);
         return app;
     }

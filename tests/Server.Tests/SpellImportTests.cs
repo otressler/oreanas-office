@@ -14,8 +14,10 @@ using static OreanasOffice.Server.Tests.SpellTestApi;
 namespace OreanasOffice.Server.Tests;
 
 // knowledge/features/spell-cards.md, "Creating a spell": by name through the wiki and by photo,
-// against the fake text model and wiki. The fakes are shared by the app; only this class
-// sets their answers, and its tests run one after another.
+// against the fake text model and wiki. The fakes are shared by the app; this class and
+// SpellJobTests set their answers, and the Images collection runs them one after another (also
+// apart from the tests that use up the monthly budget).
+[Collection("Images")]
 public sealed class SpellImportTests(AppFixture fixture) : IClassFixture<AppFixture>
 {
     private FakeTextModel Model => fixture.App.Services.GetRequiredService<FakeTextModel>();

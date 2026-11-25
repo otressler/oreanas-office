@@ -34,10 +34,12 @@ public sealed class FakeTextModel : ITextModelClient
     }
 }
 
-// The wiki's pages by slug ("moonbeam"); every other page is a 404.
+// The wiki's pages by slug ("moonbeam"); every other page is Fallback, or a 404 without one.
 public sealed class FakeWiki : HttpMessageHandler
 {
     public ConcurrentDictionary<string, string> Pages { get; } = new();
+
+    public string? Fallback { get; set; }
 
     public ConcurrentQueue<Uri> Requests { get; } = new();
 
@@ -50,7 +52,7 @@ public sealed class FakeWiki : HttpMessageHandler
     {
         Requests.Enqueue(request.RequestUri!);
         var slug = request.RequestUri!.AbsolutePath.TrimStart('/').Replace("spell:", "", StringComparison.Ordinal);
-        return Task.FromResult(Pages.TryGetValue(slug, out var html)
+        return Task.FromResult(Pages.TryGetValue(slug, out var html) || (html = Fallback) is not null
             ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(html, Encoding.UTF8, "text/html") }
             : new HttpResponseMessage(HttpStatusCode.NotFound) { Content = new StringContent("<html>not found</html>") });
     }

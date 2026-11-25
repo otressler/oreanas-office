@@ -67,6 +67,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityUser
 
     public DbSet<TextModelCall> TextModelCalls => Set<TextModelCall>();
 
+    public DbSet<SpellJob> SpellJobs => Set<SpellJob>();
+
+    public DbSet<SpellCardDraft> SpellCardDrafts => Set<SpellCardDraft>();
+
+    public DbSet<SpellCardRevision> SpellCardRevisions => Set<SpellCardRevision>();
+
     public DbSet<CharacterClass> CharacterClasses => Set<CharacterClass>();
 
     public DbSet<CharacterSubclass> CharacterSubclasses => Set<CharacterSubclass>();

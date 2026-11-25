@@ -91,3 +91,12 @@ Per variant, the spell-cards studio's history, kept append-only like there (proj
 - **Art prompt** ("Motiv"): `variantId`, `letter` (`a`–`z`, one line of ideas each), `subject` (up to 1,500 characters), `createdAt`, `createdByUserId`. Each save adds a revision; the newest per letter is current. The app adds the style block (`ImageOptions.SpellArtStyle`) around the subject.
 - **Art picture**: an [asset](/domain/asset.md) of kind `SpellArt`, owned by the variant, with the prompt revision it came from (`spellArtPromptId`), or an upload. Generated pictures go through the site's one image queue and count against the [budget](/decisions/image-budget.md). The asset row is also the request: queued, running, done or failed.
 - **Art event**: `variantId`, optional `assetId`, `kind` (`comment`, `favorite`, `reject`, `dismiss`), `value`, `createdAt`, `userId`. The newest `favorite`/`reject` per picture counts ("1" or "0"); `dismiss` hides a failed request; a comment without a picture is a note on the variant.
+
+# Suggestions and revisions
+
+Since 2026-11-25 ([spell cards](/features/spell-cards.md), "Planned", steps 4 and 5).
+
+- **Art prompt source**: `studio`, `seed` or `suggestion` (written by the suggestion queue, shown as "Vorschlag").
+- **Card draft**: `spellId` (one per spell), the `card` as the text model wrote it from the wiki, an optional motif `subject`, `createdAt`, `createdByUserId` (the admin who started the run). Not a variant: it isn't in the library's "Mit Karte" and can't go on a character. Taking it makes a variant and removes it.
+- **Card revision**: `variantId`, the `previous` card, `createdAt`, `revertedAt`. Made when the revision pass saves a card; "Zurücksetzen" puts `previous` back while the variant's `updatedAt` is still the revision's.
+- **Spell job**: `kind` (`draft`, `motif`, `revision`), `spellId`, `variantId` (motif and revision), `status` (`queued`, `running`, `done`, `failed`), `outcome` for a done job (`saved`, `unchanged`, `wordsChanged`), `error`, `detail` (for `wordsChanged` the first field that differed), `attempts`, `createdAt`, `startedAt`, `finishedAt`, `createdByUserId`. Worked one at a time by its own background worker; jobs cut off by a restart go back to the queue when the app starts.

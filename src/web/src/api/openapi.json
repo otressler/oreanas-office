@@ -231,6 +231,32 @@
         }
       }
     },
+    "/api/spells/drafts/{draftId}": {
+      "delete": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "draftId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/admin/spells/seed": {
       "post": {
         "tags": [
@@ -4775,6 +4801,165 @@
           }
         }
       }
+    },
+    "/api/admin/spells/jobs": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellJobsOverview"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpellJobsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellJobsPlan"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/spells/jobs/plan": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpellJobsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellJobsPlan"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/spells/jobs/retry": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/admin/spells/jobs/{jobId}/retry": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/admin/spells/revisions/{revisionId}/revert": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5012,6 +5197,7 @@
           "artPromptInvalid",
           "spellNotInHandbook",
           "motifSuggestionFailed",
+          "revisionOutdated",
           "motifInUse",
           "glossaryInvalid"
         ]
@@ -6149,6 +6335,13 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "draftId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -6283,6 +6476,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "revisionOutdated",
               "motifInUse",
               "glossaryInvalid",
               null
@@ -6801,6 +6995,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "revisionOutdated",
               "motifInUse",
               "glossaryInvalid",
               null
@@ -6917,6 +7112,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "revisionOutdated",
               "motifInUse",
               "glossaryInvalid",
               null
@@ -7344,6 +7540,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "revisionOutdated",
               "motifInUse",
               "glossaryInvalid",
               null
@@ -7468,6 +7665,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "revisionOutdated",
               "motifInUse",
               "glossaryInvalid",
               null
@@ -8444,6 +8642,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "revisionOutdated",
               "motifInUse",
               "glossaryInvalid",
               null
@@ -9312,6 +9511,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "revisionOutdated",
               "motifInUse",
               "glossaryInvalid",
               null
@@ -9553,7 +9753,8 @@
       "SpellArtPromptSource": {
         "enum": [
           "studio",
-          "seed"
+          "seed",
+          "suggestion"
         ]
       },
       "SpellArtPromptView": {
@@ -9681,6 +9882,69 @@
           }
         }
       },
+      "SpellCardDraftView": {
+        "required": [
+          "id",
+          "card",
+          "motifSubject",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "card": {
+            "$ref": "#/components/schemas/SpellCard"
+          },
+          "motifSubject": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SpellCardRevisionView": {
+        "required": [
+          "id",
+          "variantId",
+          "spellId",
+          "name",
+          "createdAt",
+          "canRevert"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "variantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "spellId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "canRevert": {
+            "type": "boolean"
+          }
+        }
+      },
       "SpellcastingKind": {
         "enum": [
           "full",
@@ -9744,7 +10008,8 @@
           "school",
           "inHandbook",
           "lists",
-          "variants"
+          "variants",
+          "draft"
         ],
         "type": "object",
         "properties": {
@@ -9782,6 +10047,16 @@
             "items": {
               "$ref": "#/components/schemas/SpellVariantView"
             }
+          },
+          "draft": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellCardDraftView"
+              }
+            ]
           }
         }
       },
@@ -9869,6 +10144,248 @@
           },
           "budget": {
             "$ref": "#/components/schemas/ImageBudgetResponse"
+          }
+        }
+      },
+      "SpellJobCounts": {
+        "required": [
+          "kind",
+          "queued",
+          "running",
+          "done",
+          "failed"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SpellJobKind"
+          },
+          "queued": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "running": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "done": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SpellJobKind": {
+        "enum": [
+          "draft",
+          "motif",
+          "revision"
+        ]
+      },
+      "SpellJobOutcome": {
+        "enum": [
+          "saved",
+          "unchanged",
+          "wordsChanged",
+          null
+        ]
+      },
+      "SpellJobRun": {
+        "enum": [
+          "suggestions",
+          "revision"
+        ]
+      },
+      "SpellJobsOverview": {
+        "required": [
+          "textModel",
+          "budget",
+          "counts",
+          "failed",
+          "toCheck",
+          "revisions"
+        ],
+        "type": "object",
+        "properties": {
+          "textModel": {
+            "type": "boolean"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/ImageBudgetResponse"
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellJobCounts"
+            }
+          },
+          "failed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellJobView"
+            }
+          },
+          "toCheck": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellJobView"
+            }
+          },
+          "revisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellCardRevisionView"
+            }
+          }
+        }
+      },
+      "SpellJobsPlan": {
+        "required": [
+          "drafts",
+          "motifs",
+          "revisions",
+          "estimatedUsd"
+        ],
+        "type": "object",
+        "properties": {
+          "drafts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "motifs": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revisions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "estimatedUsd": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "SpellJobsRequest": {
+        "required": [
+          "run"
+        ],
+        "type": "object",
+        "properties": {
+          "run": {
+            "$ref": "#/components/schemas/SpellJobRun"
+          },
+          "level": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "classId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "school": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellSchool"
+              }
+            ]
+          },
+          "onlyWithoutCard": {
+            "type": "boolean",
+            "default": true
+          },
+          "onlyUnrevised": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "SpellJobStatus": {
+        "enum": [
+          "queued",
+          "running",
+          "done",
+          "failed"
+        ]
+      },
+      "SpellJobView": {
+        "required": [
+          "id",
+          "kind",
+          "spellId",
+          "variantId",
+          "spellName",
+          "status",
+          "outcome",
+          "error",
+          "detail",
+          "finishedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SpellJobKind"
+          },
+          "spellId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "variantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "spellName": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SpellJobStatus"
+          },
+          "outcome": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellJobOutcome"
+              }
+            ]
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "finishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -10016,7 +10533,8 @@
           "icon",
           "variantCount",
           "artUrl",
-          "lists"
+          "lists",
+          "hasDraft"
         ],
         "type": "object",
         "properties": {
@@ -10055,6 +10573,9 @@
             "items": {
               "$ref": "#/components/schemas/SpellListLink"
             }
+          },
+          "hasDraft": {
+            "type": "boolean"
           }
         }
       },
@@ -10471,6 +10992,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "revisionOutdated",
               "motifInUse",
               "glossaryInvalid",
               null
@@ -11946,6 +12468,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "revisionOutdated",
               "motifInUse",
               "glossaryInvalid",
               null

@@ -253,12 +253,7 @@ public static class SpellArt
             return TypedResults.Conflict(new ApiError(ApiErrorCode.ImageBudgetExhausted));
         }
 
-        var classes = await db.SpellListEntries.AsNoTracking()
-            .Where(e => e.SpellId == variant.SpellId && e.SubclassId == null)
-            .Join(db.CharacterClasses, e => e.ClassId, c => c.Id, (e, c) => c.NameEn)
-            .Distinct()
-            .OrderBy(n => n)
-            .ToListAsync(cancellationToken);
+        var classes = await import.ClassNamesAsync(variant.SpellId, cancellationToken);
         var prompts = await db.SpellArtPrompts.AsNoTracking()
             .Where(p => p.VariantId == variantId)
             .OrderBy(p => p.CreatedAt)

@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using OreanasOffice.Server.Images;
+using OreanasOffice.Server.Spells;
 
 namespace OreanasOffice.Server.Tests;
 
 // `configuration` adds settings such as a Google client or Admin:Email. Without
-// `runsImageJobs` the app has no image job worker (AppFixture.CreateApp says why).
+// `runsImageJobs` the app has no image or spell job worker (AppFixture.CreateApp says why).
 public sealed class AppFactory(
     string databaseConnectionString,
     string storageConnectionString,
@@ -46,6 +47,7 @@ public sealed class AppFactory(
             if (!runsImageJobs)
             {
                 services.Remove(services.Single(d => d.ImplementationType == typeof(ImageJobWorker)));
+                services.Remove(services.Single(d => d.ImplementationType == typeof(SpellJobWorker)));
             }
         });
     }

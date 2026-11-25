@@ -199,6 +199,9 @@ public enum ApiErrorCode
     // MotifSuggestionFailed: the text model gave no motif for the studio (no answer, or it
     // refused); trying again or writing the motif by hand helps.
     MotifSuggestionFailed,
+    // RevisionOutdated: the revision pass's card was edited since; putting the old card back
+    // would lose the edit.
+    RevisionOutdated,
     // MotifInUse: a motif with pictures, or with a picture still being made, can't be deleted.
     MotifInUse,
     // GlossaryInvalid: an uploaded glossary needs 1 to 500 entries, each with a unique name of up

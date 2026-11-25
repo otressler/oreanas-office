@@ -288,6 +288,9 @@ public enum SpellArtPromptSource
 {
     Studio,
     Seed,
+
+    // Written by the suggestion queue (knowledge/features/spell-cards.md, "Planned", step 5).
+    Suggestion,
 }
 
 // A review in the studio: comments, ★, ✕ and hiding a failed request. Append-only; the
@@ -358,6 +361,16 @@ internal sealed class SpellConfiguration :
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
+    // A card stored as one JSON column.
+    public static PropertyBuilder<SpellCard> AsCardJson(PropertyBuilder<SpellCard> property) =>
+        property.HasConversion(
+            card => JsonSerializer.Serialize(card, CardJson),
+            json => JsonSerializer.Deserialize<SpellCard>(json, CardJson)!,
+            new ValueComparer<SpellCard>(
+                (a, b) => JsonSerializer.Serialize(a, CardJson) == JsonSerializer.Serialize(b, CardJson),
+                card => JsonSerializer.Serialize(card, CardJson).GetHashCode(),
+                card => JsonSerializer.Deserialize<SpellCard>(JsonSerializer.Serialize(card, CardJson), CardJson)!));
+
     public void Configure(EntityTypeBuilder<Spell> spell)
     {
         spell.Property(s => s.NameEn).HasMaxLength(Spell.NameMaxLength);
@@ -369,15 +382,7 @@ internal sealed class SpellConfiguration :
 
     public void Configure(EntityTypeBuilder<SpellVariant> variant)
     {
-        variant.Property(v => v.Card)
-            .HasConversion(
-                card => JsonSerializer.Serialize(card, CardJson),
-                json => JsonSerializer.Deserialize<SpellCard>(json, CardJson)!,
-                new ValueComparer<SpellCard>(
-                    (a, b) => JsonSerializer.Serialize(a, CardJson) == JsonSerializer.Serialize(b, CardJson),
-                    card => JsonSerializer.Serialize(card, CardJson).GetHashCode(),
-                    card => JsonSerializer.Deserialize<SpellCard>(JsonSerializer.Serialize(card, CardJson), CardJson)!))
-            .HasColumnName("CardJson");
+        AsCardJson(variant.Property(v => v.Card)).HasColumnName("CardJson");
         variant.Property(v => v.SeedKey).HasMaxLength(Spell.NameMaxLength);
         variant.HasIndex(v => v.SeedKey).IsUnique().HasFilter("[SeedKey] IS NOT NULL");
         variant.HasIndex(v => v.ArtAssetId);

@@ -116,6 +116,10 @@ public sealed class ImageOptions
     // The wiki spell import reads (knowledge/features/spell-cards.md).
     public string SpellWikiBaseUrl { get; set; } = "https://dnd2024.wikidot.com";
 
+    // The suggestion queue fetches wiki pages at most this often (knowledge/features/spell-cards.md,
+    // "Planned", step 5), so a run of 330 spells doesn't hit the wiki all at once.
+    public TimeSpan SpellWikiInterval { get; set; } = TimeSpan.FromSeconds(3);
+
     // Book photos for spell import: the largest upload, and the long edge sent to the model.
     public int SpellPhotoMaxBytes { get; set; } = 15 * 1024 * 1024;
 

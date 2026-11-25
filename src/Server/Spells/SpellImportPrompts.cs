@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using OreanasOffice.Server.Statuses;
 
@@ -80,6 +81,55 @@ public static class SpellImportPrompts
 
     public static string WikiUser(string nameEn, string pageText) =>
         $"Spell: {nameEn}\n\nWiki page text:\n{pageText}";
+
+    // The revision pass (knowledge/features/spell-cards.md, "Planned", step 4): the card's form
+    // in the rules above, its words as they are. The server takes only the name, the texts and
+    // the status fields from the answer, and saves nothing whose words changed.
+    public const string RevisionIntro =
+        "You get a German spell card that is already written, as JSON. Bring it into the form the rules below describe, without changing its words.";
+
+    public const string RevisionRules =
+        """
+
+
+        Revising rules, which come before every rule above:
+        - Keep every word, number and punctuation mark of "name", "description", the effects' "text" and the tables' "caption", "title" and "text" exactly as they are, in the same order. Don't shorten, add, translate or reword anything, and don't fix what looks wrong.
+        - What you may change: split "description" into paragraphs with a blank line, put a lead-in that is already the start of a paragraph in **bold**, turn a run of choices into lines that start with "- " (only where the choices already stand one after another, keeping their words), add or remove the glossary marks [[…]], add one break point "|" to a long name, and set "offerStatus" and "statuses".
+        - Copy every other field unchanged: the stats, "concentration", "ritual", the effects' icons, titles, tags and chips, the tables' keys, colours and chips, "icon", "pips", "higherLevels", "tip", "material", "source", "writeIns". Keep the number and order of effects, tables and rows.
+        """;
+
+    public static string RevisionSystemWith(IReadOnlyCollection<string> terms) =>
+        RevisionIntro + "\n\n" + CardRules + GlossaryRule(terms) + RevisionRules;
+
+    // The card as the model writes it: break points as "|", with the spell's facts.
+    public static string RevisionUser(string nameEn, int level, SpellSchool school, SpellCard card) =>
+        JsonSerializer.Serialize(
+            new
+            {
+                nameEn,
+                name = card.Name.Replace(SpellCards.SoftHyphen, '|'),
+                level,
+                school,
+                card.CastingTime,
+                card.Range,
+                card.Components,
+                card.Duration,
+                card.Concentration,
+                card.Ritual,
+                card.Description,
+                card.Effects,
+                card.Tables,
+                card.Icon,
+                card.Pips,
+                card.HigherLevels,
+                card.Tip,
+                card.Material,
+                card.Source,
+                card.WriteIns,
+                card.OfferStatus,
+                card.Statuses,
+            },
+            SpellConfiguration.CardJson);
 
     public static string PhotoSystem =>
         $"""

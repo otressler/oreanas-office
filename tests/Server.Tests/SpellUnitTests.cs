@@ -118,6 +118,45 @@ public sealed class SpellUnitTests
         Assert.Equal("card.name", SpellCards.Validate(SpellTestApi.Card("||")).Error?.Field);
     }
 
+    // knowledge/features/spell-cards.md, "Planned", step 4: the revision keeps the words.
+    [Fact]
+    public void The_revision_check_ignores_markup_and_spacing_but_not_words()
+    {
+        Assert.Equal(
+            SpellCardRevise.Words("Ein Strahl. Das Ziel ist festgesetzt und kann wählen: Lauf oder Sprung"),
+            SpellCardRevise.Words("Ein Strahl.\n\n**Das Ziel** ist [[festgesetzt]] und kann *wählen*:\n- Lauf oder\n- Sprung"));
+        Assert.Equal(SpellCardRevise.Words("im Vorteil"), SpellCardRevise.Words("[[im Vorteil|Vorteil]]"));
+        Assert.NotEqual(SpellCardRevise.Words("Das Ziel ist festgesetzt."), SpellCardRevise.Words("Das Ziel wird festgesetzt."));
+        Assert.NotEqual(SpellCardRevise.Words("A, B"), SpellCardRevise.Words("- A\n- B"));
+    }
+
+    [Fact]
+    public void The_revision_takes_only_the_texts_form_and_the_status_fields()
+    {
+        var old = SpellTestApi.Card("Sonnenexplosion") with { Description = "Licht. Es blendet." };
+        var proposed = old with
+        {
+            Name = "Sonnen|explosion",
+            Description = "**Licht.** Es [[blendet]].",
+            CastingTime = "1 Bonusaktion",
+            Effects = [old.Effects[0] with { Title = "Anders", Text = "RW [[Konstitution]]" }],
+            OfferStatus = true,
+            Statuses = ["blinded"],
+        };
+
+        var (card, changed) = SpellCardRevise.Merge(old, proposed);
+        Assert.Null(changed);
+        Assert.Equal(("Sonnen" + SpellCards.SoftHyphen + "explosion", "**Licht.** Es [[blendet]].", "1 Aktion"), (card.Name, card.Description, card.CastingTime));
+        Assert.Equal(("Zylinder 1,5 m", "RW [[Konstitution]]"), (card.Effects[0].Title, card.Effects[0].Text));
+        Assert.True(card.OfferStatus);
+        Assert.Equal(["blinded"], card.Statuses);
+
+        Assert.Equal("card.effects[0]", SpellCardRevise.Merge(old, proposed with { Effects = [old.Effects[0] with { Text = "RW Stärke" }] }).Changed);
+        Assert.Equal("card.name", SpellCardRevise.Merge(old, proposed with { Name = "Sonnenstrahl" }).Changed);
+        // Another number of rows: the card keeps its own.
+        Assert.Equal(old.Effects, SpellCardRevise.Merge(old, proposed with { Effects = [] }).Card.Effects);
+    }
+
     // knowledge/domain/spell.md, "The card": the conditions a card offers are condition keys,
     // each once, kept in the conditions' order; Konzentration comes from "concentration".
     [Fact]

@@ -9,7 +9,8 @@ public record SpellListLink(string ClassId, string? SubclassId, int? ClassLevel)
 // A Handbook spell in the library: the German name, icon and art of its first variant (the one
 // most characters use, then the oldest), or the Handbook's German name (the English one where it
 // has none) and "spark" without a variant;
-// how many variants it has; and its class lists.
+// how many variants it has; and its class lists. HasDraft: a card draft from the suggestion
+// queue waits to be checked ("Vorschlag bereit").
 public record SpellSummary(
     Guid Id,
     string NameEn,
@@ -19,7 +20,8 @@ public record SpellSummary(
     string Icon,
     int VariantCount,
     string? ArtUrl,
-    List<SpellListLink> Lists);
+    List<SpellListLink> Lists,
+    bool HasDraft);
 
 public record SpellAuthor(Guid Id, string DisplayName);
 
@@ -53,14 +55,21 @@ public record SpellDetail(
     SpellSchool School,
     bool InHandbook,
     List<SpellListLink> Lists,
-    List<SpellVariantView> Variants);
+    List<SpellVariantView> Variants,
+    SpellCardDraftView? Draft);
+
+// A card the suggestion queue wrote (knowledge/features/spell-cards.md, "Planned", step 5), with
+// the motif it suggested; "Prüfen und übernehmen" opens the editor with it.
+public record SpellCardDraftView(Guid Id, SpellCard Card, string? MotifSubject, DateTimeOffset CreatedAt);
 
 // A new variant of a Handbook spell from the library (409 SpellNotInHandbook otherwise).
+// DraftId: the card draft it was checked from; the variant gets its motif and the draft goes.
 public record CreateVariantRequest(
     Guid SpellId,
     SpellCard Card,
     SpellVariantOrigin Origin = SpellVariantOrigin.Manual,
-    Guid? BasedOnVariantId = null);
+    Guid? BasedOnVariantId = null,
+    Guid? DraftId = null);
 
 public record UpdateVariantRequest(SpellCard Card);
 

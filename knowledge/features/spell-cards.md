@@ -181,7 +181,7 @@ What is offered is what the character's list doesn't have yet. A spell status is
 
 Removing the spell keeps its statuses; tokens may carry them, and statuses are never deleted.
 
-## 4. Revising the existing cards
+## 4. Revising the existing cards (decided 2026-11-25, being built)
 
 An admin action "Karten überarbeiten": for every variant, the text model gets the **current card**, not the wiki, and may change only its form: paragraphs and lead-ins (1), condition markup (2), the status switch (3).
 
@@ -189,8 +189,11 @@ An admin action "Karten überarbeiten": for every variant, the text model gets t
 - **Undo**: the card before the revision is kept, so it can be put back. Variants have no history yet, so this needs a schema addition.
 - Moving text into tables rewrites it and can't pass the check; that stays with the editor and "Eigene Variante", card by card.
 - About 60 cards at a fraction of a cent each; it runs as a background job (below).
+- **What the model may touch** (2026-11-25): the name (break points only), the description, the effect rows' texts and the tables' caption, titles and texts, plus "Als Zustand anbieten" and the conditions. Everything else is kept from the card as it is. The check compares each of those texts with its markup (`**`, `*`, `[[…|…]]`, list dashes, break points) and all spacing taken out. A model that changes the number of effects or tables keeps the card's own.
+- **On the admin page**: "Karten überarbeiten" with "nur noch nicht überarbeitete" ticked, the number of cards and the estimated cost before it starts. Afterwards the cards whose words changed ("Zum Prüfen", with the field and a link to the editor) and the revised cards with "Zurücksetzen". Putting a card back is refused once it was edited after the revision.
+- A card edited while its revision ran isn't overwritten: the job fails with "inzwischen geändert" and can be tried again.
 
-## 5. A queue for card drafts and motif suggestions
+## 5. A queue for card drafts and motif suggestions (decided 2026-11-25, being built)
 
 Project owner, 2026-11-25: queue all spells for suggestions, cards and art motifs, **but not the art itself** (pictures cost far more per image; 330 would use up the [image budget](/decisions/image-budget.md)).
 
@@ -198,6 +201,10 @@ Project owner, 2026-11-25: queue all spells for suggestions, cards and art motif
 - **The queue**: a job per spell in the database (queued, running, done, failed), worked in the background like the image queue, with progress, failures and "Erneut versuchen" on the admin page. Production scales to zero ([hosting](/decisions/hosting.md)), so an interrupted run goes on at the next start. Wiki pages are fetched a few seconds apart, not all at once. The revision pass (4) runs on the same queue.
 - **Card drafts** are not variants: a machine card would look like someone's own, count as "Mit Karte" and could land on a character unchecked. A spell with a draft shows "Vorschlag bereit" in the library; its page shows the draft with "Prüfen und übernehmen", which opens the editor with it, and saving makes it a variant with whoever checked it as author. A spell with only a draft can't be added to a character. This settles the open question below for machine-written cards.
 - **Motif suggestions**: for each card without a motif, and for each draft, the text model writes one subject as "Vorschlagen" does. On a variant it becomes motif A with a revision of its own source (`suggestion`, shown as "Vorschlag" in the studio); a draft carries its suggestion into the variant when it's taken. One that doesn't fit is deleted with "Motiv löschen". Generating the picture stays the author's step.
+- **Which jobs** (2026-11-25): a spell without a card gets a **draft** job (wiki page, German card, then a motif for it); with "nur Zauber ohne Karte" unticked, each variant of the other spells without any motif gets a **motif** job. A spell with a draft already, or with an open job of the same kind, is skipped. The class filter uses the class's list.
+- **Who and what it costs**: only admins start it. The calls are recorded under the admin who started the run and count against the monthly AI budget; the estimate uses the average cost of earlier calls of the same kind (a fixed guess before there are any). Without a text model the buttons are disabled. When the month's budget is used up, the remaining jobs fail with "Budget aufgebraucht" and can be tried again next month.
+- **Progress**: the admin page shows waiting, running, done and failed jobs per kind and reloads every few seconds while jobs are open. Failed ones show their reason, with "Erneut versuchen" for one or all.
+- **Drafts**: a spell has at most one. Its page shows the draft card with "Prüfen und übernehmen" for everyone signed in and "Verwerfen" for admins. Taking it opens the creation page's editor with the draft (also from a character's "Zauber hinzufügen", whose row says "Vorschlag prüfen"); saving creates the variant with origin "aus dem Wiki", gives it the draft's motif and removes the draft.
 
 # Open
 

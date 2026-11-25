@@ -119,6 +119,32 @@ public sealed partial class SpellImport(
         return text.Length == 0 ? null : text;
     }
 
+    // The card in the revision pass's form, as the model wrote it (cut to the limits like a
+    // draft), or null without a usable answer. SpellCardRevise decides what may be kept.
+    public async Task<SpellCard?> ReviseCardAsync(string nameEn, int level, SpellSchool school, SpellCard card, Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await CallAsync(
+            new TextModelRequest(
+                "spell-revise",
+                SpellImportPrompts.RevisionSystemWith(await GlossaryTermsAsync(cancellationToken)),
+                SpellImportPrompts.RevisionUser(nameEn, level, school, card),
+                "spell_card",
+                SpellImportPrompts.CardSchema()),
+            userId,
+            cancellationToken);
+        var model = JsonSerializer.Deserialize<ModelCard>(result.Json, SpellConfiguration.CardJson);
+        return model is not null && ToDraft(model with { NameEn = nameEn }, SpellVariantOrigin.Manual) is { } draft ? draft.Card : null;
+    }
+
+    // The English names of the classes whose list the spell is on, for the motif prompt.
+    public async Task<List<string>> ClassNamesAsync(Guid spellId, CancellationToken cancellationToken) =>
+        await db.SpellListEntries.AsNoTracking()
+            .Where(e => e.SpellId == spellId && e.SubclassId == null)
+            .Join(db.CharacterClasses, e => e.ClassId, c => c.Id, (e, c) => c.NameEn)
+            .Distinct()
+            .OrderBy(n => n)
+            .ToListAsync(cancellationToken);
+
     // The drafts of Handbook spells, with the Handbook's name, level and school; the others
     // are dropped (the library holds only the Handbook's spells).
     public async Task<List<SpellDraft>> InHandbookAsync(IEnumerable<SpellDraft> drafts, CancellationToken cancellationToken)

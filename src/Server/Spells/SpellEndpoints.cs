@@ -44,6 +44,7 @@ public static class SpellEndpoints
                 s.Level,
                 s.School,
                 Count = s.Variants.Count,
+                HasDraft = db.SpellCardDrafts.Any(d => d.SpellId == s.Id),
                 First = s.Variants
                     .OrderByDescending(v => db.CharacterSpells.Count(c => c.VariantId == v.Id))
                     .ThenBy(v => v.CreatedAt)
@@ -62,7 +63,8 @@ public static class SpellEndpoints
                 r.First?.Card.Icon ?? "spark",
                 r.Count,
                 r.First?.ArtAssetId is { } art ? MapBackgrounds.Url(art) : null,
-                lists.GetValueOrDefault(r.Id) ?? []))
+                lists.GetValueOrDefault(r.Id) ?? [],
+                r.HasDraft))
             .ToList());
     }
 
@@ -92,8 +94,12 @@ public static class SpellEndpoints
         var variants = await ViewsAsync(
             db, db.SpellVariants.Where(v => v.SpellId == spellId).OrderBy(v => v.CreatedAt), user, cancellationToken);
         var lists = await ListsAsync(db, db.Spells.Where(s => s.Id == spellId), cancellationToken);
+        var draft = await db.SpellCardDrafts.AsNoTracking()
+            .Where(d => d.SpellId == spellId)
+            .Select(d => new SpellCardDraftView(d.Id, d.Card, d.MotifSubject, d.CreatedAt))
+            .SingleOrDefaultAsync(cancellationToken);
         return TypedResults.Ok(new SpellDetail(
-            spell.Id, spell.NameEn, spell.NameDe, spell.Level, spell.School, spell.InHandbook, lists.GetValueOrDefault(spell.Id) ?? [], variants));
+            spell.Id, spell.NameEn, spell.NameDe, spell.Level, spell.School, spell.InHandbook, lists.GetValueOrDefault(spell.Id) ?? [], variants, draft));
     }
 
     // 409 SpellNotInHandbook for a spell that isn't the Handbook's, 400 SpellNotFound for an
@@ -128,10 +134,52 @@ public static class SpellEndpoints
         }
 
         var origin = request.Origin == SpellVariantOrigin.Seed ? SpellVariantOrigin.Manual : request.Origin;
+        var now = time.GetUtcNow();
         var variant = await AddVariantAsync(
-            db, request.SpellId, card, origin, request.BasedOnVariantId, null, user.GetUserId(), time.GetUtcNow(), cancellationToken);
+            db, request.SpellId, card, origin, request.BasedOnVariantId, null, user.GetUserId(), now, cancellationToken);
+        if (request.DraftId is { } draftId)
+        {
+            await TakeDraftAsync(db, draftId, variant, now, cancellationToken);
+        }
+
         var view = (await ViewsAsync(db, db.SpellVariants.Where(v => v.Id == variant.Id), user, cancellationToken)).Single();
         return TypedResults.Created($"/api/spells/variants/{variant.Id}", view);
+    }
+
+    // A checked draft (knowledge/features/spell-cards.md, "Planned", step 5): its motif becomes
+    // the variant's motif A, and the draft goes. One already taken or of another spell is ignored.
+    private static async Task TakeDraftAsync(AppDbContext db, Guid draftId, SpellVariant variant, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var draft = await db.SpellCardDrafts.SingleOrDefaultAsync(d => d.Id == draftId && d.SpellId == variant.SpellId, cancellationToken);
+        if (draft is null)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(draft.MotifSubject))
+        {
+            db.SpellArtPrompts.Add(new SpellArtPrompt
+            {
+                Id = Guid.NewGuid(),
+                VariantId = variant.Id,
+                Letter = "a",
+                Subject = draft.MotifSubject,
+                Source = SpellArtPromptSource.Suggestion,
+                CreatedAt = now,
+                CreatedByUserId = variant.AuthorUserId,
+            });
+        }
+
+        db.SpellCardDrafts.Remove(draft);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Someone took or discarded it at the same time; the variant stands.
+            db.ChangeTracker.Clear();
+        }
     }
 
     // Adds a variant to a spell of the library (HandbookSync made them all).
@@ -219,6 +267,8 @@ public static class SpellEndpoints
 
         await db.SpellVariants.Where(v => v.BasedOnVariantId == variantId)
             .ExecuteUpdateAsync(set => set.SetProperty(v => v.BasedOnVariantId, (Guid?)null), cancellationToken);
+        // Its suggestion jobs go with it; the jobs' key doesn't cascade (SpellJobConfiguration).
+        await db.SpellJobs.Where(j => j.VariantId == variant.Id).ExecuteDeleteAsync(cancellationToken);
         db.SpellVariants.Remove(variant);
         await db.SaveChangesAsync(cancellationToken);
         if (!await db.SpellVariants.AnyAsync(v => v.SpellId == variant.SpellId, cancellationToken))

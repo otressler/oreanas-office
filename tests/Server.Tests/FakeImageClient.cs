@@ -80,6 +80,7 @@ public static class FakeImageClientExtensions
         ["Images:ApiKey"] = "fake",
         ["Images:Deployment"] = "fake-image",
         ["Images:MinRequestInterval"] = "00:00:00",
+        ["Images:SpellWikiInterval"] = "00:00:00",
     };
 
     public static void AddFakeImageClient(this IServiceCollection services)
