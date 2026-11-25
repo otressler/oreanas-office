@@ -157,15 +157,21 @@ Effect and table rows stay one block each. The import prompt changes from "no he
 - **A tap** on it (hover on a desktop as well) shows the condition's icon, name and rules, outside the card so it isn't clipped or scaled: a sheet at the bottom of the gallery on a phone, a popover beside the term on a desktop. The tap doesn't turn the card. The card then needs its own "Karte umdrehen" control for the keyboard and screen readers, since buttons can't sit inside the card's button.
 - The same explanation opens from a status on the [token card](/features/token-card.md) and in the initiative list.
 
-## 3. Statuses when a spell is added
+## 3. Statuses when a spell is added (decided 2026-11-25, being built)
 
-When a spell is added to a character (the "Zauber hinzufügen" dialog), and only when something is missing from the character's status list ([statuses](/features/statuses.md), "Status lists"), the dialog offers the statuses ticked: "Für Liriels Zustandsliste: ☑ Mal des Jägers ☑ Konzentration". Unticking skips them; nothing is added unseen.
+When a spell is added to a character, and only when something is missing from the character's status list ([statuses](/features/statuses.md), "Status lists"), the app offers the statuses ticked: "Für Liriels Zustandsliste: ☑ Mal des Jägers ☑ Konzentration", with "Hinzufügen" and "Überspringen". Unticking skips one; nothing is added unseen. This happens in the "Zauber hinzufügen" dialog and when "Neuen Zauber anlegen" comes back to the character page; not when switching a variant.
 
-- **Spell statuses**: a switch on the card, "Als Zustand anbieten", for spells that mark a target or last on someone (Hunter's Mark, Hex, Bless, Faerie Fire). Set by the author in the editor and by spell import. The status takes the spell's name and the card's icon as its icon, so nothing is generated or spent and it works offline.
-- **Konzentration**, offered with a character's first concentration spell.
-- **Conditions** a card marks (step 2) that the character's list is missing. Mentioning isn't causing (Lesser Restoration ends Blinded), so only conditions missing anyway are offered, which keeps a wrong guess harmless.
-- Removing the spell keeps its statuses; tokens may carry them, and statuses are never deleted.
-- *Open*: whether a status made from a spell is linked to it, so two characters with Hunter's Mark share its name and icon and it isn't offered twice; whether Konzentration becomes a built-in status of every list instead of a suggestion.
+The card says what it offers (project owner, 2026-11-25):
+
+- **"Als Zustand anbieten"** (`offerStatus`): the spell itself is a status, for spells that mark a target or last on someone (Hunter's Mark, Hex, Bless, Faerie Fire). The author sets it in the editor and spell import sets it.
+- **Conditions** (`statuses`): the conditions the spell causes. The editor's "Zustände" section lists every condition the card's texts mark (step 2) as a suggestion to tick, and keeps the ticked ones even when a mark goes. Mentioning isn't causing (Lesser Restoration ends Blinded), so the author decides; spell import ticks only conditions the spell causes.
+- **Konzentration**: offered with a concentration spell (the card's `concentration`), as a built-in status (below).
+
+What is offered is what the character's list doesn't have yet. A spell status is **linked to its spell**: one per campaign and spell, made the first time it's taken, with the German name of the variant it was taken from (without break points) and the card's icon drawn as its icon, so nothing is generated or spent and it works offline. Two characters with Hunter's Mark share it, and a character whose list has it isn't offered it again. Its icon can still be generated like a custom status's; a generated picture takes the drawn icon's place.
+
+**Konzentration** becomes a 16th built-in status (key `concentration`), with an icon made once like the conditions' and the glossary's "Konzentration" as its explanation. New status lists don't start with it; it's offered with a concentration spell, and anyone may add it to a list by hand.
+
+Removing the spell keeps its statuses; tokens may carry them, and statuses are never deleted.
 
 ## 4. Revising the existing cards
 

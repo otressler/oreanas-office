@@ -20,6 +20,10 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-16T06:10:00Z }
 | `iconAssetId` | → [Asset](/domain/asset.md), nullable | The picked icon version of a custom status. Library icons are static files of the app instead |
 | `characterId` | → [Character](/domain/character.md), nullable | Custom statuses: the character whose status list it was made in; empty when it was made in a DM status list. Whoever may edit that character generates and picks its icon; for a DM's status, any `dm` member |
 | `createdByUserId` | → [User](/domain/user.md), nullable | |
+| `spellId` | → [Spell](/domain/spell.md), nullable | A spell status (since 2026-11-25): at most one per campaign and spell ([spell cards](/features/spell-cards.md), "Statuses when a spell is added") |
+| `spellIcon` | string, nullable | The card icon a spell status is drawn with while it has no `iconAssetId` |
+
+Besides the 15 conditions, the library has `concentration` ("Konzentration", since 2026-11-25), which new status lists don't start with.
 
 Definitions are never deleted, so a token's status always has a name and an icon.
 

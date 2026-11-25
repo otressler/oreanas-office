@@ -18,7 +18,7 @@ A token carries reminders of what is going on with it: prone, grappled, poisoned
 # Who puts statuses on which token
 
 - **The session DM** puts statuses on any token, creature or character, and removes any status.
-- **Players** put statuses on their own characters and on any creature they can see, and remove the ones they put on. They don't put statuses on other players' characters. Other `dm` members count as players at the table ([session](/domain/session.md)). This is the backlog's rule, confirmed by the project owner on 2026-10-16 (question 21).
+- **Players** put statuses on any token they can see, creatures and every character, and remove the ones they put on. Other `dm` members count as players at the table ([session](/domain/session.md)). Until 2026-11-25 players didn't put statuses on other players' characters (the backlog's rule, question 21); the project owner dropped that limit so a player can mark an ally with their spell ("Segnen" on Brom).
 - The same status can't be on one token twice, as conditions don't stack in the 2024 rules.[^roll20-conditions] Exhaustion has a level from 1 to 6 instead; anyone who may remove it may change the level.
 
 # The library: the 15 conditions
@@ -60,7 +60,8 @@ A status list ("Zustandsliste" in the app) is the list a person picks from when 
 - **What the picker shows**: a player sees the status lists of the characters they play in this session that are in this fight (one list if they play one character; [character](/domain/character.md), "Who plays it"). The session DM sees their own DM status list first, then every character's status list in the fight, under the character's name, so they can put on a status a player's character caused.
 - Picking a status puts it on at once; it's easy to remove, so there is no confirm step.
 - **Explained** (since 2026-11-25): on the token card, a tap on one of the 15 conditions shows its rules from the [rules glossary](/features/rules-glossary.md).
-- **Planned** (2026-11-25): adding a spell to a character offers the statuses its list is missing, such as "Mal des Jägers" or "Konzentration" ([spell cards](/features/spell-cards.md), "Planned", step 3).
+- **From spells** (2026-11-25): adding a spell to a character offers the statuses its list is missing, such as "Mal des Jägers" or "Konzentration" ([spell cards](/features/spell-cards.md), "Planned", step 3). A spell status is a custom status linked to its spell, one per campaign and spell, drawn with the card's icon until a picture is generated for it.
+- **Konzentration** (2026-11-25) is a 16th built-in status, key `concentration`. Unlike the 15 conditions, new status lists don't start with it; it's offered with a concentration spell and can be added by hand.
 
 # Custom statuses
 

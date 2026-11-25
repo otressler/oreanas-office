@@ -65,6 +65,8 @@ Always German and in meters (1.5 m per 5 ft, [units](/rules/movement-distance.md
 | `material` | 120 | "M: …" in the footer |
 | `source` | 60 | The book, shown only when it isn't the Player's Handbook |
 | `writeIns` | `attack`, `saveDc`, `modifier` | Blank lines to write the character's numbers on ("Angr. +", "SG", "Mod +") |
+| `offerStatus` | bool | Not shown. "Als Zustand anbieten": the spell itself is offered as a status when it's added to a character (Hunter's Mark, Hex, Bless; since 2026-11-25, [spell cards](/features/spell-cards.md), "Statuses when a spell is added") |
+| `statuses` | condition keys | Not shown. The conditions the spell causes, offered with it (`restrained` for Entangle); the editor suggests the conditions the card's texts mark. Konzentration isn't listed here: `concentration` offers it |
 
 Icons and damage kinds come from a fixed list in the app (`src/web/src/spells/icons.ts`); the server checks the names.
 
