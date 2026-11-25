@@ -4142,6 +4142,121 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/characters/{characterId}/spells/{spellId}/status-offers": {
+      "get": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "spellId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SpellStatusOffer"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/characters/{characterId}/spells/{spellId}/statuses": {
+      "post": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "spellId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSpellStatusesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/spells/variants/{variantId}/studio": {
       "get": {
         "tags": [
@@ -4742,6 +4857,23 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "AddSpellStatusesRequest": {
+        "required": [
+          "keys"
+        ],
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -9537,6 +9669,15 @@
             "items": {
               "$ref": "#/components/schemas/SpellWriteIn"
             }
+          },
+          "offerStatus": {
+            "type": "boolean"
+          },
+          "statuses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -9780,6 +9921,42 @@
           "necromancy",
           "transmutation"
         ]
+      },
+      "SpellStatusOffer": {
+        "required": [
+          "key",
+          "libraryKey",
+          "name",
+          "iconUrl",
+          "spellIcon"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "libraryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "iconUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "spellIcon": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       },
       "SpellStudio": {
         "required": [
@@ -10054,7 +10231,9 @@
           "hasLevels",
           "iconUrl",
           "iconDescription",
-          "characterId"
+          "characterId",
+          "spellId",
+          "spellIcon"
         ],
         "type": "object",
         "properties": {
@@ -10092,6 +10271,19 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "spellId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "spellIcon": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

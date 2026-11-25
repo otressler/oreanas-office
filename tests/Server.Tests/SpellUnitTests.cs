@@ -118,6 +118,19 @@ public sealed class SpellUnitTests
         Assert.Equal("card.name", SpellCards.Validate(SpellTestApi.Card("||")).Error?.Field);
     }
 
+    // knowledge/domain/spell.md, "The card": the conditions a card offers are condition keys,
+    // each once, kept in the conditions' order; Konzentration comes from "concentration".
+    [Fact]
+    public void A_cards_statuses_are_condition_keys()
+    {
+        var (card, _) = SpellCards.Validate(SpellTestApi.Card() with { OfferStatus = true, Statuses = ["restrained", "prone"] });
+        Assert.True(card!.OfferStatus);
+        Assert.Equal(["prone", "restrained"], card.Statuses);
+        Assert.Equal("card.statuses", SpellCards.Validate(SpellTestApi.Card() with { Statuses = ["concentration"] }).Error?.Field);
+        Assert.Equal("card.statuses", SpellCards.Validate(SpellTestApi.Card() with { Statuses = ["prone", "prone"] }).Error?.Field);
+        Assert.Equal("card.statuses", SpellCards.Validate(SpellTestApi.Card() with { Statuses = [null!] }).Error?.Field);
+    }
+
     [Fact]
     public void A_long_description_is_allowed_up_to_its_limit()
     {

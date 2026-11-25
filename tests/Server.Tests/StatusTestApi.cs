@@ -9,7 +9,7 @@ namespace OreanasOffice.Server.Tests;
 // Shortcuts for statuses and status lists (knowledge/features/statuses.md).
 public static class StatusTestApi
 {
-    public static Guid Library(string key) => StatusLibrary.Conditions.Single(c => c.Key == key).Id;
+    public static Guid Library(string key) => StatusLibrary.All.Single(c => c.Key == key).Id;
 
     public static Guid Prone => Library("prone");
 
@@ -17,7 +17,10 @@ public static class StatusTestApi
 
     public static Guid Exhaustion => Library("exhaustion");
 
-    public static IEnumerable<Guid> LibraryIds => StatusLibrary.Conditions.Select(c => c.Id);
+    public static Guid Concentration => Library("concentration");
+
+    // The 15 conditions, which a new status list starts with.
+    public static IEnumerable<Guid> ConditionIds => StatusLibrary.Conditions.Select(c => c.Id);
 
     public static string CharacterListUrl(Guid campaignId, Guid characterId) => $"/api/campaigns/{campaignId}/characters/{characterId}/status-list";
 

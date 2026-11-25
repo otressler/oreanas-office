@@ -33,7 +33,7 @@ public sealed class TableStatusTests(AppFixture fixture) : IClassFixture<AppFixt
         Assert.Equal((Prone, (int?)null, player.Id), (status.StatusId, status.Level, status.AppliedByUserId));
         Assert.InRange(status.AppliedAt, DateTimeOffset.UtcNow.AddMinutes(-1), DateTimeOffset.UtcNow.AddMinutes(1));
         Assert.Equal(
-            [new StatusDefinitionView(Prone, "prone", "Liegend", false, "/statuses/prone.webp", null, null)],
+            [new StatusDefinitionView(Prone, "prone", "Liegend", false, "/statuses/prone.webp", null, null, null, null)],
             change.Definitions);
         AssertSameChange(change, await dmDevice.NextStatusesAsync());
         AssertSameChange(change, await playerDevice.NextStatusesAsync());
@@ -48,9 +48,10 @@ public sealed class TableStatusTests(AppFixture fixture) : IClassFixture<AppFixt
         }
     }
 
-    // Other `dm` members count as players at the table (knowledge/domain/session.md).
+    // Other `dm` members count as players at the table (knowledge/domain/session.md). Since
+    // 2026-11-25 players put statuses on other players' characters too ("Segnen" on an ally).
     [Fact]
-    public async Task Players_put_statuses_on_their_own_characters_and_on_creatures()
+    public async Task Everyone_puts_statuses_on_every_character_and_creature()
     {
         var fight = await App.StartFightAsync();
         await using var brom = await TableTestClient.JoinAsync(App, fight.Table.Player, fight.EncounterId);
@@ -65,18 +66,17 @@ public sealed class TableStatusTests(AppFixture fixture) : IClassFixture<AppFixt
             await yara.AddStatusAsync(fight.Goblin, Prone),
             await oreana.AddStatusAsync(fight.Thorin, Poisoned),
             await oreana.AddStatusAsync(fight.Aria, Poisoned),
-        ];
-        StatusResult[] refused =
-        [
-            await brom.AddStatusAsync(fight.Aria, Poisoned),
+            await brom.AddStatusAsync(fight.Aria, Exhaustion),
             await yara.AddStatusAsync(fight.Thorin, Exhaustion),
         ];
 
         Assert.All(allowed, r => Assert.Null(r.Error));
-        Assert.All(refused, r => Assert.Equal(new StatusResult(ApiErrorCode.NotYourToken, null), r));
         var board = await fight.Table.Dm.BoardAsync(fight);
-        Assert.Equal([Prone, Poisoned], board.Tokens.Single(t => t.Id == fight.Thorin).Statuses.Select(s => s.StatusId));
-        Assert.Equal([Prone, Poisoned], board.Tokens.Single(t => t.Id == fight.Aria).Statuses.Select(s => s.StatusId));
+        Assert.Equal([Prone, Poisoned, Exhaustion], board.Tokens.Single(t => t.Id == fight.Thorin).Statuses.Select(s => s.StatusId));
+        Assert.Equal([Prone, Poisoned, Exhaustion], board.Tokens.Single(t => t.Id == fight.Aria).Statuses.Select(s => s.StatusId));
+
+        // Taking one off stays with whoever put it on, or the session DM.
+        Assert.Equal(ApiErrorCode.NotYourStatus, (await brom.RemoveStatusAsync(fight.Thorin, Exhaustion)).Error);
     }
 
     [Fact]

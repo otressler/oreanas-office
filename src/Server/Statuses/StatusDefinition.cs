@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OreanasOffice.Server.Accounts;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Characters;
+using OreanasOffice.Server.Spells;
 
 namespace OreanasOffice.Server.Statuses;
 
@@ -16,6 +17,8 @@ public class StatusDefinition
     public const int IconDescriptionMaxLength = 300;
 
     public const int LibraryKeyMaxLength = 20;
+
+    public const int SpellIconMaxLength = 20;
 
     // Exhaustion and custom statuses with levels: 1 to MaxLevel.
     public const int MaxLevel = 6;
@@ -48,6 +51,13 @@ public class StatusDefinition
 
     public Guid? CreatedByUserId { get; set; }
 
+    // A spell status (knowledge/features/spell-cards.md, "Statuses when a spell is added"):
+    // the spell it was made from, at most one per campaign and spell.
+    public Guid? SpellId { get; set; }
+
+    // A spell status's card icon (SpellCards.Icons), drawn while it has no IconAssetId.
+    public string? SpellIcon { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public Campaign? Campaign { get; set; }
@@ -64,6 +74,9 @@ internal sealed class StatusDefinitionConfiguration : IEntityTypeConfiguration<S
         status.HasIndex(s => s.LibraryKey).IsUnique().HasFilter($"[{nameof(StatusDefinition.LibraryKey)}] IS NOT NULL");
         status.HasIndex(s => s.CampaignId);
         status.HasIndex(s => s.IconAssetId);
+        status.Property(s => s.SpellIcon).HasMaxLength(StatusDefinition.SpellIconMaxLength).IsUnicode(false);
+        status.HasIndex(s => new { s.CampaignId, s.SpellId }).IsUnique().HasFilter($"[{nameof(StatusDefinition.SpellId)}] IS NOT NULL");
+        status.HasOne<Spell>().WithMany().HasForeignKey(s => s.SpellId).OnDelete(DeleteBehavior.Restrict);
         status.HasOne(s => s.Campaign).WithMany().HasForeignKey(s => s.CampaignId).OnDelete(DeleteBehavior.Cascade);
 
         // The campaign's cascade already deletes characters; one path is all SQL Server allows.
@@ -79,9 +92,9 @@ internal sealed class StatusDefinitionConfiguration : IEntityTypeConfiguration<S
     }
 }
 
-// The 15 conditions (knowledge/features/statuses.md, "The library"). Keys and ids are
-// fixed for good: tokens and status lists point at them, and the app's static icons are
-// /statuses/<key>.webp.
+// The 15 conditions (knowledge/features/statuses.md, "The library") and Konzentration, which
+// new status lists don't start with. Keys and ids are fixed for good: tokens and status lists
+// point at them, and the app's static icons are /statuses/<key>.webp.
 public static class StatusLibrary
 {
     public static readonly IReadOnlyList<(string Key, string Name, Guid Id)> Conditions =
@@ -103,18 +116,37 @@ public static class StatusLibrary
         ("unconscious", "Bewusstlos", new Guid("5a7d0000-0000-4000-8000-00000000000f")),
     ];
 
+    public static readonly (string Key, string Name, Guid Id) Concentration =
+        ("concentration", "Konzentration", new Guid("5a7d0000-0000-4000-8000-000000000010"));
+
+    // Every library status: the conditions in their order, then Konzentration.
+    public static readonly IReadOnlyList<(string Key, string Name, Guid Id)> All = [.. Conditions, Concentration];
+
     public const string LevelledKey = "exhaustion";
+
+    public static bool IsCondition(string? key) => key is not null && Conditions.Any(c => c.Key == key);
+
+    public static Guid ConditionId(string key) => Conditions.Single(c => c.Key == key).Id;
+
+    // The keys in the conditions' order, each once.
+    public static List<string> InConditionOrder(IEnumerable<string> keys)
+    {
+        var wanted = keys.ToHashSet(StringComparer.Ordinal);
+        return [.. Conditions.Where(c => wanted.Contains(c.Key)).Select(c => c.Key)];
+    }
 
     // The static icon of a library status, served from wwwroot.
     public static string IconUrl(string key) => $"/statuses/{key}.webp";
 
     internal static IEnumerable<StatusDefinition> Seed() =>
-        Conditions.Select(c => new StatusDefinition
+        All.Select(c => new StatusDefinition
         {
             Id = c.Id,
             LibraryKey = c.Key,
             Name = c.Name,
             HasLevels = c.Key == LevelledKey,
-            CreatedAt = new DateTimeOffset(2026, 10, 16, 0, 0, 0, TimeSpan.Zero),
+            CreatedAt = c.Key == Concentration.Key
+                ? new DateTimeOffset(2026, 11, 25, 0, 0, 0, TimeSpan.Zero)
+                : new DateTimeOffset(2026, 10, 16, 0, 0, 0, TimeSpan.Zero),
         });
 }

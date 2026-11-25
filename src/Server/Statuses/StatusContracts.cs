@@ -3,12 +3,14 @@ namespace OreanasOffice.Server.Statuses;
 // Request and response types for statuses and status lists (knowledge/features/statuses.md,
 // knowledge/domain/status.md). Every endpoint needs a connection; the app says so offline.
 
-// A status as the app shows it. LibraryKey: one of the 15 condition keys, whose German
-// name the app takes from its text file; null for custom statuses. IconUrl: the static
-// /statuses/<key>.webp for library statuses, /api/assets/{id} for a custom status's picked
-// icon, null for a custom status without one (the app shows its first letter).
+// A status as the app shows it. LibraryKey: one of the library keys (the 15 conditions and
+// "concentration"), whose German name the app takes from its text file; null for custom
+// statuses. IconUrl: the static /statuses/<key>.webp for library statuses, /api/assets/{id}
+// for a custom status's picked icon, null for a custom status without one (the app shows its
+// first letter).
 // CharacterId: the character whose status list a custom status was made in; null for
-// library statuses and those made in a DM status list.
+// library statuses and those made in a DM status list. SpellId and SpellIcon: a spell status's
+// spell and its card icon, which the app draws while IconUrl is null.
 public record StatusDefinitionView(
     Guid Id,
     string? LibraryKey,
@@ -16,7 +18,9 @@ public record StatusDefinitionView(
     bool HasLevels,
     string? IconUrl,
     string? IconDescription,
-    Guid? CharacterId);
+    Guid? CharacterId,
+    Guid? SpellId,
+    string? SpellIcon);
 
 // A character's or the caller's own DM status list, in its owner's order. Read on first
 // use: a list read for the first time is made with all 15 conditions. CanEdit: the caller

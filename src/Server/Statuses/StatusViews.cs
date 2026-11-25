@@ -10,9 +10,10 @@ namespace OreanasOffice.Server.Statuses;
 public static class StatusViews
 {
     private static readonly Dictionary<Guid, int> LibraryOrder =
-        StatusLibrary.Conditions.Select((condition, index) => (condition.Id, index)).ToDictionary(p => p.Id, p => p.index);
+        StatusLibrary.All.Select((status, index) => (status.Id, index)).ToDictionary(p => p.Id, p => p.index);
 
-    // Library statuses show their static icon; a custom status its picked version, or none.
+    // Library statuses show their static icon; a custom status its picked version, or none (a
+    // spell status then draws its card icon, SpellIcon).
     public static StatusDefinitionView ToView(StatusDefinition status) => new(
         status.Id,
         status.LibraryKey,
@@ -20,9 +21,11 @@ public static class StatusViews
         status.HasLevels,
         status.LibraryKey is { } key ? StatusLibrary.IconUrl(key) : status.IconAssetId is { } assetId ? MapBackgrounds.Url(assetId) : null,
         status.IconDescription,
-        status.CharacterId);
+        status.CharacterId,
+        status.SpellId,
+        status.SpellIcon);
 
-    // The 15 conditions in library order, then custom statuses by name.
+    // The library statuses in their order, then custom statuses by name.
     public static IEnumerable<StatusDefinition> InLibraryOrder(IEnumerable<StatusDefinition> statuses) =>
         statuses
             .OrderBy(s => LibraryOrder.TryGetValue(s.Id, out var index) ? index : int.MaxValue)

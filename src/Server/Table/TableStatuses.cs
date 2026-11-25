@@ -9,17 +9,16 @@ using OreanasOffice.Server.Statuses;
 namespace OreanasOffice.Server.Table;
 
 // Statuses on tokens at the table (knowledge/features/statuses.md, "Who puts statuses on
-// which token"): the session DM on any token and removes any; everyone else, other `dm`
-// members included, puts them on their own characters and on creatures, and removes or
-// changes only the ones they put on. Saved before the hub broadcasts the token's whole list.
-// A shared screen in local mode (knowledge/features/shared-table.md) acts like a player who owns
-// every character: statuses on any character and creature, and it removes or changes only the
-// ones put on from a shared screen (TokenStatus.FromSharedScreen). A spectator screen, or a
+// which token"): everyone puts them on any token they can see (since 2026-11-25 other
+// players' characters too); the session DM removes any, everyone else, other `dm` members
+// included, removes or changes only the ones they put on. Saved before the hub broadcasts the
+// token's whole list. A shared screen in local mode (knowledge/features/shared-table.md) removes
+// or changes only the ones put on from a shared screen (TokenStatus.FromSharedScreen). A spectator screen, or a
 // shared screen outside local mode, gets ReadOnlyConnection; neither acts as the session DM.
 public sealed class TableStatuses(AppDbContext db, TimeProvider time)
 {
-    // Errors in this order: TokenNotFound, EncounterNotActive, TokenNotFound (removed),
-    // NotYourToken, StatusNotFound, LevelInvalid, StatusAlreadySet. Two people putting on
+    // Errors in this order: TokenNotFound, EncounterNotActive, TokenNotFound (removed or
+    // hidden), StatusNotFound, LevelInvalid, StatusAlreadySet. Two people putting on
     // the same status at once: one wins, the other gets StatusAlreadySet.
     public async Task<StatusResult> AddAsync(Guid userId, AddStatusRequest? request, ConnectionMode mode = ConnectionMode.Player)
     {
@@ -34,13 +33,8 @@ public sealed class TableStatuses(AppDbContext db, TimeProvider time)
             return Failed(error.Value);
         }
 
-        if (!token!.IsSessionDm(userId) && !token.IsSharedScreen && !(token.Kind == TokenKind.Creature || token.OwnerUserId == userId))
-        {
-            return Failed(ApiErrorCode.NotYourToken);
-        }
-
         var status = await db.StatusDefinitions.AsNoTracking()
-            .Where(s => s.Id == request.StatusId && (s.CampaignId == null || s.CampaignId == token.CampaignId))
+            .Where(s => s.Id == request.StatusId && (s.CampaignId == null || s.CampaignId == token!.CampaignId))
             .Select(s => new { s.HasLevels })
             .SingleOrDefaultAsync();
         if (status is null)
@@ -66,7 +60,7 @@ public sealed class TableStatuses(AppDbContext db, TimeProvider time)
             Level = level,
             AppliedByUserId = userId,
             AppliedAt = time.GetUtcNow(),
-            FromSharedScreen = token.IsSharedScreen,
+            FromSharedScreen = token!.IsSharedScreen,
         });
         try
         {
@@ -169,8 +163,6 @@ public sealed class TableStatuses(AppDbContext db, TimeProvider time)
                     t.EncounterId,
                     t.Encounter.CampaignId,
                     (Guid?)t.Encounter.Session.DmUserId,
-                    t.Kind,
-                    t.Character!.SessionPlayers.Where(p => p.SessionId == t.Encounter.SessionId).Select(p => (Guid?)p.UserId).FirstOrDefault() ?? (Guid?)t.Character!.OwnerUserId,
                     ConnectionMode.Player),
                 IsMember = db.CampaignMembers.Any(m => m.CampaignId == t.Encounter.CampaignId && m.UserId == userId),
                 t.Encounter.Status,
@@ -214,7 +206,7 @@ public sealed class TableStatuses(AppDbContext db, TimeProvider time)
     }
 
     private sealed record TokenAccess(
-        Guid Id, Guid EncounterId, Guid CampaignId, Guid? SessionDmUserId, TokenKind Kind, Guid? OwnerUserId, ConnectionMode Effective)
+        Guid Id, Guid EncounterId, Guid CampaignId, Guid? SessionDmUserId, ConnectionMode Effective)
     {
         public bool IsSessionDm(Guid userId) => TablePermissions.ActsAsSessionDm(Effective, userId, SessionDmUserId);
 

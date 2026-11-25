@@ -144,6 +144,14 @@ public sealed record SpellCard
     public string Source { get; init; } = "";
 
     public List<SpellWriteIn> WriteIns { get; init; } = [];
+
+    // "Als Zustand anbieten": the spell itself is offered as a status when it's added to a
+    // character (knowledge/features/spell-cards.md, "Statuses when a spell is added").
+    public bool OfferStatus { get; init; }
+
+    // The conditions the spell causes, as StatusLibrary condition keys, offered with it.
+    // Konzentration isn't one of them: Concentration offers it.
+    public List<string> Statuses { get; init; } = [];
 }
 
 public sealed record SpellEffect

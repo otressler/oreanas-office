@@ -71,6 +71,15 @@ public record CharacterSpellView(Guid SpellId, bool Prepared, DateTimeOffset Add
 // character has. Prepared null keeps it (false for a new entry).
 public record SetCharacterSpellRequest(Guid VariantId, bool? Prepared = null);
 
+// A status the character's list is missing that its spell offers (knowledge/features/spell-cards.md,
+// "Statuses when a spell is added"). Key: "spell" for the spell's own status, else LibraryKey
+// ("concentration", "restrained" …). IconUrl: a library status's static icon or a spell status's
+// picked picture; SpellIcon: the card icon a spell status is drawn with otherwise.
+public record SpellStatusOffer(string Key, string? LibraryKey, string Name, string? IconUrl, string? SpellIcon);
+
+// The offered statuses to add to the character's list, by SpellStatusOffer.Key.
+public record AddSpellStatusesRequest(List<string>? Keys);
+
 // Spell import (knowledge/features/spell-cards.md, "Creating a spell"): a draft of a card for
 // a Handbook spell, which the user checks in the editor. Level and school are the Handbook's.
 // VariantCount: how many cards the library has for the spell already.

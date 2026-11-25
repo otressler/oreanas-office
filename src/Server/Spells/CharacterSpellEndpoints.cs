@@ -5,6 +5,7 @@ using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
+using OreanasOffice.Server.Statuses;
 
 namespace OreanasOffice.Server.Spells;
 
@@ -22,6 +23,8 @@ public static class CharacterSpellEndpoints
         spells.MapGet("/", ListSpells);
         spells.MapPut("/{spellId:guid}", SetSpell);
         spells.MapDelete("/{spellId:guid}", RemoveSpell);
+        spells.MapGet("/{spellId:guid}/status-offers", ListStatusOffers);
+        spells.MapPost("/{spellId:guid}/statuses", AddStatuses);
 
         // Every character's spells in the campaign at once, for the gallery at the table.
         app.MapGet("/api/campaigns/{campaignId:guid}/character-spells", ListCampaignSpells)
@@ -128,6 +131,55 @@ public static class CharacterSpellEndpoints
             .Where(e => e.CharacterId == characterId && e.SpellId == spellId)
             .ExecuteDeleteAsync(cancellationToken);
         return TypedResults.NoContent();
+    }
+
+    // What the spell offers for the character's status list (SpellStatuses), for whoever may
+    // edit the character; empty when nothing is missing. 404 when the spell isn't on it.
+    private static async Task<Results<Ok<List<SpellStatusOffer>>, NotFound, ForbidHttpResult>> ListStatusOffers(
+        Guid campaignId, Guid characterId, Guid spellId, ClaimsPrincipal user, AppDbContext db, TimeProvider time, CancellationToken cancellationToken)
+    {
+        switch (await AccessAsync(db, campaignId, characterId, user, cancellationToken))
+        {
+            case Access.NotFound:
+                return TypedResults.NotFound();
+            case Access.ReadOnly:
+                return TypedResults.Forbid();
+        }
+
+        return await SpellStatuses.OffersAsync(db, campaignId, characterId, spellId, time.GetUtcNow(), cancellationToken) is { } found
+            ? TypedResults.Ok(found.Offers)
+            : TypedResults.NotFound();
+    }
+
+    // Adds the offered statuses picked by key to the character's status list and answers the
+    // list; a key not offered (any more) is skipped. 404 when the spell isn't on the character.
+    private static async Task<Results<Ok<StatusListResponse>, NotFound, ForbidHttpResult>> AddStatuses(
+        Guid campaignId,
+        Guid characterId,
+        Guid spellId,
+        AddSpellStatusesRequest request,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        TimeProvider time,
+        CancellationToken cancellationToken)
+    {
+        switch (await AccessAsync(db, campaignId, characterId, user, cancellationToken))
+        {
+            case Access.NotFound:
+                return TypedResults.NotFound();
+            case Access.ReadOnly:
+                return TypedResults.Forbid();
+        }
+
+        var listId = await SpellStatuses.AddAsync(
+            db, campaignId, characterId, spellId, request.Keys ?? [], user.GetUserId(), time.GetUtcNow(), cancellationToken);
+        if (listId is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var statuses = (await StatusLists.StatusesAsync(db, [listId.Value], cancellationToken))[listId.Value];
+        return TypedResults.Ok(new StatusListResponse(listId.Value, characterId, statuses, true));
     }
 
     private enum Access

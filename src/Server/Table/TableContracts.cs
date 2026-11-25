@@ -59,12 +59,11 @@ public interface ITableHub
     // as Ping.
     Task<HubResult> DrawArrow(DrawArrowRequest request);
 
-    // Puts a status on a token (knowledge/features/statuses.md): the session DM on any
-    // token, everyone else on their own characters and on creatures. Saved, then
-    // TokenStatusesChanged to the encounter's group, the caller included. A status with
-    // levels starts at Level, or 1 without one. Errors: TokenNotFound, EncounterNotActive,
-    // NotYourToken, StatusNotFound (not a library status or a custom status of the
-    // campaign), StatusAlreadySet, LevelInvalid.
+    // Puts a status on a token (knowledge/features/statuses.md): anyone on any token they
+    // can see. Saved, then TokenStatusesChanged to the encounter's group, the caller
+    // included. A status with levels starts at Level, or 1 without one. Errors:
+    // TokenNotFound, EncounterNotActive, StatusNotFound (not a library status or a custom
+    // status of the campaign), StatusAlreadySet, LevelInvalid.
     Task<StatusResult> AddStatus(AddStatusRequest request);
 
     // Takes a status off: the session DM any, everyone else the ones they put on.

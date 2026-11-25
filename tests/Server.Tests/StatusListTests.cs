@@ -32,9 +32,9 @@ public sealed class StatusListTests(AppFixture fixture) : IClassFixture<AppFixtu
         var list = first[0];
         Assert.All(first, l => Assert.Equal(list.Id, l.Id));
         Assert.Equal((thorin.Id, true), (list.CharacterId, list.CanEdit));
-        Assert.Equal(LibraryIds, list.Statuses.Select(s => s.Id));
+        Assert.Equal(ConditionIds, list.Statuses.Select(s => s.Id));
         Assert.Equal(
-            new StatusDefinitionView(Exhaustion, "exhaustion", "Erschöpfung", true, "/statuses/exhaustion.webp", null, null),
+            new StatusDefinitionView(Exhaustion, "exhaustion", "Erschöpfung", true, "/statuses/exhaustion.webp", null, null, null, null),
             list.Statuses[3]);
         Assert.Equal((list.Id, true), (byDm.Id, byDm.CanEdit));
         Assert.Equal((list.Id, false), (byOtherPlayer.Id, byOtherPlayer.CanEdit));
@@ -66,7 +66,7 @@ public sealed class StatusListTests(AppFixture fixture) : IClassFixture<AppFixtu
         Assert.Empty((await table.Player.GetCharacterListAsync(table.CampaignId, thorin.Id)).Statuses);
         var all = await (await table.Player.Client.GetAsync($"/api/campaigns/{table.CampaignId}/statuses"))
             .ReadAsync<List<StatusDefinitionView>>(HttpStatusCode.OK);
-        Assert.Equal([.. LibraryIds, hexed.Id], all.Select(s => s.Id));
+        Assert.Equal([.. ConditionIds, Concentration, hexed.Id], all.Select(s => s.Id));
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public sealed class StatusListTests(AppFixture fixture) : IClassFixture<AppFixtu
         Assert.Equal(HttpStatusCode.Forbidden, (await stranger.Client.GetAsync($"/api/campaigns/{table.CampaignId}/statuses")).StatusCode);
 
         // Nothing changed: the list still has the fifteen conditions.
-        Assert.Equal(LibraryIds, (await table.Player.GetCharacterListAsync(table.CampaignId, thorin.Id)).Statuses.Select(s => s.Id));
+        Assert.Equal(ConditionIds, (await table.Player.GetCharacterListAsync(table.CampaignId, thorin.Id)).Statuses.Select(s => s.Id));
     }
 
     // knowledge/features/statuses.md: one DM status list per `dm` member (question 22).
@@ -108,10 +108,10 @@ public sealed class StatusListTests(AppFixture fixture) : IClassFixture<AppFixtu
 
         Assert.NotEqual(oreanas.Id, yaras.Id);
         Assert.Equal((null, true), (oreanas.CharacterId, oreanas.CanEdit));
-        Assert.Equal(LibraryIds, oreanas.Statuses.Select(s => s.Id));
+        Assert.Equal(ConditionIds, oreanas.Statuses.Select(s => s.Id));
         Assert.Equal(oreanas.Id, changed.Id);
         Assert.Equal([Prone], changed.Statuses.Select(s => s.Id));
-        Assert.Equal(LibraryIds, (await table.SecondDm.GetDmListAsync(table.CampaignId)).Statuses.Select(s => s.Id));
+        Assert.Equal(ConditionIds, (await table.SecondDm.GetDmListAsync(table.CampaignId)).Statuses.Select(s => s.Id));
         Assert.Equal(HttpStatusCode.Forbidden, (await table.Player.Client.GetAsync(DmListUrl(table.CampaignId))).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await table.Player.SetDmListAsync(table.CampaignId, Prone)).StatusCode);
     }
@@ -129,13 +129,13 @@ public sealed class StatusListTests(AppFixture fixture) : IClassFixture<AppFixtu
         var forThorinByDm = await table.Dm.CreateStatusOkAsync(table.CampaignId, "Verflucht", thorin.Id, "");
 
         var hexed = await response.ReadAsync<StatusDefinitionView>(HttpStatusCode.Created);
-        Assert.Equal(new StatusDefinitionView(hexed.Id, null, "Verhext", false, null, "a purple eye inside a hand", thorin.Id), hexed);
+        Assert.Equal(new StatusDefinitionView(hexed.Id, null, "Verhext", false, null, "a purple eye inside a hand", thorin.Id, null, null), hexed);
         Assert.Equal((true, (Guid?)null, (string?)null), (dmStatus.HasLevels, dmStatus.CharacterId, dmStatus.IconDescription));
         Assert.Null(forThorinByDm.IconDescription);
         Assert.Equal([Prone, hexed.Id, forThorinByDm.Id], (await table.Player.GetCharacterListAsync(table.CampaignId, thorin.Id)).Statuses.Select(s => s.Id));
 
         // Yara's DM list didn't exist yet: it's made with the fifteen, then the new one.
-        Assert.Equal([.. LibraryIds, dmStatus.Id], (await table.SecondDm.GetDmListAsync(table.CampaignId)).Statuses.Select(s => s.Id));
+        Assert.Equal([.. ConditionIds, dmStatus.Id], (await table.SecondDm.GetDmListAsync(table.CampaignId)).Statuses.Select(s => s.Id));
         var stored = await App.InDbAsync(db => db.StatusDefinitions.AsNoTracking().SingleAsync(s => s.Id == hexed.Id));
         Assert.Equal((table.CampaignId, (Guid?)table.Player.Id), (stored.CampaignId!.Value, stored.CreatedByUserId));
     }
@@ -184,7 +184,7 @@ public sealed class StatusListTests(AppFixture fixture) : IClassFixture<AppFixtu
         Assert.Equal(
             new (StatusListKind, Guid?, string?)[] { (StatusListKind.Dm, null, null), (StatusListKind.Character, ariaId, "Aria"), (StatusListKind.Character, thorinId, "Thorin") },
             dms.Lists.Select(l => (l.Kind, l.CharacterId, l.CharacterName)));
-        Assert.Equal(LibraryIds, dms.Lists[0].Statuses.Select(s => s.Id));
+        Assert.Equal(ConditionIds, dms.Lists[0].Statuses.Select(s => s.Id));
         Assert.Equal([Prone, Poisoned], dms.Lists[2].Statuses.Select(s => s.Id));
         var brom = Assert.Single(broms.Lists);
         Assert.Equal((StatusListKind.Character, (Guid?)thorinId), (brom.Kind, brom.CharacterId));

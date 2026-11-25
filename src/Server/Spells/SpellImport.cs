@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Images;
+using OreanasOffice.Server.Statuses;
 
 namespace OreanasOffice.Server.Spells;
 
@@ -244,6 +245,8 @@ public sealed partial class SpellImport(
             Material = Cut(m.Material, SpellCards.MaterialMax),
             Source = Cut(m.Source, SpellCards.SourceMax),
             WriteIns = [.. (m.WriteIns ?? []).Distinct()],
+            OfferStatus = m.OfferStatus,
+            Statuses = StatusLibrary.InConditionOrder(m.Statuses ?? []),
         };
         return new SpellDraft(Guid.Empty, nameEn, Math.Clamp(m.Level, 0, Spell.MaxLevel), m.School ?? SpellSchool.Evocation, card, origin, 0);
     }
@@ -353,6 +356,8 @@ public sealed partial class SpellImport(
         public string? Material { get; init; }
         public string? Source { get; init; }
         public List<SpellWriteIn>? WriteIns { get; init; }
+        public bool OfferStatus { get; init; }
+        public List<string>? Statuses { get; init; }
     }
 
     private sealed record ModelEffect(string? Icon, string? Title, string? Tag, string? Text, SpellChip? Chip);

@@ -1,4 +1,5 @@
 using OreanasOffice.Server.Api;
+using OreanasOffice.Server.Statuses;
 
 namespace OreanasOffice.Server.Spells;
 
@@ -178,6 +179,12 @@ public static class SpellCards
             cleanTables.Add(new SpellTable { Caption = caption, Rows = cleanRows });
         }
 
+        var statuses = card.Statuses ?? [];
+        if (statuses.Any(s => !StatusLibrary.IsCondition(s)) || statuses.Distinct().Count() != statuses.Count)
+        {
+            return Fail("card.statuses");
+        }
+
         return (new SpellCard
         {
             Name = name,
@@ -197,6 +204,8 @@ public static class SpellCards
             Material = material!,
             Source = source!,
             WriteIns = [.. (card.WriteIns ?? []).Distinct().Where(Enum.IsDefined)],
+            OfferStatus = card.OfferStatus,
+            Statuses = StatusLibrary.InConditionOrder(statuses),
         }, null);
     }
 

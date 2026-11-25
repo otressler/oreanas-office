@@ -231,5 +231,5 @@ public sealed class TableVisibilityTests
         Assert.Equal("Ost", tidy.Areas.Single().Name);
     }
 
-    private static StatusDefinitionView Definition(Guid id) => new(id, null, "x", false, null, null, null);
+    private static StatusDefinitionView Definition(Guid id) => new(id, null, "x", false, null, null, null, null, null);
 }

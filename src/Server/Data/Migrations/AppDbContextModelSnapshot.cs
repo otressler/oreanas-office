@@ -1411,6 +1411,14 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
 
+                    b.Property<string>("SpellIcon")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<Guid?>("SpellId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CampaignId");
@@ -1424,6 +1432,12 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasIndex("LibraryKey")
                         .IsUnique()
                         .HasFilter("[LibraryKey] IS NOT NULL");
+
+                    b.HasIndex("SpellId");
+
+                    b.HasIndex("CampaignId", "SpellId")
+                        .IsUnique()
+                        .HasFilter("[SpellId] IS NOT NULL");
 
                     b.ToTable("StatusDefinitions", null, t =>
                         {
@@ -1550,6 +1564,14 @@ namespace OreanasOffice.Server.Data.Migrations
                             HasLevels = false,
                             LibraryKey = "unconscious",
                             Name = "Bewusstlos"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a7d0000-0000-4000-8000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 11, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasLevels = false,
+                            LibraryKey = "concentration",
+                            Name = "Konzentration"
                         });
                 });
 
@@ -2134,6 +2156,11 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OreanasOffice.Server.Spells.Spell", null)
+                        .WithMany()
+                        .HasForeignKey("SpellId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Campaign");
