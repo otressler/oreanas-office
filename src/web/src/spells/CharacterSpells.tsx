@@ -385,10 +385,19 @@ function AddSpellDialog({
                 return (
                   <li key={spell.id}>
                     {spell.variantCount === 0 && !has.has(spell.id) ? (
-                      // Without a card there's nothing to add yet: write the first one.
-                      <Link to={spellPaths.create(forCharacter, spell.id)} className={row}>
+                      // Without a card there's nothing to add yet: check the draft or write one.
+                      <Link
+                        to={
+                          spell.hasDraft
+                            ? spellPaths.checkDraft(spell.id, forCharacter)
+                            : spellPaths.create(forCharacter, spell.id)
+                        }
+                        className={row}
+                      >
                         {label}
-                        <span className="text-xs text-candle">{t.noCardYet}</span>
+                        <span className="text-xs text-candle">
+                          {spell.hasDraft ? t.checkDraft : t.noCardYet}
+                        </span>
                       </Link>
                     ) : (
                       <button

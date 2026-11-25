@@ -179,6 +179,9 @@ export function SpellTile({ spell }: { spell: SpellSummary }) {
         <span className="text-xs text-dim">
           {spell.nameEn} · {t.library.variants(spell.variantCount)}
         </span>
+        {spell.variantCount === 0 && spell.hasDraft && (
+          <span className="text-xs font-semibold text-candle">{t.library.draftReady}</span>
+        )}
       </span>
     </Link>
   )

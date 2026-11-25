@@ -142,6 +142,13 @@ Built on `feature/spell-cards`.
 - **Tests**: `SpellStatusTests`, `SpellUnitTests.A_cards_statuses_are_condition_keys`, the changed `TableStatusTests` and `StatusListTests`; `spells/statuses.test.ts`, `statuses/icon.test.ts`, `SpellEditor.test.tsx`, `CharacterPage.test.tsx` and the token card's test.
 - **Existing cards** offer nothing until an edit or the revision pass (step 4) sets their switch and conditions; their Konzentration is offered already.
 
+# As built (2026-11-25): suggestion queue and revision pass
+
+- **Server**: `SpellJob`, `SpellCardDraft` and `SpellCardRevision` (migration `SpellSuggestions`); `SpellJobWorker` with its doorbell `SpellJobQueue`, separate from the image queue because it needs only the text model; wiki pages at most every `Images:SpellWikiInterval` (3 s). Admin endpoints under `/api/admin/spells`: `GET jobs` (overview), `POST jobs/plan` (counts and estimate), `POST jobs` (start; 409 `textModelUnavailable` or `imageBudgetExhausted`), `POST jobs/retry`, `POST jobs/{id}/retry`, `POST revisions/{id}/revert` (409 `revisionOutdated` after an edit); `DELETE /api/spells/drafts/{id}` for admins. `SpellSummary.hasDraft`, `SpellDetail.draft`, `CreateVariantRequest.draftId`. The revision prompt is `SpellImportPrompts.RevisionSystemWith` (the card rules, the glossary, then rules that keep the words), recorded as `spell-revise`; `SpellCardRevise` merges and checks. Motif source `suggestion`. Deleting a variant deletes its jobs.
+- **Frontend**: `SpellJobsPanel.tsx` on the admin page (reloads every 3 s while jobs are open); the draft on the spell page (`DraftCard` in `SpellPage.tsx`); `CheckDraft` on the creation page for `?zauber=…&vorschlag=1` (`spellPaths.checkDraft`); "Vorschlag bereit" in the library; "Vorschlag prüfen" in a character's add dialog; the "Vorschlag" badge on a motif in the studio.
+- **Tests**: `SpellJobTests` (in the Images collection with `SpellImportTests`, since both set the fake text model's answers and need the monthly budget), `SpellUnitTests` for the check; `SpellJobsPanel.test.tsx`, `SpellDraft.test.tsx`.
+- **Not tried against the real model yet**: how many of the ~60 cards pass the word check depends on how closely the model keeps the words; cards that fail land in "Zum Prüfen".
+
 # Planned (2026-11-25)
 
 Agreed with the project owner on 2026-11-25, not built yet. Built in this order, each step on top of the one before, so the revision pass (4) redoes every existing card once.
@@ -181,7 +188,7 @@ What is offered is what the character's list doesn't have yet. A spell status is
 
 Removing the spell keeps its statuses; tokens may carry them, and statuses are never deleted.
 
-## 4. Revising the existing cards (decided 2026-11-25, being built)
+## 4. Revising the existing cards (built 2026-11-25, see "As built")
 
 An admin action "Karten überarbeiten": for every variant, the text model gets the **current card**, not the wiki, and may change only its form: paragraphs and lead-ins (1), condition markup (2), the status switch (3).
 
@@ -193,7 +200,7 @@ An admin action "Karten überarbeiten": for every variant, the text model gets t
 - **On the admin page**: "Karten überarbeiten" with "nur noch nicht überarbeitete" ticked, the number of cards and the estimated cost before it starts. Afterwards the cards whose words changed ("Zum Prüfen", with the field and a link to the editor) and the revised cards with "Zurücksetzen". Putting a card back is refused once it was edited after the revision.
 - A card edited while its revision ran isn't overwritten: the job fails with "inzwischen geändert" and can be tried again.
 
-## 5. A queue for card drafts and motif suggestions (decided 2026-11-25, being built)
+## 5. A queue for card drafts and motif suggestions (built 2026-11-25, see "As built")
 
 Project owner, 2026-11-25: queue all spells for suggestions, cards and art motifs, **but not the art itself** (pictures cost far more per image; 330 would use up the [image budget](/decisions/image-budget.md)).
 

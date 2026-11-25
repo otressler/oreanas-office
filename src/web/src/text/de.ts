@@ -1210,6 +1210,8 @@ export const de = {
       withoutCards: 'Ohne Karte',
       allCards: 'Alle Zauber',
       noCard: 'Noch keine Karte',
+      /** A spell with a card draft from the suggestion queue, not yet checked. */
+      draftReady: 'Vorschlag bereit',
       search: 'Suchen',
       searchPlaceholder: 'Name, deutsch oder englisch',
       allLevels: 'Alle Grade',
@@ -1230,6 +1232,9 @@ export const de = {
         `${subclass} (ab ${className} ${level})`,
     },
     create: {
+      draftIntro:
+        'Vorschlag aus dem Wiki: Prüf die Karte, bevor du sie speicherst. Gespeichert wird sie deine Variante und bekommt das vorgeschlagene Motiv.',
+      draftGone: 'Diesen Vorschlag gibt es nicht mehr. Vielleicht hat ihn schon jemand übernommen.',
       title: 'Neuer Zauber',
       back: '← Zauber',
       tabs: { manual: 'Von Hand', name: 'Nach Name', photo: 'Aus Foto' },
@@ -1363,6 +1368,12 @@ export const de = {
       tapToFlip: 'Tipp auf eine Karte, um sie umzudrehen.',
       noCards: 'Für diesen Zauber hat noch niemand eine Karte geschrieben.',
       writeCard: 'Karte anlegen',
+      draftTitle: 'Vorschlag',
+      draftIntro:
+        'Diese Karte hat das Textmodell aus dem Wiki geschrieben. Prüf sie und übernimm sie, dann wird sie deine Variante.',
+      draftMotif: (subject: string) => `Motiv-Vorschlag: ${subject}`,
+      checkDraft: 'Prüfen und übernehmen',
+      discardDraft: 'Verwerfen',
       notInHandbook:
         'Diesen Zauber gibt es nicht im Spielerhandbuch 2024. Seine Karten bleiben für die Charaktere, die sie haben, neue kommen keine dazu.',
     },
@@ -1371,6 +1382,8 @@ export const de = {
       back: '← Zum Zauber',
       readOnly: 'Nur die Autorin oder der Autor der Variante kann hier etwas ändern.',
       motif: (letter: string) => `Motiv ${letter.toUpperCase()}`,
+      /** A motif the suggestion queue wrote (source "suggestion"). */
+      suggested: 'Vorschlag',
       newMotif: '+ Motiv',
       notSaved: 'neu, noch nicht gespeichert',
       revision: (n: number) => `Rev ${n}`,
@@ -1467,6 +1480,7 @@ export const de = {
       onlyMyClasses: (classes: string) => `Nur Zauber für ${classes}`,
       noClassHint: 'Gib dem Charakter eine Klasse, dann zeigt die Liste zuerst deren Zauber.',
       noCardYet: 'Noch keine Karte: anlegen',
+      checkDraft: 'Vorschlag prüfen',
       noMatch: 'Kein Zauber passt. Nimm den Klassenfilter weg, um alle zu sehen.',
       /** Statuses a spell offers when it's added (knowledge/features/spell-cards.md). */
       offersTitle: (spell: string) => `${spell}: Zustände`,
@@ -1486,6 +1500,53 @@ export const de = {
       previous: 'Vorheriger Zauber',
       next: 'Nächster Zauber',
       hint: 'Tipp auf eine Karte, um sie umzudrehen.',
+    },
+    /** The admin page's suggestion queue (knowledge/features/spell-cards.md, "Planned", 4 and 5). */
+    jobs: {
+      title: 'Vorschläge und Überarbeitung',
+      intro:
+        'Das Textmodell schreibt im Hintergrund Kartenentwürfe aus dem Wiki und Motive, und es bringt die vorhandenen Karten in die neue Form. Bilder malt es nicht. Alles zählt zum KI-Budget des Monats.',
+      noTextModel: 'Es ist kein Textmodell eingerichtet.',
+      budget: (spent: string, limit: string) => `Budget diesen Monat: ${spent} von ${limit}`,
+      suggestions: 'Vorschläge erstellen',
+      suggestionsHint:
+        'Für jeden Zauber ohne Karte einen Entwurf mit Motiv. Ohne Haken bei „Nur Zauber ohne Karte“ auch Motive für Karten, die noch keins haben.',
+      onlyWithoutCard: 'Nur Zauber ohne Karte',
+      revision: 'Karten überarbeiten',
+      revisionHint:
+        'Absätze, fette Einleitungen, Glossar-Markierungen und Zustände für die vorhandenen Karten. Gespeichert wird nur, wenn kein Wort sich ändert; die alte Karte bleibt zum Zurücksetzen.',
+      onlyUnrevised: 'Nur noch nicht überarbeitete',
+      estimate: 'Kosten schätzen',
+      plan: (drafts: number, motifs: number, revisions: number, usd: string) =>
+        [
+          drafts > 0 && `${drafts} Entwürfe`,
+          motifs > 0 && `${motifs} Motive`,
+          revisions > 0 && `${revisions} Karten`,
+        ]
+          .filter(Boolean)
+          .join(', ') + ` · etwa ${usd}`,
+      nothingToDo: 'Nichts zu tun: Alles passende ist erledigt oder schon in der Warteschlange.',
+      start: (count: number) => `${count} starten`,
+      started: (count: number) => `${count} in der Warteschlange.`,
+      progress: 'Fortschritt',
+      kinds: { draft: 'Entwürfe', motif: 'Motive', revision: 'Überarbeitung' } as Record<
+        string,
+        string
+      >,
+      counts: (queued: number, running: number, done: number, failed: number) =>
+        `${queued} wartend · ${running} läuft · ${done} fertig · ${failed} fehlgeschlagen`,
+      refresh: 'Aktualisieren',
+      failed: 'Fehlgeschlagen',
+      retry: 'Erneut versuchen',
+      retryAll: 'Alle erneut versuchen',
+      toCheck: 'Zum Prüfen: Wörter geändert',
+      toCheckHint:
+        'Hier hätte die Überarbeitung Wörter geändert, deshalb ist nichts gespeichert. Sieh dir die Karte selbst an.',
+      field: (field: string) => `bei ${field}`,
+      openCard: 'Karte öffnen',
+      revised: (count: number) => `Überarbeitete Karten (${count})`,
+      revert: 'Zurücksetzen',
+      edited: 'seitdem bearbeitet',
     },
     seed: {
       title: 'Zauberkarten übernehmen',
@@ -2183,6 +2244,8 @@ export const de = {
       'Zu diesem Motiv gibt es Bilder oder ein Bild wird gerade gemalt. Nur Motive ohne Bilder lassen sich löschen.',
     glossaryInvalid:
       'Das Regelglossar ist ungültig: Jeder Eintrag braucht einen eindeutigen Namen und einen Text.',
+    revisionOutdated:
+      'Die Karte wurde nach der Überarbeitung geändert. Zurücksetzen würde diese Änderung verlieren.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */

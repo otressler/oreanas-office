@@ -459,6 +459,7 @@ describe('CharacterPage', () => {
       variantCount: 1,
       artUrl: null,
       lists: [{ classId: 'druid', subclassId: null, classLevel: null }],
+      hasDraft: false,
       ...fields,
     })
     const library = [

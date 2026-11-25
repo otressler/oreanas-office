@@ -1,6 +1,11 @@
 // German paths of the spell pages (knowledge/features/spell-cards.md).
 export const spellPaths = {
   library: '/zauber',
+  /** The creation page's editor with the spell's card draft ("Prüfen und übernehmen"). */
+  checkDraft: (
+    spellId: string,
+    forCharacter?: { campaignId: string; characterId: string } | null,
+  ) => `${spellPaths.create(forCharacter, spellId)}&vorschlag=1`,
   /** The creation page, for a character (back there after saving) and for one spell. */
   create: (forCharacter?: { campaignId: string; characterId: string } | null, spellId?: string) => {
     const params = new URLSearchParams()

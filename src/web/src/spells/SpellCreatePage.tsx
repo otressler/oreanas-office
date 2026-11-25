@@ -2,7 +2,8 @@
 // (knowledge/features/spell-cards.md, "Creating a spell"). All three end in the editor; nothing
 // is saved before "Änderungen speichern". With ?kampagne=…&charakter=… the saved spell is
 // added to that character and the page goes back there; with ?zauber=… the card is for that
-// Handbook spell.
+// Handbook spell, and with &vorschlag=1 the editor starts with its card draft ("Prüfen und
+// übernehmen", knowledge/features/spell-cards.md, "Planned", step 5).
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
@@ -10,7 +11,7 @@ import type { SpellDraft, SpellSummary } from '../api/types'
 import { characterPath } from '../campaigns/paths'
 import { useCharacters } from '../campaigns/queries'
 import { BackLink } from '../components/sheet'
-import { Button, ErrorAlert, PageTitle, TextField } from '../components/ui'
+import { Button, ErrorAlert, LoadError, Loading, PageTitle, TextField } from '../components/ui'
 import { de } from '../text/de'
 import { spellPaths } from './paths'
 import { SpellCardView } from './SpellCard'
@@ -24,6 +25,7 @@ import {
   setCharacterSpell,
   shrinkPhoto,
   spellKeys,
+  useSpell,
   useSpellImportStatus,
   useSpellLibrary,
 } from './queries'
@@ -32,10 +34,14 @@ const t = de.spells.create
 
 type Tab = 'manual' | 'name' | 'photo'
 
-/** A draft for the editor; `locked` when it is for a known spell (an import, ?zauber=…). */
+/**
+ * A draft for the editor; `locked` when it is for a known spell (an import, ?zauber=…);
+ * `draftId` when it is the spell's card draft from the suggestion queue.
+ */
 interface Draft {
   edit: SpellEdit
   locked: boolean
+  draftId?: string
 }
 
 export function SpellCreatePage() {
@@ -48,6 +54,9 @@ export function SpellCreatePage() {
   const preset = spellId ? (library.data?.find((s) => s.id === spellId) ?? null) : null
   const [draft, setDraft] = useState<Draft | null>(null)
 
+  if (!draft && spellId && params.get('vorschlag') === '1') {
+    return <CheckDraft spellId={spellId} forCharacter={forCharacter} />
+  }
   if (draft) {
     return (
       <SaveDraft
@@ -132,6 +141,47 @@ function Choose({
         {tab !== 'manual' && <p className="text-sm text-dim">{t.cost}</p>}
       </div>
     </div>
+  )
+}
+
+/** The spell's card draft in the editor; saved, it's the user's variant. */
+function CheckDraft({
+  spellId,
+  forCharacter,
+}: {
+  spellId: string
+  forCharacter: { campaignId: string; characterId: string } | null
+}) {
+  const spell = useSpell(spellId)
+  const navigate = useNavigate()
+  if (spell.isPending) return <Loading />
+  if (spell.isError) return <LoadError error={spell.error} onRetry={() => void spell.refetch()} />
+  const data = spell.data
+  if (!data.draft) {
+    return (
+      <div className="flex flex-col gap-3 pb-8">
+        <BackLink to={spellPaths.spell(spellId)} label={data.nameDe ?? data.nameEn} />
+        <p className="text-parchment">{t.draftGone}</p>
+      </div>
+    )
+  }
+  return (
+    <SaveDraft
+      draft={{
+        edit: {
+          spellId: data.id,
+          nameEn: data.nameEn,
+          level: data.level,
+          school: data.school,
+          card: data.draft.card,
+          origin: 'wiki',
+        },
+        locked: true,
+        draftId: data.draft.id,
+      }}
+      forCharacter={forCharacter}
+      onBack={() => navigate(spellPaths.spell(spellId))}
+    />
   )
 }
 
@@ -331,7 +381,12 @@ function SaveDraft({
     setError(null)
     try {
       if (!edit.spellId) return setBusy(false)
-      const variant = await createVariant({ spellId: edit.spellId, card: edit.card, origin })
+      const variant = await createVariant({
+        spellId: edit.spellId,
+        card: edit.card,
+        origin,
+        draftId: draft.draftId ?? null,
+      })
       await queries.invalidateQueries({ queryKey: spellKeys.all })
       if (forCharacter) {
         await setCharacterSpell(
@@ -367,7 +422,9 @@ function SaveDraft({
         initial={draft.edit}
         factsLocked={draft.locked}
         intro={
-          origin !== 'manual' ? (
+          draft.draftId ? (
+            <p className="text-sm text-candle">{t.draftIntro}</p>
+          ) : origin !== 'manual' ? (
             <p className="text-sm text-candle">
               {de.spells.editor.origin[origin]} · {de.spells.editor.draftHint}
             </p>

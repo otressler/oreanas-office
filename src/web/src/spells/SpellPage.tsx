@@ -4,7 +4,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import type { SpellListLink, SpellVariant } from '../api/types'
+import type { SpellCardDraft, SpellDetail, SpellListLink, SpellVariant } from '../api/types'
 import { useCurrentUser } from '../auth/auth'
 import { BackLink } from '../components/sheet'
 import {
@@ -24,6 +24,7 @@ import { SpellEditor, type SpellEdit } from './SpellEditor'
 import {
   createVariant,
   deleteVariant,
+  discardDraft,
   spellKeys,
   updateVariant,
   useSpell,
@@ -68,10 +69,13 @@ export function SpellPage() {
           <Note>{t.notInHandbook}</Note>
         </div>
       )}
+      {data.draft && data.inHandbook && (
+        <DraftCard spell={data} draft={data.draft} canDiscard={me.isAdmin} />
+      )}
       {data.variants.length === 0 ? (
         <div className="mt-6 flex flex-col items-start gap-3">
           <p className="text-parchment">{t.noCards}</p>
-          {data.inHandbook && (
+          {data.inHandbook && !data.draft && (
             <ButtonLink to={spellPaths.create(null, data.id)} variant="primary">
               {t.writeCard}
             </ButtonLink>
@@ -88,6 +92,68 @@ export function SpellPage() {
         ))}
       </ul>
     </div>
+  )
+}
+
+/** The card draft from the suggestion queue: everyone may check and take it, admins discard it. */
+function DraftCard({
+  spell,
+  draft,
+  canDiscard,
+}: {
+  spell: Pick<SpellDetail, 'id' | 'nameEn' | 'level' | 'school'>
+  draft: SpellCardDraft
+  canDiscard: boolean
+}) {
+  const queries = useQueryClient()
+  const [error, setError] = useState<unknown>(null)
+  const [busy, setBusy] = useState(false)
+  const discard = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await discardDraft(draft.id)
+      await queries.invalidateQueries({ queryKey: spellKeys.all })
+    } catch (err) {
+      setError(err)
+      setBusy(false)
+    }
+  }
+  return (
+    <section
+      aria-labelledby="spell-draft"
+      className="mt-6 flex flex-col gap-3 rounded-xl border border-candle/40 bg-panel/60 p-4"
+    >
+      <h2 id="spell-draft" className="font-display text-lg font-semibold text-candle">
+        {t.draftTitle}
+      </h2>
+      <p className="text-sm text-dim">{t.draftIntro}</p>
+      <div className="flex flex-wrap items-start gap-6">
+        <FlipCard
+          spell={{
+            nameEn: spell.nameEn,
+            level: spell.level,
+            school: spell.school,
+            card: draft.card,
+          }}
+        />
+        {draft.motifSubject && (
+          <p className="max-w-md text-sm text-parchment">{t.draftMotif(draft.motifSubject)}</p>
+        )}
+      </div>
+      <ErrorAlert error={error} />
+      <div className="flex flex-wrap gap-2">
+        <ButtonLink to={spellPaths.checkDraft(spell.id)} variant="primary">
+          {t.checkDraft}
+        </ButtonLink>
+        {/* Reversible enough: the queue writes a new one when asked. */}
+        {canDiscard && (
+          <Button variant="quiet" busy={busy} onClick={() => void discard()}>
+            {t.discardDraft}
+          </Button>
+        )}
+      </div>
+    </section>
   )
 }
 

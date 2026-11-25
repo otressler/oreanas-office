@@ -9,6 +9,7 @@ import type {
   SpellArtImage,
   SpellCard,
   SpellDraft,
+  SpellJobsRequest,
   SpellVariant,
   SpellVariantOrigin,
 } from '../api/types'
@@ -20,6 +21,7 @@ export const spellKeys = {
   variant: (variantId: string) => ['spells', 'variant', variantId] as const,
   studio: (variantId: string) => ['spells', 'studio', variantId] as const,
   importStatus: ['spells', 'import'] as const,
+  jobs: ['spells', 'jobs'] as const,
   character: (campaignId: string, characterId: string) =>
     ['campaign', campaignId, 'characters', characterId, 'spells'] as const,
   campaign: (campaignId: string) => ['campaign', campaignId, 'characters', 'spells'] as const,
@@ -89,6 +91,8 @@ export interface NewVariant {
   card: SpellCard
   origin: SpellVariantOrigin
   basedOnVariantId?: string | null
+  /** The card draft it was checked from: the variant gets its motif, the draft goes. */
+  draftId?: string | null
 }
 
 export const createVariant = (variant: NewVariant): Promise<SpellVariant> =>
@@ -145,6 +149,38 @@ export const addSpellStatuses = (
     api.POST('/api/campaigns/{campaignId}/characters/{characterId}/spells/{spellId}/statuses', {
       params: { path: { campaignId, characterId, spellId } },
       body: { keys },
+    }),
+  )
+
+/** An admin discards a spell's card draft. */
+export const discardDraft = (draftId: string) =>
+  unwrap(api.DELETE('/api/spells/drafts/{draftId}', { params: { path: { draftId } } }))
+
+/** The suggestion queue on the admin page; reloads every few seconds while jobs are open. */
+export function useSpellJobs() {
+  return useQuery({
+    queryKey: spellKeys.jobs,
+    queryFn: () => unwrap(api.GET('/api/admin/spells/jobs')),
+    refetchInterval: (query) =>
+      query.state.data?.counts.some((c) => c.queued + c.running > 0) ? 3000 : false,
+  })
+}
+
+export const planSpellJobs = (request: SpellJobsRequest) =>
+  unwrap(api.POST('/api/admin/spells/jobs/plan', { body: request }))
+
+export const startSpellJobs = (request: SpellJobsRequest) =>
+  unwrap(api.POST('/api/admin/spells/jobs', { body: request }))
+
+export const retrySpellJob = (jobId: string) =>
+  unwrap(api.POST('/api/admin/spells/jobs/{jobId}/retry', { params: { path: { jobId } } }))
+
+export const retrySpellJobs = () => unwrap(api.POST('/api/admin/spells/jobs/retry'))
+
+export const revertRevision = (revisionId: string) =>
+  unwrap(
+    api.POST('/api/admin/spells/revisions/{revisionId}/revert', {
+      params: { path: { revisionId } },
     }),
   )
 

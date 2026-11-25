@@ -187,6 +187,13 @@ export type SpellDraft = Schemas['SpellDraft']
 export type CharacterSpell = Schemas['CharacterSpellView']
 /** A status a spell offers a character's status list (knowledge/features/spell-cards.md). */
 export type SpellStatusOffer = Schemas['SpellStatusOffer']
+// The suggestion queue and card drafts (knowledge/features/spell-cards.md, "Planned", 4 and 5).
+export type SpellCardDraft = Schemas['SpellCardDraftView']
+export type SpellJobsRequest = Schemas['SpellJobsRequest']
+export type SpellJobsPlan = Schemas['SpellJobsPlan']
+export type SpellJobsOverview = Schemas['SpellJobsOverview']
+export type SpellJob = Schemas['SpellJobView']
+export type SpellCardRevision = Schemas['SpellCardRevisionView']
 export type SpellImportStatus = Schemas['SpellImportStatus']
 export type SpellStudio = Schemas['SpellStudio']
 export type SpellArtImage = Schemas['SpellArtImage']

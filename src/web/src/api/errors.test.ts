@@ -99,6 +99,7 @@ const ALL_CODES = {
   motifSuggestionFailed: true,
   motifInUse: true,
   glossaryInvalid: true,
+  revisionOutdated: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

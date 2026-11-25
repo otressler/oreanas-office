@@ -452,9 +452,7 @@ describe('statuses on the card', () => {
     const { user } = openFight()
     await connected()
     await user.click(cell(1, 0))
-    expect(
-      within(card()).getByRole('button', { name: de.tokenCard.addStatus }),
-    ).toBeInTheDocument()
+    expect(within(card()).getByRole('button', { name: de.tokenCard.addStatus })).toBeInTheDocument()
   })
 
   it('updates the card when someone else changes a status', async () => {

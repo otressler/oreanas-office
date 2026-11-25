@@ -7,6 +7,7 @@ import { Badge, Button, ErrorAlert, LoadError, Loading, PageTitle, Panel } from 
 import { formatDateTime } from '../lib/dates'
 import { UploadGlossary } from '../rules/UploadGlossary'
 import { SeedSpells } from '../spells/SeedSpells'
+import { SpellJobsPanel } from '../spells/SpellJobsPanel'
 import { de } from '../text/de'
 
 const invitesKey = ['admin', 'invites'] as const
@@ -19,6 +20,7 @@ export function AdminPage() {
       <Invites />
       <Users />
       <SeedSpells />
+      <SpellJobsPanel />
       <UploadGlossary />
     </div>
   )

@@ -16,7 +16,7 @@ import type {
 } from '../api/types'
 import { BackLink } from '../components/sheet'
 import { inputClass } from '../components/styles'
-import { Button, ErrorAlert, LoadError, Loading, PageTitle } from '../components/ui'
+import { Badge, Button, ErrorAlert, LoadError, Loading, PageTitle } from '../components/ui'
 import { Modal } from '../sync/Modal'
 import { de } from '../text/de'
 import { spellPaths } from './paths'
@@ -431,6 +431,7 @@ function Motif({
     >
       <header className="flex flex-wrap items-center gap-2">
         <h2 className="font-display text-lg font-semibold text-parchment">{t.motif(letter)}</h2>
+        {current?.source === 'suggestion' && <Badge>{t.suggested}</Badge>}
         <span className="text-sm text-dim">
           {current ? `${t.revision(revisions.length)} · ${fmt(current.createdAt)}` : t.notSaved}
         </span>
