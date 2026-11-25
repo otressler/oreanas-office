@@ -5,6 +5,7 @@ import type { UserSummary } from '../api/types'
 import { CopyBox } from '../components/CopyBox'
 import { Badge, Button, ErrorAlert, LoadError, Loading, PageTitle, Panel } from '../components/ui'
 import { formatDateTime } from '../lib/dates'
+import { UploadGlossary } from '../rules/UploadGlossary'
 import { SeedSpells } from '../spells/SeedSpells'
 import { de } from '../text/de'
 
@@ -18,6 +19,7 @@ export function AdminPage() {
       <Invites />
       <Users />
       <SeedSpells />
+      <UploadGlossary />
     </div>
   )
 }

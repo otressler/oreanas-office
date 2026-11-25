@@ -61,6 +61,20 @@ public static class SpellImportPrompts
 
     public static string WikiSystem => $"{WikiSystemIntro}\n\n{CardRules}";
 
+    // The rules glossary's terms (knowledge/features/rules-glossary.md), which the app explains
+    // when a card marks them. Without an uploaded glossary the prompt asks for no marks.
+    public static string GlossaryRule(IReadOnlyCollection<string> terms) => terms.Count == 0
+        ? ""
+        : $"""
+
+
+           Glossary terms: the app explains the rules terms of the Player's Handbook's glossary to the reader when the card marks them with double brackets. In "description", effect texts and table row texts, mark each condition and each rules term from the list below that matters for the spell, the first time it appears: "[[festgesetzt]]", "[[im Vorteil|Vorteil]]" (the words shown, then "|" and the term's name when they differ more than by an ending). Don't mark terms in the name, the stats, "higherLevels", "tip" or "material", and don't mark ordinary words that only look like a term. The terms: {string.Join(", ", terms)}.
+           """;
+
+    public static string WikiSystemWith(IReadOnlyCollection<string> terms) => WikiSystem + GlossaryRule(terms);
+
+    public static string PhotoSystemWith(IReadOnlyCollection<string> terms) => PhotoSystem + GlossaryRule(terms);
+
     public static string WikiUser(string nameEn, string pageText) =>
         $"Spell: {nameEn}\n\nWiki page text:\n{pageText}";
 

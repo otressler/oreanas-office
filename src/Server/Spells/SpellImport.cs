@@ -87,7 +87,7 @@ public sealed partial class SpellImport(
     public async Task<SpellDraft?> DraftFromWikiAsync(HandbookMatch spell, string pageText, Guid userId, CancellationToken cancellationToken)
     {
         var result = await CallAsync(
-            new TextModelRequest("spell-wiki", SpellImportPrompts.WikiSystem, SpellImportPrompts.WikiUser(spell.NameEn, pageText), "spell_card", SpellImportPrompts.CardSchema()),
+            new TextModelRequest("spell-wiki", SpellImportPrompts.WikiSystemWith(await GlossaryTermsAsync(cancellationToken)), SpellImportPrompts.WikiUser(spell.NameEn, pageText), "spell_card", SpellImportPrompts.CardSchema()),
             userId,
             cancellationToken);
         var card = JsonSerializer.Deserialize<ModelCard>(result.Json, SpellConfiguration.CardJson);
@@ -97,7 +97,7 @@ public sealed partial class SpellImport(
     public async Task<List<SpellDraft>> DraftsFromPhotoAsync(ImageInput photo, Guid userId, CancellationToken cancellationToken)
     {
         var result = await CallAsync(
-            new TextModelRequest("spell-photo", SpellImportPrompts.PhotoSystem, SpellImportPrompts.PhotoUser, "spell_cards", SpellImportPrompts.PhotoSchema(), [photo], MaxOutputTokens: 32000),
+            new TextModelRequest("spell-photo", SpellImportPrompts.PhotoSystemWith(await GlossaryTermsAsync(cancellationToken)), SpellImportPrompts.PhotoUser, "spell_cards", SpellImportPrompts.PhotoSchema(), [photo], MaxOutputTokens: 32000),
             userId,
             cancellationToken);
         var page = JsonSerializer.Deserialize<ModelPage>(result.Json, SpellConfiguration.CardJson);
@@ -178,6 +178,10 @@ public sealed partial class SpellImport(
             await db.SaveChangesAsync(CancellationToken.None);
         }
     }
+
+    // The rules glossary's names, for the cards' [[term]] marks.
+    private async Task<List<string>> GlossaryTermsAsync(CancellationToken cancellationToken) =>
+        await db.GlossaryEntries.AsNoTracking().OrderBy(e => e.Position).Select(e => e.Name).ToListAsync(cancellationToken);
 
     // The model's card as a draft: limits enforced by cutting, unknown icons replaced, so
     // the user always gets something to fix in the editor. Null without a usable name.

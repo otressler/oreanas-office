@@ -201,4 +201,7 @@ public enum ApiErrorCode
     MotifSuggestionFailed,
     // MotifInUse: a motif with pictures, or with a picture still being made, can't be deleted.
     MotifInUse,
+    // GlossaryInvalid: an uploaded glossary needs 1 to 500 entries, each with a unique name of up
+    // to 60 characters, a tag of up to 30 and a text of 1 to 8,000.
+    GlossaryInvalid,
 }

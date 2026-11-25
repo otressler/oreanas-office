@@ -1272,7 +1272,7 @@ export const de = {
       description: 'Beschreibung',
       nameHint: 'Ein | zeigt, wo ein langes Wort umbrechen darf: „Sonnen|explosion“.',
       descriptionHint:
-        '**fett** und *kursiv* gehen, eine Leerzeile beginnt einen Absatz, Zeilen mit „- “ werden eine Aufzählung. Abstände in Metern, Würfel als „2W10“.',
+        '**fett** und *kursiv* gehen, eine Leerzeile beginnt einen Absatz, Zeilen mit „- “ werden eine Aufzählung. [[festgesetzt]] erklärt einen Begriff aus dem Regelglossar. Abstände in Metern, Würfel als „2W10“.',
       effects: 'Wirkungen',
       effectsHint: 'Kurze Zeilen unter dem Text, die die Regeln auf einen Blick zeigen.',
       addEffect: '+ Wirkung',
@@ -2161,6 +2161,8 @@ export const de = {
       'Das Textmodell hat gerade kein Motiv vorgeschlagen. Versuch es noch einmal oder beschreib das Motiv selbst.',
     motifInUse:
       'Zu diesem Motiv gibt es Bilder oder ein Bild wird gerade gemalt. Nur Motive ohne Bilder lassen sich löschen.',
+    glossaryInvalid:
+      'Das Regelglossar ist ungültig: Jeder Eintrag braucht einen eindeutigen Namen und einen Text.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */
@@ -2594,6 +2596,26 @@ export const de = {
       'Erst muss ein Konflikt oder eine abgelehnte Änderung gelöst werden. Schau in den Synchronisierungsstatus.',
   },
 
+  /** The rules glossary (knowledge/features/rules-glossary.md); its texts come from the server. */
+  rules: {
+    glossary: {
+      back: '← Zurück',
+      close: 'Erklärung schließen',
+      /** On a status of a token card, for the condition's glossary entry. */
+      explain: 'Was bedeutet das?',
+      upload: {
+        title: 'Regelglossar übernehmen',
+        intro:
+          'Lädt das Regelglossar des Spielerhandbuchs (regelglossar.json aus scripts/glossary-seed.mjs) hoch und ersetzt das bisherige. Die Texte bleiben außerhalb des Repositorys.',
+        pick: 'regelglossar.json',
+        start: 'Hochladen',
+        done: (count: number) => `${count} Einträge übernommen.`,
+        current: (count: number) =>
+          count === 0 ? 'Noch kein Glossar hochgeladen.' : `Zurzeit ${count} Einträge.`,
+      },
+    },
+  },
+
   /**
    * Statuses (stage 9, lane: card and status lists). `library`: the German names of the 15
    * conditions of the 2024 rules, by their fixed key (knowledge/features/statuses.md).
@@ -2717,6 +2739,8 @@ export const de = {
     removeRow: (label: string) => `${label} vom Feld nehmen`,
     /** The options of a status the person may change. */
     statusRemove: 'Entfernen',
+    /** The condition's rules from the glossary, under an opened status. */
+    statusExplained: (name: string) => `Regeln: ${name}`,
     levelDown: (name: string) => `${name}: Stufe senken`,
     levelUp: (name: string) => `${name}: Stufe erhöhen`,
     /** A stack: how many tokens share the tapped cell. */

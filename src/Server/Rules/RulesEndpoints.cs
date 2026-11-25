@@ -18,6 +18,7 @@ public static class RulesEndpoints
     public static IEndpointRouteBuilder MapRulesEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/api/rules/classes", ListClasses).WithTags("Rules").RequireAuthorization();
+        app.MapGlossaryEndpoints();
         return app;
     }
 

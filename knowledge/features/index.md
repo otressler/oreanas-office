@@ -14,6 +14,7 @@
 - [Token card](token-card.md) - Tapping a token shows its portrait, name and statuses at the edge of the screen; a stack lists its tokens
 - [Pings and arrows](pings-and-arrows.md) - Double tap points at a cell or token, double tap and drag draws an arrow, for everyone
 - [Statuses](statuses.md) - The 15 conditions and custom statuses on tokens, picked from status lists on characters and DMs
+- [Rules glossary](rules-glossary.md) - The Player's Handbook's glossary, uploaded by the admin, explains marked terms on spell cards and conditions on tokens with a tap, its entries linked to each other
 - [Removing tokens](removing-tokens.md) - The session DM takes a defeated or departed token off the board, with undo and a way back
 - [Player extras](player-extras.md) - "Meine Figur" brings the player's character into view, and the phone vibrates when a move is taken
 - [Initiative](initiative.md) - The session DM's optional initiative list per fight: players say their rolls, creatures roll with modifier and advantage or disadvantage, drag to reorder, tap to select

@@ -9,7 +9,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-11-25T16:30:00Z }
 
 # Spell
 
-Site-wide, not per campaign: every signed-in user sees every spell (project owner, 2026-11-21). The library holds exactly the 391 spells of the 2024 Player's Handbook (project owner, 2026-11-24), copied from `handbook.json` with their class lists ([handbook classes](/rules/handbook-classes.md)); users don't create spells, only cards for them.
+Site-wide, not per campaign: every signed-in user sees every spell (project owner, 2026-11-21). The library holds exactly the 390 spells of the 2024 Player's Handbook (project owner, 2026-11-24), copied from `handbook.json` with their class lists ([handbook classes](/rules/handbook-classes.md)); users don't create spells, only cards for them.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -55,7 +55,7 @@ Always German and in meters (1.5 m per 5 ft, [units](/rules/movement-distance.md
 | `name` | 1–60 | German name, front and back. May hold break points: written `|` in the editor ("Sonnen|explosion"), stored as soft hyphens, which show only as a hyphen where the title breaks there (since 2026-11-25) |
 | `castingTime`, `range`, `components`, `duration` | 40 each | The four stats on the back ("Zeitaufwand", "Reichweite", "Komponenten", "Wirkungsdauer") |
 | `concentration`, `ritual` | bool | "K" and "R" badges |
-| `description` | 3,000 | The main text; `**bold**`, `*italic*` and line breaks are the only inline markup. A blank line starts a new paragraph, and lines starting with "- " make a list (since 2026-11-25). Since 2026-11-25 up to 3,000 (was 1,500): a long text scrolls on the back ([spell cards](/features/spell-cards.md), "The card") |
+| `description` | 3,000 | The main text; `**bold**`, `*italic*`, line breaks and rules terms marked `[[festgesetzt]]` ([rules glossary](/features/rules-glossary.md)) are the only inline markup; the marks work in effect and table rows too. A blank line starts a new paragraph, and lines starting with "- " make a list (since 2026-11-25). Since 2026-11-25 up to 3,000 (was 1,500): a long text scrolls on the back ([spell cards](/features/spell-cards.md), "The card") |
 | `tables` | up to 3 | A spell's own tables, between the text and the effects (since 2026-11-25): Prismatic Wall's seven layers, Confusion's behaviour roll. Each has a `caption` (80, may be empty: what applies to every row) and 1–12 `rows`: `key` (6, e.g. "1" or "2–4", may be empty) in a strip of the row's `color` (`red`, `orange`, `yellow`, `green`, `blue`, `indigo`, `violet`, or none for the school's colour), `title` (30) and `text` (300, with the description's markup), at least one of the two, and an optional `chip` as on an effect row |
 | `effects` | up to 6 | Rows below the text and tables: `icon`, `title` (30), optional `tag` (24, e.g. "Bonusaktion"), `text` (200) and an optional `chip` with `big` (12, e.g. "2W10"), `small` (14, e.g. "Gleißend") and a damage `kind` |
 | `icon` | | The flourish icon on the front and the divider |

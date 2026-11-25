@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router'
 import { LoadError } from '../components/ui'
 import { SyncProvider } from '../sync'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { GlossaryLayer } from '../rules/GlossaryHint'
 import { signInPath, useMe } from './auth'
 
 /**
@@ -21,6 +22,7 @@ export function RequireAuth() {
   return (
     <SyncProvider>
       <Outlet />
+      <GlossaryLayer />
     </SyncProvider>
   )
 }

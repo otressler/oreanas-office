@@ -59,7 +59,8 @@ A status list ("Zustandsliste" in the app) is the list a person picks from when 
 - **Each `dm` member has their own DM status list** in the campaign, which also starts with all 15 conditions (question 22, confirmed on 2026-10-16).
 - **What the picker shows**: a player sees the status lists of the characters they play in this session that are in this fight (one list if they play one character; [character](/domain/character.md), "Who plays it"). The session DM sees their own DM status list first, then every character's status list in the fight, under the character's name, so they can put on a status a player's character caused.
 - Picking a status puts it on at once; it's easy to remove, so there is no confirm step.
-- **Planned** (2026-11-25): adding a spell to a character offers the statuses its list is missing, such as "Mal des Jägers" or "Konzentration", and tapping a status explains it from a German glossary of the conditions ([spell cards](/features/spell-cards.md), "Planned", steps 2 and 3).
+- **Explained** (since 2026-11-25): on the token card, a tap on one of the 15 conditions shows its rules from the [rules glossary](/features/rules-glossary.md).
+- **Planned** (2026-11-25): adding a spell to a character offers the statuses its list is missing, such as "Mal des Jägers" or "Konzentration" ([spell cards](/features/spell-cards.md), "Planned", step 3).
 
 # Custom statuses
 

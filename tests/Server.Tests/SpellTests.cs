@@ -26,10 +26,10 @@ public sealed class SpellTests(AppFixture fixture) : IClassFixture<AppFixture>
 
         var library = await (await mira.Client.GetAsync("/api/spells")).ReadAsync<List<SpellSummary>>(HttpStatusCode.OK);
 
-        Assert.Equal(391, library.Count);
-        // A spell nobody wrote a card for yet shows its English name.
+        Assert.Equal(390, library.Count);
+        // A spell nobody wrote a card for yet shows the German Handbook's name.
         var foresight = Assert.Single(library, s => s.NameEn == "Foresight");
-        Assert.Equal((9, SpellSchool.Divination, "Foresight", 0), (foresight.Level, foresight.School, foresight.Name, foresight.VariantCount));
+        Assert.Equal((9, SpellSchool.Divination, "Voraussicht", 0), (foresight.Level, foresight.School, foresight.Name, foresight.VariantCount));
         var moonbeam = Assert.Single(library, s => s.NameEn == "Moonbeam");
         Assert.Contains(new SpellListLink("druid", "circle-of-the-moon", 3), moonbeam.Lists);
         Assert.Contains(new SpellListLink("paladin", "oath-of-the-ancients", 5), moonbeam.Lists);

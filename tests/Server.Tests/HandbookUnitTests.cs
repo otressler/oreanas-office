@@ -13,15 +13,15 @@ public sealed class HandbookUnitTests
     private static HandbookData Data => Handbook.Data;
 
     [Fact]
-    public void The_handbook_has_its_12_classes_48_subclasses_and_391_spells()
+    public void The_handbook_has_its_12_classes_48_subclasses_and_390_spells()
     {
         Assert.Equal(
             ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"],
             Data.Classes.Select(c => c.Id));
         Assert.All(Data.Classes, c => Assert.Equal(4, c.Subclasses.Count));
         Assert.Equal(48, Data.Classes.SelectMany(c => c.Subclasses).Select(s => s.Id).Distinct().Count());
-        Assert.Equal(391, Data.Spells.Count);
-        Assert.Equal(391, Data.Spells.Select(s => Spell.KeyOf(s.NameEn)).Distinct().Count());
+        Assert.Equal(390, Data.Spells.Count);
+        Assert.Equal(390, Data.Spells.Select(s => Spell.KeyOf(s.NameEn)).Distinct().Count());
         Assert.All(Data.Spells, s => Assert.InRange(s.Level, 0, Spell.MaxLevel));
     }
 

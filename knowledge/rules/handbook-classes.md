@@ -1,7 +1,7 @@
 ---
 type: Game Rule
 title: Handbook classes and spell lists
-description: The 12 classes and 48 subclasses of the 2024 Player's Handbook with German names, its 391 spells, which class lists each spell is on, and the spells subclasses grant from a class level on.
+description: The 12 classes and 48 subclasses of the 2024 Player's Handbook with German names, its 390 spells, which class lists each spell is on, and the spells subclasses grant from a class level on.
 tags: [rules, characters, spells]
 status: draft
 generated: { by: claude-code/claude-opus-5-5, at: 2026-11-24T08:10:23Z }
@@ -17,7 +17,7 @@ The app automates nothing with it ("show, don't enforce", [overview](/overview.m
 
 - `src/Server/Rules/handbook.json`, embedded in the server. It is the source of truth: corrections go there, by hand.
 - On startup, after the migrations, the server copies it into the database when the file changed (`HandbookSync`, a hash in `ReferenceDataVersions`). Spells are matched by English name, so a spell keeps its id and cards.
-- Made on 2026-11-24 from dnd2024.wikidot.com: its list of all spells, each spell's page for its source (391 have "Player's Handbook"), and the 48 subclass pages for the spells they grant. Each spell keeps the wiki's page name (`slug`, e.g. `hunter-s-mark`), which spell import reads.
+- Made on 2026-11-24 from dnd2024.wikidot.com: its list of all spells, each spell's page for its source (391 had "Player's Handbook"; Summon Elemental was dropped since, below), and the 48 subclass pages for the spells they grant. Each spell keeps the wiki's page name (`slug`, e.g. `hunter-s-mark`), which spell import reads.
 
 # Classes
 
@@ -110,9 +110,9 @@ Granted spells are the ones a subclass's table or feature says a character "alwa
 
 # German spell names
 
-`handbook.json` gives each spell a `nameDe`, the German Player's Handbook 2024's name, as the project owner gave them on 2026-11-24 (390 of the 391). Claude matched them to the English names by hand; every German name is used exactly once. The sync stores it as the spell's `nameDe` ([spell](/domain/spell.md)). The library and the spell page show it for a spell that has no card yet; once a spell has a card, the card's own `name` wins.
+`handbook.json` gives each spell a `nameDe`, the German Player's Handbook 2024's name, as the project owner gave them on 2026-11-24, one for each of the 390 spells. Claude matched them to the English names by hand; every German name is used exactly once. The sync stores it as the spell's `nameDe` ([spell](/domain/spell.md)). The library and the spell page show it for a spell that has no card yet; once a spell has a card, the card's own `name` wins.
 
-Summon Elemental has no `nameDe`: the project owner's note says the German "Elementar beschwören" belongs to Conjure Elemental, which already has it, so Summon Elemental's own name is still missing (or the spell isn't in the German book). Conjure Celestial and Conjure Fey are "Celestisches Wesen beschwören" and "Feenwesen beschwören", Summon Celestial and Summon Fey are "… herbeirufen". Claude's judgement calls: Bane is "Verderben" and Blight "Dürre"; Enthrall is "Fesseln" and Sending "Verständigung"; Mislead is "Ablenkung", Sequester "Verbergen", Mirage Arcane "Arkane Spiegelung", Befuddlement "Wirrnis", Prismatic Spray "Regenbogenspiel" and Weird "Unheimliches Schicksal".
+**Summon Elemental is not a Handbook spell** (project owner, 2026-11-25): the wiki listed it as one, but it was a doubling of Conjure Elemental ("Elementar beschwören"), and it is gone from `handbook.json`. The sync marks its row as no longer in the Handbook, so it left the library. Conjure Celestial and Conjure Fey are "Celestisches Wesen beschwören" and "Feenwesen beschwören", Summon Celestial and Summon Fey are "… herbeirufen". Claude's judgement calls: Bane is "Verderben" and Blight "Dürre"; Enthrall is "Fesseln" and Sending "Verständigung"; Mislead is "Ablenkung", Sequester "Verbergen", Mirage Arcane "Arkane Spiegelung", Befuddlement "Wirrnis", Prismatic Spray "Regenbogenspiel" and Weird "Unheimliches Schicksal".
 
 # Spell lists
 
@@ -128,4 +128,4 @@ A filter by classes (`src/web/src/rules/classes.ts`) lets a spell through when i
 # Open
 
 - A filter by class level (the groundwork above).
-- The German name of Summon Elemental, and a check of the judgement calls above.
+- A check of the judgement calls above.

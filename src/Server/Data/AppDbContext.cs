@@ -77,6 +77,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityUser
 
     public DbSet<ReferenceDataVersion> ReferenceDataVersions => Set<ReferenceDataVersion>();
 
+    public DbSet<GlossaryEntry> GlossaryEntries => Set<GlossaryEntry>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

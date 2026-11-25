@@ -22,6 +22,8 @@ import {
   MIN_LEVEL,
   personName,
 } from '../statuses/rules'
+import { CONDITION_ENTRIES, findEntry, useGlossaryData, useGlossaryHint } from '../rules/glossary'
+import { GlossaryText } from '../rules/GlossaryHint'
 import { StatusIcon } from '../statuses/StatusIcon'
 import type { Controls } from '../table/controls'
 import { de } from '../text/de'
@@ -277,6 +279,8 @@ function TokenDetails({
   hitPoints,
 }: TokenCardProps & { token: BoardToken }) {
   const [open, setOpen] = useState<string | null>(null)
+  const glossary = useGlossaryData((s) => s.byName)
+  const followHint = useGlossaryHint((s) => s.open)
   const may = (status: BoardTokenStatus) => canRemoveStatus(status, board, userId, sharedScreen)
   const addable = live.running && canAddStatus(token, board, userId, sharedScreen)
   const removable = live.running && board.isSessionDm
@@ -329,9 +333,14 @@ function TokenDetails({
                 </>
               )
               const changeable = live.running && may(status)
+              // A condition explains itself from the rules glossary when it's open.
+              const entry = definition?.libraryKey
+                ? findEntry(glossary, CONDITION_ENTRIES[definition.libraryKey] ?? '')
+                : undefined
+              const expanded = open === status.statusId
               return (
                 <li key={status.statusId} className="flex flex-col gap-1">
-                  {changeable ? (
+                  {changeable || entry ? (
                     <button
                       type="button"
                       aria-expanded={open === status.statusId}
@@ -343,7 +352,19 @@ function TokenDetails({
                   ) : (
                     <div className="flex min-h-11 items-center gap-2 px-2 py-1">{content}</div>
                   )}
-                  {changeable && open === status.statusId && (
+                  {expanded && entry && (
+                    <div
+                      role="region"
+                      aria-label={t.statusExplained(entry.name)}
+                      className="max-h-60 overflow-y-auto rounded-lg border border-line/60 bg-panel/60 px-3 py-2"
+                    >
+                      <GlossaryText
+                        entry={entry}
+                        onFollow={(next) => followHint(next, null, true)}
+                      />
+                    </div>
+                  )}
+                  {changeable && expanded && (
                     <div className="flex flex-wrap items-center gap-2 pl-2">
                       <Button
                         disabled={off}

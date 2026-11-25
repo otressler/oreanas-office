@@ -66,6 +66,67 @@
         }
       }
     },
+    "/api/rules/glossary": {
+      "get": {
+        "tags": [
+          "Rules"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GlossaryEntryView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/rules/glossary": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadGlossaryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadGlossaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/maps/{mapId}": {
       "delete": {
         "tags": [
@@ -4819,7 +4880,8 @@
           "artPromptInvalid",
           "spellNotInHandbook",
           "motifSuggestionFailed",
-          "motifInUse"
+          "motifInUse",
+          "glossaryInvalid"
         ]
       },
       "ApproveArtRequest": {
@@ -6090,6 +6152,7 @@
               "spellNotInHandbook",
               "motifSuggestionFailed",
               "motifInUse",
+              "glossaryInvalid",
               null
             ]
           },
@@ -6473,6 +6536,28 @@
           }
         }
       },
+      "GlossaryEntryView": {
+        "required": [
+          "name",
+          "tag",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "tag": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
       "HealthResponse": {
         "required": [
           "status"
@@ -6585,6 +6670,7 @@
               "spellNotInHandbook",
               "motifSuggestionFailed",
               "motifInUse",
+              "glossaryInvalid",
               null
             ]
           },
@@ -6700,6 +6786,7 @@
               "spellNotInHandbook",
               "motifSuggestionFailed",
               "motifInUse",
+              "glossaryInvalid",
               null
             ]
           }
@@ -7126,6 +7213,7 @@
               "spellNotInHandbook",
               "motifSuggestionFailed",
               "motifInUse",
+              "glossaryInvalid",
               null
             ]
           },
@@ -7249,6 +7337,7 @@
               "spellNotInHandbook",
               "motifSuggestionFailed",
               "motifInUse",
+              "glossaryInvalid",
               null
             ]
           },
@@ -8224,6 +8313,7 @@
               "spellNotInHandbook",
               "motifSuggestionFailed",
               "motifInUse",
+              "glossaryInvalid",
               null
             ]
           },
@@ -9091,6 +9181,7 @@
               "spellNotInHandbook",
               "motifSuggestionFailed",
               "motifInUse",
+              "glossaryInvalid",
               null
             ]
           },
@@ -10189,6 +10280,7 @@
               "spellNotInHandbook",
               "motifSuggestionFailed",
               "motifInUse",
+              "glossaryInvalid",
               null
             ]
           },
@@ -11425,6 +11517,35 @@
           }
         }
       },
+      "UploadGlossaryRequest": {
+        "required": [
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/GlossaryEntryView"
+            }
+          }
+        }
+      },
+      "UploadGlossaryResponse": {
+        "required": [
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "UserSummaryResponse": {
         "required": [
           "id",
@@ -11634,6 +11755,7 @@
               "spellNotInHandbook",
               "motifSuggestionFailed",
               "motifInUse",
+              "glossaryInvalid",
               null
             ]
           },
@@ -11682,6 +11804,9 @@
       "name": "Rules"
     },
     {
+      "name": "Admin"
+    },
+    {
       "name": "Maps"
     },
     {
@@ -11689,9 +11814,6 @@
     },
     {
       "name": "Spells"
-    },
-    {
-      "name": "Admin"
     },
     {
       "name": "Auth"

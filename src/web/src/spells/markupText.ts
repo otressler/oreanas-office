@@ -60,6 +60,24 @@ export function parseBlocks(text: string): Block[] {
   return blocks
 }
 
+/**
+ * A run's glossary marks (knowledge/features/rules-glossary.md): "[[festgesetzt]]" or, when the
+ * words shown differ from the entry's name, "[[im Vorteil|Vorteil]]".
+ */
+export function splitTerms(
+  text: string,
+): { kind: 'text' | 'term'; text: string; target?: string }[] {
+  const parts: { kind: 'text' | 'term'; text: string; target?: string }[] = []
+  let last = 0
+  for (const match of text.matchAll(/\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]/g)) {
+    if (match.index > last) parts.push({ kind: 'text', text: text.slice(last, match.index) })
+    parts.push({ kind: 'term', text: match[1], ...(match[2] ? { target: match[2] } : {}) })
+    last = match.index + match[0].length
+  }
+  if (last < text.length) parts.push({ kind: 'text', text: text.slice(last) })
+  return parts
+}
+
 /** Splits "a **b** *c*" into plain, bold and italic runs; an unclosed marker stays as it is. */
 export function parseMarkup(
   text: string,

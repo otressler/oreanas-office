@@ -53,7 +53,7 @@ erDiagram
 
 # Entities
 
-[User](/domain/user.md), [Registration invite](/domain/registration-invite.md), [Campaign](/domain/campaign.md), [Campaign member](/domain/campaign-member.md), [Character](/domain/character.md), [Session](/domain/session.md), [Encounter](/domain/encounter.md), [Battle map](/domain/battle-map.md), [Creature type](/domain/creature-type.md), [Token](/domain/token.md), [Asset](/domain/asset.md), [Status](/domain/status.md) (stage 9, not built yet), [Spell](/domain/spell.md), and the 2024 Player's Handbook's classes, subclasses and spell lists as reference data ([handbook classes](/rules/handbook-classes.md)).
+[User](/domain/user.md), [Registration invite](/domain/registration-invite.md), [Campaign](/domain/campaign.md), [Campaign member](/domain/campaign-member.md), [Character](/domain/character.md), [Session](/domain/session.md), [Encounter](/domain/encounter.md), [Battle map](/domain/battle-map.md), [Creature type](/domain/creature-type.md), [Token](/domain/token.md), [Asset](/domain/asset.md), [Status](/domain/status.md) (stage 9, not built yet), [Spell](/domain/spell.md), and the 2024 Player's Handbook's classes, subclasses and spell lists as reference data ([handbook classes](/rules/handbook-classes.md)), and its rules glossary, uploaded by the admin ([rules glossary](/features/rules-glossary.md)).
 
 # "Only one active" rules
 

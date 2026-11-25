@@ -941,6 +941,29 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.ToTable("CharacterSubclasses", (string)null);
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Rules.GlossaryEntry", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Tag")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("GlossaryEntries");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Rules.ReferenceDataVersion", b =>
                 {
                     b.Property<string>("Key")

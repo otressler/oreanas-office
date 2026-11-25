@@ -224,8 +224,9 @@
     0 0 2mm var(--accent),
     0 0.3mm 0.6mm rgba(0, 0, 0, 0.9);
   overflow: hidden;
-  /* Breaks only between words or at the name's break point; fit.ts decides the rest. */
-  overflow-wrap: normal;
+  /* Until fit.ts has measured the title (it then breaks only between words or at the name's
+     break point), a long word wraps rather than being cut off. */
+  overflow-wrap: break-word;
   hyphens: manual;
 }
 .sc-title-plate .sc-orig {
@@ -1069,10 +1070,37 @@
 .sc-flip:not(.sc-flipped) .sc-face-back {
   visibility: hidden;
 }
-.sc-flip:focus-visible {
+/* The turning is a hidden button (keyboard, screen readers); its focus rings the whole card. */
+.sc-flip:has(> .sc-flip-button:focus-visible) {
   outline: 2px solid var(--gold-light);
   outline-offset: 4px;
   border-radius: 5mm;
+}
+
+/* ---------- rules terms: "[[festgesetzt]]", explained on a tap (knowledge/features/rules-glossary.md) ---------- */
+.sc-card .gl-term {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: help;
+  text-align: inherit;
+  text-decoration: underline dashed color-mix(in srgb, var(--accent) 60%, transparent);
+  text-decoration-thickness: 0.25mm;
+  text-underline-offset: 0.5mm;
+  -webkit-tap-highlight-color: transparent;
+}
+.sc-card .gl-term[aria-expanded='true'] {
+  text-decoration-style: solid;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: 0.5mm;
+}
+.sc-card .gl-term:focus-visible {
+  outline: 0.4mm solid var(--accent);
+  outline-offset: 0.2mm;
 }
 @media (prefers-reduced-motion: reduce) {
   .sc-flip > .sc-zoom,

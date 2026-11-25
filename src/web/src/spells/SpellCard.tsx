@@ -485,20 +485,15 @@ export function FlipCard({
     setOwn(!flipped)
     onFlip?.(!flipped)
   }
+  // A tap anywhere on the card turns it, except on a rules term, which explains itself. For the
+  // keyboard and screen readers the turning is a button of its own, since the terms are
+  // buttons too and can't sit inside one.
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-pressed={flipped}
-      aria-label={t.card.flip(spell.card.name)}
       className={`sc-scale sc-flip${flipped ? ' sc-flipped' : ''} ${className}`}
       style={{ '--sc-zoom': zoom } as CSSProperties}
       onClick={flip}
       onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          flip()
-        }
         // A long back scrolls with the arrow keys while it is turned up.
         const body = flipped
           ? event.currentTarget.querySelector<HTMLElement>('.sc-scrolls .sc-body')
@@ -509,6 +504,16 @@ export function FlipCard({
         }
       }}
     >
+      <button
+        type="button"
+        className="sc-flip-button sr-only"
+        aria-pressed={flipped}
+        aria-label={t.card.flip(spell.card.name)}
+        onClick={(event) => {
+          event.stopPropagation()
+          flip()
+        }}
+      />
       <div className="sc-zoom" ref={ref}>
         <div className="sc-face" aria-hidden={flipped}>
           <SpellCardFront spell={spell} />
@@ -521,7 +526,7 @@ export function FlipCard({
   )
 }
 
-/** Shrinks the card's texts to fit after every change and once the fonts are in. */
+/** Shrinks the card's texts to fit after every change, when fonts load and when it gets a size. */
 function useCardFit(spell: CardSpell, onOverflow?: (overflow: boolean) => void) {
   const ref = useRef<HTMLDivElement>(null)
   const key = JSON.stringify([spell.nameEn, spell.level, spell.school, spell.card])
@@ -533,9 +538,17 @@ function useCardFit(spell: CardSpell, onOverflow?: (overflow: boolean) => void) 
       if (live && ref.current) report(fitCard(ref.current))
     }
     run()
+    // Measured with a fallback font before the card's fonts are in, a title fits that doesn't
+    // fit in Cinzel: fit again once fonts finish loading, also after "ready" resolved early.
     void document.fonts?.ready.then(run)
+    document.fonts?.addEventListener?.('loadingdone', run)
+    // A card that appears without a size (still hidden) fits once it gets one.
+    const sized = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(run)
+    sized?.observe(ref.current)
     return () => {
       live = false
+      document.fonts?.removeEventListener?.('loadingdone', run)
+      sized?.disconnect()
     }
   }, [key])
   return ref

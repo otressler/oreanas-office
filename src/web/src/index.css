@@ -66,3 +66,30 @@
     outline-offset: 2px;
   }
 }
+
+/* A rules term or a link between glossary entries outside a card (knowledge/features/rules-glossary.md). */
+.gl-text .gl-term,
+.gl-term:not(.sc-card .gl-term) {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: help;
+  text-align: inherit;
+  text-decoration: underline dashed color-mix(in srgb, var(--color-candle) 70%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.gl-text p + p,
+.gl-text p + ul,
+.gl-text ul + p {
+  margin-top: 0.5rem;
+}
+.gl-text ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.gl-text strong {
+  color: var(--color-parchment);
+}

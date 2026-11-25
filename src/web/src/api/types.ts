@@ -176,6 +176,7 @@ export type SpellChipKind = NonNullable<Schemas['SpellChipKind']>
 export type SpellTable = Schemas['SpellTable']
 export type SpellTableRow = Schemas['SpellTableRow']
 export type SpellRowColor = NonNullable<Schemas['SpellRowColor']>
+export type GlossaryEntry = Schemas['GlossaryEntryView']
 export type SpellWriteIn = Schemas['SpellWriteIn']
 export type SpellSummary = Schemas['SpellSummary']
 export type SpellListLink = Schemas['SpellListLink']
