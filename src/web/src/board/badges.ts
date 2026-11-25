@@ -3,6 +3,7 @@
 // level as a small number. A custom status without an icon shows its first letter. On a
 // token drawn too small for a row, one disc: the icon of a single status, else the count.
 import type { BoardTokenStatus, StatusDefinition } from '../api/types'
+import { statusIconSrc } from '../statuses/icon'
 import { statusLetter } from '../statuses/names'
 import { PARCHMENT, TABLE_COLOR } from './palette'
 
@@ -146,7 +147,8 @@ export function drawBadges(
     }
     const definition = look.definitions.get(slot.status.statusId)
     disc(ctx, slot.x, slot.y, radius, px)
-    const icon = definition?.iconUrl ? look.icons.get(definition.iconUrl) : undefined
+    const src = definition ? statusIconSrc(definition) : null
+    const icon = src ? look.icons.get(src) : undefined
     if (icon) drawContained(ctx, icon, slot.x, slot.y, radius * 0.78)
     else {
       const letter = definition ? statusLetter(definition) : '?'

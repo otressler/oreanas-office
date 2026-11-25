@@ -24,6 +24,8 @@ const SAMPLE_STATUSES: StatusDefinition[] = [
   iconUrl: null,
   iconDescription: null,
   characterId: null,
+  spellId: null,
+  spellIcon: null,
 }))
 
 const fixtures = import.meta.glob<{ default: unknown }>('../fixtures/*.board.json', {

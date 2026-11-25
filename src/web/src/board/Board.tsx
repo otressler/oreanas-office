@@ -31,6 +31,7 @@ import { Layer, Shape, Stage } from 'react-konva'
 import type { BoardState, BoardToken, StatusDefinition } from '../api/types'
 import { de } from '../text/de'
 import { fadesRunning, NO_FADES, startFades, type FogFades } from '../fog/fade'
+import { statusIconSrc } from '../statuses/icon'
 import { cellKey, footprint, stackCounts, tokenAt, tokensAt, type GridPoint } from './geometry'
 import { buildFogScene, drawFog, type BoardFog } from './fogRender'
 import { pingExpired, type PingTarget, type ShownPing } from './pings'
@@ -739,7 +740,7 @@ export function Board({
   )
   const iconUrls = useMemo(() => {
     const used = new Set(tokens.flatMap((token) => (token.statuses ?? []).map((s) => s.statusId)))
-    return (definitions ?? []).filter((s) => used.has(s.id)).map((s) => s.iconUrl)
+    return (definitions ?? []).filter((s) => used.has(s.id)).map(statusIconSrc)
   }, [tokens, definitions])
   const icons = useTokenPictures(iconUrls)
   const statusLook = useMemo(() => ({ definitions: statusById, icons }), [statusById, icons])

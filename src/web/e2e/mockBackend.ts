@@ -1623,6 +1623,8 @@ export class MockBackend {
         : this.pickedTokenImageUrl(status.id),
       iconDescription: status.iconDescription,
       characterId: status.characterId,
+      spellId: null,
+      spellIcon: null,
     }
   }
 

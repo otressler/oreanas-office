@@ -13,6 +13,9 @@ export const glossaryKeys = { all: ['rules', 'glossary'] as const }
 
 const key = (words: string) => words.normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase()
 
+/** How names are compared: spacing and case don't count. */
+export const nameKey = key
+
 interface GlossaryData {
   byName: ReadonlyMap<string, GlossaryEntry>
 }
@@ -48,6 +51,15 @@ export function findEntry(
   words: string,
   target?: string | null,
 ): GlossaryEntry | undefined {
+  return findByName(byName, words, target)
+}
+
+/** As findEntry, in any map keyed by lower-case names (nameKey). */
+export function findByName<T>(
+  byName: ReadonlyMap<string, T>,
+  words: string,
+  target?: string | null,
+): T | undefined {
   const wanted = key(target ?? words)
   const exact = byName.get(wanted)
   if (exact || target) return exact
@@ -60,7 +72,7 @@ export function findEntry(
   return undefined
 }
 
-/** The glossary entry of each library status (knowledge/features/statuses.md). */
+/** The glossary entry of each library status (knowledge/features/statuses.md), Konzentration too. */
 export const CONDITION_ENTRIES: Record<string, string> = {
   blinded: 'Blind',
   charmed: 'Bezaubert',
@@ -77,6 +89,7 @@ export const CONDITION_ENTRIES: Record<string, string> = {
   restrained: 'Festgesetzt',
   stunned: 'Betäubt',
   unconscious: 'Bewusstlos',
+  concentration: 'Konzentration',
 }
 
 /**

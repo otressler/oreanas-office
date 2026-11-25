@@ -15,6 +15,7 @@ import { de } from '../text/de'
 import { spellPaths } from './paths'
 import { SpellCardView } from './SpellCard'
 import { SpellEditor, type SpellEdit } from './SpellEditor'
+import type { AddedSpellState } from './CharacterSpells'
 import {
   blankCard,
   createVariant,
@@ -343,8 +344,12 @@ function SaveDraft({
         await queries.invalidateQueries({
           queryKey: spellKeys.character(forCharacter.campaignId, forCharacter.characterId),
         })
+        const state: AddedSpellState = {
+          addedSpell: { spellId: variant.spellId, name: variant.card.name },
+        }
         navigate(characterPath(forCharacter.campaignId, forCharacter.characterId), {
           replace: true,
+          state,
         })
       } else {
         navigate(spellPaths.spell(variant.spellId), { replace: true })

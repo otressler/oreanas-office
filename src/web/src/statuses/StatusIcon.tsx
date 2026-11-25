@@ -1,9 +1,10 @@
 // A status's icon outside the board (knowledge/features/statuses.md, "Icons"): its picture
-// on a small dark disc, or its first letter while it has none or the picture doesn't load
+// (or a spell status's card icon) on a small dark disc, or its first letter while it has none or the picture doesn't load
 // (the library's static icons may be missing on a development machine). With a level,
 // the number sits on the disc's edge.
 import { useState } from 'react'
 import type { StatusDefinition } from '../api/types'
+import { statusIconSrc } from './icon'
 import { statusLetter } from './names'
 
 export function StatusIcon({
@@ -11,13 +12,16 @@ export function StatusIcon({
   level,
   className = 'h-8 w-8 text-sm',
 }: {
-  status: Pick<StatusDefinition, 'libraryKey' | 'name' | 'iconUrl'> | undefined
+  status:
+    | (Pick<StatusDefinition, 'libraryKey' | 'name' | 'iconUrl'> &
+        Partial<Pick<StatusDefinition, 'spellIcon'>>)
+    | undefined
   level?: number | null
   /** Size and letter size. */
   className?: string
 }) {
   const [failed, setFailed] = useState<string | null>(null)
-  const url = status?.iconUrl
+  const url = status ? statusIconSrc(status) : null
   const shown = url && failed !== url ? url : null
   return (
     <span aria-hidden="true" className={`relative inline-flex shrink-0 ${className}`}>

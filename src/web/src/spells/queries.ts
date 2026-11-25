@@ -126,6 +126,28 @@ export const removeCharacterSpell = (campaignId: string, characterId: string, sp
     }),
   )
 
+/** What the spell offers the character's status list (empty when nothing is missing). */
+export const statusOffers = (campaignId: string, characterId: string, spellId: string) =>
+  unwrap(
+    api.GET('/api/campaigns/{campaignId}/characters/{characterId}/spells/{spellId}/status-offers', {
+      params: { path: { campaignId, characterId, spellId } },
+    }),
+  )
+
+/** Adds the picked offers, by key, to the character's status list; answers the list. */
+export const addSpellStatuses = (
+  campaignId: string,
+  characterId: string,
+  spellId: string,
+  keys: string[],
+) =>
+  unwrap(
+    api.POST('/api/campaigns/{campaignId}/characters/{characterId}/spells/{spellId}/statuses', {
+      params: { path: { campaignId, characterId, spellId } },
+      body: { keys },
+    }),
+  )
+
 export const importByName = (name: string, force = false) =>
   unwrap(api.POST('/api/spells/import/name', { body: { name, force } }))
 

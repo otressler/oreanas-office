@@ -29,6 +29,8 @@ function definition(id: string, libraryKey: string | null, name: string): Status
     iconUrl: libraryKey ? `/statuses/${libraryKey}.webp` : null,
     iconDescription: null,
     characterId: null,
+    spellId: null,
+    spellIcon: null,
   }
 }
 

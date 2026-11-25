@@ -507,6 +507,105 @@ describe('CharacterPage', () => {
     })
   })
 
+  // knowledge/features/spell-cards.md, "Statuses when a spell is added".
+  it('offers the statuses the character’s list is missing after adding a spell', async () => {
+    const variant = {
+      id: 'v2',
+      spellId: 's2',
+      nameEn: 'Hex',
+      level: 1,
+      school: 'enchantment',
+      author: { id: 'u', displayName: 'Mira' },
+      basedOnVariantId: null,
+      origin: 'manual',
+      card: {
+        name: 'Verhexen',
+        icon: 'eye',
+        description: '',
+        effects: [],
+        pips: [],
+        concentration: true,
+        offerStatus: true,
+      },
+      artAssetId: null,
+      artUrl: null,
+      artApproved: false,
+      usedBy: 0,
+      canEdit: false,
+      createdAt: '2026-11-25T00:00:00Z',
+      updatedAt: '2026-11-25T00:00:00Z',
+    }
+    const hex = {
+      id: 's2',
+      nameEn: 'Hex',
+      nameDe: 'Verhexen',
+      level: 1,
+      school: 'enchantment',
+      name: 'Verhexen',
+      icon: 'eye',
+      variantCount: 1,
+      artUrl: null,
+      lists: [{ classId: 'ranger', subclassId: null, classLevel: null }],
+    }
+    const calls = open([character()], {
+      extra: {
+        'GET /api/campaigns/:id/characters/:characterId/spells': json(200, []),
+        'GET /api/spells': json(200, [hex]),
+        'GET /api/spells/:spellId': json(200, { ...hex, inHandbook: true, variants: [variant] }),
+        'PUT /api/campaigns/:id/characters/:characterId/spells/:spellId': json(200, {
+          spellId: 's2',
+          prepared: false,
+          addedAt: '2026-11-25T00:00:00Z',
+          variant,
+        }),
+        'GET /api/campaigns/:id/characters/:characterId/spells/:spellId/status-offers': json(200, [
+          { key: 'spell', libraryKey: null, name: 'Verhexen', iconUrl: null, spellIcon: 'eye' },
+          {
+            key: 'concentration',
+            libraryKey: 'concentration',
+            name: 'Konzentration',
+            iconUrl: '/statuses/concentration.webp',
+            spellIcon: null,
+          },
+        ]),
+        'POST /api/campaigns/:id/characters/:characterId/spells/:spellId/statuses': json(200, {
+          id: 'list1',
+          characterId: 'ch1',
+          statuses: [],
+          canEdit: true,
+        }),
+      },
+    })
+    const user = userEvent.setup()
+    const s = de.spells.character
+
+    await user.click(await screen.findByRole('button', { name: s.add }))
+    const picker = await screen.findByRole('dialog', { name: s.pickTitle })
+    await user.click(await within(picker).findByRole('button', { name: /Verhexen/ }))
+    await user.click(await within(picker).findByRole('button', { name: /Mira/ }))
+
+    // Everything missing comes ticked; unticking one leaves it out.
+    const offers = await screen.findByRole('dialog', { name: s.offersTitle('Verhexen') })
+    expect(within(offers).getByText(s.offersIntro('Liriel'))).toBeVisible()
+    const own = within(offers).getByRole('checkbox', { name: /Verhexen/ })
+    const concentration = within(offers).getByRole('checkbox', { name: /Konzentration/ })
+    expect(own).toBeChecked()
+    expect(concentration).toBeChecked()
+    await user.click(concentration)
+    await user.click(within(offers).getByRole('button', { name: s.offersAdd }))
+
+    await vi.waitFor(() =>
+      expect(calls.filter((c) => c.method === 'POST').map((c) => [c.path, c.body])).toEqual([
+        [`/api/campaigns/${CAMPAIGN}/characters/ch1/spells/s2/statuses`, { keys: ['spell'] }],
+      ]),
+    )
+    await vi.waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: s.offersTitle('Verhexen') }),
+      ).not.toBeInTheDocument(),
+    )
+  })
+
   it('removes a spell in its dialog, without asking', async () => {
     const entry = {
       spellId: 's1',

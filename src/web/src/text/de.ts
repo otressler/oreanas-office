@@ -1315,6 +1315,17 @@ export const de = {
       source: 'Quelle',
       sourceHint: 'Leer lassen für das Spielerhandbuch.',
       writeIns: 'Zum Eintragen',
+      statuses: 'Zustände',
+      statusesHint:
+        'Was der Zauber der Zustandsliste eines Charakters anbietet, wenn er ihn bekommt und sie es noch nicht hat.',
+      offerStatus: 'Als Zustand anbieten',
+      offerStatusHint:
+        'Für Zauber, die ein Ziel markieren oder auf jemandem liegen, wie Mal des Jägers, Verhexen oder Segnen. Der Zustand heißt wie die Karte und zeigt ihr Symbol.',
+      concentrationOffered: 'Konzentration wird angeboten, weil der Zauber sie erfordert.',
+      conditions: 'Verursachte Zustände',
+      conditionsHint:
+        'Die im Text markierten Zustände. Hake an, was der Zauber selbst verursacht, nicht was er nur erwähnt oder beendet.',
+      noConditions: 'Markiere Zustände im Text mit [[…]], dann erscheinen sie hier.',
       save: 'Speichern',
       saving: 'Wird gespeichert …',
       cancel: 'Abbrechen',
@@ -1457,6 +1468,15 @@ export const de = {
       noClassHint: 'Gib dem Charakter eine Klasse, dann zeigt die Liste zuerst deren Zauber.',
       noCardYet: 'Noch keine Karte: anlegen',
       noMatch: 'Kein Zauber passt. Nimm den Klassenfilter weg, um alle zu sehen.',
+      /** Statuses a spell offers when it's added (knowledge/features/spell-cards.md). */
+      offersTitle: (spell: string) => `${spell}: Zustände`,
+      offersIntro: (character: string) =>
+        `Der Zustandsliste von ${character} fehlen diese Zustände des Zaubers. Was angehakt ist, kommt dazu.`,
+      offersIntroUnnamed:
+        'Der Zustandsliste fehlen diese Zustände des Zaubers. Was angehakt ist, kommt dazu.',
+      offerSpell: 'aus dem Zauber',
+      offersAdd: 'Hinzufügen',
+      offersSkip: 'Überspringen',
     },
     gallery: {
       open: 'Zauber',
@@ -2637,6 +2657,7 @@ export const de = {
       restrained: 'Festgesetzt',
       stunned: 'Betäubt',
       unconscious: 'Bewusstlos',
+      concentration: 'Konzentration',
     } as Record<string, string>,
     /** A status's level, e.g. "Stufe 2". */
     level: (level: number) => `Stufe ${level}`,

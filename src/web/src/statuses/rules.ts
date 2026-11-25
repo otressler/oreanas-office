@@ -1,31 +1,13 @@
 // Who may do what with statuses at the table (knowledge/features/statuses.md, "Who puts
-// statuses on which token"): the session DM puts them on any token and removes any;
-// everyone else puts them on their own characters and on creatures, and removes (or
-// changes the level of) the ones they put on. The server checks the same rules; the app
-// only hides what isn't allowed.
-import type {
-  BoardPerson,
-  BoardState,
-  BoardToken,
-  BoardTokenStatus,
-  StatusDefinition,
-} from '../api/types'
+// statuses on which token"): everyone puts them on any token they see (since 2026-11-25 other
+// players' characters too); the session DM removes any, everyone else removes (or changes the
+// level of) the ones they put on. The server checks the same rules; the app only hides what
+// isn't allowed.
+import type { BoardPerson, BoardState, BoardTokenStatus, StatusDefinition } from '../api/types'
 
 /** Levels go from 1 to 6 (Exhaustion, and custom statuses with levels). */
 export const MIN_LEVEL = 1
 export const MAX_LEVEL = 6
-
-/** Whether the person may put statuses on the token: not on other players' characters. */
-export function canAddStatus(
-  token: Pick<BoardToken, 'kind' | 'ownerUserId'>,
-  board: Pick<BoardState, 'isSessionDm'>,
-  userId: string,
-  sharedScreen = false,
-): boolean {
-  // A shared screen acts like a player who owns every character (knowledge/features/shared-table.md).
-  if (sharedScreen || board.isSessionDm) return true
-  return token.kind === 'creature' || token.ownerUserId === userId
-}
 
 /** Whether the person may take the status off (or change its level). */
 export function canRemoveStatus(

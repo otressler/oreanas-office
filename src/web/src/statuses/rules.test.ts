@@ -1,28 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { moveInList } from './queries'
-import { canAddStatus, canRemoveStatus, clampLevel, personName } from './rules'
+import { canRemoveStatus, clampLevel, personName } from './rules'
 import { statusLetter, statusName } from './names'
 
 const ME = 'me'
 const player = { isSessionDm: false }
 const dm = { isSessionDm: true }
-
-describe('canAddStatus', () => {
-  it('lets players put statuses on creatures and their own characters only', () => {
-    expect(canAddStatus({ kind: 'creature', ownerUserId: null }, player, ME)).toBe(true)
-    expect(canAddStatus({ kind: 'character', ownerUserId: ME }, player, ME)).toBe(true)
-    expect(canAddStatus({ kind: 'character', ownerUserId: 'other' }, player, ME)).toBe(false)
-  })
-
-  it('lets the session DM put statuses on any token', () => {
-    expect(canAddStatus({ kind: 'character', ownerUserId: 'other' }, dm, ME)).toBe(true)
-  })
-
-  it('lets a shared screen put statuses on any character and creature', () => {
-    expect(canAddStatus({ kind: 'character', ownerUserId: 'other' }, player, ME, true)).toBe(true)
-    expect(canAddStatus({ kind: 'creature', ownerUserId: null }, player, ME, true)).toBe(true)
-  })
-})
 
 describe('canRemoveStatus', () => {
   it('lets players take off the statuses they put on, the session DM any', () => {

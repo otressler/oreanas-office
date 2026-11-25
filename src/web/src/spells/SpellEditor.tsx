@@ -21,6 +21,7 @@ import { useLeaveWarning } from '../components/useLeaveWarning'
 import { de } from '../text/de'
 import { nameForEditing, nameFromEditing, SPELL_ICON_NAMES, SPELL_LIMITS, searchKey } from './model'
 import { useSpellLibrary } from './queries'
+import { conditionChoices } from './statuses'
 import { SpellCardView, SpellIcon } from './SpellCard'
 
 const t = de.spells
@@ -285,6 +286,7 @@ export function SpellEditor({
               onChange={(event) => set({ source: event.target.value })}
             />
           </div>
+          <StatusFields card={card} onChange={set} />
           <Fieldset legend={e.writeIns}>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {WRITE_INS.map((writeIn) => (
@@ -387,6 +389,58 @@ function trimmed(edit: SpellEdit): SpellEdit {
         .filter((table) => table.rows.length > 0),
     },
   }
+}
+
+/** "Zustände": what the card offers a character's status list (knowledge/domain/spell.md). */
+function StatusFields({
+  card,
+  onChange,
+}: {
+  card: SpellCard
+  onChange: (patch: Partial<SpellCard>) => void
+}) {
+  const ticked = card.statuses ?? []
+  const choices = conditionChoices(card)
+  const conditionsId = useId()
+  return (
+    <Fieldset legend={e.statuses} hint={e.statusesHint}>
+      <div className="flex flex-col">
+        <Check
+          label={e.offerStatus}
+          checked={!!card.offerStatus}
+          onChange={(offerStatus) => onChange({ offerStatus })}
+        />
+        <p className="text-sm text-dim">{e.offerStatusHint}</p>
+      </div>
+      {card.concentration && <p className="text-sm text-parchment">{e.concentrationOffered}</p>}
+      <div role="group" aria-labelledby={conditionsId} className="flex flex-col gap-1">
+        <span id={conditionsId} className="text-sm font-semibold text-parchment">
+          {e.conditions}
+        </span>
+        {choices.length === 0 ? (
+          <p className="text-sm text-dim">{e.noConditions}</p>
+        ) : (
+          <>
+            <p className="text-sm text-dim">{e.conditionsHint}</p>
+            <div className="flex flex-wrap gap-x-6 gap-y-1">
+              {choices.map((key) => (
+                <Check
+                  key={key}
+                  label={de.statuses.library[key] ?? key}
+                  checked={ticked.includes(key)}
+                  onChange={(on) =>
+                    onChange({
+                      statuses: on ? [...ticked, key] : ticked.filter((k) => k !== key),
+                    })
+                  }
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </Fieldset>
+  )
 }
 
 function Fieldset({

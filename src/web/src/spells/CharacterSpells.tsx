@@ -1,10 +1,11 @@
 // The "Zauber" section of the character page (knowledge/features/spell-cards.md, "A
 // character's spells"): the spells by level as small card fronts with "Vorbereitet", and for
 // whoever may edit the character adding, switching the variant and removing. Adding first
-// shows the spells of the character's classes; the others stay a click away.
+// shows the spells of the character's classes; the others stay a click away. A spell added
+// here or on the creation page then offers the statuses the character's list is missing.
 import { useQueryClient } from '@tanstack/react-query'
-import { useDeferredValue, useState } from 'react'
-import { Link } from 'react-router'
+import { useDeferredValue, useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
 import type { CharacterClassEntry, CharacterSpell, SpellSummary, SpellVariant } from '../api/types'
 import { SectionTitle } from '../components/sheet'
 import { Button, ButtonLink, ErrorAlert, LoadError, Loading, TextField } from '../components/ui'
@@ -19,6 +20,8 @@ import { de } from '../text/de'
 import { spellPaths } from './paths'
 import { FlipCard, SpellCardView } from './SpellCard'
 import { matchesSpell } from './model'
+import { StatusOffersDialog } from './StatusOffers'
+import { loadOffers, type PendingOffers } from './statuses'
 import {
   removeCharacterSpell,
   setCharacterSpell,
@@ -30,14 +33,21 @@ import {
 
 const t = de.spells.character
 
+/** The creation page's way back: the spell it just added, so its statuses get offered. */
+export interface AddedSpellState {
+  addedSpell?: { spellId: string; name: string }
+}
+
 export function CharacterSpells({
   campaignId,
   characterId,
+  characterName,
   canEdit,
   classes,
 }: {
   campaignId: string
   characterId: string
+  characterName?: string
   canEdit: boolean
   /** The character's classes, for the add dialog's default filter. */
   classes: CharacterClassEntry[]
@@ -47,6 +57,20 @@ export function CharacterSpells({
   const [adding, setAdding] = useState(false)
   const [open, setOpen] = useState<CharacterSpell | null>(null)
   const [error, setError] = useState<unknown>(null)
+  const [offering, setOffering] = useState<PendingOffers | null>(null)
+
+  // Back from "Neuen Zauber anlegen": offer once, then forget it, so a reload doesn't ask again.
+  // Kept from the first render: clearing the state below mustn't cancel the offers.
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [added] = useState(() => (location.state as AddedSpellState | null)?.addedSpell)
+  useEffect(() => {
+    if (!added || !canEdit) return
+    navigate(location.pathname + location.search, { replace: true, state: null })
+    void loadOffers(campaignId, characterId, added.spellId, added.name).then(setOffering)
+    // Once per arrival; the path stays the same while this section shows.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [added])
 
   const refresh = () => {
     void queries.invalidateQueries({ queryKey: spellKeys.character(campaignId, characterId) })
@@ -172,10 +196,22 @@ export function CharacterSpells({
             run(async () => {
               await setCharacterSpell(campaignId, characterId, variant.spellId, variant.id, false)
               setAdding(false)
+              setOffering(
+                await loadOffers(campaignId, characterId, variant.spellId, variant.card.name),
+              )
             })
           }
           createPath={spellPaths.create({ campaignId, characterId })}
           onClose={() => setAdding(false)}
+        />
+      )}
+      {offering && (
+        <StatusOffersDialog
+          campaignId={campaignId}
+          characterId={characterId}
+          characterName={characterName}
+          pending={offering}
+          onClose={() => setOffering(null)}
         />
       )}
     </section>

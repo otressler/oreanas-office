@@ -4238,6 +4238,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/campaigns/{campaignId}/characters/{characterId}/spells/{spellId}/status-offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    characterId: string;
+                    spellId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SpellStatusOffer"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaignId}/characters/{characterId}/spells/{spellId}/statuses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    campaignId: string;
+                    characterId: string;
+                    spellId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AddSpellStatusesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StatusListResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/spells/variants/{variantId}/studio": {
         parameters: {
             query?: never;
@@ -4833,6 +4929,9 @@ export interface components {
             /** Format: uuid */
             assetId?: null | string;
             value?: null | string;
+        };
+        AddSpellStatusesRequest: {
+            keys: null | string[];
         };
         AddStatusRequest: {
             /** Format: uuid */
@@ -5907,6 +6006,8 @@ export interface components {
             material?: string;
             source?: string;
             writeIns?: components["schemas"]["SpellWriteIn"][];
+            offerStatus?: boolean;
+            statuses?: string[];
         };
         /** @enum {unknown} */
         SpellcastingKind: "full" | "half" | "pact" | null;
@@ -5962,6 +6063,13 @@ export interface components {
         SpellRowColor: "red" | "orange" | "yellow" | "green" | "blue" | "indigo" | "violet" | null;
         /** @enum {unknown} */
         SpellSchool: "abjuration" | "conjuration" | "divination" | "enchantment" | "evocation" | "illusion" | "necromancy" | "transmutation";
+        SpellStatusOffer: {
+            key: string;
+            libraryKey: null | string;
+            name: string;
+            iconUrl: null | string;
+            spellIcon: null | string;
+        };
         SpellStudio: {
             variant: components["schemas"]["SpellVariantView"];
             canEdit: boolean;
@@ -6040,6 +6148,9 @@ export interface components {
             iconDescription: null | string;
             /** Format: uuid */
             characterId: null | string;
+            /** Format: uuid */
+            spellId: null | string;
+            spellIcon: null | string;
         };
         /** @enum {unknown} */
         StatusListKind: "dm" | "character";

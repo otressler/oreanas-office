@@ -413,6 +413,7 @@ function CharacterView({
           <CharacterSpells
             campaignId={campaignId}
             characterId={character.id}
+            characterName={character.name}
             canEdit={character.canEdit}
             classes={character.classes}
           />

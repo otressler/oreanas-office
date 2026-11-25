@@ -185,6 +185,8 @@ export type SpellVariant = Schemas['SpellVariantView']
 export type SpellVariantOrigin = Schemas['SpellVariantOrigin']
 export type SpellDraft = Schemas['SpellDraft']
 export type CharacterSpell = Schemas['CharacterSpellView']
+/** A status a spell offers a character's status list (knowledge/features/spell-cards.md). */
+export type SpellStatusOffer = Schemas['SpellStatusOffer']
 export type SpellImportStatus = Schemas['SpellImportStatus']
 export type SpellStudio = Schemas['SpellStudio']
 export type SpellArtImage = Schemas['SpellArtImage']

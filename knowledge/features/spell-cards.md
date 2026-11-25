@@ -134,6 +134,14 @@ Built on `feature/spell-cards`.
 - **Tests**: `SpellUnitTests.A_break_point_in_the_name_is_saved_as_a_soft_hyphen`, `spells.test.tsx` (blocks, break points, the description on the back). The fit itself needs real layout and was checked in a browser.
 - **Existing cards** keep their text; their titles now fit at larger sizes. Paragraphs come with the revision pass (step 4) or an edit.
 
+# As built (2026-11-25): statuses from spells
+
+- **Server**: `SpellCard.OfferStatus` and `SpellCard.Statuses` (condition keys, saved in the conditions' order; `spellInvalid` with `card.statuses` for anything else or a repeat) in the card's JSON column. `SpellStatuses` works out the offers and adds them: `GET /api/campaigns/{id}/characters/{id}/spells/{spellId}/status-offers` answers `SpellStatusOffer`s (`key` "spell" or a library key), `POST …/statuses` with `{ keys }` adds the picked ones still on offer and answers the status list; both for whoever may edit the character, 404 when the spell isn't on it. Migration `SpellStatuses`: `StatusDefinition.SpellId` (unique per campaign) and `SpellIcon`, and the library status `concentration`. Spell import's schema and rules have `offerStatus` and `statuses`. `TableStatuses` lets everyone put statuses on every token they can see.
+- **Frontend**: the editor's "Zustände" (`StatusFields` in `SpellEditor.tsx`, the marked conditions from `spells/statuses.ts`, matched by the glossary's and the statuses' names without needing the glossary); the offer dialog `StatusOffers.tsx`, opened after "Zauber hinzufügen" and when the creation page comes back with `addedSpell` in the navigation state; `statuses/icon.ts` draws a spell status's card icon as an SVG picture in candle gold for the badges and lists; "Status hinzufügen" on the token card for everyone.
+- **Konzentration's icon**: `public/statuses/concentration.webp`, a glowing cyan crystal orb with a spark at its heart, made with the status icon template (medium quality, about 20 s); its source is `assets/generated/statuses/concentration-v1.png`.
+- **Tests**: `SpellStatusTests`, `SpellUnitTests.A_cards_statuses_are_condition_keys`, the changed `TableStatusTests` and `StatusListTests`; `spells/statuses.test.ts`, `statuses/icon.test.ts`, `SpellEditor.test.tsx`, `CharacterPage.test.tsx` and the token card's test.
+- **Existing cards** offer nothing until an edit or the revision pass (step 4) sets their switch and conditions; their Konzentration is offered already.
+
 # Planned (2026-11-25)
 
 Agreed with the project owner on 2026-11-25, not built yet. Built in this order, each step on top of the one before, so the revision pass (4) redoes every existing card once.
@@ -157,7 +165,7 @@ Effect and table rows stay one block each. The import prompt changes from "no he
 - **A tap** on it (hover on a desktop as well) shows the condition's icon, name and rules, outside the card so it isn't clipped or scaled: a sheet at the bottom of the gallery on a phone, a popover beside the term on a desktop. The tap doesn't turn the card. The card then needs its own "Karte umdrehen" control for the keyboard and screen readers, since buttons can't sit inside the card's button.
 - The same explanation opens from a status on the [token card](/features/token-card.md) and in the initiative list.
 
-## 3. Statuses when a spell is added (decided 2026-11-25, being built)
+## 3. Statuses when a spell is added (built 2026-11-25, see "As built")
 
 When a spell is added to a character, and only when something is missing from the character's status list ([statuses](/features/statuses.md), "Status lists"), the app offers the statuses ticked: "Für Liriels Zustandsliste: ☑ Mal des Jägers ☑ Konzentration", with "Hinzufügen" and "Überspringen". Unticking skips one; nothing is added unseen. This happens in the "Zauber hinzufügen" dialog and when "Neuen Zauber anlegen" comes back to the character page; not when switching a variant.
 

@@ -36,6 +36,8 @@ const prone: StatusDefinition = {
   iconUrl: '/statuses/prone.webp',
   iconDescription: null,
   characterId: null,
+  spellId: null,
+  spellIcon: null,
 }
 const exhaustion: StatusDefinition = {
   ...prone,
@@ -445,13 +447,14 @@ describe('statuses on the card', () => {
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(de.errors.statusAlreadySet)
   })
 
-  it('offers no statuses on another player’s character, but the session DM may', async () => {
+  // Since 2026-11-25 players mark allies too ("Segnen" on another player's character).
+  it('offers statuses on another player’s character too', async () => {
     const { user } = openFight()
     await connected()
     await user.click(cell(1, 0))
     expect(
-      within(card()).queryByRole('button', { name: de.tokenCard.addStatus }),
-    ).not.toBeInTheDocument()
+      within(card()).getByRole('button', { name: de.tokenCard.addStatus }),
+    ).toBeInTheDocument()
   })
 
   it('updates the card when someone else changes a status', async () => {

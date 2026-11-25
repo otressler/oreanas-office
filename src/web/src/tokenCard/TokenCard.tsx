@@ -15,7 +15,6 @@ import { Button } from '../components/ui'
 import { MAX_MAX, parseHitPoints } from '../hitPoints/hitPoints'
 import { statusName } from '../statuses/names'
 import {
-  canAddStatus,
   canRemoveStatus,
   findDefinition,
   MAX_LEVEL,
@@ -282,7 +281,8 @@ function TokenDetails({
   const glossary = useGlossaryData((s) => s.byName)
   const followHint = useGlossaryHint((s) => s.open)
   const may = (status: BoardTokenStatus) => canRemoveStatus(status, board, userId, sharedScreen)
-  const addable = live.running && canAddStatus(token, board, userId, sharedScreen)
+  // Everyone puts statuses on every token they see (knowledge/features/statuses.md).
+  const addable = live.running
   const removable = live.running && board.isSessionDm
   const off = !live.connected
   // Creatures can be hidden from the players; characters are always visible.

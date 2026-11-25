@@ -42,6 +42,7 @@ Every status list can hold the conditions of the 2024 rules.[^roll20-conditions]
 | `restrained` | Festgesetzt | A wrist bound by heavy chains |
 | `stunned` | Betäubt | Stars circling over a dazed head |
 | `unconscious` | Bewusstlos | Closed eyes under a big white sleep swirl |
+| `concentration` | Konzentration | A glowing cyan crystal orb with a bright spark at its heart (2026-11-25; new lists don't start with it) |
 
 The German names follow the German edition of the rules, as the project owner confirmed on 2026-10-16; the keys are fixed. The motifs are the ones the T1 icons were generated from (2026-10-16); five were changed from the first proposal because they didn't read at 20 pixels.
 
