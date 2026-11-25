@@ -143,7 +143,9 @@ public sealed class CharacterPlayerTests(AppFixture fixture) : IClassFixture<App
 
         Assert.Equal(HttpStatusCode.OK, (await SetPlayerAsync(fight.Table.Dm, fight, thorin.Id, fight.Table.SecondDm.Id)).StatusCode);
 
-        Assert.Equal(ApiErrorCode.NotYourToken, (await brom.AddStatusAsync(fight.Thorin, Prone)).Error);
+        // Since 2026-11-25 anyone puts statuses on every character; the picker still shows the
+        // character's list only to whoever plays it in this session.
+        Assert.Null((await brom.AddStatusAsync(fight.Thorin, Poisoned)).Error);
         Assert.Null((await yara.AddStatusAsync(fight.Thorin, Prone)).Error);
         var yarasPicker = await fight.Table.SecondDm.Client.GetFromJsonAsync<StatusPickerResponse>(PickerUrl(fight.CampaignId, fight.EncounterId), Json);
         var bromsPicker = await fight.Table.Player.Client.GetFromJsonAsync<StatusPickerResponse>(PickerUrl(fight.CampaignId, fight.EncounterId), Json);
