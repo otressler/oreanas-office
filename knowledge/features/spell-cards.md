@@ -19,6 +19,10 @@ Data: [spell](/domain/spell.md). Text model: [text model](/decisions/text-model.
 
 The spell-cards layout, ported as it was: 70 × 120 mm tarot proportions, the front with the art, the German name, the school and level ("Zaubertrick" or "Grad 3"), the flourish icon and two corner pips; the back on parchment with the school's colours and pattern, the four stats, the description, the effect rows with damage chips, the notes (higher levels, ritual, tip) and a footer with material, source and write-in lines. The fonts (Alegreya, Alegreya Sans, Alegreya Sans SC, Cinzel) come bundled with the app, not from Google's servers ([legal notice](/decisions/legal-notice.md)). The back shrinks its text to fit, as the original did, but only down to its normal size (scale 1.00; the spell-cards app went to 0.88).
 
+**Titles** (2026-11-25, after "Sonnenexplosion" came out as "SONNENEXP / LOSION"): the name takes one line if it fits down to a minimum size, else two lines broken only between words or at the name's break point ("Sonnen|explosion", [spell](/domain/spell.md), "The card"), shrinking further rather than cutting a word. Only a word too long even then gets the browser's German hyphenation by syllables, and as the very last resort a break anywhere. The fit allows a quarter line of slack in height, because Cinzel's letters reach slightly past their lines; without it every title failed the check and ended at the smallest size, cut anywhere.
+
+**Description**: a blank line starts a paragraph, with a small gap; lines starting with "- " are a list with markers in the school's colour. Spell import writes short spells as one paragraph and longer ones as paragraphs with bold lead-ins ("**Licht.** …"), choices as a list.
+
 **Long backs scroll** (project owner, 2026-11-25, after a prototype with Prismatic Wall): spells like Prismatic Wall don't fit on one card, and the cards are read on phones, not printed. When the text doesn't fit at its normal size, the head and the four stats stay put and everything below them (text, tables, effects, notes, footer) scrolls inside the card. A gold rail along the right edge shows where the reader is; the text fades out softly at the bottom, with a small ▾ arrow, until the end, and at the top once it has moved. A vertical swipe scrolls the card, a horizontal one goes to the next card in the gallery, and a tap still turns it over; with the keyboard, ↑ and ↓ scroll a turned card. The editor says so below the preview ("Langer Text: Die Rückseite lässt sich scrollen."), as information, not a warning. Rejected: continuation cards (a tap already turns the card), a separate reading view, and a short summary on the card with the full text elsewhere.
 
 **Tables**: a spell's own table (Prismatic Wall's layers, Confusion's roll, Control Weather's stages) is a block of its own between the text and the effects: an optional line above it, then a row per entry with its key in a coloured strip (the rainbow colours of the prismatic spells, or the school's), a title, a text and an optional chip ([spell](/domain/spell.md), "The card"). Spell import writes tables when the rules text has one.
@@ -123,11 +127,18 @@ Built on `feature/spell-cards`.
 - **Frontend**: "Entfernen" in a character's spell dialog no longer asks (`CharacterSpells.tsx`); "Motiv löschen" in a motif's row of buttons in the studio, only where nothing came of it, confirmed in the row.
 - **Tests**: `Images/SpellArtTests.Only_a_motif_nothing_came_of_can_be_deleted`, `SpellStudioPage.test.tsx`, `CharacterPage.test.tsx`.
 
+# As built (2026-11-25): titles that fit, paragraphs and lists
+
+- **Server**: `SpellCards.BreakPoints` turns "|" in a card name into a soft hyphen when saving and in import drafts; the motif prompt gets the name without them. The import prompt asks for a break point in long names and for paragraphs, lead-ins and lists. No schema change.
+- **Frontend**: `fit.ts` (`fitTitle`'s order, the height slack), `parseBlocks` in `markupText.ts` with `Description` in `SpellCard.tsx`, list styles in `cards.css`; the editor shows break points as "|" (`nameForEditing`, `nameFromEditing` in `model.ts`) and search ignores them.
+- **Tests**: `SpellUnitTests.A_break_point_in_the_name_is_saved_as_a_soft_hyphen`, `spells.test.tsx` (blocks, break points, the description on the back). The fit itself needs real layout and was checked in a browser.
+- **Existing cards** keep their text; their titles now fit at larger sizes. Paragraphs come with the revision pass (step 4) or an edit.
+
 # Planned (2026-11-25)
 
 Agreed with the project owner on 2026-11-25, not built yet. Built in this order, each step on top of the one before, so the revision pass (4) redoes every existing card once.
 
-## 1. Paragraphs, lead-ins and lists
+## 1. Paragraphs, lead-ins and lists (built 2026-11-25, see "The card")
 
 The project owner noticed that cards often are one long block of text. In the description:
 

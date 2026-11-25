@@ -184,7 +184,7 @@ public sealed partial class SpellImport(
     private static SpellDraft? ToDraft(ModelCard m, SpellVariantOrigin origin)
     {
         var nameEn = Cut(m.NameEn, Spell.NameMaxLength);
-        var name = Cut(m.Name, SpellCards.NameMax);
+        var name = SpellCards.BreakPoints(Cut(m.Name, SpellCards.NameMax));
         if (nameEn.Length == 0 || name.Length == 0)
         {
             return null;

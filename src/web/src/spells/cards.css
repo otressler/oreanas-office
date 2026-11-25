@@ -224,7 +224,8 @@
     0 0 2mm var(--accent),
     0 0.3mm 0.6mm rgba(0, 0, 0, 0.9);
   overflow: hidden;
-  overflow-wrap: break-word;
+  /* Breaks only between words or at the name's break point; fit.ts decides the rest. */
+  overflow-wrap: normal;
   hyphens: manual;
 }
 .sc-title-plate .sc-orig {
@@ -554,6 +555,28 @@
   text-align: justify;
   hyphens: auto;
 }
+.sc-desc + .sc-desc,
+.sc-desc + .sc-list,
+.sc-list + .sc-desc,
+.sc-list + .sc-list {
+  margin-top: calc(1mm * var(--k));
+}
+/* Choices the caster picks from: "- " lines in the description. */
+.sc-list {
+  flex: none;
+  margin: 0 3mm;
+  padding-left: 3.4mm;
+  font-size: calc(7.2pt * var(--k));
+  line-height: 1.25;
+  hyphens: auto;
+}
+.sc-list li + li {
+  margin-top: calc(0.4mm * var(--k));
+}
+.sc-list li::marker {
+  color: var(--accent);
+}
+.sc-list b,
 .sc-desc b,
 .sc-note b {
   color: var(--accent-deep);

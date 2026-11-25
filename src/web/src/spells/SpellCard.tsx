@@ -24,6 +24,7 @@ import { fitCard, updateScroll } from './fit'
 import { SPELL_ICONS } from './iconPaths'
 import type { SpellIconName } from './model'
 import { Markup } from './markup'
+import { parseBlocks } from './markupText'
 
 const t = de.spells
 
@@ -153,7 +154,9 @@ export function SpellCardFront({ spell }: { spell: CardSpell }) {
         )}
         <Gem school={spell.school} level={spell.level} />
         <header className="sc-title-plate">
-          <h1 data-fit="h1">{card.name}</h1>
+          <h1 data-fit="h1" lang="de">
+            {card.name}
+          </h1>
           <div className="sc-flourish">
             <SpellIcon name={card.icon} />
           </div>
@@ -243,7 +246,9 @@ export function SpellCardBack({ spell }: { spell: CardSpell }) {
         <header className="sc-back-head">
           <Gem school={spell.school} level={spell.level} />
           <div className="sc-titles">
-            <h2 data-fit="h2">{card.name}</h2>
+            <h2 data-fit="h2" lang="de">
+              {card.name}
+            </h2>
             <div className="sc-en" data-fit="en">
               {spell.nameEn}
             </div>
@@ -282,11 +287,7 @@ export function SpellCardBack({ spell }: { spell: CardSpell }) {
           </Stat>
         </div>
         <div className="sc-body" onScroll={(event) => updateScroll(event.currentTarget)}>
-          {card.description && (
-            <p className="sc-desc" lang="de">
-              <Markup text={card.description} hyphenate />
-            </p>
-          )}
+          {card.description && <Description text={card.description} />}
           {(tables.length > 0 || effects.length > 0) && (
             <div className="sc-divider">
               <SpellIcon name={card.icon} />
@@ -359,6 +360,25 @@ export function SpellCardBack({ spell }: { spell: CardSpell }) {
         </div>
       </div>
     </article>
+  )
+}
+
+/** The description: paragraphs with a small gap between them, and lists of choices. */
+function Description({ text }: { text: string }) {
+  return parseBlocks(text).map((block, index) =>
+    block.kind === 'paragraph' ? (
+      <p className="sc-desc" lang="de" key={index}>
+        <Markup text={block.text} hyphenate />
+      </p>
+    ) : (
+      <ul className="sc-list" lang="de" key={index}>
+        {block.items.map((item, i) => (
+          <li key={i}>
+            <Markup text={item} hyphenate />
+          </li>
+        ))}
+      </ul>
+    ),
   )
 }
 

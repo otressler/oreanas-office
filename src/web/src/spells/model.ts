@@ -45,9 +45,18 @@ export const SCHOOLS: SpellSchool[] = [
 export const CARD_WIDTH_PX = (70 * 96) / 25.4
 export const CARD_HEIGHT_PX = (120 * 96) / 25.4
 
-/** Lower case without diacritics, so "mondstrahl" finds "Mondstrahl". */
+/**
+ * A card name's break point: "|" in the editor, a soft hyphen on the card, which shows only as a
+ * hyphen where the title breaks (SpellCards.BreakPoints on the server).
+ */
+export const SOFT_HYPHEN = '­'
+export const nameForEditing = (name: string) => name.replaceAll(SOFT_HYPHEN, '|')
+export const nameFromEditing = (value: string) => value.replaceAll('|', SOFT_HYPHEN)
+
+/** Lower case without diacritics or break points, so "mondstrahl" finds "Mondstrahl". */
 export const searchKey = (text: string) =>
   text
+    .replaceAll(SOFT_HYPHEN, '')
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()

@@ -22,16 +22,31 @@ function shrink(el: HTMLElement, { max, min, step = 0.25, lines = 1 }: Shrink): 
   for (let pt = max; pt >= min; pt -= step) {
     el.style.fontSize = `${pt}pt`
     if (lines) el.style.maxHeight = `${lines * ratio * pt + 0.5}pt`
-    if (el.scrollWidth <= el.clientWidth + 0.5 && el.scrollHeight <= el.clientHeight + 0.5)
+    // A quarter line of slack in height: a glyph from a fallback font (the soft hyphen of a
+    // break point) sticks out of its line a little, but never as far as one more line.
+    const slack = Math.max(0.5, 0.25 * pt * (96 / 72))
+    if (el.scrollWidth <= el.clientWidth + 0.5 && el.scrollHeight <= el.clientHeight + slack)
       return true
   }
   return false
 }
 
+/**
+ * One line if it fits; else two lines broken only between words or at the name's break point
+ * ("Sonnen|explosion", a soft hyphen), so a word too wide keeps the title shrinking instead of
+ * being cut anywhere ("SONNENEXP / LOSION"). Only a word too long even then gets the browser's
+ * German hyphenation, and as the very last resort a break anywhere.
+ */
 function fitTitle(el: HTMLElement, one: Shrink, two: Shrink) {
   el.style.whiteSpace = 'nowrap'
+  el.style.overflowWrap = 'normal'
+  el.style.hyphens = 'manual'
   if (shrink(el, one)) return
   el.style.whiteSpace = 'normal'
+  if (shrink(el, { ...two, lines: 2 })) return
+  el.style.hyphens = 'auto'
+  if (shrink(el, { ...two, lines: 2 })) return
+  el.style.overflowWrap = 'anywhere'
   shrink(el, { ...two, lines: 2 })
 }
 

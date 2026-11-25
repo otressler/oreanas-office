@@ -52,10 +52,10 @@ Always German and in meters (1.5 m per 5 ft, [units](/rules/movement-distance.md
 
 | Field | Limit | On the card |
 |-------|-------|-------------|
-| `name` | 1–60 | German name, front and back |
+| `name` | 1–60 | German name, front and back. May hold break points: written `|` in the editor ("Sonnen|explosion"), stored as soft hyphens, which show only as a hyphen where the title breaks there (since 2026-11-25) |
 | `castingTime`, `range`, `components`, `duration` | 40 each | The four stats on the back ("Zeitaufwand", "Reichweite", "Komponenten", "Wirkungsdauer") |
 | `concentration`, `ritual` | bool | "K" and "R" badges |
-| `description` | 3,000 | The main text; `**bold**`, `*italic*` and line breaks are the only markup. Since 2026-11-25 up to 3,000 (was 1,500): a long text scrolls on the back ([spell cards](/features/spell-cards.md), "The card") |
+| `description` | 3,000 | The main text; `**bold**`, `*italic*` and line breaks are the only inline markup. A blank line starts a new paragraph, and lines starting with "- " make a list (since 2026-11-25). Since 2026-11-25 up to 3,000 (was 1,500): a long text scrolls on the back ([spell cards](/features/spell-cards.md), "The card") |
 | `tables` | up to 3 | A spell's own tables, between the text and the effects (since 2026-11-25): Prismatic Wall's seven layers, Confusion's behaviour roll. Each has a `caption` (80, may be empty: what applies to every row) and 1–12 `rows`: `key` (6, e.g. "1" or "2–4", may be empty) in a strip of the row's `color` (`red`, `orange`, `yellow`, `green`, `blue`, `indigo`, `violet`, or none for the school's colour), `title` (30) and `text` (300, with the description's markup), at least one of the two, and an optional `chip` as on an effect row |
 | `effects` | up to 6 | Rows below the text and tables: `icon`, `title` (30), optional `tag` (24, e.g. "Bonusaktion"), `text` (200) and an optional `chip` with `big` (12, e.g. "2W10"), `small` (14, e.g. "Gleißend") and a damage `kind` |
 | `icon` | | The flourish icon on the front and the divider |

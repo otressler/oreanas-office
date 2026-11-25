@@ -19,7 +19,7 @@ import { inputClass } from '../components/styles'
 import { Button, SelectField, TextField } from '../components/ui'
 import { useLeaveWarning } from '../components/useLeaveWarning'
 import { de } from '../text/de'
-import { SPELL_ICON_NAMES, SPELL_LIMITS, searchKey } from './model'
+import { nameForEditing, nameFromEditing, SPELL_ICON_NAMES, SPELL_LIMITS, searchKey } from './model'
 import { useSpellLibrary } from './queries'
 import { SpellCardView, SpellIcon } from './SpellCard'
 
@@ -109,7 +109,7 @@ export function SpellEditor({
     school: edit.school,
     card: { ...card, name: card.name || '—' },
   }
-  const canSave = edit.spellId !== null && card.name.trim() !== ''
+  const canSave = edit.spellId !== null && searchKey(card.name).trim() !== ''
 
   return (
     <div className="flex flex-col pb-4">
@@ -146,9 +146,10 @@ export function SpellEditor({
           <Fieldset legend={e.name}>
             <TextField
               label={e.name}
-              value={card.name}
+              hint={e.nameHint}
+              value={nameForEditing(card.name)}
               maxLength={SPELL_LIMITS.name}
-              onChange={(event) => set({ name: event.target.value })}
+              onChange={(event) => set({ name: nameFromEditing(event.target.value) })}
             />
             <div className="grid grid-cols-2 gap-3">
               {(['castingTime', 'range', 'components', 'duration'] as const).map((key) => (

@@ -28,6 +28,15 @@ public static class SpellCards
     public const int MaterialMax = 120;
     public const int SourceMax = 60;
 
+    // Where a long name may break on the card: written "|" in the editor and by spell import
+    // ("Sonnen|explosion"), stored as a soft hyphen, which is invisible unless the line breaks
+    // there and then shows as a hyphen (knowledge/domain/spell.md, "The card").
+    public const char SoftHyphen = '­';
+
+    public static string BreakPoints(string name) => name.Replace('|', SoftHyphen);
+
+    public static string WithoutBreakPoints(string name) => name.Replace(SoftHyphen.ToString(), "", StringComparison.Ordinal);
+
     public static readonly IReadOnlySet<string> Icons = new HashSet<string>(StringComparer.Ordinal)
     {
         "hourglass", "range", "spark", "clock", "shard", "burst", "snow", "up", "leaf", "flame", "drop",
@@ -44,8 +53,8 @@ public static class SpellCards
             return Fail("card");
         }
 
-        var name = Clean(card.Name);
-        if (name.Length is 0 or > NameMax)
+        var name = BreakPoints(Clean(card.Name));
+        if (WithoutBreakPoints(name).Trim().Length == 0 || name.Length > NameMax)
         {
             return Fail("card.name");
         }

@@ -1270,7 +1270,9 @@ export const de = {
       concentration: 'Konzentration',
       ritual: 'Ritual',
       description: 'Beschreibung',
-      descriptionHint: '**fett** und *kursiv* gehen. Abstände in Metern, Würfel als „2W10“.',
+      nameHint: 'Ein | zeigt, wo ein langes Wort umbrechen darf: „Sonnen|explosion“.',
+      descriptionHint:
+        '**fett** und *kursiv* gehen, eine Leerzeile beginnt einen Absatz, Zeilen mit „- “ werden eine Aufzählung. Abstände in Metern, Würfel als „2W10“.',
       effects: 'Wirkungen',
       effectsHint: 'Kurze Zeilen unter dem Text, die die Regeln auf einen Blick zeigen.',
       addEffect: '+ Wirkung',

@@ -31,7 +31,7 @@ public static class SpellImportPrompts
 
         Language and units:
         - Everything on the card is German, in the terms of the 2024 German Spielerhandbuch: "Aktion", "Bonusaktion", "Reaktion", "Magie-Aktion", "Rettungswurf", "Fernkampf-Zauberangriff", "Nahkampf-Zauberangriff", "Konzentration", "Trefferpunkte", "Vorteil", "Nachteil", condition names as in the German book ("Verängstigt", "Liegend", "Gelähmt" …).
-        - "name" is the official German 2024 name of the spell when you know it, otherwise a faithful German translation. "nameEn" is the official English 2024 name.
+        - "name" is the official German 2024 name of the spell when you know it, otherwise a faithful German translation. When a word of it is longer than 12 letters, mark the one place where it reads best broken across two lines with "|", usually between the parts of a compound ("Sonnen|explosion", "Monster|festhalten"); the card shows the mark only as a hyphen where it breaks. "nameEn" is the official English 2024 name.
         - Dice are written the German way: "2W10", "1W8 + Mod". Use "Mod" for the spellcasting ability modifier.
         - Never feet or miles: 5 ft = 1,5 m, 10 ft = 3 m, 15 ft = 4,5 m, 20 ft = 6 m, 30 ft = 9 m, 60 ft = 18 m, 90 ft = 27 m, 100 ft = 30 m, 120 ft = 36 m, 150 ft = 45 m, 300 ft = 90 m, 1 mile = 1,5 km. Decimal comma.
 
@@ -41,7 +41,7 @@ public static class SpellImportPrompts
         - "components": "V, G, M" (V verbal, G Gesten for somatic, M material). The material itself goes into "material" in German, without "M:", or "" when there is none.
         - "duration": "Unmittelbar", "1 Runde", "10 Minuten", "1 Stunde" …; with concentration write "bis 1 Minute" and set "concentration" to true.
         - "ritual": true when the spell has the Ritual tag.
-        - "description": the full rules text in German, condensed but leaving out no rule. Aim for at most 700 characters. A long spell may take more, up to 2800: the back of the card then scrolls, so never leave out a rule to make it short. Mark the attack roll or saving throw and other key terms with **bold**. No headings, no lists; a line break only where it really helps.
+        - "description": the full rules text in German, condensed but leaving out no rule. Aim for at most 700 characters. A long spell may take more, up to 2800: the back of the card then scrolls, so never leave out a rule to make it short. Mark the attack roll or saving throw and other key terms with **bold**. A short spell is one paragraph. A longer one is split into short paragraphs by topic, separated by a blank line, each starting with a bold lead-in that ends in a period when the spell has distinct parts ("**Wand oder Kugel.** …", "**Licht.** …"). When the caster picks one of several options, list them as lines starting with "- ". No headings.
         - "effects": 1 to 4 short rows that sum up the mechanics at a glance: "title" up to 30 characters, "tag" (up to 24) for the action it needs when that differs from casting ("Magie-Aktion", "Bonusaktion") or a condition ("immer"), else null, "text" up to 200 characters. A row with damage or healing dice gets a "chip": "big" up to 12 characters ("2W10", "1W8 + Mod"), "small" up to 14 ("Gleißend", "Heilung"), and "kind" the damage type (or "heal" for healing, null for other values such as "+1W4").
         - "tables": [] unless the rules text has a table, or parallel cases that read like one (Prismatic Wall's seven layers, Confusion's behaviour roll, Control Weather's stages). Then up to 3 tables of up to 12 rows, and their content stays out of "description" and "effects". "caption" up to 80 characters says what applies to every row ("Je Schicht RW Geschick · Erfolg: halber Schaden"), or "". Each row: "key" up to 6 characters, the roll or the order ("1", "2–4") or ""; "color" the row's colour when the rule names one (red, orange, yellow, green, blue, indigo, violet), else null; "title" up to 30 ("Rot", "Feuer"); "text" up to 300, a row's parts on lines of their own with a bold label ("**Zerstört:** 25 Kälteschaden"); and a "chip" for damage dice as in an effect row, else null.
         - "higherLevels": for a cantrip the damage by character level, "5 → 2W10 · 11 → 3W10 · 17 → 4W10"; for a levelled spell what a higher spell slot does, "+1W10 je Grad über 2"; "" when nothing changes.
@@ -201,7 +201,7 @@ public static class SpellImportPrompts
         var card = input.Card;
         var lines = new List<string>
         {
-            $"Spell: {input.NameEn} (German: {card.Name}), {(input.Level == 0 ? "cantrip" : $"level {input.Level}")}, {input.School.ToString().ToLowerInvariant()}",
+            $"Spell: {input.NameEn} (German: {SpellCards.WithoutBreakPoints(card.Name)}), {(input.Level == 0 ? "cantrip" : $"level {input.Level}")}, {input.School.ToString().ToLowerInvariant()}",
             $"Classes: {(input.Classes.Count == 0 ? "none listed" : string.Join(", ", input.Classes))}",
             $"Casting time: {card.CastingTime} · Range: {card.Range} · Duration: {card.Duration}",
         };

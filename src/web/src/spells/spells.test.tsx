@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { createQueryClient } from '../api/queryClient'
 import type { CharacterSpell, SpellVariant } from '../api/types'
-import { parseMarkup } from './markupText'
-import { matchesSpell } from './model'
+import { parseBlocks, parseMarkup } from './markupText'
+import { matchesSpell, nameForEditing, nameFromEditing } from './model'
 import { pictureType, spellKeys } from './queries'
 import { FlipCard, SpellCardBack, SpellCardFront } from './SpellCard'
 import { SpellGalleryButton } from './SpellGalleryButton'
@@ -48,6 +48,34 @@ describe('markup', () => {
       { kind: 'break', text: '' },
       { kind: 'text', text: 'd <i>e</i>' },
     ])
+  })
+})
+
+describe('parseBlocks', () => {
+  it('makes paragraphs at blank lines and lists of "- " lines', () => {
+    expect(
+      parseBlocks(
+        '**Wand.** Bis 27 m lang.\nOder eine Kugel.\n\n\n**Wahl.** Eins davon:\n- Feuer\n-  Kälte \n\nEnde -1W4',
+      ),
+    ).toEqual([
+      { kind: 'paragraph', text: '**Wand.** Bis 27 m lang.\nOder eine Kugel.' },
+      { kind: 'paragraph', text: '**Wahl.** Eins davon:' },
+      { kind: 'list', items: ['Feuer', 'Kälte'] },
+      { kind: 'paragraph', text: 'Ende -1W4' },
+    ])
+    // A line of text after a list starts a new paragraph.
+    expect(parseBlocks('- a\nb')).toEqual([
+      { kind: 'list', items: ['a'] },
+      { kind: 'paragraph', text: 'b' },
+    ])
+  })
+})
+
+describe('break points in names', () => {
+  it('are "|" in the editor, soft hyphens on the card, and nothing for search', () => {
+    expect(nameFromEditing('Sonnen|explosion')).toBe('Sonnen­explosion')
+    expect(nameForEditing('Sonnen­explosion')).toBe('Sonnen|explosion')
+    expect(matchesSpell({ name: 'Sonnen­explosion', nameEn: 'Sunburst' }, 'sonnenex')).toBe(true)
   })
 })
 
@@ -95,6 +123,22 @@ describe('the card', () => {
     expect(screen.getByText('Höherer Grad:')).toBeInTheDocument()
     expect(screen.getByText('ein Mondsamenblatt')).toBeInTheDocument()
     expect(screen.getByText('SG')).toBeInTheDocument()
+  })
+
+  it('shows the description as paragraphs and lists', () => {
+    const long = {
+      ...spell,
+      card: { ...card, description: '**Licht.** Hell.\n\n**Wahl.** Eins:\n- **Feuer**\n- Kälte' },
+    }
+    const { container } = render(<SpellCardBack spell={long} />)
+    const blocks = [...container.querySelectorAll('.sc-body > .sc-desc, .sc-body > .sc-list')]
+    expect(blocks.map((b) => b.tagName)).toEqual(['P', 'P', 'UL'])
+    expect(blocks[0].querySelector('b')).toHaveTextContent('Licht.')
+    expect([...blocks[2].querySelectorAll('li')].map((li) => li.textContent)).toEqual([
+      'Feuer',
+      'Kälte',
+    ])
+    expect(blocks[2].querySelector('li b')).toHaveTextContent('Feuer')
   })
 
   it('shows a table between the text and the effects, with keys, colours and chips', () => {

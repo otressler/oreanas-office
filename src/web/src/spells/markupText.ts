@@ -23,6 +23,43 @@ const SHY: [RegExp, string][] = [
 export const hyphenate = (text: string) =>
   SHY.reduce((acc, [re, rep]) => acc.replace(re, rep), text)
 
+export type Block = { kind: 'paragraph'; text: string } | { kind: 'list'; items: string[] }
+
+/**
+ * A description's blocks (knowledge/domain/spell.md, "The card"): a blank line starts a new
+ * paragraph, a single line break stays inside it, and lines starting with "- " make a list
+ * until a blank line or a line of text.
+ */
+export function parseBlocks(text: string): Block[] {
+  const blocks: Block[] = []
+  let lines: string[] = []
+  let list: string[] | null = null
+  const endParagraph = () => {
+    if (lines.length > 0) blocks.push({ kind: 'paragraph', text: lines.join('\n') })
+    lines = []
+  }
+  for (const raw of text.split('\n')) {
+    const line = raw.trimEnd()
+    const item = /^\s*-\s+(.*)$/.exec(line)
+    if (!line.trim()) {
+      endParagraph()
+      list = null
+    } else if (item) {
+      endParagraph()
+      if (!list) {
+        list = []
+        blocks.push({ kind: 'list', items: list })
+      }
+      list.push(item[1])
+    } else {
+      list = null
+      lines.push(line)
+    }
+  }
+  endParagraph()
+  return blocks
+}
+
 /** Splits "a **b** *c*" into plain, bold and italic runs; an unclosed marker stays as it is. */
 export function parseMarkup(
   text: string,

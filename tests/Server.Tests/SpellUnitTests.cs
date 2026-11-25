@@ -109,6 +109,16 @@ public sealed class SpellUnitTests
     }
 
     [Fact]
+    public void A_break_point_in_the_name_is_saved_as_a_soft_hyphen()
+    {
+        var (card, _) = SpellCards.Validate(SpellTestApi.Card(" Sonnen|explosion "));
+        Assert.Equal("Sonnen­explosion", card!.Name);
+        Assert.Equal("Sonnenexplosion", SpellCards.WithoutBreakPoints(card.Name));
+        // A name of break points only is no name.
+        Assert.Equal("card.name", SpellCards.Validate(SpellTestApi.Card("||")).Error?.Field);
+    }
+
+    [Fact]
     public void A_long_description_is_allowed_up_to_its_limit()
     {
         Assert.Null(SpellCards.Validate(SpellTestApi.Card() with { Description = new string('x', SpellCards.DescriptionMax) }).Error);
