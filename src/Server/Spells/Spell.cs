@@ -6,11 +6,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OreanasOffice.Server.Accounts;
 using OreanasOffice.Server.Characters;
 using OreanasOffice.Server.Images;
+using OreanasOffice.Server.Rules;
 
 namespace OreanasOffice.Server.Spells;
 
-// knowledge/domain/spell.md: a spell of the rules, site-wide, identified by its English
-// 2024 name. Level and school belong to the spell; the German card text to its variants.
+// knowledge/domain/spell.md: a spell of the 2024 Player's Handbook, site-wide, identified by
+// its English name. HandbookSync writes the facts (name, slug, level, school, lists) from
+// handbook.json; the German card text belongs to the variants.
 public class Spell
 {
     public const int NameMaxLength = 60;
@@ -21,6 +23,10 @@ public class Spell
 
     public required string NameEn { get; set; }
 
+    // The German Player's Handbook 2024's name, from handbook.json; null where that has none
+    // yet and for a spell that isn't in the Handbook. A variant's card name wins over it.
+    public string? NameDe { get; set; }
+
     // NameEn trimmed and in lower case, for the unique index (SQL Server's collation
     // ignores case already, but this also keeps "Moonbeam " and "moonbeam" one spell).
     public required string NameKey { get; set; }
@@ -29,11 +35,20 @@ public class Spell
 
     public SpellSchool School { get; set; }
 
+    // The spell's page on dnd2024.wikidot.com ("hunter-s-mark"); null for a spell that
+    // isn't in the Handbook.
+    public string? Slug { get; set; }
+
+    // False for a spell made before the library was limited to the Handbook: it keeps its
+    // variants for the characters that use them, but the library no longer offers it.
+    public bool InHandbook { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
-    public Guid CreatedByUserId { get; set; }
-
     public List<SpellVariant> Variants { get; } = [];
+
+    // The class lists it is on and the subclasses that grant it.
+    public List<SpellListEntry> Lists { get; } = [];
 
     public static string KeyOf(string nameEn) => nameEn.Trim().ToLowerInvariant();
 }
@@ -114,6 +129,8 @@ public sealed record SpellCard
 
     public List<SpellEffect> Effects { get; init; } = [];
 
+    public List<SpellTable> Tables { get; init; } = [];
+
     public string Icon { get; init; } = "spark";
 
     public List<string> Pips { get; init; } = [];
@@ -151,6 +168,42 @@ public sealed record SpellChip
     public string? Small { get; init; }
 
     public SpellChipKind? Kind { get; init; }
+}
+
+// A table of the spell's own on the back, between the text and the effect rows: Prismatic
+// Wall's seven layers, Confusion's behaviour roll. Caption: a line above the rows, may be "".
+public sealed record SpellTable
+{
+    public string Caption { get; init; } = "";
+
+    public List<SpellTableRow> Rows { get; init; } = [];
+}
+
+// One row: Key ("1", "1–4", may be "") in a strip of the row's Color (the school's colour
+// when null), a Title and a Text (at least one of them) and an optional chip.
+public sealed record SpellTableRow
+{
+    public string Key { get; init; } = "";
+
+    public SpellRowColor? Color { get; init; }
+
+    public string Title { get; init; } = "";
+
+    public string Text { get; init; } = "";
+
+    public SpellChip? Chip { get; init; }
+}
+
+// The colours a table row's strip may take: the rainbow of the prismatic spells.
+public enum SpellRowColor
+{
+    Red,
+    Orange,
+    Yellow,
+    Green,
+    Blue,
+    Indigo,
+    Violet,
 }
 
 public enum SpellChipKind
@@ -300,9 +353,10 @@ internal sealed class SpellConfiguration :
     public void Configure(EntityTypeBuilder<Spell> spell)
     {
         spell.Property(s => s.NameEn).HasMaxLength(Spell.NameMaxLength);
+        spell.Property(s => s.NameDe).HasMaxLength(Spell.NameMaxLength);
         spell.Property(s => s.NameKey).HasMaxLength(Spell.NameMaxLength);
+        spell.Property(s => s.Slug).HasMaxLength(Spell.NameMaxLength).IsUnicode(false);
         spell.HasIndex(s => s.NameKey).IsUnique();
-        spell.HasOne<AppUser>().WithMany().HasForeignKey(s => s.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
     }
 
     public void Configure(EntityTypeBuilder<SpellVariant> variant)

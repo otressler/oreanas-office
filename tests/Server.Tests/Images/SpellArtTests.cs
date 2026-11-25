@@ -40,7 +40,8 @@ public sealed class SpellArtTests(AppFixture fixture) : IClassFixture<AppFixture
         fake.TokenPng = TestPictures.SplitJpeg(1008, 1728);
         var author = await fixture.App.CreatePersonAsync("Mira");
         var stranger = await fixture.App.CreatePersonAsync("Fremd");
-        var variant = await author.CreateSpellAsync();
+        // A spell no other test writes cards for, so the library shows this variant's art.
+        var variant = await author.CreateSpellAsync("Conjure Woodland Beings");
 
         var first = await (await author.Client.PostAsJsonAsync(Studio(variant.Id) + "/prompts", new SaveArtPromptRequest("A", "a druid in moonlight"), Json))
             .ReadAsync<SaveArtPromptResponse>(HttpStatusCode.OK);

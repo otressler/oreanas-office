@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Text model
-description: Spell import uses the gpt-6-luna deployment on the existing Foundry resource, signed in like the image model, and its cost counts against the site's monthly AI budget.
+description: Spell import and the art studio's motif suggestions use the gpt-6-luna deployment on the existing Foundry resource, signed in like the image model, and its cost counts against the site's monthly AI budget.
 tags: [decision, ai, cost, spells]
 decision: accepted
 status: draft
@@ -26,6 +26,7 @@ Decided by the project owner on 2026-11-21:
 - Chat completions with a strict JSON schema, so the answer is always a card the server can check. A photo goes as an image part.
 - Every call is recorded with its tokens and cost (`TextModelCall`). Rates: `TextModelInputUsdPerMillion` 0.10 and `TextModelOutputUsdPerMillion` 0.50 (third-party price lists, 2026-11-21; the Azure invoice should confirm them).
 - Calls run while the user waits (a few seconds), not in the image queue: nothing is saved until the user saves the draft, so a cut-off call loses nothing.
+- Since 2026-11-24 the art studio's "Vorschlagen" also uses it: it reads the variant's card and writes one English motif for the image model (purpose `spell-motif`, [spell cards](/features/spell-cards.md), "Art studio"). Same budget, same recording, same reasoning effort.
 
 # Consequences
 

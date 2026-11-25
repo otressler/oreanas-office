@@ -26,3 +26,5 @@ The group plays D&D 5e (2024).
 # Consequences
 
 [Movement distance](/rules/movement-distance.md) now counts every step as one square and forbids diagonals past a blocked corner. The app shows distances in meters, not feet: the project owner set one square to 1.5 m. The alternating-diagonal setting was dropped. Whether one blocked side cell is enough to block a diagonal is still open there.
+
+Classes and spells follow the 2024 Player's Handbook alone (project owner, 2026-11-24): a character picks from its 12 classes and 48 subclasses, and the spell library holds its 391 spells with their class lists ([handbook classes](/rules/handbook-classes.md)). Classes and spells from other books are left out.

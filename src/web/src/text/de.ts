@@ -381,7 +381,7 @@ export const de = {
     link: 'Datenschutz',
     intro:
       "Hier steht, welche Daten Oreana's Office verarbeitet, wozu und wie lange. Die App ist ein privates Hobbyprojekt für eine Runde unter Freunden: ohne Werbung, ohne Tracking, ohne Analyse-Werkzeuge. Daten werden nicht verkauft und nicht für andere Zwecke genutzt.",
-    asOf: 'Stand: 21. November 2026',
+    asOf: 'Stand: 24. November 2026',
     controller: {
       title: 'Verantwortlich',
       body: 'Für Fragen zum Datenschutz und um deine Rechte geltend zu machen, schreib an diese E-Mail-Adresse.',
@@ -439,11 +439,12 @@ export const de = {
       {
         title: 'Zauberkarten mit KI',
         body: [
-          'Beim Anlegen eines Zaubers „Nach Name“ oder „Aus Foto“ schreibt ein Textmodell bei Microsoft Foundry (dieselbe Azure-Ressource wie das Bildmodell) die deutsche Karte. Dafür gehen an Microsoft:',
+          'Beim Anlegen eines Zaubers „Nach Name“ oder „Aus Foto“ schreibt ein Textmodell bei Microsoft Foundry (dieselbe Azure-Ressource wie das Bildmodell) die deutsche Karte; im Bildstudio schlägt es mit „Vorschlagen“ ein Motiv vor. Dafür gehen an Microsoft:',
           [
             'der eingegebene Name des Zaubers,',
             'der Text der Wiki-Seite des Zaubers, die der Server dafür von dnd2024.wikidot.com abruft (dabei gehen keine Daten über dich an das Wiki),',
-            'beim Anlegen aus einem Foto das Foto der Buchseite, verkleinert.',
+            'beim Anlegen aus einem Foto das Foto der Buchseite, verkleinert,',
+            'beim Vorschlagen eines Motivs der Text der Karte, ihre bisherigen Motive und die Notizen zur Variante.',
           ],
           'Für das Textmodell gilt dasselbe wie für das Bildmodell: Microsoft nutzt die Daten nicht zum Training, es ist weltweit bereitgestellt („Global“), und der Missbrauchsschutz kann auffällige Anfragen in der EU speichern. Fotografiere deshalb nur die Buchseite, keine Menschen. Das Foto speichert die App nicht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.',
         ],
@@ -695,8 +696,25 @@ export const de = {
     },
     name: 'Name',
     size: 'Größe',
-    /** Free-text facts under the name on a character's page. */
-    characterClass: 'Klasse',
+    /** The facts under the name on a character's page; species and age are free text. */
+    characterClass: (count: number) => (count > 1 ? 'Klassen' : 'Klasse'),
+    /** A character's classes from the 2024 Player's Handbook (knowledge/domain/character.md). */
+    classes: {
+      title: 'Klassen',
+      hint: 'Aus dem Spielerhandbuch 2024. Mehrere Klassen für Multiklassen, die erste ist die, mit der der Charakter begonnen hat. Eine Unterklasse gibt es ab Stufe 3.',
+      none: 'Noch keine Klasse.',
+      className: 'Klasse',
+      level: 'Stufe',
+      subclass: 'Unterklasse',
+      noSubclass: 'Keine',
+      subclassFrom: 'ab Stufe 3',
+      addFirst: 'Klasse wählen',
+      add: '+ Weitere Klasse',
+      removeShort: 'Entfernen',
+      remove: (name: string) => `${name} entfernen`,
+      total: (level: number) => `Charakterstufe ${level}`,
+      tooHigh: (level: number) => `Zusammen Stufe ${level}: höchstens 20 gehen.`,
+    },
     species: 'Spezies',
     age: 'Alter',
     owner: (name: string) => `Gehört ${name}`,
@@ -1131,6 +1149,16 @@ export const de = {
     },
     level: (level: number) => (level === 0 ? 'Zaubertrick' : `Grad ${level}`),
     levelGroup: (level: number) => (level === 0 ? 'Zaubertricks' : `Grad ${level}`),
+    /** The colours of a table row's strip (SpellTableRow.color). */
+    rowColors: {
+      red: 'Rot',
+      orange: 'Orange',
+      yellow: 'Gelb',
+      green: 'Grün',
+      blue: 'Blau',
+      indigo: 'Indigo',
+      violet: 'Violett',
+    },
     chipKinds: {
       acid: 'Säure',
       bludgeoning: 'Wucht',
@@ -1165,12 +1193,23 @@ export const de = {
       source: (book: string) => `Quelle: ${book}`,
       writeIns: { attack: 'Angr. +', saveDc: 'SG', modifier: 'Mod +' },
       flip: (name: string) => `${name}: Karte umdrehen`,
-      overflow: 'Der Text passt nicht ganz auf die Karte. Kürze ihn etwas.',
+      /** The back's text doesn't fit at a readable size: it scrolls below the head and stats. */
+      scrolls: 'Langer Text: Die Rückseite lässt sich scrollen.',
     },
     library: {
       title: 'Zauber',
       intro:
-        'Alle Zauber der Seite, für jede Kampagne. Jeder Zauber kann mehrere Varianten haben: Gefällt dir keine, leg deine eigene an.',
+        'Die Zauber des Spielerhandbuchs 2024, für jede Kampagne. Jeder Zauber kann mehrere Karten haben: Gefällt dir keine, leg deine eigene an.',
+      /** The filter by a class's spell list, and by a subclass's spells. */
+      classFilter: 'Klasse',
+      allClasses: 'Alle Klassen',
+      subclassFilter: 'Unterklasse',
+      allSubclasses: 'Nur die Klassenliste',
+      cards: 'Karten',
+      withCards: 'Mit Karte',
+      withoutCards: 'Ohne Karte',
+      allCards: 'Alle Zauber',
+      noCard: 'Noch keine Karte',
       search: 'Suchen',
       searchPlaceholder: 'Name, deutsch oder englisch',
       allLevels: 'Alle Grade',
@@ -1178,20 +1217,31 @@ export const de = {
       newSpell: 'Neuer Zauber',
       empty: 'Noch keine Zauber. Leg den ersten an.',
       noMatch: 'Kein Zauber passt zur Suche.',
-      variants: (count: number) => (count === 1 ? '1 Variante' : `${count} Varianten`),
+      variants: (count: number) =>
+        count === 0 ? 'noch keine Karte' : count === 1 ? '1 Variante' : `${count} Varianten`,
+    },
+    /** Which classes and subclasses a spell is on (knowledge/rules/handbook-classes.md). */
+    lists: {
+      title: 'Zauberlisten',
+      classes: 'Klassen',
+      subclasses: 'Unterklassen',
+      /** A subclass that grants the spell from a class level, e.g. "Zirkel des Mondes (ab Druide 3)". */
+      granted: (subclass: string, className: string, level: number) =>
+        `${subclass} (ab ${className} ${level})`,
     },
     create: {
       title: 'Neuer Zauber',
       back: '← Zauber',
       tabs: { manual: 'Von Hand', name: 'Nach Name', photo: 'Aus Foto' },
-      manualIntro: 'Leg den Zauber selbst an. Zuerst sein englischer Name, Grad und Schule.',
+      manualIntro:
+        'Schreib die Karte selbst. Zuerst wählst du den Zauber aus dem Spielerhandbuch 2024, Grad und Schule kommen von dort.',
       nameIntro:
         'Gib den Namen ein, auf Deutsch oder Englisch. Die App sucht den Zauber im Wiki (dnd2024.wikidot.com) und schreibt daraus eine deutsche Karte, die du danach prüfst.',
       nameLabel: 'Name des Zaubers',
       namePlaceholder: 'z. B. Mondstrahl',
       lookUp: 'Nachschlagen',
       lookingUp: 'Wird nachgeschlagen …',
-      exists: (name: string) => `„${name}“ gibt es schon in der Sammlung.`,
+      exists: (name: string) => `Für „${name}“ gibt es schon Karten in der Sammlung.`,
       openExisting: 'Varianten ansehen',
       draftAnyway: 'Trotzdem eine eigene Variante aus dem Wiki',
       photoIntro:
@@ -1199,14 +1249,16 @@ export const de = {
       takePhoto: 'Foto aufnehmen oder wählen',
       reading: 'Das Foto wird gelesen …',
       pickDraft: 'Auf dem Foto stehen mehrere Zauber. Welchen nimmst du?',
-      inLibrary: 'schon in der Sammlung',
+      inLibrary: 'hat schon Karten',
       cost: 'Kostet einen Bruchteil eines Cents aus dem monatlichen KI-Budget.',
       unavailable: 'Nachschlagen und Fotos gehen gerade nicht. Von Hand geht immer.',
       forCharacter: (name: string) => `Wird nach dem Speichern ${name} hinzugefügt.`,
     },
     editor: {
       nameEn: 'Englischer Name',
-      nameEnHint: 'Wie im englischen Player’s Handbook 2024. Daran erkennt die App den Zauber.',
+      nameEnHint:
+        'Wie im englischen Player’s Handbook 2024; nur dessen Zauber gehen. Grad und Schule kommen von dort.',
+      nameEnUnknown: 'Diesen Zauber hat das Spielerhandbuch 2024 nicht.',
       level: 'Grad',
       school: 'Schule',
       factsFixed: 'Grad und Schule gehören zum Zauber und gelten für alle seine Varianten.',
@@ -1223,6 +1275,23 @@ export const de = {
       effectsHint: 'Kurze Zeilen unter dem Text, die die Regeln auf einen Blick zeigen.',
       addEffect: '+ Wirkung',
       removeEffect: 'Wirkung entfernen',
+      tables: 'Tabellen',
+      tablesHint:
+        'Für Zauber mit eigener Tabelle, etwa die Schichten der Prismatischen Wand oder den Wurf bei Verwirrung. Sie stehen zwischen Text und Wirkungen.',
+      addTable: '+ Tabelle',
+      removeTable: 'Tabelle entfernen',
+      tableTitle: (index: number) => `Tabelle ${index + 1}`,
+      tableCaption: 'Zeile darüber',
+      tableCaptionPlaceholder: 'z. B. Je Schicht RW Geschick · Erfolg: halber Schaden',
+      addRow: '+ Zeile',
+      removeRow: 'Zeile entfernen',
+      rowKey: 'Nr.',
+      rowKeyPlaceholder: 'z. B. 1',
+      rowColor: 'Farbe',
+      rowTitle: 'Titel',
+      rowText: 'Text',
+      rowTextHint:
+        '**fett**, *kursiv* und Zeilenumbrüche gehen, etwa „**Zerstört:** 25 Kälteschaden“.',
       icon: 'Symbol',
       effectTitle: 'Titel',
       effectTag: 'Markierung',
@@ -1276,9 +1345,11 @@ export const de = {
       ownVariantHint: 'Startet als Kopie dieser Variante.',
       delete: 'Löschen',
       confirmDelete: 'Diese Variante löschen? Das lässt sich nicht rückgängig machen.',
-      editFacts: 'Zauber korrigieren',
-      saveFacts: 'Speichern',
       tapToFlip: 'Tipp auf eine Karte, um sie umzudrehen.',
+      noCards: 'Für diesen Zauber hat noch niemand eine Karte geschrieben.',
+      writeCard: 'Karte anlegen',
+      notInHandbook:
+        'Diesen Zauber gibt es nicht im Spielerhandbuch 2024. Seine Karten bleiben für die Charaktere, die sie haben, neue kommen keine dazu.',
     },
     studio: {
       title: (name: string) => `Bildstudio: ${name}`,
@@ -1295,6 +1366,9 @@ export const de = {
       save: 'Speichern',
       saveGenerate: 'Speichern & generieren',
       discard: 'Änderung verwerfen',
+      suggest: 'Vorschlagen',
+      suggestHint:
+        'Das Textmodell liest die Karte und schlägt ein neues Motiv vor; gespeichert wird erst mit „Speichern“.',
       generate: 'Generieren',
       upload: 'Hochladen',
       ctrlEnter: 'Strg+Enter speichert',
@@ -1369,6 +1443,11 @@ export const de = {
       alreadyHas: 'schon dabei',
       notFoundHint: 'Nicht dabei? Leg ihn neu an.',
       back: 'Zurück zur Liste',
+      /** The add dialog's default filter by the character's classes; other spells stay allowed. */
+      onlyMyClasses: (classes: string) => `Nur Zauber für ${classes}`,
+      noClassHint: 'Gib dem Charakter eine Klasse, dann zeigt die Liste zuerst deren Zauber.',
+      noCardYet: 'Noch keine Karte: anlegen',
+      noMatch: 'Kein Zauber passt. Nimm den Klassenfilter weg, um alle zu sehen.',
     },
     gallery: {
       open: 'Zauber',
@@ -1981,6 +2060,8 @@ export const de = {
     sessionInvalid: 'Diese Sitzung gibt es in der Kampagne nicht (mehr).',
     colorInvalid: 'Ein Farbcode ist # und sechs Zeichen aus 0–9 und a–f, etwa #4da3ff.',
     notAMember: 'Diese Person gehört nicht zur Kampagne.',
+    characterClassInvalid:
+      'Prüf die Klassen: jede nur einmal, Stufen von 1 bis 20 und zusammen höchstens 20, eine Unterklasse erst ab Stufe 3.',
     textTooLong: 'Ein Text in der Datei ist zu lang.',
     mapSizeInvalid: 'Eine Karte ist 1 bis 40 Felder breit und hoch.',
     layoutVersionUnsupported: 'Diese Kartendatei stammt aus einer neueren Version der App.',
@@ -2065,6 +2146,10 @@ export const de = {
     spellImportFailed:
       'Das Wiki oder das Textmodell hat gerade nicht geantwortet. Versuch es gleich noch einmal.',
     artPromptInvalid: 'Ein Motiv braucht einen Text von höchstens 1.500 Zeichen.',
+    spellNotInHandbook:
+      'Diesen Zauber gibt es nicht im Spielerhandbuch 2024. Die Sammlung hat nur dessen Zauber.',
+    motifSuggestionFailed:
+      'Das Textmodell hat gerade kein Motiv vorgeschlagen. Versuch es noch einmal oder beschreib das Motiv selbst.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */

@@ -19,7 +19,7 @@ On a wide screen the top row has the portrait on the left and the name, the edit
 
 - A link back named after the campaign ("← Der Fluch von Barovia").
 - A portrait in the ring colour's light (the token's letter without one), the name, "Dein Charakter" or who plays it, and the **flavor sentence** ("Kurzer Satz", up to 120 characters) under the name. The same sentence stands under the portrait on the character's card on the campaign page.
-- The facts under the name: **Klasse**, **Spezies**, **Alter** (free text) and **Größe** (the creature size), each a small label over its value; an empty one is left out. The size is no longer next to the owner note.
+- The facts under the name: **Klasse** (or **Klassen**: the Handbook classes with level and subclass, "Magier 5 (Hervorrufer) · Kämpfer 2"), **Spezies**, **Alter** (free text) and **Größe** (the creature size), each a small label over its value; an empty one is left out. The size is no longer next to the owner note.
 - The four texts, each under its own heading: **Aussehen**, **Hintergrund**, **Persönlichkeit**, **Verbindungen**. An empty one says "Noch nichts eingetragen." The texts take a little markdown: bold, italic, lists and line breaks. Headings, links, images and raw HTML are shown as plain text, so one player's text can't bring links or pictures onto another's page.
 - A **Zauber** section after the texts: the character's spells as small cards with "Vorbereitet" ([spell cards](/features/spell-cards.md), 2026-11-21).
 - Whoever may edit the character ([character](/domain/character.md), "Permissions") also sees its status list ([statuses](/features/statuses.md)), folded behind "Zustandsliste zeigen" because it is a combat setting, not part of the story.
@@ -28,7 +28,8 @@ On a wide screen the top row has the portrait on the left and the name, the edit
 
 Whoever may edit has a labelled "Bearbeiten" button by the name. It does not open a form beside the page: the page itself turns into the editor and the portrait stays where it was.
 
-- The name becomes a field; below it the flavor sentence (two lines), Klasse, Spezies, Alter, Größe, "Gespielt von" (`dm` members only) and "Farbe auf dem Brett": the default colours as swatches with the chosen one marked (also the automatic one), and a "+" swatch that opens a hex field.
+- The name becomes a field; below it the flavor sentence (two lines), Spezies, Alter, Größe, "Gespielt von" (`dm` members only), **Klassen** and "Farbe auf dem Brett": the default colours as swatches with the chosen one marked (also the automatic one), and a "+" swatch that opens a hex field.
+- **Klassen** (2026-11-24): a row per class with "Klasse" (the Handbook's classes it doesn't have yet), "Stufe" (1–20) and "Unterklasse" (that class's four, open from level 3; lowering the level below 3 drops it), and "Entfernen". "Klasse wählen" adds the first, "+ Weitere Klasse" more (multiclassing). "Charakterstufe 7" counts the levels; over 20 it warns and the server refuses ([character](/domain/character.md), Classes).
 - Each of the four texts becomes a box under the same heading that grows with its text. Under it stand the hint and a counter on the right, which stands out near the limit (appearance 750, background 1,500, personality 750, bonds 1,500 characters; markdown characters count). The hints say which texts feed the portrait and that markdown works.
 - The portrait tools sit in the left column under the portrait: "Neues Porträt erzeugen" (a secondary button, since saving is the primary action), upload, "Ohne Bild" and the versions as a grid of thumbnails. They say they use the text currently in the fields.
 - The status list is hidden while editing.
@@ -41,7 +42,7 @@ The "Neuer Charakter" tile on the campaign page opens `/kampagnen/:campaignId/ch
 
 # Portrait prompt
 
-Name and appearance as before, then a line with the species, class and age that are filled in ("Species: Waldelfe. Class: Waldläuferin. Age: 112."), then one line with the background and personality when they are filled in: "Background: …. Personality: …. Let this show in the expression, clothing and bearing, without drawing scenes from it." A portrait still needs a filled-in appearance. Bonds are never sent.
+Name and appearance as before, then a line with the species, classes and age that are filled in ("Species: Waldelfe. Class: Ranger (Gloom Stalker), Rogue. Age: 112.", the classes in English without levels), then one line with the background and personality when they are filled in: "Background: …. Personality: …. Let this show in the expression, clothing and bearing, without drawing scenes from it." A portrait still needs a filled-in appearance. Bonds are never sent.
 
 # As built
 
@@ -51,4 +52,4 @@ API: `CharacterRequest` and `CharacterResponse` carry `background`, `personality
 
 - Not built from the second review round: a blurred portrait behind the header, links to the other characters, a marker for which texts are visible to whom, and a placeholder tagline on the campaign page's other cards.
 - Whether a text should be private to its player and `dm` members (secrets); today all four are readable by every member.
-- Class, level, race and other structured sheet fields are not built; they come with the full character sheet in the [backlog](/backlog.md).
+- Race and other structured sheet fields are not built; they come with the full character sheet in the [backlog](/backlog.md). Classes, levels and subclasses are built (2026-11-24).

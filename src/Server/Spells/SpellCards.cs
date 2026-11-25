@@ -9,8 +9,14 @@ public static class SpellCards
 {
     public const int NameMax = 60;
     public const int StatMax = 40;
-    public const int DescriptionMax = 1500;
+    public const int DescriptionMax = 3000;
     public const int EffectsMax = 6;
+    public const int TablesMax = 3;
+    public const int TableCaptionMax = 80;
+    public const int TableRowsMax = 12;
+    public const int TableKeyMax = 6;
+    public const int TableTitleMax = 30;
+    public const int TableTextMax = 300;
     public const int EffectTitleMax = 30;
     public const int EffectTagMax = 24;
     public const int EffectTextMax = 200;
@@ -105,17 +111,9 @@ public static class SpellCards
                 return Fail(field);
             }
 
-            SpellChip? chip = null;
-            if (effect.Chip is { } c)
+            if (!CleanChip(effect.Chip, out var chip))
             {
-                var big = Clean(c.Big);
-                var small = Clean(c.Small);
-                if (big.Length is 0 or > ChipBigMax || small.Length > ChipSmallMax)
-                {
-                    return Fail(field);
-                }
-
-                chip = new SpellChip { Big = big, Small = small.Length > 0 ? small : null, Kind = c.Kind };
+                return Fail(field);
             }
 
             cleanEffects.Add(new SpellEffect
@@ -126,6 +124,49 @@ public static class SpellCards
                 Text = text,
                 Chip = chip,
             });
+        }
+
+        var tables = card.Tables ?? [];
+        if (tables.Count > TablesMax)
+        {
+            return Fail("card.tables");
+        }
+
+        var cleanTables = new List<SpellTable>(tables.Count);
+        for (var i = 0; i < tables.Count; i++)
+        {
+            var table = tables[i];
+            var field = $"card.tables[{i}]";
+            var rows = table?.Rows ?? [];
+            var caption = Clean(table?.Caption);
+            if (table is null || rows.Count is 0 or > TableRowsMax || caption.Length > TableCaptionMax)
+            {
+                return Fail(field);
+            }
+
+            var cleanRows = new List<SpellTableRow>(rows.Count);
+            for (var j = 0; j < rows.Count; j++)
+            {
+                var row = rows[j];
+                var rowField = $"{field}.rows[{j}]";
+                var key = Clean(row?.Key);
+                var title = Clean(row?.Title);
+                var text = Clean(row?.Text);
+                if (row is null
+                    || key.Length > TableKeyMax
+                    || title.Length > TableTitleMax
+                    || text.Length > TableTextMax
+                    || title.Length + text.Length == 0
+                    || (row.Color is { } color && !Enum.IsDefined(color))
+                    || !CleanChip(row.Chip, out var chip))
+                {
+                    return Fail(rowField);
+                }
+
+                cleanRows.Add(new SpellTableRow { Key = key, Color = row.Color, Title = title, Text = text, Chip = chip });
+            }
+
+            cleanTables.Add(new SpellTable { Caption = caption, Rows = cleanRows });
         }
 
         return (new SpellCard
@@ -139,6 +180,7 @@ public static class SpellCards
             Ritual = card.Ritual,
             Description = description!,
             Effects = cleanEffects,
+            Tables = cleanTables,
             Icon = card.Icon!,
             Pips = [.. pips],
             HigherLevels = higherLevels!,
@@ -147,6 +189,26 @@ public static class SpellCards
             Source = source!,
             WriteIns = [.. (card.WriteIns ?? []).Distinct().Where(Enum.IsDefined)],
         }, null);
+    }
+
+    // A chip as saved, or null without one; false when its value is empty or a text too long.
+    private static bool CleanChip(SpellChip? value, out SpellChip? chip)
+    {
+        chip = null;
+        if (value is null)
+        {
+            return true;
+        }
+
+        var big = Clean(value.Big);
+        var small = Clean(value.Small);
+        if (big.Length is 0 or > ChipBigMax || small.Length > ChipSmallMax || (value.Kind is { } kind && !Enum.IsDefined(kind)))
+        {
+            return false;
+        }
+
+        chip = new SpellChip { Big = big, Small = small.Length > 0 ? small : null, Kind = value.Kind };
+        return true;
     }
 
     // Trimmed, Windows line ends as \n, at most one blank line in a row.

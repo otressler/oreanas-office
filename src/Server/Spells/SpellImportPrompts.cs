@@ -41,8 +41,9 @@ public static class SpellImportPrompts
         - "components": "V, G, M" (V verbal, G Gesten for somatic, M material). The material itself goes into "material" in German, without "M:", or "" when there is none.
         - "duration": "Unmittelbar", "1 Runde", "10 Minuten", "1 Stunde" …; with concentration write "bis 1 Minute" and set "concentration" to true.
         - "ritual": true when the spell has the Ritual tag.
-        - "description": the full rules text in German, condensed but leaving out no rule. Aim for at most 700 characters, never more than 1400. Mark the attack roll or saving throw and other key terms with **bold**. No headings, no lists; a line break only where it really helps.
+        - "description": the full rules text in German, condensed but leaving out no rule. Aim for at most 700 characters. A long spell may take more, up to 2800: the back of the card then scrolls, so never leave out a rule to make it short. Mark the attack roll or saving throw and other key terms with **bold**. No headings, no lists; a line break only where it really helps.
         - "effects": 1 to 4 short rows that sum up the mechanics at a glance: "title" up to 30 characters, "tag" (up to 24) for the action it needs when that differs from casting ("Magie-Aktion", "Bonusaktion") or a condition ("immer"), else null, "text" up to 200 characters. A row with damage or healing dice gets a "chip": "big" up to 12 characters ("2W10", "1W8 + Mod"), "small" up to 14 ("Gleißend", "Heilung"), and "kind" the damage type (or "heal" for healing, null for other values such as "+1W4").
+        - "tables": [] unless the rules text has a table, or parallel cases that read like one (Prismatic Wall's seven layers, Confusion's behaviour roll, Control Weather's stages). Then up to 3 tables of up to 12 rows, and their content stays out of "description" and "effects". "caption" up to 80 characters says what applies to every row ("Je Schicht RW Geschick · Erfolg: halber Schaden"), or "". Each row: "key" up to 6 characters, the roll or the order ("1", "2–4") or ""; "color" the row's colour when the rule names one (red, orange, yellow, green, blue, indigo, violet), else null; "title" up to 30 ("Rot", "Feuer"); "text" up to 300, a row's parts on lines of their own with a bold label ("**Zerstört:** 25 Kälteschaden"); and a "chip" for damage dice as in an effect row, else null.
         - "higherLevels": for a cantrip the damage by character level, "5 → 2W10 · 11 → 3W10 · 17 → 4W10"; for a levelled spell what a higher spell slot does, "+1W10 je Grad über 2"; "" when nothing changes.
         - "tip": a short practical hint for the player only when one really helps, else "".
         - "source": "" for the Player's Handbook, else the book's name.
@@ -78,6 +79,8 @@ public static class SpellImportPrompts
     private static readonly string[] ChipKinds =
         ["acid", "bludgeoning", "cold", "fire", "force", "lightning", "necrotic", "piercing", "poison", "psychic", "radiant", "slashing", "thunder", "heal"];
 
+    private static readonly string[] RowColors = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"];
+
     public static JsonObject CardSchema()
     {
         JsonArray Strings(IEnumerable<string> values) => [.. values.Select(v => (JsonNode)v)];
@@ -110,6 +113,31 @@ public static class SpellImportPrompts
             ["required"] = new JsonArray("icon", "title", "tag", "text", "chip"),
             ["additionalProperties"] = false,
         };
+        var row = new JsonObject
+        {
+            ["type"] = "object",
+            ["properties"] = new JsonObject
+            {
+                ["key"] = Text(),
+                ["color"] = new JsonObject { ["type"] = new JsonArray("string", "null"), ["enum"] = Strings([.. RowColors, null!]) },
+                ["title"] = Text(),
+                ["text"] = Text(),
+                ["chip"] = chip.DeepClone(),
+            },
+            ["required"] = new JsonArray("key", "color", "title", "text", "chip"),
+            ["additionalProperties"] = false,
+        };
+        var table = new JsonObject
+        {
+            ["type"] = "object",
+            ["properties"] = new JsonObject
+            {
+                ["caption"] = Text(),
+                ["rows"] = new JsonObject { ["type"] = "array", ["items"] = row },
+            },
+            ["required"] = new JsonArray("caption", "rows"),
+            ["additionalProperties"] = false,
+        };
         var properties = new JsonObject
         {
             ["nameEn"] = Text(),
@@ -124,6 +152,7 @@ public static class SpellImportPrompts
             ["ritual"] = new JsonObject { ["type"] = "boolean" },
             ["description"] = Text(),
             ["effects"] = new JsonObject { ["type"] = "array", ["items"] = effect },
+            ["tables"] = new JsonObject { ["type"] = "array", ["items"] = table },
             ["icon"] = IconEnum(),
             ["pips"] = new JsonObject { ["type"] = "array", ["items"] = IconEnum() },
             ["higherLevels"] = Text(),
@@ -144,6 +173,84 @@ public static class SpellImportPrompts
             ["additionalProperties"] = false,
         };
     }
+
+    // The studio's "Vorschlagen" (knowledge/features/spell-cards.md, "Art studio"): one
+    // subject for the image model. The examples are motifs of the spell-cards app; the server
+    // adds the style block (ImageOptions.SpellArtStyle), so the subject leaves style and
+    // layout out.
+    public const string MotifSystem =
+        """
+        You suggest the subject of a painting for a Dungeons & Dragons spell card (a tall tarot-style card). You get the card's German rules text and the subjects the card already has. Answer with one new subject in English for an image model.
+
+        - One or two sentences, 150 to 400 characters: what is shown, who, where, the light and the one moment of the spell taking effect. Concrete and visual; the viewer should recognise the spell from the picture.
+        - Only the subject. The style (loose painterly concept art), the tall format and the empty band for the title are added by the app, so never mention art style, medium, colours of the whole picture, camera, format, borders or text.
+        - Show the spell's effect as the rules describe it, translated into an image: its shape (a cylinder of light, a cone of flame, a sphere), its targets, its material component when it is a striking object.
+        - The caster, when one is shown, fits the classes whose list the spell is on: a druid, a wizard, a cleric, a bard, a paladin and so on. Vary race, age and gender. No named characters from books, films or games, no real people.
+        - Make it differ clearly from the subjects the card already has: a different scene, framing or setting. Good alternatives are a wide scene of the spell in action, a close view of the hands or the magic itself, or the effect on a creature in another landscape.
+        - No lettering, runes that read as text, gore or cruelty; danger and battle are fine.
+
+        Examples of good subjects:
+        - a lone grey wolf howling upward in a dark forest clearing, a single tall column of pale silver moonlight pouring down from a full moon onto it, twisted tree silhouettes framing the scene.
+        - close view of a druid's hand holding a glowing moonseed leaf up toward the full moon, a narrow silver beam forming between the leaf and the sky, moths and fireflies circling in the pale light.
+        - a battlefield in a rocky pass where a fallen fighter lies on the ground, a druid far behind the line calling out a single word, a ribbon of warm golden-green light streaking across the battlefield to the fighter, who begins to stir.
+        - close view of a druid's hands releasing a swirling ball of mist that is rapidly expanding, wisps curling between the fingers, the forest behind already blurring into white.
+        """;
+
+    public static string MotifUser(SpellMotifInput input)
+    {
+        var card = input.Card;
+        var lines = new List<string>
+        {
+            $"Spell: {input.NameEn} (German: {card.Name}), {(input.Level == 0 ? "cantrip" : $"level {input.Level}")}, {input.School.ToString().ToLowerInvariant()}",
+            $"Classes: {(input.Classes.Count == 0 ? "none listed" : string.Join(", ", input.Classes))}",
+            $"Casting time: {card.CastingTime} · Range: {card.Range} · Duration: {card.Duration}",
+        };
+        if (card.Material.Length > 0)
+        {
+            lines.Add($"Material: {card.Material}");
+        }
+
+        lines.Add("");
+        lines.Add("Rules text:");
+        lines.Add(card.Description);
+        lines.AddRange(card.Effects.Select(e => $"- {e.Title}{(e.Tag is null ? "" : $" ({e.Tag})")}: {e.Text}"));
+        foreach (var table in card.Tables)
+        {
+            if (table.Caption.Length > 0)
+            {
+                lines.Add(table.Caption);
+            }
+
+            lines.AddRange(table.Rows.Select(r => $"- {string.Join(" ", new[] { r.Key, r.Title }.Where(p => p.Length > 0))}: {r.Text.Replace('\n', ' ')}"));
+        }
+
+        if (card.HigherLevels.Length > 0)
+        {
+            lines.Add($"Higher levels: {card.HigherLevels}");
+        }
+
+        lines.Add("");
+        lines.Add(input.Motifs.Count == 0
+            ? "The card has no subjects yet."
+            : $"Subjects the card already has:\n{string.Join('\n', input.Motifs.Select(m => $"- {m}"))}");
+        if (input.Notes.Count > 0)
+        {
+            lines.Add("");
+            lines.Add($"The author's notes on the card's art (may be German):\n{string.Join('\n', input.Notes.Select(n => $"- {n}"))}");
+        }
+
+        return string.Join('\n', lines);
+    }
+
+    public static readonly JsonObject MotifSchema = (JsonObject)JsonNode.Parse(
+        """
+        {
+          "type": "object",
+          "properties": { "subject": { "type": "string" } },
+          "required": ["subject"],
+          "additionalProperties": false
+        }
+        """)!;
 
     public static JsonObject PhotoSchema() => new()
     {

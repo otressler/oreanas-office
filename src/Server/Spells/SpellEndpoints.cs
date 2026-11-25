@@ -19,7 +19,6 @@ public static class SpellEndpoints
 
         spells.MapGet("/", ListSpells);
         spells.MapGet("/{spellId:guid}", GetSpell);
-        spells.MapPut("/{spellId:guid}", UpdateSpell);
         spells.MapPost("/variants", CreateVariant);
         spells.MapGet("/variants/{variantId:guid}", GetVariant);
         spells.MapPut("/variants/{variantId:guid}", UpdateVariant);
@@ -30,16 +29,18 @@ public static class SpellEndpoints
 
     internal static bool IsAdmin(this ClaimsPrincipal user) => user.HasClaim(AppClaims.Admin, "true");
 
-    // The whole library, ordered by level and English name; the app filters and searches.
+    // The Handbook's spells, ordered by level and English name; the app filters and searches.
     private static async Task<Ok<List<SpellSummary>>> ListSpells(AppDbContext db, CancellationToken cancellationToken)
     {
         var rows = await db.Spells.AsNoTracking()
+            .Where(s => s.InHandbook)
             .OrderBy(s => s.Level)
             .ThenBy(s => s.NameEn)
             .Select(s => new
             {
                 s.Id,
                 s.NameEn,
+                s.NameDe,
                 s.Level,
                 s.School,
                 Count = s.Variants.Count,
@@ -50,17 +51,33 @@ public static class SpellEndpoints
                     .FirstOrDefault(),
             })
             .ToListAsync(cancellationToken);
+        var lists = await ListsAsync(db, db.Spells.Where(s => s.InHandbook), cancellationToken);
         return TypedResults.Ok(rows
             .Select(r => new SpellSummary(
                 r.Id,
                 r.NameEn,
                 r.Level,
                 r.School,
-                r.First?.Card.Name ?? r.NameEn,
+                r.First?.Card.Name ?? r.NameDe ?? r.NameEn,
                 r.First?.Card.Icon ?? "spark",
                 r.Count,
-                r.First?.ArtAssetId is { } art ? MapBackgrounds.Url(art) : null))
+                r.First?.ArtAssetId is { } art ? MapBackgrounds.Url(art) : null,
+                lists.GetValueOrDefault(r.Id) ?? []))
             .ToList());
+    }
+
+    // The class lists of these spells, by spell: the class lists first, then the subclasses by level.
+    private static async Task<Dictionary<Guid, List<SpellListLink>>> ListsAsync(
+        AppDbContext db, IQueryable<Spell> spells, CancellationToken cancellationToken)
+    {
+        var entries = await db.SpellListEntries.AsNoTracking()
+            .Where(e => spells.Any(s => s.Id == e.SpellId))
+            .OrderBy(e => e.ClassLevel ?? 0)
+            .ThenBy(e => e.ClassId)
+            .ThenBy(e => e.SubclassId)
+            .Select(e => new { e.SpellId, Link = new SpellListLink(e.ClassId, e.SubclassId, e.ClassLevel) })
+            .ToListAsync(cancellationToken);
+        return entries.GroupBy(e => e.SpellId).ToDictionary(g => g.Key, g => g.Select(e => e.Link).ToList());
     }
 
     private static async Task<Results<Ok<SpellDetail>, NotFound>> GetSpell(
@@ -74,54 +91,28 @@ public static class SpellEndpoints
 
         var variants = await ViewsAsync(
             db, db.SpellVariants.Where(v => v.SpellId == spellId).OrderBy(v => v.CreatedAt), user, cancellationToken);
-        return TypedResults.Ok(new SpellDetail(spell.Id, spell.NameEn, spell.Level, spell.School, user.IsAdmin(), variants));
+        var lists = await ListsAsync(db, db.Spells.Where(s => s.Id == spellId), cancellationToken);
+        return TypedResults.Ok(new SpellDetail(
+            spell.Id, spell.NameEn, spell.NameDe, spell.Level, spell.School, spell.InHandbook, lists.GetValueOrDefault(spell.Id) ?? [], variants));
     }
 
-    // Site admins correct the English name, level and school. 409 SpellInvalid with
-    // Field "nameEn" also when another spell has that name.
-    private static async Task<Results<Ok<SpellDetail>, NotFound, ForbidHttpResult, BadRequest<ApiError>, Conflict<ApiError>>> UpdateSpell(
-        Guid spellId, UpdateSpellRequest request, ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken)
-    {
-        if (!user.IsAdmin())
-        {
-            return TypedResults.Forbid();
-        }
-
-        if (ValidateFacts(request.NameEn, request.Level, request.School) is { } error)
-        {
-            return TypedResults.BadRequest(error);
-        }
-
-        var spell = await db.Spells.SingleOrDefaultAsync(s => s.Id == spellId, cancellationToken);
-        if (spell is null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        var key = Spell.KeyOf(request.NameEn);
-        if (key != spell.NameKey && await db.Spells.AnyAsync(s => s.NameKey == key, cancellationToken))
-        {
-            return TypedResults.Conflict(new ApiError(ApiErrorCode.SpellInvalid, "nameEn"));
-        }
-
-        spell.NameEn = request.NameEn.Trim();
-        spell.NameKey = key;
-        spell.Level = request.Level;
-        spell.School = request.School;
-        await db.SaveChangesAsync(cancellationToken);
-        return (await GetSpell(spellId, user, db, cancellationToken)).Result switch
-        {
-            Ok<SpellDetail> ok => ok,
-            _ => TypedResults.NotFound(),
-        };
-    }
-
-    private static async Task<Results<Created<SpellVariantView>, BadRequest<ApiError>>> CreateVariant(
+    // 409 SpellNotInHandbook for a spell that isn't the Handbook's, 400 SpellNotFound for an
+    // unknown spell or basedOnVariantId.
+    private static async Task<Results<Created<SpellVariantView>, BadRequest<ApiError>, Conflict<ApiError>>> CreateVariant(
         CreateVariantRequest request, ClaimsPrincipal user, AppDbContext db, TimeProvider time, CancellationToken cancellationToken)
     {
-        if (ValidateFacts(request.NameEn, request.Level, request.School) is { } factsError)
+        var spell = await db.Spells.AsNoTracking()
+            .Where(s => s.Id == request.SpellId)
+            .Select(s => new { s.InHandbook })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (spell is null)
         {
-            return TypedResults.BadRequest(factsError);
+            return TypedResults.BadRequest(new ApiError(ApiErrorCode.SpellNotFound, "spellId"));
+        }
+
+        if (!spell.InHandbook)
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.SpellNotInHandbook, "spellId"));
         }
 
         var (card, cardError) = SpellCards.Validate(request.Card);
@@ -138,19 +129,15 @@ public static class SpellEndpoints
 
         var origin = request.Origin == SpellVariantOrigin.Seed ? SpellVariantOrigin.Manual : request.Origin;
         var variant = await AddVariantAsync(
-            db, request.NameEn, request.Level, request.School, card, origin, request.BasedOnVariantId, null,
-            user.GetUserId(), time.GetUtcNow(), cancellationToken);
+            db, request.SpellId, card, origin, request.BasedOnVariantId, null, user.GetUserId(), time.GetUtcNow(), cancellationToken);
         var view = (await ViewsAsync(db, db.SpellVariants.Where(v => v.Id == variant.Id), user, cancellationToken)).Single();
         return TypedResults.Created($"/api/spells/variants/{variant.Id}", view);
     }
 
-    // Finds the spell by its English name or creates it, under a lock on the name so two
-    // users adding the same new spell at once get one spell; then adds the variant.
+    // Adds a variant to a spell of the library (HandbookSync made them all).
     internal static async Task<SpellVariant> AddVariantAsync(
         AppDbContext db,
-        string nameEn,
-        int level,
-        SpellSchool school,
+        Guid spellId,
         SpellCard card,
         SpellVariantOrigin origin,
         Guid? basedOnVariantId,
@@ -159,49 +146,21 @@ public static class SpellEndpoints
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        var key = Spell.KeyOf(nameEn);
-        var strategy = db.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync(async () =>
+        var variant = new SpellVariant
         {
-            db.ChangeTracker.Clear();
-            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-            await db.Database.ExecuteSqlAsync(
-                $"EXEC sp_getapplock @Resource = {$"spell:{key}"}, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 20000",
-                cancellationToken);
-
-            var spell = await db.Spells.SingleOrDefaultAsync(s => s.NameKey == key, cancellationToken);
-            if (spell is null)
-            {
-                spell = new Spell
-                {
-                    Id = Guid.NewGuid(),
-                    NameEn = nameEn.Trim(),
-                    NameKey = key,
-                    Level = level,
-                    School = school,
-                    CreatedAt = now,
-                    CreatedByUserId = userId,
-                };
-                db.Spells.Add(spell);
-            }
-
-            var variant = new SpellVariant
-            {
-                Id = Guid.NewGuid(),
-                SpellId = spell.Id,
-                AuthorUserId = userId,
-                BasedOnVariantId = basedOnVariantId,
-                Origin = origin,
-                Card = card,
-                SeedKey = seedKey,
-                CreatedAt = now,
-                UpdatedAt = now,
-            };
-            db.SpellVariants.Add(variant);
-            await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return variant;
-        });
+            Id = Guid.NewGuid(),
+            SpellId = spellId,
+            AuthorUserId = userId,
+            BasedOnVariantId = basedOnVariantId,
+            Origin = origin,
+            Card = card,
+            SeedKey = seedKey,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.SpellVariants.Add(variant);
+        await db.SaveChangesAsync(cancellationToken);
+        return variant;
     }
 
     private static async Task<Results<Ok<SpellVariantView>, NotFound>> GetVariant(
@@ -236,8 +195,9 @@ public static class SpellEndpoints
         return TypedResults.Ok((await ViewsAsync(db, db.SpellVariants.Where(v => v.Id == variantId), user, cancellationToken)).Single());
     }
 
-    // Only while no character uses it. The spell goes with its last variant. Its art rows
-    // stay for the monthly limit.
+    // Only while no character uses it. A spell that isn't the Handbook's goes with its last
+    // variant; Handbook spells stay in the library without one. Its art rows stay for the
+    // monthly limit.
     private static async Task<Results<NoContent, NotFound, Conflict<ApiError>>> DeleteVariant(
         Guid variantId, ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken)
     {
@@ -263,7 +223,7 @@ public static class SpellEndpoints
         await db.SaveChangesAsync(cancellationToken);
         if (!await db.SpellVariants.AnyAsync(v => v.SpellId == variant.SpellId, cancellationToken))
         {
-            await db.Spells.Where(s => s.Id == variant.SpellId).ExecuteDeleteAsync(cancellationToken);
+            await db.Spells.Where(s => s.Id == variant.SpellId && !s.InHandbook).ExecuteDeleteAsync(cancellationToken);
         }
 
         return TypedResults.NoContent();
@@ -271,22 +231,6 @@ public static class SpellEndpoints
 
     internal static bool CanEdit(SpellVariant variant, ClaimsPrincipal user) =>
         variant.AuthorUserId == user.GetUserId() || user.IsAdmin();
-
-    internal static ApiError? ValidateFacts(string? nameEn, int level, SpellSchool school)
-    {
-        var name = nameEn?.Trim() ?? "";
-        if (name.Length is 0 or > Spell.NameMaxLength)
-        {
-            return new ApiError(ApiErrorCode.SpellInvalid, "nameEn");
-        }
-
-        if (level is < 0 or > Spell.MaxLevel)
-        {
-            return new ApiError(ApiErrorCode.SpellInvalid, "level");
-        }
-
-        return Enum.IsDefined(school) ? null : new ApiError(ApiErrorCode.SpellInvalid, "school");
-    }
 
     // Variants as the app sees them, in the query's order.
     internal static async Task<List<SpellVariantView>> ViewsAsync(

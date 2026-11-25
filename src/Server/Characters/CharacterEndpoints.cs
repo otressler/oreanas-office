@@ -7,6 +7,7 @@ using OreanasOffice.Server.Authorization;
 using OreanasOffice.Server.Campaigns;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Images;
+using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Table;
 
 namespace OreanasOffice.Server.Characters;
@@ -49,7 +50,7 @@ public static class CharacterEndpoints
         TimeProvider time,
         CancellationToken cancellationToken)
     {
-        if (Validate(request, out var texts) is { } error)
+        if (Validate(request, out var texts, out var classes) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
@@ -80,12 +81,12 @@ public static class CharacterEndpoints
             Personality = texts.Personality,
             Bonds = texts.Bonds,
             Tagline = texts.Tagline,
-            CharacterClass = texts.CharacterClass,
             Species = texts.Species,
             Age = texts.Age,
             Color = texts.Color,
             CreatedAt = time.GetUtcNow(),
         };
+        CharacterClasses.Apply(character, classes);
         db.Characters.Add(character);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -106,6 +107,7 @@ public static class CharacterEndpoints
         CancellationToken cancellationToken)
     {
         var character = await db.Characters
+            .Include(c => c.Classes)
             .SingleOrDefaultAsync(c => c.Id == characterId && c.CampaignId == campaignId, cancellationToken);
         if (character is null)
         {
@@ -119,7 +121,7 @@ public static class CharacterEndpoints
             return TypedResults.Forbid();
         }
 
-        if (Validate(request, out var texts) is { } error)
+        if (Validate(request, out var texts, out var classes) is { } error)
         {
             return TypedResults.BadRequest(error);
         }
@@ -147,7 +149,7 @@ public static class CharacterEndpoints
         character.Personality = texts.Personality;
         character.Bonds = texts.Bonds;
         character.Tagline = texts.Tagline;
-        character.CharacterClass = texts.CharacterClass;
+        CharacterClasses.Apply(character, classes);
         character.Species = texts.Species;
         character.Age = texts.Age;
         character.Color = texts.Color;
@@ -163,7 +165,7 @@ public static class CharacterEndpoints
         return TypedResults.Ok(await LoadAsync(db, campaignId, character.Id, userId, cancellationToken));
     }
 
-    private static ApiError? Validate(CharacterRequest request, out Texts texts)
+    private static ApiError? Validate(CharacterRequest request, out Texts texts, out List<CharacterClassView> classes)
     {
         texts = new Texts(
             request.Name?.Trim() ?? "",
@@ -172,10 +174,14 @@ public static class CharacterEndpoints
             request.Personality?.Trim() ?? "",
             request.Bonds?.Trim() ?? "",
             request.Tagline?.Trim() ?? "",
-            request.CharacterClass?.Trim() ?? "",
             request.Species?.Trim() ?? "",
             request.Age?.Trim() ?? "",
             request.Color?.Trim().ToLowerInvariant() is { Length: > 0 } picked ? picked : null);
+        if (CharacterClasses.Validate(request.Classes, out classes) is { } classError)
+        {
+            return classError;
+        }
+
         if (texts.Name.Length is 0 or > Character.NameMaxLength)
         {
             return new ApiError(ApiErrorCode.NameInvalid, "name");
@@ -188,7 +194,6 @@ public static class CharacterEndpoints
             (texts.Personality, Character.PersonalityMaxLength, "personality"),
             (texts.Bonds, Character.BondsMaxLength, "bonds"),
             (texts.Tagline, Character.TaglineMaxLength, "tagline"),
-            (texts.CharacterClass, Character.FactMaxLength, "characterClass"),
             (texts.Species, Character.FactMaxLength, "species"),
             (texts.Age, Character.FactMaxLength, "age"),
         })
@@ -238,9 +243,9 @@ public static class CharacterEndpoints
                 c.Personality,
                 c.Bonds,
                 c.Tagline,
-                c.CharacterClass,
                 c.Species,
-                c.Age),
+                c.Age,
+                c.Classes.OrderBy(x => x.Position).Select(x => new CharacterClassView(x.ClassId, x.Level, x.SubclassId)).ToList()),
             c.TokenAssetId));
 
     private static async Task<List<CharacterResponse>> WithColorsAsync(
@@ -259,7 +264,7 @@ public static class CharacterEndpoints
 
     private sealed record Texts(
         string Name, string Appearance, string Background, string Personality, string Bonds, string Tagline,
-        string CharacterClass, string Species, string Age, string? Color);
+        string Species, string Age, string? Color);
 
     private sealed record Row(CharacterResponse Response, Guid? TokenAssetId);
 }

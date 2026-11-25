@@ -5,7 +5,7 @@ import { render } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { vi } from 'vitest'
 import { createQueryClient } from '../api/queryClient'
-import type { Me } from '../api/types'
+import type { ClassInfo, Me } from '../api/types'
 import { routes } from '../routes'
 import { useServerStatus, type ServerStatus } from '../server/serverStatus'
 
@@ -42,7 +42,9 @@ function parseBody(text: string): unknown {
 
 export function mockApi(handlers: Record<string, Handler | Response | (() => Response)>) {
   const calls: ApiCall[] = []
-  const entries = Object.entries(handlers).map(([key, handler]) => {
+  // The Handbook's classes are reference data every page may ask for.
+  const all: typeof handlers = { 'GET /api/rules/classes': json(200, testClasses), ...handlers }
+  const entries = Object.entries(all).map(([key, handler]) => {
     const [method, pattern] = key.split(' ') as [string, string]
     const regex = new RegExp(`^${pattern.replace(/:[^/]+/g, '[^/]+')}$`)
     return { method, regex, handler }
@@ -69,6 +71,67 @@ export function mockApi(handlers: Record<string, Handler | Response | (() => Res
   )
   return calls
 }
+
+/** A few of the Handbook's classes (knowledge/rules/handbook-classes.md), as the server sends them. */
+export const testClasses: ClassInfo[] = [
+  {
+    id: 'druid',
+    nameEn: 'Druid',
+    nameDe: 'Druide',
+    caster: 'full',
+    subclasses: [
+      {
+        id: 'circle-of-the-land',
+        nameEn: 'Circle of the Land',
+        nameDe: 'Zirkel des Landes',
+        spellListClassId: null,
+      },
+      {
+        id: 'circle-of-the-moon',
+        nameEn: 'Circle of the Moon',
+        nameDe: 'Zirkel des Mondes',
+        spellListClassId: null,
+      },
+    ],
+  },
+  {
+    id: 'fighter',
+    nameEn: 'Fighter',
+    nameDe: 'Kämpfer',
+    caster: null,
+    subclasses: [
+      { id: 'champion', nameEn: 'Champion', nameDe: 'Champion', spellListClassId: null },
+      {
+        id: 'eldritch-knight',
+        nameEn: 'Eldritch Knight',
+        nameDe: 'Mystischer Ritter',
+        spellListClassId: 'wizard',
+      },
+    ],
+  },
+  {
+    id: 'ranger',
+    nameEn: 'Ranger',
+    nameDe: 'Waldläufer',
+    caster: 'half',
+    subclasses: [
+      {
+        id: 'gloom-stalker',
+        nameEn: 'Gloom Stalker',
+        nameDe: 'Düsterpirscher',
+        spellListClassId: null,
+      },
+      { id: 'hunter', nameEn: 'Hunter', nameDe: 'Jäger', spellListClassId: null },
+    ],
+  },
+  {
+    id: 'wizard',
+    nameEn: 'Wizard',
+    nameDe: 'Magier',
+    caster: 'full',
+    subclasses: [{ id: 'evoker', nameEn: 'Evoker', nameDe: 'Hervorrufer', spellListClassId: null }],
+  },
+]
 
 export const testUser: Me = {
   id: '00000000-0000-0000-0000-000000000001',

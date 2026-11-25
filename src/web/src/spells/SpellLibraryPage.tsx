@@ -1,8 +1,11 @@
-// /zauber: the site-wide spell library (knowledge/features/spell-cards.md, "Library").
+// /zauber: the site-wide spell library (knowledge/features/spell-cards.md, "Library"): the
+// 2024 Player's Handbook's spells, filtered by name, level, school, class and subclass, and
+// whether they have a card yet.
 import { useDeferredValue, useState } from 'react'
 import { Link } from 'react-router'
 import type { SpellSchool, SpellSummary } from '../api/types'
 import { ButtonLink, LoadError, Loading, PageTitle, SelectField, TextField } from '../components/ui'
+import { indexClasses, pickedSpellFilter, spellMatchesFilter, useClasses } from '../rules/classes'
 import { de } from '../text/de'
 import { spellPaths } from './paths'
 import { SpellCardView } from './SpellCard'
@@ -11,22 +14,34 @@ import { useSpellLibrary } from './queries'
 
 const t = de.spells
 
+type Cards = 'with' | 'without' | 'all'
+
 export function SpellLibraryPage() {
   const library = useSpellLibrary()
+  const classList = useClasses()
   const [query, setQuery] = useState('')
   const [level, setLevel] = useState<number | null>(null)
   const [school, setSchool] = useState<SpellSchool | null>(null)
+  const [classId, setClassId] = useState<string | null>(null)
+  const [subclassId, setSubclassId] = useState<string | null>(null)
+  // As before the library held the Handbook: the spells someone wrote a card for.
+  const [cards, setCards] = useState<Cards>('with')
   const deferred = useDeferredValue(query)
 
   if (library.isPending) return <Loading />
   if (library.isError)
     return <LoadError error={library.error} onRetry={() => void library.refetch()} />
 
+  const index = classList.data ? indexClasses(classList.data) : undefined
+  const picked = classId ? index?.classById.get(classId) : undefined
+  const filter = classId ? pickedSpellFilter(classId, subclassId, index) : null
   const spells = library.data.filter(
     (s) =>
       matchesSpell(s, deferred) &&
       (level == null || s.level === level) &&
-      (school == null || s.school === school),
+      (school == null || s.school === school) &&
+      (filter == null || spellMatchesFilter(s.lists, filter)) &&
+      (cards === 'all' || (cards === 'with') === s.variantCount > 0),
   )
   const levels = [...new Set(spells.map((s) => s.level))].sort((a, b) => a - b)
 
@@ -39,7 +54,7 @@ export function SpellLibraryPage() {
         </ButtonLink>
       </div>
       <p className="text-dim">{t.library.intro}</p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,2fr)_1fr_1fr]">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(5,minmax(0,1fr))]">
         <TextField
           label={t.library.search}
           type="search"
@@ -72,6 +87,43 @@ export function SpellLibraryPage() {
               {t.schools[s]}
             </option>
           ))}
+        </SelectField>
+        <SelectField
+          label={t.library.classFilter}
+          value={classId ?? ''}
+          onChange={(event) => {
+            setClassId(event.target.value || null)
+            setSubclassId(null)
+          }}
+        >
+          <option value="">{t.library.allClasses}</option>
+          {classList.data?.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.nameDe}
+            </option>
+          ))}
+        </SelectField>
+        <SelectField
+          label={t.library.subclassFilter}
+          value={subclassId ?? ''}
+          disabled={!picked}
+          onChange={(event) => setSubclassId(event.target.value || null)}
+        >
+          <option value="">{t.library.allSubclasses}</option>
+          {picked?.subclasses.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.nameDe}
+            </option>
+          ))}
+        </SelectField>
+        <SelectField
+          label={t.library.cards}
+          value={cards}
+          onChange={(event) => setCards(event.target.value as Cards)}
+        >
+          <option value="with">{t.library.withCards}</option>
+          <option value="without">{t.library.withoutCards}</option>
+          <option value="all">{t.library.allCards}</option>
         </SelectField>
       </div>
 

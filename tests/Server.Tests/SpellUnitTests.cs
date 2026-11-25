@@ -7,13 +7,6 @@ namespace OreanasOffice.Server.Tests;
 [Trait(TestCategory.Name, TestCategory.Unit)]
 public sealed class SpellUnitTests
 {
-    [Theory]
-    [InlineData("Moonbeam", "moonbeam")]
-    [InlineData("Hunter's Mark", "hunters-mark")]
-    [InlineData("Enlarge/Reduce", "enlarge-reduce")]
-    [InlineData("  Protection from Evil and Good ", "protection-from-evil-and-good")]
-    public void Wiki_slugs_follow_the_wikis_page_names(string nameEn, string slug) => Assert.Equal(slug, SpellImport.Slug(nameEn));
-
     [Fact]
     public void Page_text_keeps_the_content_as_lines_and_drops_the_rest()
     {
@@ -69,5 +62,66 @@ public sealed class SpellUnitTests
     {
         var system = SpellImportPrompts.WikiSystem;
         Assert.All(SpellCards.Icons, icon => Assert.Contains($" {icon} (", system));
+    }
+
+    private static SpellTableRow Row(string title, string text = "") => new() { Key = "1", Title = title, Text = text };
+
+    [Fact]
+    public void Tables_are_trimmed_and_their_limits_checked()
+    {
+        var table = new SpellTable
+        {
+            Caption = "  Je Schicht RW Geschick  ",
+            Rows =
+            [
+                new SpellTableRow
+                {
+                    Key = " 1 ",
+                    Color = SpellRowColor.Red,
+                    Title = " Rot ",
+                    Text = "Fernkampf kommt nicht durch.\r\n**Zerstört:** 25 Kälteschaden",
+                    Chip = new SpellChip { Big = " 12W6 ", Small = " ", Kind = SpellChipKind.Fire },
+                },
+                new SpellTableRow { Text = "nur Text" },
+            ],
+        };
+        var (card, error) = SpellCards.Validate(SpellTestApi.Card() with { Tables = [table] });
+        Assert.Null(error);
+        var saved = Assert.Single(card!.Tables);
+        Assert.Equal("Je Schicht RW Geschick", saved.Caption);
+        Assert.Equal(
+            ("1", SpellRowColor.Red, "Rot", "Fernkampf kommt nicht durch.\n**Zerstört:** 25 Kälteschaden"),
+            (saved.Rows[0].Key, saved.Rows[0].Color, saved.Rows[0].Title, saved.Rows[0].Text));
+        Assert.Equal(("12W6", null), (saved.Rows[0].Chip!.Big, saved.Rows[0].Chip!.Small));
+        Assert.Equal(("", "nur Text"), (saved.Rows[1].Title, saved.Rows[1].Text));
+
+        string? Field(SpellCard c) => SpellCards.Validate(c).Error?.Field;
+        var plain = SpellTestApi.Card();
+        Assert.Equal("card.tables", Field(plain with { Tables = [.. Enumerable.Repeat(table, SpellCards.TablesMax + 1)] }));
+        Assert.Equal("card.tables[0]", Field(plain with { Tables = [new SpellTable()] }));
+        Assert.Equal("card.tables[0]", Field(plain with { Tables = [new SpellTable { Rows = [.. Enumerable.Repeat(Row("x"), SpellCards.TableRowsMax + 1)] }] }));
+        Assert.Equal("card.tables[0]", Field(plain with { Tables = [new SpellTable { Caption = new string('x', SpellCards.TableCaptionMax + 1), Rows = [Row("x")] }] }));
+        Assert.Equal("card.tables[1].rows[1]", Field(plain with { Tables = [table, new SpellTable { Rows = [Row("x"), Row(" ", " ")] }] }));
+        Assert.Equal("card.tables[0].rows[0]", Field(plain with { Tables = [new SpellTable { Rows = [Row("x") with { Key = "1234567" }] }] }));
+        Assert.Equal("card.tables[0].rows[0]", Field(plain with { Tables = [new SpellTable { Rows = [Row("x", new string('x', SpellCards.TableTextMax + 1))] }] }));
+        Assert.Equal("card.tables[0].rows[0]", Field(plain with { Tables = [new SpellTable { Rows = [Row("x") with { Chip = new SpellChip { Big = " " } }] }] }));
+        Assert.Equal("card.tables[0].rows[0]", Field(plain with { Tables = [new SpellTable { Rows = [Row("x") with { Color = (SpellRowColor)99 }] }] }));
+    }
+
+    [Fact]
+    public void A_long_description_is_allowed_up_to_its_limit()
+    {
+        Assert.Null(SpellCards.Validate(SpellTestApi.Card() with { Description = new string('x', SpellCards.DescriptionMax) }).Error);
+        Assert.Equal(
+            "card.description",
+            SpellCards.Validate(SpellTestApi.Card() with { Description = new string('x', SpellCards.DescriptionMax + 1) }).Error?.Field);
+    }
+
+    [Fact]
+    public void The_motif_prompt_reads_the_tables()
+    {
+        var card = SpellTestApi.Card() with { Tables = [new SpellTable { Caption = "Sieben Schichten", Rows = [Row("Rot", "Feuer\n**Zerstört:** Kälte")] }] };
+        var prompt = SpellImportPrompts.MotifUser(new SpellMotifInput("Prismatic Wall", 9, SpellSchool.Abjuration, card, ["Wizard"], [], []));
+        Assert.Contains("Sieben Schichten\n- 1 Rot: Feuer **Zerstört:** Kälte", prompt);
     }
 }

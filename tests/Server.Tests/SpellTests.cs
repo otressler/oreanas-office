@@ -1,8 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using OreanasOffice.Server.Api;
 using OreanasOffice.Server.Characters;
+using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Spells;
 using static OreanasOffice.Server.Tests.CampaignTestApi;
@@ -17,28 +20,43 @@ public sealed class SpellTests(AppFixture fixture) : IClassFixture<AppFixture>
     private static string Json(SpellCard card) => JsonSerializer.Serialize(card, CampaignTestApi.Json);
 
     [Fact]
-    public async Task A_first_variant_creates_the_spell_and_another_one_joins_it()
+    public async Task The_library_holds_the_handbooks_spells_with_their_class_lists()
+    {
+        var mira = await fixture.App.CreatePersonAsync("Mira");
+
+        var library = await (await mira.Client.GetAsync("/api/spells")).ReadAsync<List<SpellSummary>>(HttpStatusCode.OK);
+
+        Assert.Equal(391, library.Count);
+        // A spell nobody wrote a card for yet shows its English name.
+        var foresight = Assert.Single(library, s => s.NameEn == "Foresight");
+        Assert.Equal((9, SpellSchool.Divination, "Foresight", 0), (foresight.Level, foresight.School, foresight.Name, foresight.VariantCount));
+        var moonbeam = Assert.Single(library, s => s.NameEn == "Moonbeam");
+        Assert.Contains(new SpellListLink("druid", "circle-of-the-moon", 3), moonbeam.Lists);
+        Assert.Contains(new SpellListLink("paladin", "oath-of-the-ancients", 5), moonbeam.Lists);
+        // The class lists come first.
+        Assert.Equal(new SpellListLink("druid", null, null), moonbeam.Lists[0]);
+    }
+
+    [Fact]
+    public async Task Variants_join_their_handbook_spell()
     {
         var mira = await fixture.App.CreatePersonAsync("Mira");
         var brom = await fixture.App.CreatePersonAsync("Brom");
-        var nameEn = UniqueName("Moonbeam");
 
-        var first = await mira.CreateSpellAsync(nameEn);
-        // Another case and spaces around it are the same spell; its level and school stay.
-        var second = await brom.CreateSpellAsync($"  {nameEn.ToUpperInvariant()} ", Card("Mondlicht"), level: 5, school: SpellSchool.Illusion);
+        var first = await mira.CreateSpellAsync("Moonbeam");
+        var second = await brom.CreateSpellAsync("Moonbeam", Card("Mondlicht"));
 
         Assert.Equal(first.SpellId, second.SpellId);
-        Assert.Equal((nameEn, 2, SpellSchool.Evocation), (second.NameEn, second.Level, second.School));
+        Assert.Equal(("Moonbeam", 2, SpellSchool.Evocation), (second.NameEn, second.Level, second.School));
         Assert.Equal((mira.Id, "Mira", true), (first.Author.Id, first.Author.DisplayName, first.CanEdit));
 
         var spell = await brom.GetSpellAsync(first.SpellId);
-        Assert.Equal([first.Id, second.Id], spell.Variants.Select(v => v.Id));
-        Assert.Equal([false, true], spell.Variants.Select(v => v.CanEdit));
-        Assert.Equal(Json(Card()), Json(spell.Variants[0].Card));
-
-        var library = await (await brom.Client.GetAsync("/api/spells")).ReadAsync<List<SpellSummary>>(HttpStatusCode.OK);
-        var summary = Assert.Single(library, s => s.Id == first.SpellId);
-        Assert.Equal(("Mondstrahl", 2, (string?)null), (summary.Name, summary.VariantCount, summary.ArtUrl));
+        Assert.True(spell.InHandbook);
+        Assert.Contains(new SpellListLink("druid", null, null), spell.Lists);
+        var ours = spell.Variants.Where(v => v.Id == first.Id || v.Id == second.Id).ToList();
+        Assert.Equal([first.Id, second.Id], ours.Select(v => v.Id));
+        Assert.Equal([false, true], ours.Select(v => v.CanEdit));
+        Assert.Equal(Json(Card()), Json(ours[0].Card));
     }
 
     [Fact]
@@ -59,41 +77,34 @@ public sealed class SpellTests(AppFixture fixture) : IClassFixture<AppFixture>
 
         var fixedByAdmin = await (await admin.UpdateVariantAsync(variant.Id, Card("Mondstrahl"))).ReadAsync<SpellVariantView>(HttpStatusCode.OK);
         Assert.Equal(("Mondstrahl", true), (fixedByAdmin.Card.Name, fixedByAdmin.CanEdit));
-
-        // Admins also correct the spell's facts; nobody else.
-        var facts = new UpdateSpellRequest(UniqueName("Moonbeam"), 2, SpellSchool.Evocation);
-        Assert.Equal(HttpStatusCode.Forbidden, (await author.Client.PutAsJsonAsync($"/api/spells/{variant.SpellId}", facts, CampaignTestApi.Json)).StatusCode);
-        var corrected = await (await admin.Client.PutAsJsonAsync($"/api/spells/{variant.SpellId}", facts with { Level = 3 }, CampaignTestApi.Json))
-            .ReadAsync<SpellDetail>(HttpStatusCode.OK);
-        Assert.Equal((facts.NameEn, 3), (corrected.NameEn, corrected.Level));
     }
 
     [Fact]
     public async Task Cards_are_checked_and_trimmed()
     {
         var mira = await fixture.App.CreatePersonAsync("Mira");
-        var name = UniqueName("Moonbeam");
+        var spellId = (await mira.LibrarySpellAsync("Moonbeam")).Id;
 
-        await (await mira.CreateVariantAsync(new CreateVariantRequest(name, 2, SpellSchool.Evocation, Card() with { Icon = "unicorn" })))
+        await (await mira.CreateVariantAsync(new CreateVariantRequest(spellId, Card() with { Icon = "unicorn" })))
             .AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.SpellInvalid, "card.icon");
-        await (await mira.CreateVariantAsync(new CreateVariantRequest(name, 2, SpellSchool.Evocation, Card(new string('x', 61)))))
+        await (await mira.CreateVariantAsync(new CreateVariantRequest(spellId, Card(new string('x', 61)))))
             .AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.SpellInvalid, "card.name");
-        await (await mira.CreateVariantAsync(new CreateVariantRequest(name, 10, SpellSchool.Evocation, Card())))
-            .AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.SpellInvalid, "level");
+        await (await mira.CreateVariantAsync(new CreateVariantRequest(Guid.NewGuid(), Card())))
+            .AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.SpellNotFound, "spellId");
         var tooManyRows = Card() with { Effects = [.. Enumerable.Repeat(Card().Effects[0], 7)] };
-        await (await mira.CreateVariantAsync(new CreateVariantRequest(name, 2, SpellSchool.Evocation, tooManyRows)))
+        await (await mira.CreateVariantAsync(new CreateVariantRequest(spellId, tooManyRows)))
             .AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.SpellInvalid, "card.effects");
         var badChip = Card() with { Effects = [Card().Effects[0] with { Chip = new SpellChip { Big = "" } }] };
-        await (await mira.CreateVariantAsync(new CreateVariantRequest(name, 2, SpellSchool.Evocation, badChip)))
+        await (await mira.CreateVariantAsync(new CreateVariantRequest(spellId, badChip)))
             .AssertErrorAsync(HttpStatusCode.BadRequest, ApiErrorCode.SpellInvalid, "card.effects[0]");
 
-        var saved = await mira.CreateSpellAsync(name, Card() with { Tip = "  Tipp\r\n\r\n\r\n\r\nzwei  ", Pips = ["moon", "star"] });
+        var saved = await mira.CreateSpellAsync("Moonbeam", Card() with { Tip = "  Tipp\r\n\r\n\r\n\r\nzwei  ", Pips = ["moon", "star"] });
         Assert.Equal("Tipp\n\nzwei", saved.Card.Tip);
         Assert.Equal(["moon", "star"], saved.Card.Pips);
     }
 
     [Fact]
-    public async Task A_variant_in_use_stays_and_the_spell_goes_with_its_last_variant()
+    public async Task A_variant_in_use_stays_and_a_handbook_spell_stays_without_variants()
     {
         var (_, player, campaignId) = await fixture.App.CreateSpellTableAsync();
         var character = await player.CreateCharacterAsync(campaignId, "Liriel");
@@ -102,9 +113,37 @@ public sealed class SpellTests(AppFixture fixture) : IClassFixture<AppFixture>
 
         await (await player.Client.DeleteAsync($"/api/spells/variants/{used.Id}")).AssertErrorAsync(HttpStatusCode.Conflict, ApiErrorCode.VariantInUse);
 
-        var unused = await player.CreateSpellAsync();
+        var unused = await player.CreateSpellAsync("Dream");
         Assert.Equal(HttpStatusCode.NoContent, (await player.Client.DeleteAsync($"/api/spells/variants/{unused.Id}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await player.Client.GetAsync($"/api/spells/{unused.SpellId}")).StatusCode);
+        var spell = await player.GetSpellAsync(unused.SpellId);
+        Assert.DoesNotContain(spell.Variants, v => v.Id == unused.Id);
+    }
+
+    [Fact]
+    public async Task A_spell_that_isnt_the_handbooks_keeps_its_variants_but_leaves_the_library()
+    {
+        var (_, player, campaignId) = await fixture.App.CreateSpellTableAsync();
+        var character = await player.CreateCharacterAsync(campaignId, "Liriel");
+        var variant = await player.CreateSpellAsync("Shillelagh");
+        (await player.SetCharacterSpellAsync(campaignId, character.Id, variant.SpellId, variant.Id)).EnsureSuccessStatusCode();
+        // Moves the variant to a spell from before the library was limited, as HandbookSync leaves it.
+        var oldSpellId = Guid.NewGuid();
+        await using (var scope = fixture.App.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var name = $"Buzzing Bee {oldSpellId:N}";
+            db.Spells.Add(new Spell { Id = oldSpellId, NameEn = name, NameKey = Spell.KeyOf(name), Level = 0, School = SpellSchool.Evocation });
+            await db.SaveChangesAsync();
+            await db.SpellVariants.Where(v => v.Id == variant.Id).ExecuteUpdateAsync(set => set.SetProperty(v => v.SpellId, oldSpellId));
+            await db.CharacterSpells.Where(c => c.VariantId == variant.Id).ExecuteUpdateAsync(set => set.SetProperty(c => c.SpellId, oldSpellId));
+        }
+
+        var library = await (await player.Client.GetAsync("/api/spells")).ReadAsync<List<SpellSummary>>(HttpStatusCode.OK);
+        Assert.DoesNotContain(library, s => s.Id == oldSpellId);
+        Assert.False((await player.GetSpellAsync(oldSpellId)).InHandbook);
+        Assert.Equal([variant.Id], (await player.ListCharacterSpellsAsync(campaignId, character.Id)).Select(s => s.Variant.Id));
+        await (await player.CreateVariantAsync(new CreateVariantRequest(oldSpellId, Card())))
+            .AssertErrorAsync(HttpStatusCode.Conflict, ApiErrorCode.SpellNotInHandbook, "spellId");
     }
 
     [Fact]
@@ -115,9 +154,9 @@ public sealed class SpellTests(AppFixture fixture) : IClassFixture<AppFixture>
         await otherPlayer.JoinAsync((await dm.GetCampaignAsync(campaignId)).JoinCode!);
         var stranger = await fixture.App.CreatePersonAsync("Fremd");
         var character = await player.CreateCharacterAsync(campaignId, "Liriel");
-        var moonbeam = await dm.CreateSpellAsync(card: Card("Mondstrahl"));
-        var ownVariant = await player.CreateSpellAsync(moonbeam.NameEn, Card("Mondlicht"));
-        var cantrip = await dm.CreateSpellAsync(card: Card("Ausbessern"), level: 0, school: SpellSchool.Transmutation);
+        var moonbeam = await dm.CreateSpellAsync("Moonbeam", Card("Mondstrahl"));
+        var ownVariant = await player.CreateSpellAsync("Moonbeam", Card("Mondlicht"));
+        var cantrip = await dm.CreateSpellAsync("Mending", Card("Ausbessern"));
 
         var added = await (await player.SetCharacterSpellAsync(campaignId, character.Id, moonbeam.SpellId, moonbeam.Id))
             .ReadAsync<CharacterSpellView>(HttpStatusCode.OK);

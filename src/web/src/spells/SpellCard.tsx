@@ -1,6 +1,7 @@
 // The spell card (knowledge/features/spell-cards.md, "The card"): the spell-cards app's front
 // and back, as React. Drawn at print size (70 × 120 mm) and scaled with `zoom`; the back
-// shrinks its text to fit, as the original did (fit.ts).
+// shrinks its text to fit, as the original did, and scrolls below its head and stats when the
+// text still doesn't fit at a readable size (fit.ts).
 import './cards.css'
 import {
   useEffectEvent,
@@ -11,9 +12,15 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react'
-import type { SpellCard as Card, SpellChipKind, SpellSchool } from '../api/types'
+import type {
+  SpellCard as Card,
+  SpellChipKind,
+  SpellRowColor,
+  SpellSchool,
+  SpellTable,
+} from '../api/types'
 import { de } from '../text/de'
-import { fitCard } from './fit'
+import { fitCard, updateScroll } from './fit'
 import { SPELL_ICONS } from './iconPaths'
 import type { SpellIconName } from './model'
 import { Markup } from './markup'
@@ -193,6 +200,7 @@ function Stat({
 export function SpellCardBack({ spell }: { spell: CardSpell }) {
   const { card } = spell
   const effects = card.effects ?? []
+  const tables = card.tables ?? []
   const writeIns = card.writeIns ?? []
   const notes = [
     card.higherLevels &&
@@ -273,16 +281,21 @@ export function SpellCardBack({ spell }: { spell: CardSpell }) {
             {card.duration}
           </Stat>
         </div>
-        {card.description && (
-          <p className="sc-desc" lang="de">
-            <Markup text={card.description} hyphenate />
-          </p>
-        )}
-        {effects.length > 0 && (
-          <>
+        <div className="sc-body" onScroll={(event) => updateScroll(event.currentTarget)}>
+          {card.description && (
+            <p className="sc-desc" lang="de">
+              <Markup text={card.description} hyphenate />
+            </p>
+          )}
+          {(tables.length > 0 || effects.length > 0) && (
             <div className="sc-divider">
               <SpellIcon name={card.icon} />
             </div>
+          )}
+          {tables.map((table, index) => (
+            <SpellTableBlock table={table} key={index} />
+          ))}
+          {effects.length > 0 && (
             <div className="sc-effects">
               {effects.map((effect, index) => (
                 <div className={`sc-effect${effect.chip ? '' : ' sc-no-chip'}`} key={index}>
@@ -311,33 +324,71 @@ export function SpellCardBack({ spell }: { spell: CardSpell }) {
                 </div>
               ))}
             </div>
-          </>
-        )}
-        {notes.length > 0 && <div className="sc-notes">{notes}</div>}
-        {(hasFootLeft || writeIns.length > 0) && (
-          <footer className="sc-foot">
-            {hasFootLeft && (
-              <span className="sc-mat">
-                {card.material && (
-                  <>
-                    <b>{t.card.material}</b> {card.material}
-                  </>
-                )}
-                {card.material && card.source && <br />}
-                {card.source && <span className="sc-src">{t.card.source(card.source)}</span>}
-              </span>
-            )}
-            {writeIns.length > 0 && (
-              <span className="sc-write-in">
-                {writeIns.map((w) => (
-                  <span key={w}>{t.card.writeIns[w]}</span>
-                ))}
-              </span>
-            )}
-          </footer>
-        )}
+          )}
+          {notes.length > 0 && <div className="sc-notes">{notes}</div>}
+          {(hasFootLeft || writeIns.length > 0) && (
+            <footer className="sc-foot">
+              {hasFootLeft && (
+                <span className="sc-mat">
+                  {card.material && (
+                    <>
+                      <b>{t.card.material}</b> {card.material}
+                    </>
+                  )}
+                  {card.material && card.source && <br />}
+                  {card.source && <span className="sc-src">{t.card.source(card.source)}</span>}
+                </span>
+              )}
+              {writeIns.length > 0 && (
+                <span className="sc-write-in">
+                  {writeIns.map((w) => (
+                    <span key={w}>{t.card.writeIns[w]}</span>
+                  ))}
+                </span>
+              )}
+            </footer>
+          )}
+        </div>
+        <div className="sc-rail" aria-hidden="true">
+          <i />
+        </div>
+        <div className="sc-more" aria-hidden="true">
+          <svg className="sc-icon" viewBox="0 0 24 24">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
       </div>
     </article>
+  )
+}
+
+const ROW_COLORS: SpellRowColor[] = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+
+/** A table of the spell's own: rows with a key in a coloured strip, a title, a text and a chip. */
+function SpellTableBlock({ table }: { table: SpellTable }) {
+  return (
+    <div className="sc-table">
+      {table.caption && <div className="sc-table-cap">{table.caption}</div>}
+      <div className="sc-rows">
+        {(table.rows ?? []).map((row, index) => (
+          <div
+            key={index}
+            className={`sc-row${row.chip ? '' : ' sc-no-chip'}${row.color && ROW_COLORS.includes(row.color) ? ` c-${row.color}` : ''}`}
+          >
+            <span className="sc-key">{row.key}</span>
+            <div>
+              {row.title && <h3>{row.title}</h3>}
+              {row.text && (
+                <p lang="de">
+                  <Markup text={row.text} hyphenate />
+                </p>
+              )}
+            </div>
+            {row.chip && <Chip big={row.chip.big} small={row.chip.small} kind={row.chip.kind} />}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -365,7 +416,7 @@ function Chip({
 
 /**
  * One face of a card in a box of its scaled size. `onOverflow` hears whether the back's text
- * still overflows after shrinking.
+ * scrolls because it doesn't fit even after shrinking.
  */
 export function SpellCardView({
   spell,
@@ -427,6 +478,14 @@ export function FlipCard({
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
           flip()
+        }
+        // A long back scrolls with the arrow keys while it is turned up.
+        const body = flipped
+          ? event.currentTarget.querySelector<HTMLElement>('.sc-scrolls .sc-body')
+          : null
+        if (body && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+          event.preventDefault()
+          body.scrollBy({ top: event.key === 'ArrowDown' ? 40 : -40, behavior: 'smooth' })
         }
       }}
     >

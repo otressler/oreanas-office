@@ -24,8 +24,9 @@ public sealed class CharacterTests(AppFixture fixture) : IClassFixture<AppFixtur
         var character = await response.ReadAsync<CharacterResponse>(HttpStatusCode.Created);
         Assert.Equal($"/api/campaigns/{campaignId}/characters/{character.Id}", response.Headers.Location?.OriginalString);
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null, Background: "", Personality: "", Bonds: "", Tagline: "", CharacterClass: "", Species: "", Age: ""),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin", CreatureSize.Small, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null, Background: "", Personality: "", Bonds: "", Tagline: "", Species: "", Age: "", Classes: character.Classes),
             character);
+        Assert.Empty(character.Classes);
     }
 
     // Ring colours follow the order characters were added; two added at the same
@@ -91,9 +92,11 @@ public sealed class CharacterTests(AppFixture fixture) : IClassFixture<AppFixtur
             .ReadAsync<CharacterResponse>(HttpStatusCode.OK);
 
         Assert.Equal(
-            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null, Background: "", Personality: "", Bonds: "", Tagline: "", CharacterClass: "", Species: "", Age: ""),
+            new CharacterResponse(character.Id, player.Id, "Brom", "Thorin II", CreatureSize.Large, CanEdit: true, ColorIndex: 0, Appearance: "", PortraitUrl: null, Color: null, Background: "", Personality: "", Bonds: "", Tagline: "", Species: "", Age: "", Classes: updated.Classes),
             updated);
-        Assert.Equal(updated, Assert.Single(await ListAsync(player, campaignId)));
+        Assert.Empty(updated.Classes);
+        var listed = Assert.Single(await ListAsync(player, campaignId));
+        Assert.Equal(updated, listed with { Classes = updated.Classes });
     }
 
     // knowledge/domain/character.md: a picked ring colour replaces the default one;

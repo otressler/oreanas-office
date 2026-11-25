@@ -57,6 +57,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rules/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClassView"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/campaigns/{campaignId}/maps/{mapId}": {
         parameters: {
             query?: never;
@@ -3794,57 +3829,7 @@ export interface paths {
                 };
             };
         };
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    spellId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["UpdateSpellRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SpellDetail"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ApiError"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ApiError"];
-                    };
-                };
-            };
-        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -3885,6 +3870,15 @@ export interface paths {
                 };
                 /** @description Bad Request */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -4337,6 +4331,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/spells/variants/{variantId}/studio/motif": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    variantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SuggestMotifResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/spells/variants/{variantId}/studio/upload": {
         parameters: {
             query?: never;
@@ -4665,7 +4712,7 @@ export interface components {
             field?: null | string;
         };
         /** @enum {unknown} */
-        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid";
+        ApiErrorCode: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed";
         ApproveArtRequest: {
             approved: boolean;
         };
@@ -4862,6 +4909,18 @@ export interface components {
             /** Format: uuid */
             userId: string;
         };
+        CharacterClassRequest: {
+            classId: string;
+            /** Format: int32 */
+            level: number;
+            subclassId?: null | string;
+        };
+        CharacterClassView: {
+            classId: string;
+            /** Format: int32 */
+            level: number;
+            subclassId: null | string;
+        };
         CharacterPlacement: {
             /** Format: uuid */
             characterId: string;
@@ -4881,9 +4940,9 @@ export interface components {
             personality?: null | string;
             bonds?: null | string;
             tagline?: null | string;
-            characterClass?: null | string;
             species?: null | string;
             age?: null | string;
+            classes?: null | components["schemas"]["CharacterClassRequest"][];
         };
         CharacterResponse: {
             /** Format: uuid */
@@ -4903,9 +4962,9 @@ export interface components {
             personality: string;
             bonds: string;
             tagline: string;
-            characterClass: string;
             species: string;
             age: string;
+            classes: components["schemas"]["CharacterClassView"][];
         };
         CharacterSpellView: {
             /** Format: uuid */
@@ -4914,6 +4973,13 @@ export interface components {
             /** Format: date-time */
             addedAt: string;
             variant: components["schemas"]["SpellVariantView"];
+        };
+        ClassView: {
+            id: string;
+            nameEn: string;
+            nameDe: string;
+            caster: null | components["schemas"]["SpellcastingKind"];
+            subclasses: components["schemas"]["SubclassView"][];
         };
         CreateCampaignRequest: {
             name: string;
@@ -4940,10 +5006,8 @@ export interface components {
             characterId: null | string;
         };
         CreateVariantRequest: {
-            nameEn: string;
-            /** Format: int32 */
-            level: number;
-            school: components["schemas"]["SpellSchool"];
+            /** Format: uuid */
+            spellId: string;
             card: components["schemas"]["SpellCard"];
             origin?: components["schemas"]["SpellVariantOrigin"];
             /** Format: uuid */
@@ -4960,7 +5024,7 @@ export interface components {
         };
         DeadResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed" | null;
             change: components["schemas"]["TokenDeadChangedEvent"] | null;
         };
         DrawArrowRequest: {
@@ -5063,12 +5127,12 @@ export interface components {
         };
         HitPointsResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed" | null;
             change: components["schemas"]["TokenHitPointsChangedEvent"] | null;
         };
         HubResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed" | null;
         };
         ImageBudgetResponse: {
             /** Format: double */
@@ -5092,7 +5156,7 @@ export interface components {
             name: string;
             size: components["schemas"]["CreatureSize"];
             tagline: string;
-            characterClass: string;
+            classes: components["schemas"]["CharacterClassView"][];
             species: string;
             color: null | string;
             portraitUrl: null | string;
@@ -5105,7 +5169,9 @@ export interface components {
         ImportByNameResponse: {
             nameEn: string;
             /** Format: uuid */
-            existingSpellId: null | string;
+            spellId: string;
+            /** Format: int32 */
+            variantCount: number;
             draft: null | components["schemas"]["SpellDraft"];
         };
         ImportByPhotoResponse: {
@@ -5153,14 +5219,14 @@ export interface components {
         };
         InitiativeResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed" | null;
             change: components["schemas"]["InitiativeChangedEvent"] | null;
         };
         /** @enum {unknown} */
         InitiativeRollMode: "normal" | "advantage" | "disadvantage";
         InitiativeRollResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed" | null;
             entries: components["schemas"]["InitiativeEntry"][] | null;
         };
         InitiativeView: {
@@ -5392,7 +5458,7 @@ export interface components {
         };
         MoveResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed" | null;
             move: components["schemas"]["TokenMovedEvent"] | null;
         };
         MoveTokenRequest: {
@@ -5607,7 +5673,7 @@ export interface components {
         };
         SpawnResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed" | null;
             tokenIds: null | string[];
         };
         SpectateSessionRequest: {
@@ -5693,6 +5759,7 @@ export interface components {
             ritual?: boolean;
             description?: string;
             effects?: components["schemas"]["SpellEffect"][];
+            tables?: components["schemas"]["SpellTable"][];
             icon?: string;
             pips?: string[];
             higherLevels?: string;
@@ -5701,6 +5768,8 @@ export interface components {
             source?: string;
             writeIns?: components["schemas"]["SpellWriteIn"][];
         };
+        /** @enum {unknown} */
+        SpellcastingKind: "full" | "half" | "pact" | null;
         SpellChip: {
             big: string;
             small?: null | string;
@@ -5712,21 +5781,25 @@ export interface components {
             /** Format: uuid */
             id: string;
             nameEn: string;
+            nameDe: null | string;
             /** Format: int32 */
             level: number;
             school: components["schemas"]["SpellSchool"];
-            canEditFacts: boolean;
+            inHandbook: boolean;
+            lists: components["schemas"]["SpellListLink"][];
             variants: components["schemas"]["SpellVariantView"][];
         };
         SpellDraft: {
+            /** Format: uuid */
+            spellId: string;
             nameEn: string;
             /** Format: int32 */
             level: number;
             school: components["schemas"]["SpellSchool"];
             card: components["schemas"]["SpellCard"];
             origin: components["schemas"]["SpellVariantOrigin"];
-            /** Format: uuid */
-            existingSpellId: null | string;
+            /** Format: int32 */
+            variantCount: number;
         };
         SpellEffect: {
             icon: string;
@@ -5739,12 +5812,21 @@ export interface components {
             available: boolean;
             budget: components["schemas"]["ImageBudgetResponse"];
         };
+        SpellListLink: {
+            classId: string;
+            subclassId: null | string;
+            /** Format: int32 */
+            classLevel: null | number;
+        };
+        /** @enum {unknown} */
+        SpellRowColor: "red" | "orange" | "yellow" | "green" | "blue" | "indigo" | "violet" | null;
         /** @enum {unknown} */
         SpellSchool: "abjuration" | "conjuration" | "divination" | "enchantment" | "evocation" | "illusion" | "necromancy" | "transmutation";
         SpellStudio: {
             variant: components["schemas"]["SpellVariantView"];
             canEdit: boolean;
             generator: components["schemas"]["SpellArtGenerator"];
+            motifSuggestions: boolean;
             budget: components["schemas"]["ImageBudgetResponse"];
             prompts: components["schemas"]["SpellArtPromptView"][];
             images: components["schemas"]["SpellArtImage"][];
@@ -5762,6 +5844,18 @@ export interface components {
             /** Format: int32 */
             variantCount: number;
             artUrl: null | string;
+            lists: components["schemas"]["SpellListLink"][];
+        };
+        SpellTable: {
+            caption?: string;
+            rows?: components["schemas"]["SpellTableRow"][];
+        };
+        SpellTableRow: {
+            key?: string;
+            color?: null | components["schemas"]["SpellRowColor"];
+            title?: string;
+            text?: string;
+            chip?: null | components["schemas"]["SpellChip"];
         };
         /** @enum {unknown} */
         SpellVariantOrigin: "manual" | "wiki" | "photo" | "seed";
@@ -5829,7 +5923,7 @@ export interface components {
         };
         StatusResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed" | null;
             change: components["schemas"]["TokenStatusesChangedEvent"] | null;
         };
         StoreMapResponse: {
@@ -5843,6 +5937,15 @@ export interface components {
             campaignName: string;
             layout: components["schemas"]["MapLayout"];
             hasArchivedCopy: boolean;
+        };
+        SubclassView: {
+            id: string;
+            nameEn: string;
+            nameDe: string;
+            spellListClassId: null | string;
+        };
+        SuggestMotifResponse: {
+            subject: string;
         };
         SyncCampaignData: {
             name: string;
@@ -6132,12 +6235,6 @@ export interface components {
             /** Format: date */
             date: string;
         };
-        UpdateSpellRequest: {
-            nameEn: string;
-            /** Format: int32 */
-            level: number;
-            school: components["schemas"]["SpellSchool"];
-        };
         UpdateVariantRequest: {
             card: components["schemas"]["SpellCard"];
         };
@@ -6172,7 +6269,7 @@ export interface components {
         };
         WatchResult: {
             /** @enum {unknown} */
-            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | null;
+            error: "inviteInvalid" | "emailInvalid" | "emailTaken" | "passwordTooShort" | "displayNameInvalid" | "invalidCredentials" | "lockedOut" | "resetLinkInvalid" | "googleFailed" | "googleNoInvite" | "googleEmailTaken" | "googleAccountInUse" | "googleAlreadyLinked" | "nameInvalid" | "joinCodeInvalid" | "dateInvalid" | "notADm" | "anotherSessionActive" | "sessionEnded" | "notSessionDm" | "sessionInvalid" | "colorInvalid" | "notAMember" | "characterClassInvalid" | "textTooLong" | "mapSizeInvalid" | "layoutVersionUnsupported" | "cellInvalid" | "featureInvalid" | "entranceInvalid" | "creatureTypeInvalid" | "placementInvalid" | "characterInvalid" | "sessionNotActive" | "encounterNotReady" | "encounterNotActive" | "anotherEncounterActive" | "tokenNotFound" | "notYourToken" | "targetInvalid" | "nothingToUndo" | "syncOutdated" | "idTaken" | "itemNotFound" | "dependencyRejected" | "layoutInvalid" | "mapInvalid" | "creatureTypeNameTaken" | "statusInvalid" | "tokenInvalid" | "encounterArchived" | "creaturesMisplaced" | "mapNotInStore" | "mapNotArchived" | "mapPlayed" | "imagesUnavailable" | "imageBudgetExhausted" | "generationRunning" | "mapChanged" | "backgroundNotFound" | "backgroundOutdated" | "instructionInvalid" | "itemChanged" | "appearanceMissing" | "imageNotFound" | "uploadInvalid" | "uploadTooLarge" | "descriptionInvalid" | "descriptionMissing" | "statusNotFound" | "statusAlreadySet" | "levelInvalid" | "notYourStatus" | "fogInvalid" | "readOnlyConnection" | "spawnInvalid" | "notLocalMode" | "initiativeInvalid" | "hitPointsInvalid" | "notBuilt" | "spellInvalid" | "spellNotFound" | "notSpellAuthor" | "variantInUse" | "textModelUnavailable" | "spellNotInWiki" | "spellNotRecognized" | "spellImportFailed" | "artPromptInvalid" | "spellNotInHandbook" | "motifSuggestionFailed" | null;
             /** @enum {unknown} */
             mode: "player" | "spectator" | "sharedScreen";
             session: components["schemas"]["WatchedSession"] | null;

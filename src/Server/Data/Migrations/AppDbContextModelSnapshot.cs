@@ -362,11 +362,6 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<Guid>("CampaignId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("CharacterClass")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
                     b.Property<string>("Color")
                         .HasMaxLength(7)
                         .IsUnicode(false)
@@ -847,6 +842,164 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.ToTable("BattleMaps");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Rules.CharacterClass", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("Caster")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CharacterClasses", (string)null);
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Rules.CharacterClassLevel", b =>
+                {
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ClassId")
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubclassId")
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("CharacterId", "ClassId");
+
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("SubclassId");
+
+                    b.ToTable("CharacterClassLevels");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Rules.CharacterSubclass", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("ClassId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SpellListClassId")
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("SpellListClassId");
+
+                    b.ToTable("CharacterSubclasses", (string)null);
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Rules.ReferenceDataVersion", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("ReferenceDataVersions");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Rules.SpellListEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClassId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<int?>("ClassLevel")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SpellId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubclassId")
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("SubclassId");
+
+                    b.HasIndex("SpellId", "ClassId", "SubclassId")
+                        .IsUnique()
+                        .HasFilter("[SubclassId] IS NOT NULL");
+
+                    b.ToTable("SpellListEntries");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Sessions.GameSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -982,11 +1135,15 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<bool>("InHandbook")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Level")
                         .HasColumnType("int");
+
+                    b.Property<string>("NameDe")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
 
                     b.Property<string>("NameEn")
                         .IsRequired()
@@ -1003,9 +1160,12 @@ namespace OreanasOffice.Server.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Slug")
+                        .HasMaxLength(60)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(60)");
 
-                    b.HasIndex("CreatedByUserId");
+                    b.HasKey("Id");
 
                     b.HasIndex("NameKey")
                         .IsUnique();
@@ -1714,6 +1874,70 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Campaign");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Rules.CharacterClassLevel", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Characters.Character", "Character")
+                        .WithMany("Classes")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Rules.CharacterClass", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Rules.CharacterSubclass", "Subclass")
+                        .WithMany()
+                        .HasForeignKey("SubclassId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Character");
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Subclass");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Rules.CharacterSubclass", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Rules.CharacterClass", "Class")
+                        .WithMany("Subclasses")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Rules.CharacterClass", null)
+                        .WithMany()
+                        .HasForeignKey("SpellListClassId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Class");
+                });
+
+            modelBuilder.Entity("OreanasOffice.Server.Rules.SpellListEntry", b =>
+                {
+                    b.HasOne("OreanasOffice.Server.Rules.CharacterClass", null)
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Spells.Spell", "Spell")
+                        .WithMany("Lists")
+                        .HasForeignKey("SpellId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OreanasOffice.Server.Rules.CharacterSubclass", null)
+                        .WithMany()
+                        .HasForeignKey("SubclassId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Spell");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Sessions.GameSession", b =>
                 {
                     b.HasOne("OreanasOffice.Server.Campaigns.Campaign", "Campaign")
@@ -1808,15 +2032,6 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Spell");
 
                     b.Navigation("Variant");
-                });
-
-            modelBuilder.Entity("OreanasOffice.Server.Spells.Spell", b =>
-                {
-                    b.HasOne("OreanasOffice.Server.Accounts.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("OreanasOffice.Server.Spells.SpellArtEvent", b =>
@@ -1992,6 +2207,8 @@ namespace OreanasOffice.Server.Data.Migrations
 
             modelBuilder.Entity("OreanasOffice.Server.Characters.Character", b =>
                 {
+                    b.Navigation("Classes");
+
                     b.Navigation("SessionPlayers");
                 });
 
@@ -2005,6 +2222,11 @@ namespace OreanasOffice.Server.Data.Migrations
                     b.Navigation("Statuses");
                 });
 
+            modelBuilder.Entity("OreanasOffice.Server.Rules.CharacterClass", b =>
+                {
+                    b.Navigation("Subclasses");
+                });
+
             modelBuilder.Entity("OreanasOffice.Server.Sessions.GameSession", b =>
                 {
                     b.Navigation("CharacterPlayers");
@@ -2014,6 +2236,8 @@ namespace OreanasOffice.Server.Data.Migrations
 
             modelBuilder.Entity("OreanasOffice.Server.Spells.Spell", b =>
                 {
+                    b.Navigation("Lists");
+
                     b.Navigation("Variants");
                 });
 

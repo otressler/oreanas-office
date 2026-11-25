@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using OreanasOffice.Server.Rules;
 
 namespace OreanasOffice.Server.Data;
 
@@ -37,6 +38,8 @@ public sealed class DatabaseMigrator(
                 await using var scope = scopeFactory.CreateAsyncScope();
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await db.Database.MigrateAsync(stoppingToken);
+                // The Handbook's classes and spells, copied only when handbook.json changed.
+                await HandbookSync.SyncAsync(db, time, stoppingToken);
                 state.MarkMigrated();
                 logger.LogInformation("Database migrations applied");
                 return;

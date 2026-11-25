@@ -29,6 +29,7 @@ const ALL_CODES = {
   sessionInvalid: true,
   colorInvalid: true,
   notAMember: true,
+  characterClassInvalid: true,
   textTooLong: true,
   mapSizeInvalid: true,
   layoutVersionUnsupported: true,
@@ -94,6 +95,8 @@ const ALL_CODES = {
   spellNotRecognized: true,
   spellImportFailed: true,
   artPromptInvalid: true,
+  spellNotInHandbook: true,
+  motifSuggestionFailed: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

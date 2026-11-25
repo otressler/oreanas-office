@@ -12,9 +12,10 @@ using SkiaSharp;
 namespace OreanasOffice.Server.Spells;
 
 // knowledge/features/spell-cards.md, "Creating a spell": "Nach Name" and "Aus Foto". Both
-// answer drafts; the editor saves them through SpellEndpoints. Errors (409):
-// TextModelUnavailable, ImageBudgetExhausted (the month's AI budget is used up),
-// SpellNotRecognized, SpellNotInWiki, SpellImportFailed; for photos also UploadInvalid and
+// answer drafts of Handbook spells; the editor saves them through SpellEndpoints. Errors
+// (409): TextModelUnavailable, ImageBudgetExhausted (the month's AI budget is used up),
+// SpellNotRecognized, SpellNotInHandbook (a spell, but not one of the 2024 Player's
+// Handbook), SpellNotInWiki, SpellImportFailed; for photos also UploadInvalid and
 // UploadTooLarge.
 public static class SpellImportEndpoints
 {
@@ -54,27 +55,30 @@ public static class SpellImportEndpoints
                 return TypedResults.Conflict(new ApiError(ApiErrorCode.SpellNotRecognized));
             }
 
-            var key = Spell.KeyOf(nameEn);
-            var existing = await db.Spells.Where(s => s.NameKey == key).Select(s => (Guid?)s.Id).SingleOrDefaultAsync(cancellationToken);
-            if (existing is not null && !request.Force)
+            var spell = await import.HandbookSpellAsync(nameEn, cancellationToken);
+            if (spell is null)
             {
-                return TypedResults.Ok(new ImportByNameResponse(nameEn, existing, null));
+                return TypedResults.Conflict(new ApiError(ApiErrorCode.SpellNotInHandbook));
             }
 
-            var page = await import.WikiPageAsync(nameEn, cancellationToken);
+            if (spell.VariantCount > 0 && !request.Force)
+            {
+                return TypedResults.Ok(new ImportByNameResponse(spell.NameEn, spell.SpellId, spell.VariantCount, null));
+            }
+
+            var page = await import.WikiPageAsync(spell.Slug, cancellationToken);
             if (page is null)
             {
                 return TypedResults.Conflict(new ApiError(ApiErrorCode.SpellNotInWiki));
             }
 
-            var draft = await import.DraftFromWikiAsync(nameEn, page, userId, cancellationToken);
+            var draft = await import.DraftFromWikiAsync(spell, page, userId, cancellationToken);
             if (draft is null)
             {
                 return TypedResults.Conflict(new ApiError(ApiErrorCode.SpellNotRecognized));
             }
 
-            var withExisting = (await import.WithExistingAsync([draft], cancellationToken)).Single();
-            return TypedResults.Ok(new ImportByNameResponse(nameEn, withExisting.ExistingSpellId, withExisting));
+            return TypedResults.Ok(new ImportByNameResponse(spell.NameEn, spell.SpellId, spell.VariantCount, draft));
         }
         catch (SpellImportException ex)
         {
@@ -122,7 +126,10 @@ public static class SpellImportEndpoints
                 return TypedResults.Conflict(new ApiError(ApiErrorCode.SpellNotRecognized));
             }
 
-            return TypedResults.Ok(new ImportByPhotoResponse(await import.WithExistingAsync(drafts, cancellationToken)));
+            var inHandbook = await import.InHandbookAsync(drafts, cancellationToken);
+            return inHandbook.Count == 0
+                ? TypedResults.Conflict(new ApiError(ApiErrorCode.SpellNotInHandbook))
+                : TypedResults.Ok(new ImportByPhotoResponse(inHandbook));
         }
         catch (SpellImportException ex)
         {

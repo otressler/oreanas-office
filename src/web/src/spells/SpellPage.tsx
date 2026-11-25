@@ -4,7 +4,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import type { SpellSchool, SpellVariant } from '../api/types'
+import type { SpellListLink, SpellVariant } from '../api/types'
 import { useCurrentUser } from '../auth/auth'
 import { BackLink } from '../components/sheet'
 import {
@@ -13,20 +13,18 @@ import {
   ErrorAlert,
   LoadError,
   Loading,
+  Note,
   PageTitle,
-  SelectField,
-  TextField,
 } from '../components/ui'
+import { indexClasses, useClasses } from '../rules/classes'
 import { de } from '../text/de'
 import { spellPaths } from './paths'
 import { FlipCard } from './SpellCard'
-import { SCHOOLS } from './model'
 import { SpellEditor, type SpellEdit } from './SpellEditor'
 import {
   createVariant,
   deleteVariant,
   spellKeys,
-  updateSpellFacts,
   updateVariant,
   useSpell,
   useVariant,
@@ -38,7 +36,6 @@ export function SpellPage() {
   const { spellId = '' } = useParams()
   const spell = useSpell(spellId)
   const me = useCurrentUser()
-  const [editFacts, setEditFacts] = useState(false)
 
   if (spell.isPending) return <Loading />
   if (spell.isError) {
@@ -55,26 +52,34 @@ export function SpellPage() {
     <div className="flex flex-col pb-8">
       <BackLink to={spellPaths.library} label={de.spells.library.title} />
       <div className="flex flex-wrap items-end gap-3">
-        <PageTitle>{first?.card.name ?? data.nameEn}</PageTitle>
-        {data.canEditFacts && (
-          <Button variant="quiet" className="mb-2" onClick={() => setEditFacts(!editFacts)}>
-            {t.editFacts}
-          </Button>
+        <PageTitle>{first?.card.name ?? data.nameDe ?? data.nameEn}</PageTitle>
+        {data.inHandbook && data.variants.length > 0 && (
+          <ButtonLink to={spellPaths.create(null, data.id)} className="mb-2 ml-auto">
+            {t.writeCard}
+          </ButtonLink>
         )}
       </div>
       <p className="text-dim">
         {data.nameEn} · {de.spells.schools[data.school]} · {de.spells.level(data.level)}
       </p>
-      {editFacts && (
-        <FactsForm
-          spellId={data.id}
-          nameEn={data.nameEn}
-          level={data.level}
-          school={data.school}
-          onDone={() => setEditFacts(false)}
-        />
+      <SpellLists lists={data.lists} />
+      {!data.inHandbook && (
+        <div className="mt-4">
+          <Note>{t.notInHandbook}</Note>
+        </div>
       )}
-      <p className="mt-2 text-sm text-dim">{t.tapToFlip}</p>
+      {data.variants.length === 0 ? (
+        <div className="mt-6 flex flex-col items-start gap-3">
+          <p className="text-parchment">{t.noCards}</p>
+          {data.inHandbook && (
+            <ButtonLink to={spellPaths.create(null, data.id)} variant="primary">
+              {t.writeCard}
+            </ButtonLink>
+          )}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-dim">{t.tapToFlip}</p>
+      )}
       <ul className="mt-6 flex flex-wrap justify-center gap-8 sm:justify-start">
         {data.variants.map((variant) => (
           <li key={variant.id}>
@@ -142,81 +147,41 @@ function VariantCard({ variant, mine }: { variant: SpellVariant; mine: boolean }
   )
 }
 
-function FactsForm({
-  spellId,
-  nameEn,
-  level,
-  school,
-  onDone,
-}: {
-  spellId: string
-  nameEn: string
-  level: number
-  school: SpellSchool
-  onDone: () => void
-}) {
-  const queries = useQueryClient()
-  const [facts, setFacts] = useState({ nameEn, level, school })
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<unknown>(null)
-  const e = de.spells.editor
+/** The class lists a spell is on, and the subclasses that grant it from a class level. */
+function SpellLists({ lists }: { lists: SpellListLink[] }) {
+  const classes = useClasses()
+  if (lists.length === 0) return null
+  const index = classes.data ? indexClasses(classes.data) : undefined
+  const className = (id: string) => index?.classById.get(id)?.nameDe ?? id
+  const onList = lists.filter((l) => !l.subclassId).map((l) => className(l.classId))
+  const granted = lists
+    .filter((l) => l.subclassId)
+    .map((l) =>
+      de.spells.lists.granted(
+        index?.subclassById.get(l.subclassId!)?.subclass.nameDe ?? l.subclassId!,
+        className(l.classId),
+        l.classLevel ?? 1,
+      ),
+    )
+  const l = de.spells.lists
   return (
-    <form
-      className="mt-4 flex flex-col gap-3 rounded-xl border border-line bg-panel p-4"
-      onSubmit={async (event) => {
-        event.preventDefault()
-        setBusy(true)
-        try {
-          await updateSpellFacts(spellId, facts.nameEn.trim(), facts.level, facts.school)
-          await queries.invalidateQueries({ queryKey: spellKeys.all })
-          onDone()
-        } catch (err) {
-          setError(err)
-        } finally {
-          setBusy(false)
-        }
-      }}
-    >
-      <TextField
-        label={e.nameEn}
-        value={facts.nameEn}
-        maxLength={60}
-        onChange={(event) => setFacts({ ...facts, nameEn: event.target.value })}
-      />
-      <div className="grid grid-cols-2 gap-3">
-        <SelectField
-          label={e.level}
-          value={facts.level}
-          onChange={(event) => setFacts({ ...facts, level: Number(event.target.value) })}
-        >
-          {Array.from({ length: 10 }, (_, l) => (
-            <option key={l} value={l}>
-              {de.spells.level(l)}
-            </option>
-          ))}
-        </SelectField>
-        <SelectField
-          label={e.school}
-          value={facts.school}
-          onChange={(event) => setFacts({ ...facts, school: event.target.value as SpellSchool })}
-        >
-          {SCHOOLS.map((s) => (
-            <option key={s} value={s}>
-              {de.spells.schools[s]}
-            </option>
-          ))}
-        </SelectField>
-      </div>
-      <ErrorAlert error={error} />
-      <div className="flex gap-2">
-        <Button type="submit" variant="primary" busy={busy}>
-          {t.saveFacts}
-        </Button>
-        <Button variant="quiet" onClick={onDone}>
-          {de.common.cancel}
-        </Button>
-      </div>
-    </form>
+    <section aria-label={l.title} className="mt-3 flex flex-col gap-1 text-sm">
+      <h2 className="font-display text-xs font-semibold tracking-[0.2em] text-candle uppercase">
+        {l.title}
+      </h2>
+      {onList.length > 0 && (
+        <p>
+          <span className="text-dim">{l.classes}: </span>
+          <span className="text-parchment">{onList.join(', ')}</span>
+        </p>
+      )}
+      {granted.length > 0 && (
+        <p>
+          <span className="text-dim">{l.subclasses}: </span>
+          <span className="text-parchment">{granted.join(', ')}</span>
+        </p>
+      )}
+    </section>
   )
 }
 
@@ -234,6 +199,7 @@ export function SpellVariantEditPage({ copy = false }: { copy?: boolean }) {
     return <LoadError error={variant.error} onRetry={() => void variant.refetch()} />
   const v = variant.data
   const initial: SpellEdit = {
+    spellId: v.spellId,
     nameEn: v.nameEn,
     level: v.level,
     school: v.school,
@@ -246,7 +212,13 @@ export function SpellVariantEditPage({ copy = false }: { copy?: boolean }) {
     setBusy(true)
     setError(null)
     try {
-      if (copy) await createVariant({ ...edit, origin: 'manual', basedOnVariantId: v.id })
+      if (copy)
+        await createVariant({
+          spellId: v.spellId,
+          card: edit.card,
+          origin: 'manual',
+          basedOnVariantId: v.id,
+        })
       else await updateVariant(v.id, edit.card)
       await queries.invalidateQueries({ queryKey: spellKeys.all })
       navigate(back, { replace: true })

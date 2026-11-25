@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using OreanasOffice.Server.Data;
 using OreanasOffice.Server.Images.Guide;
 using OreanasOffice.Server.Maps;
+using OreanasOffice.Server.Rules;
 using OreanasOffice.Server.Spells;
 
 namespace OreanasOffice.Server.Images;
@@ -535,11 +536,22 @@ public sealed class ImageJobWorker(
                 .SingleOrDefaultAsync(cancellationToken) is { } campaign ? new TokenSubject(campaign.Name, campaign.Description ?? "") : null,
             _ => await db.Characters.AsNoTracking()
                 .Where(c => c.Id == asset.OwnerId)
-                .Select(c => new { c.Name, c.Appearance, c.Background, c.Personality, c.Species, c.CharacterClass, c.Age })
+                .Select(c => new
+                {
+                    c.Name,
+                    c.Appearance,
+                    c.Background,
+                    c.Personality,
+                    c.Species,
+                    Classes = c.Classes.OrderBy(x => x.Position).Select(x => new { x.Class.NameEn, Subclass = x.Subclass!.NameEn }).ToList(),
+                    c.Age,
+                })
                 .SingleOrDefaultAsync(cancellationToken) is { } character
                 ? new TokenSubject(
                     character.Name, character.Appearance, character.Background, character.Personality,
-                    character.Species, character.CharacterClass, character.Age)
+                    character.Species,
+                    CharacterClasses.PromptText(character.Classes.Select(c => (c.NameEn, (string?)c.Subclass))),
+                    character.Age)
                 : null,
         };
 

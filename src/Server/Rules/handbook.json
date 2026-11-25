@@ -1,0 +1,5371 @@
+{
+  "source": "D&D Player's Handbook (2024): spell lists from dnd2024.wikidot.com; German class names from the German SRD 5.2.1; German subclass and spell names from the German Player's Handbook 2024",
+  "classes": [
+    {
+      "id": "barbarian",
+      "nameEn": "Barbarian",
+      "nameDe": "Barbar",
+      "caster": null,
+      "subclasses": [
+        {
+          "id": "path-of-the-berserker",
+          "nameEn": "Path of the Berserker",
+          "nameDe": "Pfad des Berserkers",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "path-of-the-wild-heart",
+          "nameEn": "Path of the Wild Heart",
+          "nameDe": "Pfad des Wilden Herzens",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Beast Sense",
+              "Speak with Animals"
+            ],
+            "10": [
+              "Commune with Nature"
+            ]
+          }
+        },
+        {
+          "id": "path-of-the-world-tree",
+          "nameEn": "Path of the World Tree",
+          "nameDe": "Pfad des Weltenbaums",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "path-of-the-zealot",
+          "nameEn": "Path of the Zealot",
+          "nameDe": "Pfad des Eiferers",
+          "nameDeSource": "phb2024"
+        }
+      ]
+    },
+    {
+      "id": "bard",
+      "nameEn": "Bard",
+      "nameDe": "Barde",
+      "caster": "full",
+      "subclasses": [
+        {
+          "id": "college-of-dance",
+          "nameEn": "College of Dance",
+          "nameDe": "Schule des Tanzes",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "college-of-glamour",
+          "nameEn": "College of Glamour",
+          "nameDe": "Schule des Zauberbanns",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Charm Person",
+              "Mirror Image"
+            ],
+            "6": [
+              "Command"
+            ]
+          }
+        },
+        {
+          "id": "college-of-lore",
+          "nameEn": "College of Lore",
+          "nameDe": "Schule des Wissens",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "college-of-valor",
+          "nameEn": "College of Valor",
+          "nameDe": "Schule des Wagemuts",
+          "nameDeSource": "phb2024"
+        }
+      ]
+    },
+    {
+      "id": "cleric",
+      "nameEn": "Cleric",
+      "nameDe": "Kleriker",
+      "caster": "full",
+      "subclasses": [
+        {
+          "id": "life-domain",
+          "nameEn": "Life Domain",
+          "nameDe": "Domäne des Lebens",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Aid",
+              "Bless",
+              "Cure Wounds",
+              "Lesser Restoration"
+            ],
+            "5": [
+              "Mass Healing Word",
+              "Revivify"
+            ],
+            "7": [
+              "Aura of Life",
+              "Death Ward"
+            ],
+            "9": [
+              "Greater Restoration",
+              "Mass Cure Wounds"
+            ]
+          }
+        },
+        {
+          "id": "light-domain",
+          "nameEn": "Light Domain",
+          "nameDe": "Domäne des Lichts",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Burning Hands",
+              "Faerie Fire",
+              "Scorching Ray",
+              "See Invisibility"
+            ],
+            "5": [
+              "Daylight",
+              "Fireball"
+            ],
+            "7": [
+              "Arcane Eye",
+              "Wall of Fire"
+            ],
+            "9": [
+              "Flame Strike",
+              "Scrying"
+            ]
+          }
+        },
+        {
+          "id": "trickery-domain",
+          "nameEn": "Trickery Domain",
+          "nameDe": "Domäne der List",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Charm Person",
+              "Disguise Self",
+              "Invisibility",
+              "Pass without Trace"
+            ],
+            "5": [
+              "Hypnotic Pattern",
+              "Nondetection"
+            ],
+            "7": [
+              "Confusion",
+              "Dimension Door"
+            ],
+            "9": [
+              "Dominate Person",
+              "Modify Memory"
+            ]
+          }
+        },
+        {
+          "id": "war-domain",
+          "nameEn": "War Domain",
+          "nameDe": "Domäne des Krieges",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Guiding Bolt",
+              "Magic Weapon",
+              "Shield of Faith",
+              "Spiritual Weapon"
+            ],
+            "5": [
+              "Crusader's Mantle",
+              "Spirit Guardians"
+            ],
+            "7": [
+              "Fire Shield",
+              "Freedom of Movement"
+            ],
+            "9": [
+              "Hold Monster",
+              "Steel Wind Strike"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "druid",
+      "nameEn": "Druid",
+      "nameDe": "Druide",
+      "caster": "full",
+      "subclasses": [
+        {
+          "id": "circle-of-the-land",
+          "nameEn": "Circle of the Land",
+          "nameDe": "Zirkel des Landes",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Blur",
+              "Burning Hands",
+              "Fire Bolt",
+              "Fog Cloud",
+              "Hold Person",
+              "Ray of Frost",
+              "Misty Step",
+              "Shocking Grasp",
+              "Sleep",
+              "Acid Splash",
+              "Ray of Sickness",
+              "Web"
+            ],
+            "5": [
+              "Fireball",
+              "Sleet Storm",
+              "Lightning Bolt",
+              "Stinking Cloud"
+            ],
+            "7": [
+              "Blight",
+              "Ice Storm",
+              "Freedom of Movement",
+              "Polymorph"
+            ],
+            "9": [
+              "Wall of Stone",
+              "Cone of Cold",
+              "Tree Stride",
+              "Insect Plague"
+            ]
+          }
+        },
+        {
+          "id": "circle-of-the-moon",
+          "nameEn": "Circle of the Moon",
+          "nameDe": "Zirkel des Mondes",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Cure Wounds",
+              "Moonbeam",
+              "Starry Wisp"
+            ],
+            "5": [
+              "Conjure Animals"
+            ],
+            "7": [
+              "Fount of Moonlight"
+            ],
+            "9": [
+              "Mass Cure Wounds"
+            ]
+          }
+        },
+        {
+          "id": "circle-of-the-sea",
+          "nameEn": "Circle of the Sea",
+          "nameDe": "Zirkel des Meeres",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Fog Cloud",
+              "Gust of Wind",
+              "Ray of Frost",
+              "Thunderwave"
+            ],
+            "5": [
+              "Lightning Bolt",
+              "Water Breathing"
+            ],
+            "7": [
+              "Control Water",
+              "Ice Storm"
+            ],
+            "9": [
+              "Conjure Elemental",
+              "Hold Monster"
+            ]
+          }
+        },
+        {
+          "id": "circle-of-the-stars",
+          "nameEn": "Circle of the Stars",
+          "nameDe": "Zirkel der Sterne",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Guidance",
+              "Guiding Bolt"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "fighter",
+      "nameEn": "Fighter",
+      "nameDe": "Kämpfer",
+      "caster": null,
+      "subclasses": [
+        {
+          "id": "battle-master",
+          "nameEn": "Battle Master",
+          "nameDe": "Kampfmeister",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "champion",
+          "nameEn": "Champion",
+          "nameDe": "Champion",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "eldritch-knight",
+          "nameEn": "Eldritch Knight",
+          "nameDe": "Mystischer Ritter",
+          "nameDeSource": "phb2024",
+          "spellListClass": "wizard"
+        },
+        {
+          "id": "psi-warrior",
+          "nameEn": "Psi Warrior",
+          "nameDe": "Psi-Krieger",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "18": [
+              "Telekinesis"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "monk",
+      "nameEn": "Monk",
+      "nameDe": "Mönch",
+      "caster": null,
+      "subclasses": [
+        {
+          "id": "warrior-of-mercy",
+          "nameEn": "Warrior of Mercy",
+          "nameDe": "Krieger der Gnade",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "warrior-of-shadow",
+          "nameEn": "Warrior of Shadow",
+          "nameDe": "Krieger der Schatten",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Darkness",
+              "Minor Illusion"
+            ]
+          }
+        },
+        {
+          "id": "warrior-of-the-elements",
+          "nameEn": "Warrior of the Elements",
+          "nameDe": "Krieger der Elemente",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Elementalism"
+            ]
+          }
+        },
+        {
+          "id": "warrior-of-the-open-hand",
+          "nameEn": "Warrior of the Open Hand",
+          "nameDe": "Krieger der Offenen Hand",
+          "nameDeSource": "phb2024"
+        }
+      ]
+    },
+    {
+      "id": "paladin",
+      "nameEn": "Paladin",
+      "nameDe": "Paladin",
+      "caster": "half",
+      "subclasses": [
+        {
+          "id": "oath-of-devotion",
+          "nameEn": "Oath of Devotion",
+          "nameDe": "Schwur der Hingabe",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Protection from Evil and Good",
+              "Shield of Faith"
+            ],
+            "5": [
+              "Aid",
+              "Zone of Truth"
+            ],
+            "9": [
+              "Beacon of Hope",
+              "Dispel Magic"
+            ],
+            "13": [
+              "Freedom of Movement",
+              "Guardian of Faith"
+            ],
+            "17": [
+              "Commune",
+              "Flame Strike"
+            ]
+          }
+        },
+        {
+          "id": "oath-of-glory",
+          "nameEn": "Oath of Glory",
+          "nameDe": "Schwur des Ruhmes",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Guiding Bolt",
+              "Heroism"
+            ],
+            "5": [
+              "Enhance Ability",
+              "Magic Weapon"
+            ],
+            "9": [
+              "Haste",
+              "Protection from Energy"
+            ],
+            "13": [
+              "Compulsion",
+              "Freedom of Movement"
+            ],
+            "17": [
+              "Legend Lore",
+              "Yolande's Regal Presence"
+            ]
+          }
+        },
+        {
+          "id": "oath-of-the-ancients",
+          "nameEn": "Oath of the Ancients",
+          "nameDe": "Schwur der Alten",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Ensnaring Strike",
+              "Speak with Animals"
+            ],
+            "5": [
+              "Misty Step",
+              "Moonbeam"
+            ],
+            "9": [
+              "Plant Growth",
+              "Protection from Energy"
+            ],
+            "13": [
+              "Ice Storm",
+              "Stoneskin"
+            ],
+            "17": [
+              "Commune with Nature",
+              "Tree Stride"
+            ]
+          }
+        },
+        {
+          "id": "oath-of-vengeance",
+          "nameEn": "Oath of Vengeance",
+          "nameDe": "Schwur der Rache",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Bane",
+              "Hunter's Mark"
+            ],
+            "5": [
+              "Hold Person",
+              "Misty Step"
+            ],
+            "9": [
+              "Haste",
+              "Protection from Energy"
+            ],
+            "13": [
+              "Banishment",
+              "Dimension Door"
+            ],
+            "17": [
+              "Hold Monster",
+              "Scrying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ranger",
+      "nameEn": "Ranger",
+      "nameDe": "Waldläufer",
+      "caster": "half",
+      "subclasses": [
+        {
+          "id": "beast-master",
+          "nameEn": "Beast Master",
+          "nameDe": "Herr der Tiere",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "fey-wanderer",
+          "nameEn": "Fey Wanderer",
+          "nameDe": "Feenwanderer",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Charm Person"
+            ],
+            "5": [
+              "Misty Step"
+            ],
+            "9": [
+              "Summon Fey"
+            ],
+            "13": [
+              "Dimension Door"
+            ],
+            "17": [
+              "Mislead"
+            ]
+          }
+        },
+        {
+          "id": "gloom-stalker",
+          "nameEn": "Gloom Stalker",
+          "nameDe": "Düsterpirscher",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Disguise Self"
+            ],
+            "5": [
+              "Rope Trick"
+            ],
+            "9": [
+              "Fear"
+            ],
+            "13": [
+              "Greater Invisibility"
+            ],
+            "17": [
+              "Seeming"
+            ]
+          }
+        },
+        {
+          "id": "hunter",
+          "nameEn": "Hunter",
+          "nameDe": "Jäger",
+          "nameDeSource": "phb2024"
+        }
+      ]
+    },
+    {
+      "id": "rogue",
+      "nameEn": "Rogue",
+      "nameDe": "Schurke",
+      "caster": null,
+      "subclasses": [
+        {
+          "id": "arcane-trickster",
+          "nameEn": "Arcane Trickster",
+          "nameDe": "Arkaner Betrüger",
+          "nameDeSource": "phb2024",
+          "spellListClass": "wizard",
+          "spells": {
+            "3": [
+              "Mage Hand"
+            ]
+          }
+        },
+        {
+          "id": "assassin",
+          "nameEn": "Assassin",
+          "nameDe": "Assassine",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "soulknife",
+          "nameEn": "Soulknife",
+          "nameDe": "Seelenmesser",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "thief",
+          "nameEn": "Thief",
+          "nameDe": "Dieb",
+          "nameDeSource": "phb2024"
+        }
+      ]
+    },
+    {
+      "id": "sorcerer",
+      "nameEn": "Sorcerer",
+      "nameDe": "Zauberer",
+      "caster": "full",
+      "subclasses": [
+        {
+          "id": "aberrant-sorcery",
+          "nameEn": "Aberrant Sorcery",
+          "nameDe": "Aberrante Zauberei",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Arms of Hadar",
+              "Calm Emotions",
+              "Detect Thoughts",
+              "Dissonant Whispers",
+              "Mind Sliver"
+            ],
+            "5": [
+              "Hunger of Hadar",
+              "Sending"
+            ],
+            "7": [
+              "Evard's Black Tentacles",
+              "Summon Aberration"
+            ],
+            "9": [
+              "Rary's Telepathic Bond",
+              "Telekinesis"
+            ]
+          }
+        },
+        {
+          "id": "clockwork-sorcery",
+          "nameEn": "Clockwork Sorcery",
+          "nameDe": "Uhrwerk-Zauberei",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Aid",
+              "Alarm",
+              "Lesser Restoration",
+              "Protection from Evil and Good"
+            ],
+            "5": [
+              "Dispel Magic",
+              "Protection from Energy"
+            ],
+            "7": [
+              "Freedom of Movement",
+              "Summon Construct"
+            ],
+            "9": [
+              "Greater Restoration",
+              "Wall of Force"
+            ]
+          }
+        },
+        {
+          "id": "draconic-sorcery",
+          "nameEn": "Draconic Sorcery",
+          "nameDe": "Drakonische Zauberei",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Alter Self",
+              "Chromatic Orb",
+              "Command",
+              "Dragon's Breath"
+            ],
+            "5": [
+              "Fear",
+              "Fly"
+            ],
+            "7": [
+              "Arcane Eye",
+              "Charm Monster"
+            ],
+            "9": [
+              "Legend Lore",
+              "Summon Dragon"
+            ]
+          }
+        },
+        {
+          "id": "wild-magic-sorcery",
+          "nameEn": "Wild Magic Sorcery",
+          "nameDe": "Wilde-Magie-Zauberei",
+          "nameDeSource": "phb2024"
+        }
+      ]
+    },
+    {
+      "id": "warlock",
+      "nameEn": "Warlock",
+      "nameDe": "Hexenmeister",
+      "caster": "pact",
+      "subclasses": [
+        {
+          "id": "archfey-patron",
+          "nameEn": "Archfey Patron",
+          "nameDe": "Erzfee-Schutzherr",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Calm Emotions",
+              "Faerie Fire",
+              "Misty Step",
+              "Phantasmal Force",
+              "Sleep"
+            ],
+            "5": [
+              "Blink",
+              "Plant Growth"
+            ],
+            "7": [
+              "Dominate Beast",
+              "Greater Invisibility"
+            ],
+            "9": [
+              "Dominate Person",
+              "Seeming"
+            ]
+          }
+        },
+        {
+          "id": "celestial-patron",
+          "nameEn": "Celestial Patron",
+          "nameDe": "Celestischer Schutzherr",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Aid",
+              "Cure Wounds",
+              "Guiding Bolt",
+              "Lesser Restoration",
+              "Light",
+              "Sacred Flame"
+            ],
+            "5": [
+              "Daylight",
+              "Revivify"
+            ],
+            "7": [
+              "Guardian of Faith",
+              "Wall of Fire"
+            ],
+            "9": [
+              "Greater Restoration",
+              "Summon Celestial"
+            ]
+          }
+        },
+        {
+          "id": "fiend-patron",
+          "nameEn": "Fiend Patron",
+          "nameDe": "Unhold-Schutzherr",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Burning Hands",
+              "Command",
+              "Scorching Ray",
+              "Suggestion"
+            ],
+            "5": [
+              "Fireball",
+              "Stinking Cloud"
+            ],
+            "7": [
+              "Fire Shield",
+              "Wall of Fire"
+            ],
+            "9": [
+              "Geas",
+              "Insect Plague"
+            ]
+          }
+        },
+        {
+          "id": "great-old-one-patron",
+          "nameEn": "Great Old One Patron",
+          "nameDe": "Großer-Alter-Schutzherr",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Detect Thoughts",
+              "Dissonant Whispers",
+              "Phantasmal Force",
+              "Tasha's Hideous Laughter"
+            ],
+            "5": [
+              "Clairvoyance",
+              "Hunger of Hadar"
+            ],
+            "7": [
+              "Confusion",
+              "Summon Aberration"
+            ],
+            "9": [
+              "Modify Memory",
+              "Telekinesis"
+            ],
+            "10": [
+              "Hex"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "wizard",
+      "nameEn": "Wizard",
+      "nameDe": "Magier",
+      "caster": "full",
+      "subclasses": [
+        {
+          "id": "abjurer",
+          "nameEn": "Abjurer",
+          "nameDe": "Bannmagier",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "10": [
+              "Counterspell",
+              "Dispel Magic"
+            ]
+          }
+        },
+        {
+          "id": "diviner",
+          "nameEn": "Diviner",
+          "nameDe": "Seher",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "10": [
+              "See Invisibility"
+            ]
+          }
+        },
+        {
+          "id": "evoker",
+          "nameEn": "Evoker",
+          "nameDe": "Hervorrufer",
+          "nameDeSource": "phb2024"
+        },
+        {
+          "id": "illusionist",
+          "nameEn": "Illusionist",
+          "nameDe": "Illusionist",
+          "nameDeSource": "phb2024",
+          "spells": {
+            "3": [
+              "Minor Illusion"
+            ],
+            "6": [
+              "Summon Beast",
+              "Summon Fey"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "spells": [
+    {
+      "nameEn": "Acid Splash",
+      "nameDe": "Säurespritzer",
+      "slug": "acid-splash",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Blade Ward",
+      "nameDe": "Klingenbann",
+      "slug": "blade-ward",
+      "level": 0,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Chill Touch",
+      "nameDe": "Kalte Hand",
+      "slug": "chill-touch",
+      "level": 0,
+      "school": "necromancy",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Dancing Lights",
+      "nameDe": "Tanzende Lichter",
+      "slug": "dancing-lights",
+      "level": 0,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Druidcraft",
+      "nameDe": "Druidenkunst",
+      "slug": "druidcraft",
+      "level": 0,
+      "school": "transmutation",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Eldritch Blast",
+      "nameDe": "Schauriger Strahl",
+      "slug": "eldritch-blast",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Elementalism",
+      "nameDe": "Elementalismus",
+      "slug": "elementalism",
+      "level": 0,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Fire Bolt",
+      "nameDe": "Feuerpfeil",
+      "slug": "fire-bolt",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Friends",
+      "nameDe": "Freundschaft",
+      "slug": "friends",
+      "level": 0,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Guidance",
+      "nameDe": "Göttliche Führung",
+      "slug": "guidance",
+      "level": 0,
+      "school": "divination",
+      "classes": [
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Light",
+      "nameDe": "Licht",
+      "slug": "light",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "cleric",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mage Hand",
+      "nameDe": "Magierhand",
+      "slug": "mage-hand",
+      "level": 0,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mending",
+      "nameDe": "Ausbessern",
+      "slug": "mending",
+      "level": 0,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Message",
+      "nameDe": "Botschaft",
+      "slug": "message",
+      "level": 0,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mind Sliver",
+      "nameDe": "Gedankensplitter",
+      "slug": "mind-sliver",
+      "level": 0,
+      "school": "enchantment",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Minor Illusion",
+      "nameDe": "Einfache Illusion",
+      "slug": "minor-illusion",
+      "level": 0,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Poison Spray",
+      "nameDe": "Gift versprühen",
+      "slug": "poison-spray",
+      "level": 0,
+      "school": "necromancy",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Prestidigitation",
+      "nameDe": "Taschenspielerei",
+      "slug": "prestidigitation",
+      "level": 0,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Produce Flame",
+      "nameDe": "Flammen erzeugen",
+      "slug": "produce-flame",
+      "level": 0,
+      "school": "conjuration",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Ray of Frost",
+      "nameDe": "Kältestrahl",
+      "slug": "ray-of-frost",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Resistance",
+      "nameDe": "Widerstand",
+      "slug": "resistance",
+      "level": 0,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Sacred Flame",
+      "nameDe": "Heilige Flamme",
+      "slug": "sacred-flame",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Shillelagh",
+      "nameDe": "Shillelagh",
+      "slug": "shillelagh",
+      "level": 0,
+      "school": "transmutation",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Shocking Grasp",
+      "nameDe": "Schockgriff",
+      "slug": "shocking-grasp",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Sorcerous Burst",
+      "nameDe": "Explosion der Zauberei",
+      "slug": "sorcerous-burst",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "sorcerer"
+      ]
+    },
+    {
+      "nameEn": "Spare the Dying",
+      "nameDe": "Verschonung der Sterbenden",
+      "slug": "spare-the-dying",
+      "level": 0,
+      "school": "necromancy",
+      "classes": [
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Starry Wisp",
+      "nameDe": "Sternenfunke",
+      "slug": "starry-wisp",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Thaumaturgy",
+      "nameDe": "Thaumaturgie",
+      "slug": "thaumaturgy",
+      "level": 0,
+      "school": "transmutation",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Thorn Whip",
+      "nameDe": "Dornenpeitsche",
+      "slug": "thorn-whip",
+      "level": 0,
+      "school": "transmutation",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Thunderclap",
+      "nameDe": "Donnerschlag",
+      "slug": "thunderclap",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Toll the Dead",
+      "nameDe": "Totenläuten",
+      "slug": "toll-the-dead",
+      "level": 0,
+      "school": "necromancy",
+      "classes": [
+        "cleric",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "True Strike",
+      "nameDe": "Zielsicherer Schlag",
+      "slug": "true-strike",
+      "level": 0,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Vicious Mockery",
+      "nameDe": "Gehässiger Spott",
+      "slug": "vicious-mockery",
+      "level": 0,
+      "school": "enchantment",
+      "classes": [
+        "bard"
+      ]
+    },
+    {
+      "nameEn": "Word of Radiance",
+      "nameDe": "Wort des Strahlens",
+      "slug": "word-of-radiance",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Alarm",
+      "nameDe": "Alarm",
+      "slug": "alarm",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "ranger",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Animal Friendship",
+      "nameDe": "Tierfreundschaft",
+      "slug": "animal-friendship",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Armor of Agathys",
+      "nameDe": "Rüstung von Agathys",
+      "slug": "armor-of-agathys",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Arms of Hadar",
+      "nameDe": "Arme von Hadar",
+      "slug": "arms-of-hadar",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Bane",
+      "nameDe": "Verderben",
+      "slug": "bane",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "cleric",
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Bless",
+      "nameDe": "Segnen",
+      "slug": "bless",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Burning Hands",
+      "nameDe": "Brennende Hände",
+      "slug": "burning-hands",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Charm Person",
+      "nameDe": "Person bezaubern",
+      "slug": "charm-person",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Chromatic Orb",
+      "nameDe": "Chromatische Kugel",
+      "slug": "chromatic-orb",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Color Spray",
+      "nameDe": "Sprühende Farben",
+      "slug": "color-spray",
+      "level": 1,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Command",
+      "nameDe": "Befehl",
+      "slug": "command",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Compelled Duel",
+      "nameDe": "Erzwungenes Duell",
+      "slug": "compelled-duel",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Comprehend Languages",
+      "nameDe": "Sprachen verstehen",
+      "slug": "comprehend-languages",
+      "level": 1,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Create or Destroy Water",
+      "nameDe": "Wasser erschaffen oder zerstören",
+      "slug": "create-or-destroy-water",
+      "level": 1,
+      "school": "transmutation",
+      "classes": [
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Cure Wounds",
+      "nameDe": "Wunden heilen",
+      "slug": "cure-wounds",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Detect Evil and Good",
+      "nameDe": "Gutes und Böses entdecken",
+      "slug": "detect-evil-and-good",
+      "level": 1,
+      "school": "divination",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Detect Magic",
+      "nameDe": "Magie entdecken",
+      "slug": "detect-magic",
+      "level": 1,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Detect Poison and Disease",
+      "nameDe": "Gift und Krankheit entdecken",
+      "slug": "detect-poison-and-disease",
+      "level": 1,
+      "school": "divination",
+      "classes": [
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Disguise Self",
+      "nameDe": "Selbstverkleidung",
+      "slug": "disguise-self",
+      "level": 1,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Dissonant Whispers",
+      "nameDe": "Dissonantes Flüstern",
+      "slug": "dissonant-whispers",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "bard"
+      ]
+    },
+    {
+      "nameEn": "Divine Favor",
+      "nameDe": "Göttliche Gunst",
+      "slug": "divine-favor",
+      "level": 1,
+      "school": "transmutation",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Divine Smite",
+      "nameDe": "Göttliches Niederstrecken",
+      "slug": "divine-smite",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Ensnaring Strike",
+      "nameDe": "Fesselnder Schlag",
+      "slug": "ensnaring-strike",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Entangle",
+      "nameDe": "Verstricken",
+      "slug": "entangle",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Expeditious Retreat",
+      "nameDe": "Rascher Rückzug",
+      "slug": "expeditious-retreat",
+      "level": 1,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Faerie Fire",
+      "nameDe": "Feenfeuer",
+      "slug": "faerie-fire",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "False Life",
+      "nameDe": "Falsches Leben",
+      "slug": "false-life",
+      "level": 1,
+      "school": "necromancy",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Feather Fall",
+      "nameDe": "Federfall",
+      "slug": "feather-fall",
+      "level": 1,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Find Familiar",
+      "nameDe": "Vertrauten finden",
+      "slug": "find-familiar",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Fog Cloud",
+      "nameDe": "Nebelwolke",
+      "slug": "fog-cloud",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Goodberry",
+      "nameDe": "Gute Beeren",
+      "slug": "goodberry",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Grease",
+      "nameDe": "Schmieren",
+      "slug": "grease",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Guiding Bolt",
+      "nameDe": "Lenkendes Geschoss",
+      "slug": "guiding-bolt",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Hail of Thorns",
+      "nameDe": "Dornenhagel",
+      "slug": "hail-of-thorns",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Healing Word",
+      "nameDe": "Heilendes Wort",
+      "slug": "healing-word",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Hellish Rebuke",
+      "nameDe": "Höllischer Tadel",
+      "slug": "hellish-rebuke",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Heroism",
+      "nameDe": "Heldenmut",
+      "slug": "heroism",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Hex",
+      "nameDe": "Verwünschen",
+      "slug": "hex",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Hunter's Mark",
+      "nameDe": "Zeichen des Jägers",
+      "slug": "hunter-s-mark",
+      "level": 1,
+      "school": "divination",
+      "classes": [
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Ice Knife",
+      "nameDe": "Eismesser",
+      "slug": "ice-knife",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Identify",
+      "nameDe": "Identifizieren",
+      "slug": "identify",
+      "level": 1,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Illusory Script",
+      "nameDe": "Illusionsschrift",
+      "slug": "illusory-script",
+      "level": 1,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Inflict Wounds",
+      "nameDe": "Wunden verursachen",
+      "slug": "inflict-wounds",
+      "level": 1,
+      "school": "necromancy",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Jump",
+      "nameDe": "Springen",
+      "slug": "jump",
+      "level": 1,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Longstrider",
+      "nameDe": "Lange Schritte",
+      "slug": "longstrider",
+      "level": 1,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "druid",
+        "ranger",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mage Armor",
+      "nameDe": "Magierrüstung",
+      "slug": "mage-armor",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Magic Missile",
+      "nameDe": "Magisches Geschoss",
+      "slug": "magic-missile",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Protection from Evil and Good",
+      "nameDe": "Schutz vor Gut und Böse",
+      "slug": "protection-from-evil-and-good",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "druid",
+        "paladin",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Purify Food and Drink",
+      "nameDe": "Nahrung und Wasser reinigen",
+      "slug": "purify-food-and-drink",
+      "level": 1,
+      "school": "transmutation",
+      "classes": [
+        "cleric",
+        "druid",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Ray of Sickness",
+      "nameDe": "Strahl der Übelkeit",
+      "slug": "ray-of-sickness",
+      "level": 1,
+      "school": "necromancy",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Sanctuary",
+      "nameDe": "Heiligtum",
+      "slug": "sanctuary",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Searing Smite",
+      "nameDe": "Sengendes Niederstrecken",
+      "slug": "searing-smite",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Shield",
+      "nameDe": "Schild",
+      "slug": "shield",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Shield of Faith",
+      "nameDe": "Schild des Glaubens",
+      "slug": "shield-of-faith",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Silent Image",
+      "nameDe": "Lautloses Trugbild",
+      "slug": "silent-image",
+      "level": 1,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Sleep",
+      "nameDe": "Schlaf",
+      "slug": "sleep",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Speak with Animals",
+      "nameDe": "Mit Tieren sprechen",
+      "slug": "speak-with-animals",
+      "level": 1,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "druid",
+        "ranger",
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Tasha's Hideous Laughter",
+      "nameDe": "Tashas Fürchterlicher Lachanfall",
+      "slug": "tasha-s-hideous-laughter",
+      "level": 1,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Tenser's Floating Disk",
+      "nameDe": "Tensers Schwebende Scheibe",
+      "slug": "tenser-s-floating-disk",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Thunderous Smite",
+      "nameDe": "Donnerndes Niederstrecken",
+      "slug": "thunderous-smite",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Thunderwave",
+      "nameDe": "Donnerwoge",
+      "slug": "thunderwave",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Unseen Servant",
+      "nameDe": "Unsichtbarer Diener",
+      "slug": "unseen-servant",
+      "level": 1,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Witch Bolt",
+      "nameDe": "Hexenpfeil",
+      "slug": "witch-bolt",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Wrathful Smite",
+      "nameDe": "Zorniges Niederstrecken",
+      "slug": "wrathful-smite",
+      "level": 1,
+      "school": "necromancy",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Aid",
+      "nameDe": "Beistand",
+      "slug": "aid",
+      "level": 2,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Alter Self",
+      "nameDe": "Gestalt verändern",
+      "slug": "alter-self",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Animal Messenger",
+      "nameDe": "Tierbote",
+      "slug": "animal-messenger",
+      "level": 2,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Arcane Lock",
+      "nameDe": "Arkanes Schloss",
+      "slug": "arcane-lock",
+      "level": 2,
+      "school": "abjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Arcane Vigor",
+      "nameDe": "Arkane Vitalität",
+      "slug": "arcane-vigor",
+      "level": 2,
+      "school": "abjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Augury",
+      "nameDe": "Vorahnung",
+      "slug": "augury",
+      "level": 2,
+      "school": "divination",
+      "classes": [
+        "cleric",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Barkskin",
+      "nameDe": "Rindenhaut",
+      "slug": "barkskin",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Beast Sense",
+      "nameDe": "Tiersinn",
+      "slug": "beast-sense",
+      "level": 2,
+      "school": "divination",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Blindness/Deafness",
+      "nameDe": "Blindheit/Taubheit",
+      "slug": "blindness-deafness",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "cleric",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Blur",
+      "nameDe": "Verschwimmen",
+      "slug": "blur",
+      "level": 2,
+      "school": "illusion",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Calm Emotions",
+      "nameDe": "Gefühle besänftigen",
+      "slug": "calm-emotions",
+      "level": 2,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Cloud of Daggers",
+      "nameDe": "Dolchwolke",
+      "slug": "cloud-of-daggers",
+      "level": 2,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Continual Flame",
+      "nameDe": "Dauerhafte Flamme",
+      "slug": "continual-flame",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "cleric",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Cordon of Arrows",
+      "nameDe": "Pfeilspalier",
+      "slug": "cordon-of-arrows",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Crown of Madness",
+      "nameDe": "Krone des Wahnsinns",
+      "slug": "crown-of-madness",
+      "level": 2,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Darkness",
+      "nameDe": "Dunkelheit",
+      "slug": "darkness",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Darkvision",
+      "nameDe": "Dunkelsicht",
+      "slug": "darkvision",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Detect Thoughts",
+      "nameDe": "Gedanken wahrnehmen",
+      "slug": "detect-thoughts",
+      "level": 2,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Dragon's Breath",
+      "nameDe": "Drachenodem",
+      "slug": "dragon-s-breath",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Enhance Ability",
+      "nameDe": "Attribut verbessern",
+      "slug": "enhance-ability",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Enlarge/Reduce",
+      "nameDe": "Vergrößern/Verkleinern",
+      "slug": "enlarge-reduce",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Enthrall",
+      "nameDe": "Fesseln",
+      "slug": "enthrall",
+      "level": 2,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Find Steed",
+      "nameDe": "Reittier finden",
+      "slug": "find-steed",
+      "level": 2,
+      "school": "conjuration",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Find Traps",
+      "nameDe": "Fallen finden",
+      "slug": "find-traps",
+      "level": 2,
+      "school": "divination",
+      "classes": [
+        "cleric",
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Flame Blade",
+      "nameDe": "Flammenklinge",
+      "slug": "flame-blade",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "druid",
+        "sorcerer"
+      ]
+    },
+    {
+      "nameEn": "Flaming Sphere",
+      "nameDe": "Flammenkugel",
+      "slug": "flaming-sphere",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Gentle Repose",
+      "nameDe": "Sanfte Ruhe",
+      "slug": "gentle-repose",
+      "level": 2,
+      "school": "necromancy",
+      "classes": [
+        "cleric",
+        "paladin",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Gust of Wind",
+      "nameDe": "Windstoß",
+      "slug": "gust-of-wind",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "druid",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Heat Metal",
+      "nameDe": "Metall erhitzen",
+      "slug": "heat-metal",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Hold Person",
+      "nameDe": "Person festhalten",
+      "slug": "hold-person",
+      "level": 2,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Invisibility",
+      "nameDe": "Unsichtbarkeit",
+      "slug": "invisibility",
+      "level": 2,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Knock",
+      "nameDe": "Klopfen",
+      "slug": "knock",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Lesser Restoration",
+      "nameDe": "Schwache Genesung",
+      "slug": "lesser-restoration",
+      "level": 2,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Levitate",
+      "nameDe": "Schweben",
+      "slug": "levitate",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Locate Animals or Plants",
+      "nameDe": "Tiere oder Pflanzen aufspüren",
+      "slug": "locate-animals-or-plants",
+      "level": 2,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Locate Object",
+      "nameDe": "Gegenstand aufspüren",
+      "slug": "locate-object",
+      "level": 2,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Magic Mouth",
+      "nameDe": "Magischer Mund",
+      "slug": "magic-mouth",
+      "level": 2,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Magic Weapon",
+      "nameDe": "Magische Waffe",
+      "slug": "magic-weapon",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "paladin",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Melf's Acid Arrow",
+      "nameDe": "Melfs Säurepfeil",
+      "slug": "melfs-acid-arrow",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mind Spike",
+      "nameDe": "Gedankendorn",
+      "slug": "mind-spike",
+      "level": 2,
+      "school": "divination",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mirror Image",
+      "nameDe": "Spiegelbilder",
+      "slug": "mirror-image",
+      "level": 2,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Misty Step",
+      "nameDe": "Nebelschritt",
+      "slug": "misty-step",
+      "level": 2,
+      "school": "conjuration",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Moonbeam",
+      "nameDe": "Mondstrahl",
+      "slug": "moonbeam",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Nystul's Magic Aura",
+      "nameDe": "Nystuls Magische Aura",
+      "slug": "nystul-s-magic-aura",
+      "level": 2,
+      "school": "illusion",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Pass without Trace",
+      "nameDe": "Spurloses Gehen",
+      "slug": "pass-without-trace",
+      "level": 2,
+      "school": "abjuration",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Phantasmal Force",
+      "nameDe": "Macht der Vorstellungskraft",
+      "slug": "phantasmal-force",
+      "level": 2,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Prayer of Healing",
+      "nameDe": "Gebet der Heilung",
+      "slug": "prayer-of-healing",
+      "level": 2,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Protection from Poison",
+      "nameDe": "Schutz vor Gift",
+      "slug": "protection-from-poison",
+      "level": 2,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Ray of Enfeeblement",
+      "nameDe": "Schwächestrahl",
+      "slug": "ray-of-enfeeblement",
+      "level": 2,
+      "school": "necromancy",
+      "classes": [
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Rope Trick",
+      "nameDe": "Seiltrick",
+      "slug": "rope-trick",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Scorching Ray",
+      "nameDe": "Sengender Strahl",
+      "slug": "scorching-ray",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "See Invisibility",
+      "nameDe": "Unsichtbares sehen",
+      "slug": "see-invisibility",
+      "level": 2,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Shatter",
+      "nameDe": "Zerbersten",
+      "slug": "shatter",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Shining Smite",
+      "nameDe": "Strahlendes Niederstrecken",
+      "slug": "shining-smite",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Silence",
+      "nameDe": "Stille",
+      "slug": "silence",
+      "level": 2,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "cleric",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Spider Climb",
+      "nameDe": "Spinnenklettern",
+      "slug": "spider-climb",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Spike Growth",
+      "nameDe": "Dornenwuchs",
+      "slug": "spike-growth",
+      "level": 2,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Spiritual Weapon",
+      "nameDe": "Waffe des Glaubens",
+      "slug": "spiritual-weapon",
+      "level": 2,
+      "school": "evocation",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Suggestion",
+      "nameDe": "Einflüsterung",
+      "slug": "suggestion",
+      "level": 2,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Summon Beast",
+      "nameDe": "Tier herbeirufen",
+      "slug": "summon-beast",
+      "level": 2,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Warding Bond",
+      "nameDe": "Schützendes Band",
+      "slug": "warding-bond",
+      "level": 2,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Web",
+      "nameDe": "Netz",
+      "slug": "web",
+      "level": 2,
+      "school": "conjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Zone of Truth",
+      "nameDe": "Zone der Wahrheit",
+      "slug": "zone-of-truth",
+      "level": 2,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Animate Dead",
+      "nameDe": "Tote beleben",
+      "slug": "animate-dead",
+      "level": 3,
+      "school": "necromancy",
+      "classes": [
+        "cleric",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Aura of Vitality",
+      "nameDe": "Aura der Gesundheit",
+      "slug": "aura-of-vitality",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "druid",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Beacon of Hope",
+      "nameDe": "Leuchtfeuer der Hoffnung",
+      "slug": "beacon-of-hope",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Bestow Curse",
+      "nameDe": "Fluch",
+      "slug": "bestow-curse",
+      "level": 3,
+      "school": "necromancy",
+      "classes": [
+        "bard",
+        "cleric",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Blinding Smite",
+      "nameDe": "Blendendes Niederstrecken",
+      "slug": "blinding-smite",
+      "level": 3,
+      "school": "evocation",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Blink",
+      "nameDe": "Flimmern",
+      "slug": "blink",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Call Lightning",
+      "nameDe": "Blitze herbeirufen",
+      "slug": "call-lightning",
+      "level": 3,
+      "school": "conjuration",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Clairvoyance",
+      "nameDe": "Hellsehen",
+      "slug": "clairvoyance",
+      "level": 3,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Conjure Animals",
+      "nameDe": "Tiere beschwören",
+      "slug": "conjure-animals",
+      "level": 3,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Conjure Barrage",
+      "nameDe": "Schusshagel",
+      "slug": "conjure-barrage",
+      "level": 3,
+      "school": "conjuration",
+      "classes": [
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Counterspell",
+      "nameDe": "Gegenzauber",
+      "slug": "counterspell",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Create Food and Water",
+      "nameDe": "Nahrung und Wasser erschaffen",
+      "slug": "create-food-and-water",
+      "level": 3,
+      "school": "conjuration",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Crusader's Mantle",
+      "nameDe": "Kreuzfahrermantel",
+      "slug": "crusader-s-mantle",
+      "level": 3,
+      "school": "evocation",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Daylight",
+      "nameDe": "Tageslicht",
+      "slug": "daylight",
+      "level": 3,
+      "school": "evocation",
+      "classes": [
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger",
+        "sorcerer"
+      ]
+    },
+    {
+      "nameEn": "Dispel Magic",
+      "nameDe": "Magie bannen",
+      "slug": "dispel-magic",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Elemental Weapon",
+      "nameDe": "Elementare Waffe",
+      "slug": "elemental-weapon",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "paladin",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Fear",
+      "nameDe": "Furcht",
+      "slug": "fear",
+      "level": 3,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Feign Death",
+      "nameDe": "Totstellen",
+      "slug": "feign-death",
+      "level": 3,
+      "school": "necromancy",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Fireball",
+      "nameDe": "Feuerball",
+      "slug": "fireball",
+      "level": 3,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Fly",
+      "nameDe": "Fliegen",
+      "slug": "fly",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Gaseous Form",
+      "nameDe": "Gasförmige Gestalt",
+      "slug": "gaseous-form",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Glyph of Warding",
+      "nameDe": "Glyphe des Schutzes",
+      "slug": "glyph-of-warding",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Haste",
+      "nameDe": "Hast",
+      "slug": "haste",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Hunger of Hadar",
+      "nameDe": "Hunger von Hadar",
+      "slug": "hunger-of-hadar",
+      "level": 3,
+      "school": "conjuration",
+      "classes": [
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Hypnotic Pattern",
+      "nameDe": "Hypnotisches Muster",
+      "slug": "hypnotic-pattern",
+      "level": 3,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Leomund's Tiny Hut",
+      "nameDe": "Leomunds Winzige Hütte",
+      "slug": "leomund-s-tiny-hut",
+      "level": 3,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Lightning Arrow",
+      "nameDe": "Blitzpfeil",
+      "slug": "lightning-arrow",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Lightning Bolt",
+      "nameDe": "Blitz",
+      "slug": "lightning-bolt",
+      "level": 3,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Magic Circle",
+      "nameDe": "Schutzkreis",
+      "slug": "magic-circle",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Major Image",
+      "nameDe": "Mächtiges Trugbild",
+      "slug": "major-image",
+      "level": 3,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mass Healing Word",
+      "nameDe": "Massen-Heilendes Wort",
+      "slug": "mass-healing-word",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Meld into Stone",
+      "nameDe": "Mit Stein verschmelzen",
+      "slug": "meld-into-stone",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "cleric",
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Nondetection",
+      "nameDe": "Unauffindbarkeit",
+      "slug": "nondetection",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "ranger",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Phantom Steed",
+      "nameDe": "Geisterross",
+      "slug": "phantom-steed",
+      "level": 3,
+      "school": "illusion",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Plant Growth",
+      "nameDe": "Pflanzenwachstum",
+      "slug": "plant-growth",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Protection from Energy",
+      "nameDe": "Schutz vor Energie",
+      "slug": "protection-from-energy",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "druid",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Remove Curse",
+      "nameDe": "Fluch brechen",
+      "slug": "remove-curse",
+      "level": 3,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Revivify",
+      "nameDe": "Wiederbeleben",
+      "slug": "revivify",
+      "level": 3,
+      "school": "necromancy",
+      "classes": [
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Sending",
+      "nameDe": "Verständigung",
+      "slug": "sending",
+      "level": 3,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Sleet Storm",
+      "nameDe": "Schneesturm",
+      "slug": "sleet-storm",
+      "level": 3,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Slow",
+      "nameDe": "Verlangsamen",
+      "slug": "slow",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Speak with Dead",
+      "nameDe": "Mit Toten sprechen",
+      "slug": "speak-with-dead",
+      "level": 3,
+      "school": "necromancy",
+      "classes": [
+        "bard",
+        "cleric",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Speak with Plants",
+      "nameDe": "Mit Pflanzen sprechen",
+      "slug": "speak-with-plants",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Spirit Guardians",
+      "nameDe": "Schutzgeister",
+      "slug": "spirit-guardians",
+      "level": 3,
+      "school": "conjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Stinking Cloud",
+      "nameDe": "Stinkende Wolke",
+      "slug": "stinking-cloud",
+      "level": 3,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Summon Fey",
+      "nameDe": "Feenwesen herbeirufen",
+      "slug": "summon-fey",
+      "level": 3,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "ranger",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Summon Undead",
+      "nameDe": "Untoten herbeirufen",
+      "slug": "summon-undead",
+      "level": 3,
+      "school": "necromancy",
+      "classes": [
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Tongues",
+      "nameDe": "Zungen",
+      "slug": "tongues",
+      "level": 3,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Vampiric Touch",
+      "nameDe": "Vampirgriff",
+      "slug": "vampiric-touch",
+      "level": 3,
+      "school": "necromancy",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Water Breathing",
+      "nameDe": "Wasser atmen",
+      "slug": "water-breathing",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Water Walk",
+      "nameDe": "Wasserwandeln",
+      "slug": "water-walk",
+      "level": 3,
+      "school": "transmutation",
+      "classes": [
+        "cleric",
+        "druid",
+        "ranger",
+        "sorcerer"
+      ]
+    },
+    {
+      "nameEn": "Wind Wall",
+      "nameDe": "Windwall",
+      "slug": "wind-wall",
+      "level": 3,
+      "school": "evocation",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Arcane Eye",
+      "nameDe": "Arkanes Auge",
+      "slug": "arcane-eye",
+      "level": 4,
+      "school": "divination",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Aura of Life",
+      "nameDe": "Aura des Lebens",
+      "slug": "aura-of-life",
+      "level": 4,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Aura of Purity",
+      "nameDe": "Aura der Reinheit",
+      "slug": "aura-of-purity",
+      "level": 4,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Banishment",
+      "nameDe": "Verbannung",
+      "slug": "banishment",
+      "level": 4,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Blight",
+      "nameDe": "Dürre",
+      "slug": "blight",
+      "level": 4,
+      "school": "necromancy",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Charm Monster",
+      "nameDe": "Monster bezaubern",
+      "slug": "charm-monster",
+      "level": 4,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Compulsion",
+      "nameDe": "Zwang",
+      "slug": "compulsion",
+      "level": 4,
+      "school": "enchantment",
+      "classes": [
+        "bard"
+      ]
+    },
+    {
+      "nameEn": "Confusion",
+      "nameDe": "Verwirrung",
+      "slug": "confusion",
+      "level": 4,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Conjure Minor Elementals",
+      "nameDe": "Schwache Elementare beschwören",
+      "slug": "conjure-minor-elementals",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Conjure Woodland Beings",
+      "nameDe": "Wesen des Waldes beschwören",
+      "slug": "conjure-woodland-beings",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Control Water",
+      "nameDe": "Wasser kontrollieren",
+      "slug": "control-water",
+      "level": 4,
+      "school": "transmutation",
+      "classes": [
+        "cleric",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Death Ward",
+      "nameDe": "Todesschutz",
+      "slug": "death-ward",
+      "level": 4,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Dimension Door",
+      "nameDe": "Dimensionstür",
+      "slug": "dimension-door",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Divination",
+      "nameDe": "Weissagung",
+      "slug": "divination",
+      "level": 4,
+      "school": "divination",
+      "classes": [
+        "cleric",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Dominate Beast",
+      "nameDe": "Tier beherrschen",
+      "slug": "dominate-beast",
+      "level": 4,
+      "school": "enchantment",
+      "classes": [
+        "druid",
+        "ranger",
+        "sorcerer"
+      ]
+    },
+    {
+      "nameEn": "Evard's Black Tentacles",
+      "nameDe": "Evards Schwarze Tentakel",
+      "slug": "evard-s-black-tentacles",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Fabricate",
+      "nameDe": "Verarbeitung",
+      "slug": "fabricate",
+      "level": 4,
+      "school": "transmutation",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Fire Shield",
+      "nameDe": "Feuerschild",
+      "slug": "fire-shield",
+      "level": 4,
+      "school": "evocation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Fount of Moonlight",
+      "nameDe": "Quell des Mondlichts",
+      "slug": "fount-of-moonlight",
+      "level": 4,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Freedom of Movement",
+      "nameDe": "Bewegungsfreiheit",
+      "slug": "freedom-of-movement",
+      "level": 4,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Giant Insect",
+      "nameDe": "Rieseninsekt",
+      "slug": "giant-insect",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Grasping Vine",
+      "nameDe": "Schlingranke",
+      "slug": "grasping-vine",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Greater Invisibility",
+      "nameDe": "Mächtige Unsichtbarkeit",
+      "slug": "greater-invisibility",
+      "level": 4,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Guardian of Faith",
+      "nameDe": "Hüter des Glaubens",
+      "slug": "guardian-of-faith",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Hallucinatory Terrain",
+      "nameDe": "Scheingelände",
+      "slug": "hallucinatory-terrain",
+      "level": 4,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "druid",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Ice Storm",
+      "nameDe": "Eissturm",
+      "slug": "ice-storm",
+      "level": 4,
+      "school": "evocation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Leomund's Secret Chest",
+      "nameDe": "Leomunds Geheime Truhe",
+      "slug": "leomunds-secret-chest",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Locate Creature",
+      "nameDe": "Kreatur aufspüren",
+      "slug": "locate-creature",
+      "level": 4,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mordenkainen's Faithful Hound",
+      "nameDe": "Mordenkainens Treuer Hund",
+      "slug": "mordenkainen-s-faithful-hound",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mordenkainen's Private Sanctum",
+      "nameDe": "Mordenkainens Privates Heiligtum",
+      "slug": "mordenkainen-s-private-sanctum",
+      "level": 4,
+      "school": "abjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Otiluke's Resilient Sphere",
+      "nameDe": "Otilukes Unverwüstliche Sphäre",
+      "slug": "otilukes-resilient-sphere",
+      "level": 4,
+      "school": "abjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Phantasmal Killer",
+      "nameDe": "Tödliches Phantom",
+      "slug": "phantasmal-killer",
+      "level": 4,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Polymorph",
+      "nameDe": "Verwandlung",
+      "slug": "polymorph",
+      "level": 4,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Staggering Smite",
+      "nameDe": "Wankendmachendes Niederstrecken",
+      "slug": "staggering-smite",
+      "level": 4,
+      "school": "enchantment",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Stone Shape",
+      "nameDe": "Stein formen",
+      "slug": "stone-shape",
+      "level": 4,
+      "school": "transmutation",
+      "classes": [
+        "cleric",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Stoneskin",
+      "nameDe": "Steinhaut",
+      "slug": "stoneskin",
+      "level": 4,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Summon Aberration",
+      "nameDe": "Aberration herbeirufen",
+      "slug": "summon-aberration",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Summon Construct",
+      "nameDe": "Konstrukt herbeirufen",
+      "slug": "summon-construct",
+      "level": 4,
+      "school": "conjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Vitriolic Sphere",
+      "nameDe": "Ätzkugel",
+      "slug": "vitriolic-sphere",
+      "level": 4,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Wall of Fire",
+      "nameDe": "Feuerwand",
+      "slug": "wall-of-fire",
+      "level": 4,
+      "school": "evocation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Animate Objects",
+      "nameDe": "Gegenstände beleben",
+      "slug": "animate-objects",
+      "level": 5,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Antilife Shell",
+      "nameDe": "Schutzhülle gegen Lebendes",
+      "slug": "antilife-shell",
+      "level": 5,
+      "school": "abjuration",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Awaken",
+      "nameDe": "Erwecken",
+      "slug": "awaken",
+      "level": 5,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Banishing Smite",
+      "nameDe": "Verbannendes Niederstrecken",
+      "slug": "banishing-smite",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Bigby's Hand",
+      "nameDe": "Bigbys Hand",
+      "slug": "bigby-s-hand",
+      "level": 5,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Circle of Power",
+      "nameDe": "Kreis der Macht",
+      "slug": "circle-of-power",
+      "level": 5,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Cloudkill",
+      "nameDe": "Todeswolke",
+      "slug": "cloudkill",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Commune",
+      "nameDe": "Heiliges Gespräch",
+      "slug": "commune",
+      "level": 5,
+      "school": "divination",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Commune with Nature",
+      "nameDe": "Einswerden mit der Natur",
+      "slug": "commune-with-nature",
+      "level": 5,
+      "school": "divination",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Cone of Cold",
+      "nameDe": "Kältekegel",
+      "slug": "cone-of-cold",
+      "level": 5,
+      "school": "evocation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Conjure Elemental",
+      "nameDe": "Elementar beschwören",
+      "slug": "conjure-elemental",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Conjure Volley",
+      "nameDe": "Pfeilsalve beschwören",
+      "slug": "conjure-volley",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Contact Other Plane",
+      "nameDe": "Kontakt zu anderen Ebenen",
+      "slug": "contact-other-plane",
+      "level": 5,
+      "school": "divination",
+      "classes": [
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Contagion",
+      "nameDe": "Ansteckung",
+      "slug": "contagion",
+      "level": 5,
+      "school": "necromancy",
+      "classes": [
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Creation",
+      "nameDe": "Erschaffung",
+      "slug": "creation",
+      "level": 5,
+      "school": "illusion",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Destructive Wave",
+      "nameDe": "Zerstörerische Woge",
+      "slug": "destructive-wave",
+      "level": 5,
+      "school": "evocation",
+      "classes": [
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Dispel Evil and Good",
+      "nameDe": "Gutes und Böses bannen",
+      "slug": "dispel-evil-and-good",
+      "level": 5,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Dominate Person",
+      "nameDe": "Person beherrschen",
+      "slug": "dominate-person",
+      "level": 5,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Dream",
+      "nameDe": "Traum",
+      "slug": "dream",
+      "level": 5,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Flame Strike",
+      "nameDe": "Flammenschlag",
+      "slug": "flame-strike",
+      "level": 5,
+      "school": "evocation",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Geas",
+      "nameDe": "Geas",
+      "slug": "geas",
+      "level": 5,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Greater Restoration",
+      "nameDe": "Vollständige Genesung",
+      "slug": "greater-restoration",
+      "level": 5,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Hallow",
+      "nameDe": "Weihen",
+      "slug": "hallow",
+      "level": 5,
+      "school": "abjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Hold Monster",
+      "nameDe": "Monster festhalten",
+      "slug": "hold-monster",
+      "level": 5,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Insect Plague",
+      "nameDe": "Insektenplage",
+      "slug": "insect-plague",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "cleric",
+        "druid",
+        "sorcerer"
+      ]
+    },
+    {
+      "nameEn": "Jallarzi's Storm of Radiance",
+      "nameDe": "Jallarzis Sturm des Strahlens",
+      "slug": "jallarzi-s-storm-of-radiance",
+      "level": 5,
+      "school": "evocation",
+      "classes": [
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Legend Lore",
+      "nameDe": "Sagenkunde",
+      "slug": "legend-lore",
+      "level": 5,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mass Cure Wounds",
+      "nameDe": "Massen-Wunden heilen",
+      "slug": "mass-cure-wounds",
+      "level": 5,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Mislead",
+      "nameDe": "Ablenkung",
+      "slug": "mislead",
+      "level": 5,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Modify Memory",
+      "nameDe": "Erinnerung verändern",
+      "slug": "modify-memory",
+      "level": 5,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Passwall",
+      "nameDe": "Wände passieren",
+      "slug": "passwall",
+      "level": 5,
+      "school": "transmutation",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Planar Binding",
+      "nameDe": "Bindung der Ebenen",
+      "slug": "planar-binding",
+      "level": 5,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Raise Dead",
+      "nameDe": "Tote erwecken",
+      "slug": "raise-dead",
+      "level": 5,
+      "school": "necromancy",
+      "classes": [
+        "bard",
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Rary's Telepathic Bond",
+      "nameDe": "Rarys Telepathisches Band",
+      "slug": "rary-s-telepathic-bond",
+      "level": 5,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Reincarnate",
+      "nameDe": "Wiedergeburt",
+      "slug": "reincarnate",
+      "level": 5,
+      "school": "necromancy",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Scrying",
+      "nameDe": "Ausspähung",
+      "slug": "scrying",
+      "level": 5,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Seeming",
+      "nameDe": "Äußerlichkeiten",
+      "slug": "seeming",
+      "level": 5,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Steel Wind Strike",
+      "nameDe": "Stahlwindschlag",
+      "slug": "steel-wind-strike",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "ranger",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Summon Celestial",
+      "nameDe": "Celestisches Wesen herbeirufen",
+      "slug": "summon-celestial",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "cleric",
+        "paladin"
+      ]
+    },
+    {
+      "nameEn": "Summon Dragon",
+      "nameDe": "Drachen herbeirufen",
+      "slug": "summon-dragon",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Swift Quiver",
+      "nameDe": "Schneller Köcher",
+      "slug": "swift-quiver",
+      "level": 5,
+      "school": "transmutation",
+      "classes": [
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Synaptic Static",
+      "nameDe": "Synaptisches Rauschen",
+      "slug": "synaptic-static",
+      "level": 5,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Telekinesis",
+      "nameDe": "Telekinese",
+      "slug": "telekinesis",
+      "level": 5,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Teleportation Circle",
+      "nameDe": "Kreis der Teleportation",
+      "slug": "teleportation-circle",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Tree Stride",
+      "nameDe": "Baumwandeln",
+      "slug": "tree-stride",
+      "level": 5,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "ranger"
+      ]
+    },
+    {
+      "nameEn": "Wall of Force",
+      "nameDe": "Energiewand",
+      "slug": "wall-of-force",
+      "level": 5,
+      "school": "evocation",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Wall of Stone",
+      "nameDe": "Steinwand",
+      "slug": "wall-of-stone",
+      "level": 5,
+      "school": "evocation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Yolande's Regal Presence",
+      "nameDe": "Yolandes Majestätische Präsenz",
+      "slug": "yolande-s-regal-presence",
+      "level": 5,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Arcane Gate",
+      "nameDe": "Arkanes Tor",
+      "slug": "arcane-gate",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Blade Barrier",
+      "nameDe": "Klingenbarriere",
+      "slug": "blade-barrier",
+      "level": 6,
+      "school": "evocation",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Chain Lightning",
+      "nameDe": "Kettenblitz",
+      "slug": "chain-lightning",
+      "level": 6,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Circle of Death",
+      "nameDe": "Todeskreis",
+      "slug": "circle-of-death",
+      "level": 6,
+      "school": "necromancy",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Conjure Fey",
+      "nameDe": "Feenwesen beschwören",
+      "slug": "conjure-fey",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Contingency",
+      "nameDe": "Notfall",
+      "slug": "contingency",
+      "level": 6,
+      "school": "abjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Create Undead",
+      "nameDe": "Untote erschaffen",
+      "slug": "create-undead",
+      "level": 6,
+      "school": "necromancy",
+      "classes": [
+        "cleric",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Disintegrate",
+      "nameDe": "Auflösung",
+      "slug": "disintegrate",
+      "level": 6,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Drawmij's Instant Summons",
+      "nameDe": "Drawmijs Sofortige Herbeizauberung",
+      "slug": "drawmij-s-instant-summons",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Eyebite",
+      "nameDe": "Böser Blick",
+      "slug": "eyebite",
+      "level": 6,
+      "school": "necromancy",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Find the Path",
+      "nameDe": "Weg finden",
+      "slug": "find-the-path",
+      "level": 6,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Flesh to Stone",
+      "nameDe": "Fleisch zu Stein",
+      "slug": "flesh-to-stone",
+      "level": 6,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Forbiddance",
+      "nameDe": "Zutritt verwehren",
+      "slug": "forbiddance",
+      "level": 6,
+      "school": "abjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Globe of Invulnerability",
+      "nameDe": "Kugel der Unverwundbarkeit",
+      "slug": "globe-of-invulnerability",
+      "level": 6,
+      "school": "abjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Guards and Wards",
+      "nameDe": "Wächter und Hüter",
+      "slug": "guards-and-wards",
+      "level": 6,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Harm",
+      "nameDe": "Leid",
+      "slug": "harm",
+      "level": 6,
+      "school": "necromancy",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Heal",
+      "nameDe": "Heilung",
+      "slug": "heal",
+      "level": 6,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Heroes' Feast",
+      "nameDe": "Heldenmahl",
+      "slug": "heroes-feast",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Magic Jar",
+      "nameDe": "Magisches Gefäß",
+      "slug": "magic-jar",
+      "level": 6,
+      "school": "necromancy",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mass Suggestion",
+      "nameDe": "Massen-Einflüsterung",
+      "slug": "mass-suggestion",
+      "level": 6,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Move Earth",
+      "nameDe": "Erde bewegen",
+      "slug": "move-earth",
+      "level": 6,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Otiluke's Freezing Sphere",
+      "nameDe": "Otilukes Frostsphäre",
+      "slug": "otiluke-s-freezing-sphere",
+      "level": 6,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Otto's Irresistible Dance",
+      "nameDe": "Ottos unwiderstehlicher Tanz",
+      "slug": "otto-s-irresistible-dance",
+      "level": 6,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Planar Ally",
+      "nameDe": "Verbündeter aus den Ebenen",
+      "slug": "planar-ally",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Programmed Illusion",
+      "nameDe": "Vorbestimmtes Trugbild",
+      "slug": "programmed-illusion",
+      "level": 6,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Summon Fiend",
+      "nameDe": "Unhold herbeirufen",
+      "slug": "summon-fiend",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Sunbeam",
+      "nameDe": "Sonnenstrahl",
+      "slug": "sunbeam",
+      "level": 6,
+      "school": "evocation",
+      "classes": [
+        "cleric",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Tasha's Bubbling Cauldron",
+      "nameDe": "Tashas Brodelnder Kessel",
+      "slug": "tasha-s-bubbling-cauldron",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Transport via Plants",
+      "nameDe": "Pflanzentor",
+      "slug": "transport-via-plants",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "True Seeing",
+      "nameDe": "Wahrer Blick",
+      "slug": "true-seeing",
+      "level": 6,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "cleric",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Wall of Ice",
+      "nameDe": "Eiswand",
+      "slug": "wall-of-ice",
+      "level": 6,
+      "school": "evocation",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Wall of Thorns",
+      "nameDe": "Dornenwand",
+      "slug": "wall-of-thorns",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Wind Walk",
+      "nameDe": "Windwandeln",
+      "slug": "wind-walk",
+      "level": 6,
+      "school": "transmutation",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Word of Recall",
+      "nameDe": "Wort des Rückrufs",
+      "slug": "word-of-recall",
+      "level": 6,
+      "school": "conjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Conjure Celestial",
+      "nameDe": "Celestisches Wesen beschwören",
+      "slug": "conjure-celestial",
+      "level": 7,
+      "school": "conjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Delayed Blast Fireball",
+      "nameDe": "Spätzündender Feuerball",
+      "slug": "delayed-blast-fireball",
+      "level": 7,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Divine Word",
+      "nameDe": "Göttliches Wort",
+      "slug": "divine-word",
+      "level": 7,
+      "school": "evocation",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Etherealness",
+      "nameDe": "Ätherische Gestalten",
+      "slug": "etherealness",
+      "level": 7,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Finger of Death",
+      "nameDe": "Finger des Todes",
+      "slug": "finger-of-death",
+      "level": 7,
+      "school": "necromancy",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Fire Storm",
+      "nameDe": "Feuersturm",
+      "slug": "fire-storm",
+      "level": 7,
+      "school": "evocation",
+      "classes": [
+        "cleric",
+        "druid",
+        "sorcerer"
+      ]
+    },
+    {
+      "nameEn": "Forcecage",
+      "nameDe": "Energiekäfig",
+      "slug": "forcecage",
+      "level": 7,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mirage Arcane",
+      "nameDe": "Arkane Spiegelung",
+      "slug": "mirage-arcane",
+      "level": 7,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mordenkainen's Magnificent Mansion",
+      "nameDe": "Mordenkainens Herrliches Herrenhaus",
+      "slug": "mordenkainen-s-magnificent-mansion",
+      "level": 7,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mordenkainen's Sword",
+      "nameDe": "Mordenkainens Schwert",
+      "slug": "mordenkainen-s-sword",
+      "level": 7,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Plane Shift",
+      "nameDe": "Ebenenwechsel",
+      "slug": "plane-shift",
+      "level": 7,
+      "school": "conjuration",
+      "classes": [
+        "cleric",
+        "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Power Word Fortify",
+      "nameDe": "Wort der Macht: Stärken",
+      "slug": "power-word-fortify",
+      "level": 7,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Prismatic Spray",
+      "nameDe": "Regenbogenspiel",
+      "slug": "prismatic-spray",
+      "level": 7,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Project Image",
+      "nameDe": "Trugbild projizieren",
+      "slug": "project-image",
+      "level": 7,
+      "school": "illusion",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Regenerate",
+      "nameDe": "Regeneration",
+      "slug": "regenerate",
+      "level": 7,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Resurrection",
+      "nameDe": "Auferstehung",
+      "slug": "resurrection",
+      "level": 7,
+      "school": "necromancy",
+      "classes": [
+        "bard",
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Reverse Gravity",
+      "nameDe": "Schwerkraft umkehren",
+      "slug": "reverse-gravity",
+      "level": 7,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Sequester",
+      "nameDe": "Verbergen",
+      "slug": "sequester",
+      "level": 7,
+      "school": "transmutation",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Simulacrum",
+      "nameDe": "Simulakrum",
+      "slug": "simulacrum",
+      "level": 7,
+      "school": "illusion",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Symbol",
+      "nameDe": "Symbol",
+      "slug": "symbol",
+      "level": 7,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Teleport",
+      "nameDe": "Teleportieren",
+      "slug": "teleport",
+      "level": 7,
+      "school": "conjuration",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Animal Shapes",
+      "nameDe": "Tierform",
+      "slug": "animal-shapes",
+      "level": 8,
+      "school": "transmutation",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Antimagic Field",
+      "nameDe": "Antimagisches Feld",
+      "slug": "antimagic-field",
+      "level": 8,
+      "school": "abjuration",
+      "classes": [
+        "cleric",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Antipathy/Sympathy",
+      "nameDe": "Antipathie/Sympathie",
+      "slug": "antipathy-sympathy",
+      "level": 8,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Befuddlement",
+      "nameDe": "Wirrnis",
+      "slug": "befuddlement",
+      "level": 8,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "druid",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Clone",
+      "nameDe": "Klon",
+      "slug": "clone",
+      "level": 8,
+      "school": "necromancy",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Control Weather",
+      "nameDe": "Wetterkontrolle",
+      "slug": "control-weather",
+      "level": 8,
+      "school": "transmutation",
+      "classes": [
+        "cleric",
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Demiplane",
+      "nameDe": "Halbebene",
+      "slug": "demiplane",
+      "level": 8,
+      "school": "conjuration",
+      "classes": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Dominate Monster",
+      "nameDe": "Monster beherrschen",
+      "slug": "dominate-monster",
+      "level": 8,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Earthquake",
+      "nameDe": "Erdbeben",
+      "slug": "earthquake",
+      "level": 8,
+      "school": "transmutation",
+      "classes": [
+        "cleric",
+        "druid",
+        "sorcerer"
+      ]
+    },
+    {
+      "nameEn": "Glibness",
+      "nameDe": "Redegewandtheit",
+      "slug": "glibness",
+      "level": 8,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "warlock"
+      ]
+    },
+    {
+      "nameEn": "Holy Aura",
+      "nameDe": "Heilige Aura",
+      "slug": "holy-aura",
+      "level": 8,
+      "school": "abjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Incendiary Cloud",
+      "nameDe": "Flammende Wolke",
+      "slug": "incendiary-cloud",
+      "level": 8,
+      "school": "conjuration",
+      "classes": [
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Maze",
+      "nameDe": "Irrgarten",
+      "slug": "maze",
+      "level": 8,
+      "school": "conjuration",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mind Blank",
+      "nameDe": "Gedankenleere",
+      "slug": "mind-blank",
+      "level": 8,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Power Word Stun",
+      "nameDe": "Wort der Macht: Betäubung",
+      "slug": "power-word-stun",
+      "level": 8,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Sunburst",
+      "nameDe": "Sonnenfeuer",
+      "slug": "sunburst",
+      "level": 8,
+      "school": "evocation",
+      "classes": [
+        "cleric",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Telepathy",
+      "nameDe": "Telepathie",
+      "slug": "telepathy",
+      "level": 8,
+      "school": "divination",
+      "classes": [
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Tsunami",
+      "nameDe": "Tsunami",
+      "slug": "tsunami",
+      "level": 8,
+      "school": "conjuration",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Astral Projection",
+      "nameDe": "Astrale Projektion",
+      "slug": "astral-projection",
+      "level": 9,
+      "school": "necromancy",
+      "classes": [
+        "cleric",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Foresight",
+      "nameDe": "Voraussicht",
+      "slug": "foresight",
+      "level": 9,
+      "school": "divination",
+      "classes": [
+        "bard",
+        "druid",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Gate",
+      "nameDe": "Tor",
+      "slug": "gate",
+      "level": 9,
+      "school": "conjuration",
+      "classes": [
+        "cleric",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Imprisonment",
+      "nameDe": "Einkerkerung",
+      "slug": "imprisonment",
+      "level": 9,
+      "school": "abjuration",
+      "classes": [
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Mass Heal",
+      "nameDe": "Massen-Heilung",
+      "slug": "mass-heal",
+      "level": 9,
+      "school": "abjuration",
+      "classes": [
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Meteor Swarm",
+      "nameDe": "Meteoritenschwarm",
+      "slug": "meteor-swarm",
+      "level": 9,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Power Word Heal",
+      "nameDe": "Wort der Macht: Heilung",
+      "slug": "power-word-heal",
+      "level": 9,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "cleric"
+      ]
+    },
+    {
+      "nameEn": "Power Word Kill",
+      "nameDe": "Wort der Macht: Tod",
+      "slug": "power-word-kill",
+      "level": 9,
+      "school": "enchantment",
+      "classes": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Prismatic Wall",
+      "nameDe": "Regenbogenwand",
+      "slug": "prismatic-wall",
+      "level": 9,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Shapechange",
+      "nameDe": "Gestaltwandel",
+      "slug": "shapechange",
+      "level": 9,
+      "school": "transmutation",
+      "classes": [
+        "druid",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Storm of Vengeance",
+      "nameDe": "Sturm der Vergeltung",
+      "slug": "storm-of-vengeance",
+      "level": 9,
+      "school": "conjuration",
+      "classes": [
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Time Stop",
+      "nameDe": "Zeitstopp",
+      "slug": "time-stop",
+      "level": 9,
+      "school": "transmutation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "True Polymorph",
+      "nameDe": "Wahre Verwandlung",
+      "slug": "true-polymorph",
+      "level": 9,
+      "school": "transmutation",
+      "classes": [
+        "bard",
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "True Resurrection",
+      "nameDe": "Wahre Auferstehung",
+      "slug": "true-resurrection",
+      "level": 9,
+      "school": "necromancy",
+      "classes": [
+        "cleric",
+        "druid"
+      ]
+    },
+    {
+      "nameEn": "Weird",
+      "nameDe": "Unheimliches Schicksal",
+      "slug": "weird",
+      "level": 9,
+      "school": "illusion",
+      "classes": [
+        "warlock",
+        "wizard"
+      ]
+    },
+    {
+      "nameEn": "Wish",
+      "nameDe": "Wunsch",
+      "slug": "wish",
+      "level": 9,
+      "school": "conjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ]
+    }
+  ]
+}

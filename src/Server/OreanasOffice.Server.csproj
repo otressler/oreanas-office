@@ -30,4 +30,10 @@
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The 2024 Player's Handbook's classes and spell lists (Rules/Handbook.cs), read from the assembly rather than shipped as a file. -->
+    <Content Remove="Rules/handbook.json" />
+    <EmbeddedResource Include="Rules/handbook.json" LogicalName="OreanasOffice.Server.Rules.handbook.json" />
+  </ItemGroup>
+
 </Project>

@@ -18,15 +18,17 @@ public sealed class CharacterImportTests(AppFixture fixture) : IClassFixture<App
     public async Task A_player_sees_their_own_characters_from_their_other_campaigns()
     {
         var (dm, player, here, there) = await CreateTwoCampaignsAsync();
-        var thorin = await CreateCharacterAsync(player, there, new CharacterRequest("Thorin", CreatureSize.Small, Tagline: "Hat immer Hunger.", CharacterClass: "Kämpfer", Species: "Zwerg"));
+        var thorin = await CreateCharacterAsync(player, there, new CharacterRequest("Thorin", CreatureSize.Small, Tagline: "Hat immer Hunger.", Species: "Zwerg", Classes: [new("fighter", 3, "battle-master")]));
         await CreateCharacterAsync(player, here, new CharacterRequest("Schon hier", CreatureSize.Medium));
         await CreateCharacterAsync(dm, there, new CharacterRequest("Nicht seiner", CreatureSize.Medium));
 
         var importable = await ListImportableAsync(player, here);
 
+        var only = Assert.Single(importable);
         Assert.Equal(
-            [new ImportableCharacterResponse(thorin.Id, there, "Die Rabenküste", "Thorin", CreatureSize.Small, "Hat immer Hunger.", "Kämpfer", "Zwerg", null, null)],
-            importable);
+            new ImportableCharacterResponse(thorin.Id, there, "Die Rabenküste", "Thorin", CreatureSize.Small, "Hat immer Hunger.", only.Classes, "Zwerg", null, null),
+            only);
+        Assert.Equal([new CharacterClassView("fighter", 3, "battle-master")], only.Classes);
     }
 
     [Fact]
@@ -35,13 +37,14 @@ public sealed class CharacterImportTests(AppFixture fixture) : IClassFixture<App
         var (_, player, here, there) = await CreateTwoCampaignsAsync();
         var source = await CreateCharacterAsync(player, there, new CharacterRequest(
             "Liriel", CreatureSize.Medium, Appearance: "Silberhaar", Color: "#4da3ff", Background: "Aus dem Wald",
-            Personality: "Still", Bonds: "Ihre Schwester", Tagline: "Sieht alles.", CharacterClass: "Waldläuferin",
-            Species: "Waldelfe", Age: "112"));
+            Personality: "Still", Bonds: "Ihre Schwester", Tagline: "Sieht alles.", Species: "Waldelfe", Age: "112",
+            Classes: [new("ranger", 5, "gloom-stalker"), new("rogue", 1)]));
 
         var copy = await (await ImportAsync(player, here, source.Id)).ReadAsync<CharacterResponse>(HttpStatusCode.Created);
 
         Assert.NotEqual(source.Id, copy.Id);
-        Assert.Equal(source with { Id = copy.Id, ColorIndex = copy.ColorIndex }, copy);
+        Assert.Equal(source with { Id = copy.Id, ColorIndex = copy.ColorIndex, Classes = copy.Classes }, copy);
+        Assert.Equal(source.Classes, copy.Classes);
         Assert.Equal([copy.Id], (await ListAsync(player, here)).Select(c => c.Id));
 
         // Changing the copy leaves the source alone.

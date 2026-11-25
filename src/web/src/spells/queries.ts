@@ -9,7 +9,6 @@ import type {
   SpellArtImage,
   SpellCard,
   SpellDraft,
-  SpellSchool,
   SpellVariant,
   SpellVariantOrigin,
 } from '../api/types'
@@ -84,10 +83,9 @@ export function useCampaignSpells(campaignId: string, enabled = true) {
   })
 }
 
+/** A new card for a Handbook spell of the library. */
 export interface NewVariant {
-  nameEn: string
-  level: number
-  school: SpellSchool
+  spellId: string
   card: SpellCard
   origin: SpellVariantOrigin
   basedOnVariantId?: string | null
@@ -106,19 +104,6 @@ export const updateVariant = (variantId: string, card: SpellCard): Promise<Spell
 
 export const deleteVariant = (variantId: string) =>
   unwrap(api.DELETE('/api/spells/variants/{variantId}', { params: { path: { variantId } } }))
-
-export const updateSpellFacts = (
-  spellId: string,
-  nameEn: string,
-  level: number,
-  school: SpellSchool,
-) =>
-  unwrap(
-    api.PUT('/api/spells/{spellId}', {
-      params: { path: { spellId } },
-      body: { nameEn, level, school },
-    }),
-  )
 
 export const setCharacterSpell = (
   campaignId: string,

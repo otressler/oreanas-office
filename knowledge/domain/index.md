@@ -10,7 +10,7 @@
 - [Campaign member](campaign-member.md) - Links a user to a campaign with a role
 - [Character](character.md) - A player character owned by one user in one campaign
 - [Session](session.md) - One game night with its own DM; at most one is active per campaign
-- [Spell](spell.md) - Site-wide spells, their German card variants by different players, the spells a character has and prepares, and the art studio's history
+- [Spell](spell.md) - The 2024 Player's Handbook's spells, site-wide, with their class lists, their German card variants by different players, the spells a character has and prepares, and the art studio's history
 
 # Fights
 

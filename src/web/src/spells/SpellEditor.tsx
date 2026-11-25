@@ -4,9 +4,13 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type {
   SpellCard,
+  SpellChip,
   SpellChipKind,
   SpellEffect,
+  SpellRowColor,
   SpellSchool,
+  SpellTable,
+  SpellTableRow,
   SpellVariantOrigin,
   SpellWriteIn,
 } from '../api/types'
@@ -15,17 +19,25 @@ import { inputClass } from '../components/styles'
 import { Button, SelectField, TextField } from '../components/ui'
 import { useLeaveWarning } from '../components/useLeaveWarning'
 import { de } from '../text/de'
-import { SCHOOLS, SPELL_ICON_NAMES, SPELL_LIMITS } from './model'
+import { SPELL_ICON_NAMES, SPELL_LIMITS, searchKey } from './model'
+import { useSpellLibrary } from './queries'
 import { SpellCardView, SpellIcon } from './SpellCard'
 
 const t = de.spells
 const e = t.editor
 
 const CHIP_KINDS = Object.keys(t.chipKinds) as SpellChipKind[]
+const ROW_COLORS = Object.keys(t.rowColors) as SpellRowColor[]
+const EMPTY_ROW: SpellTableRow = { key: '', color: null, title: '', text: '', chip: null }
 const WRITE_INS: SpellWriteIn[] = ['attack', 'saveDc', 'modifier']
 
-/** What the editor changes: the spell's facts and the card. */
+/**
+ * What the editor changes: which Handbook spell the card is for (its id, with the English name,
+ * level and school the library has for it) and the card.
+ */
 export interface SpellEdit {
+  /** Null until the English name is one of the library's. */
+  spellId: string | null
   nameEn: string
   level: number
   school: SpellSchool
@@ -43,7 +55,7 @@ export function SpellEditor({
   onCancel,
 }: {
   initial: SpellEdit
-  /** The spell exists already: its English name, level and school can't change here. */
+  /** The card is for a known spell already (a draft, a variant): it can't change here. */
   factsLocked: boolean
   intro?: ReactNode
   error: unknown
@@ -52,7 +64,9 @@ export function SpellEditor({
   onCancel: () => void
 }) {
   const [edit, setEdit] = useState(initial)
-  const [overflow, setOverflow] = useState(false)
+  const library = useSpellLibrary()
+  const listId = useId()
+  const [scrolls, setScrolls] = useState(false)
   const [side, setSide] = useState<'front' | 'back'>('back')
   const dirty = JSON.stringify(edit) !== JSON.stringify(initial)
   // Saving and cancelling leave the page on purpose; a failed save stays and warns again.
@@ -68,8 +82,26 @@ export function SpellEditor({
   const effects = card.effects ?? []
   const setEffect = (index: number, patch: Partial<SpellEffect>) =>
     set({ effects: effects.map((effect, i) => (i === index ? { ...effect, ...patch } : effect)) })
+  const tables = card.tables ?? []
+  const setTable = (index: number, table: SpellTable | null) =>
+    set({
+      tables: table
+        ? tables.map((current, i) => (i === index ? table : current))
+        : tables.filter((_, i) => i !== index),
+    })
   const pips = card.pips ?? []
   const writeIns = card.writeIns ?? []
+
+  /** Picks the library's spell of this English name, with its level and school. */
+  const pickSpell = (nameEn: string) => {
+    const match = library.data?.find((s) => searchKey(s.nameEn) === searchKey(nameEn.trim()))
+    setEdit((current) =>
+      match
+        ? { ...current, nameEn, spellId: match.id, level: match.level, school: match.school }
+        : { ...current, nameEn, spellId: null },
+    )
+  }
+  const unknownName = !factsLocked && edit.nameEn.trim() !== '' && edit.spellId === null
 
   const spell = {
     nameEn: edit.nameEn || '—',
@@ -77,7 +109,7 @@ export function SpellEditor({
     school: edit.school,
     card: { ...card, name: card.name || '—' },
   }
-  const canSave = edit.nameEn.trim() !== '' && card.name.trim() !== ''
+  const canSave = edit.spellId !== null && card.name.trim() !== ''
 
   return (
     <div className="flex flex-col pb-4">
@@ -87,40 +119,28 @@ export function SpellEditor({
           <Fieldset legend={de.spells.library.title}>
             <TextField
               label={e.nameEn}
-              hint={factsLocked ? e.factsFixed : e.nameEnHint}
+              hint={unknownName ? e.nameEnUnknown : factsLocked ? e.factsFixed : e.nameEnHint}
+              invalid={unknownName}
               value={edit.nameEn}
               maxLength={SPELL_LIMITS.nameEn}
               disabled={factsLocked}
-              onChange={(event) => setEdit({ ...edit, nameEn: event.target.value })}
+              list={factsLocked ? undefined : listId}
+              autoComplete="off"
+              onChange={(event) => pickSpell(event.target.value)}
             />
-            <div className="grid grid-cols-2 gap-3">
-              <SelectField
-                label={e.level}
-                value={edit.level}
-                disabled={factsLocked}
-                onChange={(event) => setEdit({ ...edit, level: Number(event.target.value) })}
-              >
-                {Array.from({ length: 10 }, (_, level) => (
-                  <option key={level} value={level}>
-                    {t.level(level)}
+            {!factsLocked && (
+              <datalist id={listId}>
+                {library.data?.map((s) => (
+                  <option key={s.id} value={s.nameEn}>
+                    {s.variantCount > 0 ? `${s.name} · ${t.library.variants(s.variantCount)}` : ''}
                   </option>
                 ))}
-              </SelectField>
-              <SelectField
-                label={e.school}
-                value={edit.school}
-                disabled={factsLocked}
-                onChange={(event) =>
-                  setEdit({ ...edit, school: event.target.value as SpellSchool })
-                }
-              >
-                {SCHOOLS.map((school) => (
-                  <option key={school} value={school}>
-                    {t.schools[school]}
-                  </option>
-                ))}
-              </SelectField>
-            </div>
+              </datalist>
+            )}
+            <p className="text-sm text-dim">
+              {e.level}: {edit.spellId || factsLocked ? t.level(edit.level) : '—'} · {e.school}:{' '}
+              {edit.spellId || factsLocked ? t.schools[edit.school] : '—'}
+            </p>
           </Fieldset>
 
           <Fieldset legend={e.name}>
@@ -186,6 +206,25 @@ export function SpellEditor({
                 }
               >
                 {e.addEffect}
+              </Button>
+            )}
+          </Fieldset>
+
+          <Fieldset legend={e.tables} hint={e.tablesHint}>
+            {tables.map((table, index) => (
+              <TableFields
+                key={index}
+                index={index}
+                table={table}
+                onChange={(next) => setTable(index, next)}
+              />
+            ))}
+            {tables.length < SPELL_LIMITS.tables && (
+              <Button
+                className="self-start"
+                onClick={() => set({ tables: [...tables, { caption: '', rows: [EMPTY_ROW] }] })}
+              >
+                {e.addTable}
               </Button>
             )}
           </Fieldset>
@@ -285,11 +324,11 @@ export function SpellEditor({
               spell={spell}
               side={side}
               zoom={1.25}
-              onOverflow={side === 'back' ? setOverflow : undefined}
+              onOverflow={side === 'back' ? setScrolls : undefined}
             />
-            {overflow && side === 'back' && (
-              <p role="status" className="max-w-xs text-center text-sm text-candle">
-                {t.card.overflow}
+            {scrolls && side === 'back' && (
+              <p role="status" className="max-w-xs text-center text-sm text-dim">
+                {t.card.scrolls}
               </p>
             )}
           </div>
@@ -336,6 +375,15 @@ function trimmed(edit: SpellEdit): SpellEdit {
           tag: effect.tag?.trim() || null,
           chip: effect.chip?.big.trim() ? effect.chip : null,
         })),
+      // Rows without a title or text go, and tables without rows.
+      tables: (card.tables ?? [])
+        .map((table) => ({
+          ...table,
+          rows: (table.rows ?? [])
+            .filter((row) => row.title?.trim() || row.text?.trim())
+            .map((row) => ({ ...row, chip: row.chip?.big.trim() ? row.chip : null })),
+        }))
+        .filter((table) => table.rows.length > 0),
     },
   }
 }
@@ -391,7 +439,6 @@ function EffectFields({
   onChange: (patch: Partial<SpellEffect>) => void
   onRemove: () => void
 }) {
-  const chip = effect.chip ?? null
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
       <div className="flex flex-wrap items-end gap-3">
@@ -425,45 +472,145 @@ function EffectFields({
         maxLength={SPELL_LIMITS.effectText}
         onChange={(event) => onChange({ text: event.target.value })}
       />
-      <div className="grid grid-cols-3 gap-3">
+      <ChipFields chip={effect.chip ?? null} onChange={(chip) => onChange({ chip })} />
+    </div>
+  )
+}
+
+/** A chip's value, the line under it and its damage kind, for effect and table rows. */
+function ChipFields({
+  chip,
+  onChange,
+}: {
+  chip: SpellChip | null
+  onChange: (chip: SpellChip) => void
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      <TextField
+        label={e.chipBig}
+        placeholder={e.chipBigPlaceholder}
+        value={chip?.big ?? ''}
+        maxLength={SPELL_LIMITS.chipBig}
+        onChange={(event) => onChange({ ...(chip ?? {}), big: event.target.value })}
+      />
+      <TextField
+        label={e.chipSmall}
+        value={chip?.small ?? ''}
+        maxLength={SPELL_LIMITS.chipSmall}
+        disabled={!chip?.big}
+        onChange={(event) => onChange({ big: chip?.big ?? '', ...chip, small: event.target.value })}
+      />
+      <SelectField
+        label={e.chipKind}
+        value={chip?.kind ?? ''}
+        disabled={!chip?.big}
+        onChange={(event) =>
+          onChange({
+            big: chip?.big ?? '',
+            ...chip,
+            kind: (event.target.value || null) as SpellChipKind | null,
+          })
+        }
+      >
+        <option value="">{e.chipPlain}</option>
+        {CHIP_KINDS.map((kind) => (
+          <option key={kind} value={kind}>
+            {t.chipKinds[kind]}
+          </option>
+        ))}
+      </SelectField>
+    </div>
+  )
+}
+
+/** One table: the line above it and its rows; null from onChange removes it. */
+function TableFields({
+  index,
+  table,
+  onChange,
+}: {
+  index: number
+  table: SpellTable
+  onChange: (table: SpellTable | null) => void
+}) {
+  const rows = table.rows ?? []
+  const setRow = (i: number, patch: Partial<SpellTableRow>) =>
+    onChange({ ...table, rows: rows.map((row, j) => (j === i ? { ...row, ...patch } : row)) })
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+      <div className="flex flex-wrap items-end gap-3">
         <TextField
-          label={e.chipBig}
-          placeholder={e.chipBigPlaceholder}
-          value={chip?.big ?? ''}
-          maxLength={SPELL_LIMITS.chipBig}
-          onChange={(event) => onChange({ chip: { ...(chip ?? {}), big: event.target.value } })}
+          className="min-w-48 flex-1"
+          label={`${e.tableTitle(index)} · ${e.tableCaption}`}
+          placeholder={e.tableCaptionPlaceholder}
+          value={table.caption ?? ''}
+          maxLength={SPELL_LIMITS.tableCaption}
+          onChange={(event) => onChange({ ...table, caption: event.target.value })}
         />
-        <TextField
-          label={e.chipSmall}
-          value={chip?.small ?? ''}
-          maxLength={SPELL_LIMITS.chipSmall}
-          disabled={!chip?.big}
-          onChange={(event) =>
-            onChange({ chip: { big: chip?.big ?? '', ...chip, small: event.target.value } })
-          }
-        />
-        <SelectField
-          label={e.chipKind}
-          value={chip?.kind ?? ''}
-          disabled={!chip?.big}
-          onChange={(event) =>
-            onChange({
-              chip: {
-                big: chip?.big ?? '',
-                ...chip,
-                kind: (event.target.value || null) as SpellChipKind | null,
-              },
-            })
-          }
-        >
-          <option value="">{e.chipPlain}</option>
-          {CHIP_KINDS.map((kind) => (
-            <option key={kind} value={kind}>
-              {t.chipKinds[kind]}
-            </option>
-          ))}
-        </SelectField>
+        <Button variant="quiet" onClick={() => onChange(null)}>
+          {e.removeTable}
+        </Button>
       </div>
+      {rows.map((row, i) => (
+        <div key={i} className="flex flex-col gap-3 border-t border-line pt-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <TextField
+              className="w-20"
+              label={e.rowKey}
+              placeholder={e.rowKeyPlaceholder}
+              value={row.key ?? ''}
+              maxLength={SPELL_LIMITS.tableKey}
+              onChange={(event) => setRow(i, { key: event.target.value })}
+            />
+            <SelectField
+              label={e.rowColor}
+              value={row.color ?? ''}
+              onChange={(event) =>
+                setRow(i, { color: (event.target.value || null) as SpellRowColor | null })
+              }
+            >
+              <option value="">{e.chipPlain}</option>
+              {ROW_COLORS.map((color) => (
+                <option key={color} value={color}>
+                  {t.rowColors[color]}
+                </option>
+              ))}
+            </SelectField>
+            <TextField
+              className="min-w-40 flex-1"
+              label={e.rowTitle}
+              value={row.title ?? ''}
+              maxLength={SPELL_LIMITS.tableTitle}
+              onChange={(event) => setRow(i, { title: event.target.value })}
+            />
+            <Button
+              variant="quiet"
+              aria-label={e.removeRow}
+              onClick={() => onChange({ ...table, rows: rows.filter((_, j) => j !== i) })}
+            >
+              ✕
+            </Button>
+          </div>
+          <TextArea
+            label={e.rowText}
+            hint={e.rowTextHint}
+            rows={2}
+            max={SPELL_LIMITS.tableText}
+            value={row.text ?? ''}
+            onChange={(text) => setRow(i, { text })}
+          />
+          <ChipFields chip={row.chip ?? null} onChange={(chip) => setRow(i, { chip })} />
+        </div>
+      ))}
+      {rows.length < SPELL_LIMITS.tableRows && (
+        <Button
+          className="self-start"
+          onClick={() => onChange({ ...table, rows: [...rows, EMPTY_ROW] })}
+        >
+          {e.addRow}
+        </Button>
+      )}
     </div>
   )
 }

@@ -40,6 +40,10 @@ public enum ApiErrorCode
     ColorInvalid,
     // NotAMember: a character was given to someone who isn't a member of the campaign.
     NotAMember,
+    // CharacterClassInvalid: a character's classes break their rules: an unknown or repeated
+    // class, a level outside 1-20 or more than 20 together, or a subclass of another class or
+    // below level 3 (knowledge/domain/character.md).
+    CharacterClassInvalid,
 
     // Map imports. Field is the JSON path of the offending entry, e.g. "layout.cells[12]".
     TextTooLong,
@@ -189,4 +193,10 @@ public enum ApiErrorCode
     SpellImportFailed,
     // ArtPromptInvalid: a motif needs a letter a–z and a subject of 1 to 1,500 characters.
     ArtPromptInvalid,
+    // SpellNotInHandbook: the spell isn't one of the 2024 Player's Handbook, which the library
+    // is limited to (knowledge/features/spell-cards.md).
+    SpellNotInHandbook,
+    // MotifSuggestionFailed: the text model gave no motif for the studio (no answer, or it
+    // refused); trying again or writing the motif by hand helps.
+    MotifSuggestionFailed,
 }

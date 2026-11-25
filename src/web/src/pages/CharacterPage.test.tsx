@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Campaign, Character } from '../api/types'
+import type { Campaign, Character, SpellSummary } from '../api/types'
 import { fakeImages } from '../editor/background/testing'
 import { json, mockApi, renderApp, testUser } from '../test/api'
 import { de } from '../text/de'
@@ -55,7 +55,7 @@ function character(fields: Partial<Character> = {}): Character {
     canEdit: true,
     colorIndex: 0,
     tagline: 'Zählt Sterne und Schritte.',
-    characterClass: 'Waldläuferin',
+    classes: [{ classId: 'ranger', level: 5, subclassId: 'gloom-stalker' }],
     species: 'Waldelfe',
     age: '112',
     appearance: 'Eine schlanke Waldelfe mit silberblondem Zopf.',
@@ -115,12 +115,35 @@ describe('CharacterPage', () => {
     open([character({ species: '' })])
 
     await screen.findByRole('heading', { level: 1, name: 'Liriel' })
-    expect(screen.getByText('Waldläuferin')).toBeVisible()
+    expect(screen.getByText('Waldläufer 5 (Düsterpirscher)')).toBeVisible()
+    expect(screen.getByText(t.characterClass(1))).toBeVisible()
     expect(screen.getByText('112')).toBeVisible()
     expect(screen.getByText(de.sizes.medium)).toBeVisible()
     // An empty fact is left out.
     expect(screen.queryByText(t.species)).not.toBeInTheDocument()
     expect(screen.getByText(t.mine)).not.toHaveTextContent(de.sizes.medium)
+  })
+
+  it('offers a subclass from level 3 and drops it below', async () => {
+    const calls = open([character()])
+    const user = userEvent.setup()
+
+    await user.click(await pencil())
+    const subclass = await screen.findByLabelText(t.classes.subclass)
+    expect(subclass).toHaveValue('gloom-stalker')
+    await user.selectOptions(screen.getByLabelText(t.classes.level), '2')
+    expect(subclass).toBeDisabled()
+    expect(subclass).toHaveValue('')
+    // A total over 20 is shown, the server refuses it.
+    await user.click(screen.getByRole('button', { name: t.classes.add }))
+    expect(screen.getByText(t.classes.total(3))).toBeVisible()
+    await user.click(screen.getByRole('button', { name: t.classes.remove('Druide') }))
+    await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
+
+    await vi.waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
+    expect(calls.find((c) => c.method === 'PUT')?.body).toMatchObject({
+      classes: [{ classId: 'ranger', level: 2, subclassId: null }],
+    })
   })
 
   it('edits the facts with the other fields', async () => {
@@ -134,7 +157,7 @@ describe('CharacterPage', () => {
 
     await vi.waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
     expect(calls.find((c) => c.method === 'PUT')?.body).toMatchObject({
-      characterClass: 'Waldläuferin',
+      classes: [{ classId: 'ranger', level: 5, subclassId: 'gloom-stalker' }],
       species: 'Waldelfe',
       age: 'Mitte zwanzig',
     })
@@ -210,7 +233,7 @@ describe('CharacterPage', () => {
     expect(put?.body).toEqual({
       name: 'Liriel',
       size: 'small',
-      characterClass: 'Waldläuferin',
+      classes: [{ classId: 'ranger', level: 5, subclassId: 'gloom-stalker' }],
       species: 'Waldelfe',
       age: '112',
       tagline: 'Sucht ihren Bruder.',
@@ -379,7 +402,13 @@ describe('CharacterPage', () => {
       const user = userEvent.setup()
 
       await user.type(await screen.findByLabelText(t.name), ' Ireena ')
-      await user.type(screen.getByLabelText(t.characterClass), 'Duellantin')
+      const addClass = screen.getByRole('button', { name: t.classes.addFirst })
+      await vi.waitFor(() => expect(addClass).toBeEnabled())
+      await user.click(addClass)
+      await user.selectOptions(screen.getByLabelText(t.classes.className), 'Magier')
+      await user.selectOptions(screen.getByLabelText(t.classes.level), '3')
+      await user.selectOptions(screen.getByLabelText(t.classes.subclass), 'Hervorrufer')
+      await user.click(screen.getByRole('button', { name: t.classes.add }))
       await user.click(screen.getByRole('button', { name: t.color.addCustom }))
       await user.type(screen.getByLabelText(t.color.custom), 'A1B2C3')
       await user.click(screen.getByRole('button', { name: de.sheet.saveChanges }))
@@ -390,7 +419,10 @@ describe('CharacterPage', () => {
       expect(post?.body).toMatchObject({
         name: 'Ireena',
         size: 'medium',
-        characterClass: 'Duellantin',
+        classes: [
+          { classId: 'wizard', level: 3, subclassId: 'evoker' },
+          { classId: 'druid', level: 1, subclassId: null },
+        ],
         color: '#a1b2c3',
       })
       expect(post?.body).not.toHaveProperty('ownerUserId')
@@ -414,5 +446,64 @@ describe('CharacterPage', () => {
     open([character()], { id: 'other' })
 
     expect(await screen.findByText(p.unknownBody)).toBeInTheDocument()
+  })
+
+  describe('adding a spell', () => {
+    const spell = (fields: Partial<SpellSummary>): SpellSummary => ({
+      id: 's1',
+      nameEn: 'Moonbeam',
+      level: 2,
+      school: 'evocation',
+      name: 'Mondstrahl',
+      icon: 'moon',
+      variantCount: 1,
+      artUrl: null,
+      lists: [{ classId: 'druid', subclassId: null, classLevel: null }],
+      ...fields,
+    })
+    const library = [
+      spell({}),
+      spell({
+        id: 's2',
+        nameEn: "Hunter's Mark",
+        name: 'Mal des Jägers',
+        level: 1,
+        lists: [{ classId: 'ranger', subclassId: null, classLevel: null }],
+      }),
+      spell({
+        id: 's3',
+        nameEn: 'Fear',
+        name: 'Fear',
+        level: 3,
+        variantCount: 0,
+        lists: [{ classId: 'ranger', subclassId: 'gloom-stalker', classLevel: 9 }],
+      }),
+    ]
+
+    it('shows the spells of the character’s classes first and the others on request', async () => {
+      open([character()], {
+        extra: {
+          'GET /api/campaigns/:id/characters/:characterId/spells': json(200, []),
+          'GET /api/spells': json(200, library),
+        },
+      })
+      const user = userEvent.setup()
+      const s = de.spells.character
+
+      await user.click(await screen.findByRole('button', { name: s.add }))
+      const dialog = await screen.findByRole('dialog', { name: s.pickTitle })
+      const onlyMine = within(dialog).getByRole('checkbox', { name: s.onlyMyClasses('Waldläufer') })
+      expect(onlyMine).toBeChecked()
+      expect(await within(dialog).findByText('Mal des Jägers')).toBeVisible()
+      // The Gloom Stalker's spell counts, whatever the level; it has no card yet.
+      expect(within(dialog).getByRole('link', { name: /Fear/ })).toHaveAttribute(
+        'href',
+        `/zauber/neu?kampagne=${CAMPAIGN}&charakter=ch1&zauber=s3`,
+      )
+      expect(within(dialog).queryByText('Mondstrahl')).not.toBeInTheDocument()
+
+      await user.click(onlyMine)
+      expect(within(dialog).getByText('Mondstrahl')).toBeVisible()
+    })
   })
 })

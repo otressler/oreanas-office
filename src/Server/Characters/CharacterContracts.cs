@@ -5,8 +5,11 @@ namespace OreanasOffice.Server.Characters;
 // Appearance, Background, Personality, Bonds: up to the Character.*MaxLength characters
 // each, and Tagline up to Character.TaglineMaxLength (a flavor sentence for the card,
 // not in the prompt); the first three feed the portrait prompt, Bonds don't. Null saves an empty text.
-// CharacterClass, Species, Age: free text up to Character.FactMaxLength characters, shown under
-// the name; not in the portrait prompt. Null saves an empty text.
+// Species, Age: free text up to Character.FactMaxLength characters, shown under the name. Null
+// saves an empty text.
+// Classes: the character's classes in order, each once, with its level (1-20, together at most
+// 20) and a subclass of that class from level 3 on (knowledge/domain/character.md). Null saves
+// none. 400 CharacterClassInvalid with Field "classes" otherwise.
 // Color: the ring colour as "#rrggbb" (any case), or null or empty for the default.
 // OwnerUserId: the member the character belongs to. Null keeps the owner, or for a new
 // character makes it the signed-in user's. Only `dm` members give a character to someone
@@ -14,7 +17,13 @@ namespace OreanasOffice.Server.Characters;
 public record CharacterRequest(
     string Name, CreatureSize Size, string? Appearance = null, string? Color = null, Guid? OwnerUserId = null,
     string? Background = null, string? Personality = null, string? Bonds = null, string? Tagline = null,
-    string? CharacterClass = null, string? Species = null, string? Age = null);
+    string? Species = null, string? Age = null, List<CharacterClassRequest>? Classes = null);
+
+// ClassId and SubclassId: ids from GET /api/rules/classes ("wizard", "evoker").
+public record CharacterClassRequest(string ClassId, int Level, string? SubclassId = null);
+
+// One of a character's classes with its level, and its subclass or null.
+public record CharacterClassView(string ClassId, int Level, string? SubclassId);
 
 // CanEdit: the signed-in user owns the character or is a `dm` member. ColorIndex: the
 // character's place in the order characters were added to the campaign (0, 1, 2…),
@@ -36,9 +45,9 @@ public record CharacterResponse(
     string Personality,
     string Bonds,
     string Tagline,
-    string CharacterClass,
     string Species,
-    string Age);
+    string Age,
+    List<CharacterClassView> Classes);
 
 // One of the signed-in user's characters in another campaign they belong to, to take into
 // this one (knowledge/features/character-import.md). Color: the ring colour its player
@@ -51,7 +60,7 @@ public record ImportableCharacterResponse(
     string Name,
     CreatureSize Size,
     string Tagline,
-    string CharacterClass,
+    List<CharacterClassView> Classes,
     string Species,
     string? Color,
     string? PortraitUrl);

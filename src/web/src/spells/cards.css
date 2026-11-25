@@ -356,6 +356,7 @@
   display: flex;
 }
 .sc-back .sc-frame {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -367,13 +368,18 @@
     inset 0 0 0 0.75mm rgba(201, 164, 92, 0.6);
   overflow: hidden;
 }
-.sc-back .sc-frame::after {
-  content: '';
-  flex: none;
-  height: 1.4mm;
+/* Everything below the head and the stats. It shrinks with --k and, when that isn't enough,
+   scrolls (fit.ts adds .sc-scrolls to the frame). */
+.sc-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 1.4mm;
 }
-.sc-back .sc-frame:has(.sc-foot)::after {
-  display: none;
+.sc-body:has(> .sc-foot) {
+  padding-bottom: 0;
 }
 
 .sc-back-head {
@@ -788,6 +794,225 @@
   border-bottom: 0.2mm solid var(--ink-soft);
 }
 
+/* ---------- a back that scrolls ---------- */
+/* The text fades out under the stats once it has moved, and at the bottom until its end. */
+@property --sc-fade-top {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0mm;
+}
+@property --sc-fade-bottom {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0mm;
+}
+.sc-scrolls .sc-body {
+  --sc-fade-top: 0mm;
+  --sc-fade-bottom: 9mm;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-bottom: 3mm;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--sc-fade-top),
+    #000 calc(100% - var(--sc-fade-bottom)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--sc-fade-top),
+    #000 calc(100% - var(--sc-fade-bottom)),
+    transparent 100%
+  );
+  transition:
+    --sc-fade-top 0.25s,
+    --sc-fade-bottom 0.25s;
+}
+.sc-scrolls .sc-body::-webkit-scrollbar {
+  display: none;
+}
+.sc-scrolls.sc-moved .sc-body {
+  --sc-fade-top: 3mm;
+}
+.sc-scrolls.sc-at-end .sc-body {
+  --sc-fade-bottom: 0mm;
+}
+/* The gold rail along the right edge; fit.ts places it beside the body and moves the thumb. */
+.sc-rail {
+  display: none;
+  position: absolute;
+  right: 0.9mm;
+  width: 0.7mm;
+  border-radius: 0.4mm;
+  background: rgba(201, 164, 92, 0.25);
+  pointer-events: none;
+}
+.sc-rail i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: 0.4mm;
+  background: var(--gold);
+}
+.sc-scrolls .sc-rail {
+  display: block;
+}
+/* "There is more": an arrow at the bottom until the end. A tap on it still turns the card. */
+.sc-more {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 1.6mm;
+  width: 5mm;
+  height: 5mm;
+  margin-left: -2.5mm;
+  border-radius: 50%;
+  place-items: center;
+  background: var(--accent-deep);
+  border: 0.3mm solid var(--gold);
+  color: var(--gold-light);
+  pointer-events: none;
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
+}
+.sc-more .sc-icon {
+  width: 3mm;
+  height: 3mm;
+  stroke-width: 2.2;
+}
+.sc-scrolls .sc-more {
+  display: grid;
+  animation: sc-nudge 1.6s ease-in-out 1s 2;
+}
+.sc-scrolls.sc-at-end .sc-more {
+  opacity: 0;
+  transform: translateY(2mm);
+}
+@keyframes sc-nudge {
+  50% {
+    transform: translateY(1mm);
+  }
+}
+
+/* ---------- tables: rows with a key in a coloured strip ---------- */
+.sc-table {
+  flex: none;
+  margin: 0 2.4mm;
+}
+.sc-table + .sc-table,
+.sc-table + .sc-effects {
+  margin-top: calc(1.1mm * var(--k));
+}
+.sc-table-cap {
+  margin: 0 0.6mm calc(1mm * var(--k));
+  font-family: var(--sc-caps);
+  font-size: calc(6.4pt * var(--k));
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.sc-rows {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.8mm * var(--k));
+}
+.sc-row {
+  --c: var(--accent);
+  --c-ink: var(--accent-deep);
+  display: grid;
+  grid-template-columns: 4.6mm 1fr auto;
+  gap: 1.5mm;
+  align-items: start;
+  padding: calc(0.8mm * var(--k)) 1.3mm calc(0.8mm * var(--k)) 0;
+  border-radius: 1mm;
+  background: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+}
+.sc-row.sc-no-chip {
+  grid-template-columns: 4.6mm 1fr;
+}
+.sc-row .sc-key {
+  align-self: stretch;
+  margin: calc(-0.8mm * var(--k)) 0;
+  display: grid;
+  place-items: center;
+  background: var(--c);
+  color: #fff;
+  font-family: var(--sc-sans);
+  font-weight: 700;
+  font-size: 8pt;
+  line-height: 1;
+  text-align: center;
+  overflow-wrap: anywhere;
+  text-shadow: 0 0 0.8mm rgba(0, 0, 0, 0.5);
+}
+.sc-row h3 {
+  margin: 0;
+  font-family: var(--sc-caps);
+  font-weight: 700;
+  font-size: calc(7pt * var(--k));
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  color: var(--c-ink);
+}
+.sc-row p {
+  margin: 0.3mm 0 0;
+  font-size: calc(6.5pt * var(--k));
+  line-height: 1.2;
+}
+.sc-row h3 + p {
+  margin-top: 0.3mm;
+}
+.sc-row div > p:first-child {
+  margin-top: 0;
+}
+.sc-row p b {
+  color: var(--accent-deep);
+}
+.sc-row .sc-chip {
+  min-width: 11mm;
+  align-self: center;
+}
+.sc-row .sc-chip .sc-big {
+  font-size: 8.5pt;
+}
+.sc-row .sc-chip .sc-small {
+  font-size: 6.4pt;
+}
+.sc-row.c-red {
+  --c: #c8372d;
+  --c-ink: #b02e25;
+}
+.sc-row.c-orange {
+  --c: #d9741c;
+  --c-ink: #b35c10;
+}
+.sc-row.c-yellow {
+  --c: #d8ad12;
+  --c-ink: #8a6a00;
+}
+.sc-row.c-green {
+  --c: #3f9a45;
+  --c-ink: #2f7a35;
+}
+.sc-row.c-blue {
+  --c: #2f6fc4;
+  --c-ink: #2a62ad;
+}
+.sc-row.c-indigo {
+  --c: #4b3f9e;
+  --c-ink: #4b3f9e;
+}
+.sc-row.c-violet {
+  --c: #8a3fa8;
+  --c-ink: #7d3698;
+}
+
 /* ---------- flipping ---------- */
 .sc-flip {
   perspective: 1200px;
@@ -828,7 +1053,12 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .sc-flip > .sc-zoom,
-  .sc-flip .sc-face {
+  .sc-flip .sc-face,
+  .sc-scrolls .sc-body,
+  .sc-more {
     transition: none;
+  }
+  .sc-scrolls .sc-more {
+    animation: none;
   }
 }

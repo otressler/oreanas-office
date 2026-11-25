@@ -22,7 +22,7 @@ public class Character
 
     public const int BondsMaxLength = 1500;
 
-    // Class, species and age are free text ("Waldläuferin", "Waldelfe", "Mitte zwanzig").
+    // Species and age are free text ("Waldelfe", "Mitte zwanzig").
     public const int FactMaxLength = 40;
 
     // "#rrggbb", lower case.
@@ -54,9 +54,8 @@ public class Character
 
     public string Bonds { get; set; } = "";
 
-    // Facts under the name on the character's page; free text, not in the portrait prompt.
-    public string CharacterClass { get; set; } = "";
-
+    // Facts under the name on the character's page, free text; with the classes they feed
+    // the portrait prompt.
     public string Species { get; set; } = "";
 
     public string Age { get; set; } = "";
@@ -76,6 +75,10 @@ public class Character
 
     public AppUser Owner { get; set; } = null!;
 
+    // Its classes with their levels and subclasses, in the order its player gave them
+    // (knowledge/domain/character.md, multiclassing).
+    public List<CharacterClassLevel> Classes { get; } = [];
+
     // Who plays it in a session other than its owner (knowledge/domain/session.md).
     public List<SessionCharacterPlayer> SessionPlayers { get; } = [];
 }
@@ -90,7 +93,6 @@ internal sealed class CharacterConfiguration : IEntityTypeConfiguration<Characte
         character.Property(c => c.Background).HasMaxLength(Character.BackgroundMaxLength);
         character.Property(c => c.Personality).HasMaxLength(Character.PersonalityMaxLength);
         character.Property(c => c.Bonds).HasMaxLength(Character.BondsMaxLength);
-        character.Property(c => c.CharacterClass).HasMaxLength(Character.FactMaxLength);
         character.Property(c => c.Species).HasMaxLength(Character.FactMaxLength);
         character.Property(c => c.Age).HasMaxLength(Character.FactMaxLength);
         character.Property(c => c.Color).HasMaxLength(Character.ColorLength).IsUnicode(false);

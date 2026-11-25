@@ -9,7 +9,8 @@ using OreanasOffice.Server.Data;
 namespace OreanasOffice.Server.Spells;
 
 // One spell of the spell-cards app (knowledge/features/spell-cards.md, "Seeding"): Key is
-// its id there ("moonbeam"); Prompts its art motifs.
+// its id there ("moonbeam"); Prompts its art motifs. Level and school are ignored: the
+// Handbook's count.
 public record SeedSpell(string Key, string NameEn, int Level, SpellSchool School, SpellCard Card, List<SeedPrompt>? Prompts);
 
 public record SeedPrompt(string Letter, string Subject);
@@ -17,7 +18,8 @@ public record SeedPrompt(string Letter, string Subject);
 public record SeedSpellsRequest(List<SeedSpell> Spells);
 
 // Variants: the seeded variant of every key, new or from an earlier upload, for the art
-// upload that follows. Rejected: keys whose card broke a rule, with the field.
+// upload that follows. Rejected: keys whose card broke a rule, with the field, and spells
+// that aren't the Handbook's ("nameEn").
 public record SeedSpellsResponse(Dictionary<string, Guid> Variants, int Created, Dictionary<string, string> Rejected);
 
 public static class SpellExtensions
@@ -46,8 +48,8 @@ public static class SpellExtensions
         return app;
     }
 
-    // Creates a variant per spell, by the admin, unless one with the key exists already;
-    // its motifs become the first revisions.
+    // Creates a variant per Handbook spell, by the admin, unless one with the key exists
+    // already; its motifs become the first revisions.
     private static async Task<Ok<SeedSpellsResponse>> Seed(
         SeedSpellsRequest request, ClaimsPrincipal user, AppDbContext db, TimeProvider time, CancellationToken cancellationToken)
     {
@@ -69,9 +71,14 @@ public static class SpellExtensions
                 continue;
             }
 
-            if (SpellEndpoints.ValidateFacts(spell.NameEn, spell.Level, spell.School) is { } factsError)
+            var nameKey = Spell.KeyOf(spell.NameEn ?? "");
+            var spellId = await db.Spells
+                .Where(s => s.NameKey == nameKey && s.InHandbook)
+                .Select(s => (Guid?)s.Id)
+                .SingleOrDefaultAsync(cancellationToken);
+            if (spellId is null)
             {
-                rejected[key] = factsError.Field ?? "";
+                rejected[key] = "nameEn";
                 continue;
             }
 
@@ -84,7 +91,7 @@ public static class SpellExtensions
 
             var now = time.GetUtcNow();
             var variant = await SpellEndpoints.AddVariantAsync(
-                db, spell.NameEn, spell.Level, spell.School, card, SpellVariantOrigin.Seed, null, key, userId, now, cancellationToken);
+                db, spellId.Value, card, SpellVariantOrigin.Seed, null, key, userId, now, cancellationToken);
             foreach (var prompt in spell.Prompts ?? [])
             {
                 var letter = prompt.Letter?.Trim().ToLowerInvariant() ?? "";

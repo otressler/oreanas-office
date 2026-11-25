@@ -1,10 +1,11 @@
 import { useId, useRef, useState, type CSSProperties } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { errorMessage } from '../api/errors'
-import type { Character, CharacterRequest, CreatureSize } from '../api/types'
+import type { Character, CharacterClassEntry, CharacterRequest, CreatureSize } from '../api/types'
 import { useCurrentUser } from '../auth/auth'
 import { defaultRingColor, parseHexColor, ringColor } from '../board/palette'
 import { ColorField, OwnerField, SIZES, type OwnerChoice } from '../campaigns/CharacterFields'
+import { ClassesField } from '../campaigns/ClassesField'
 import { characterPath } from '../campaigns/paths'
 import { useCampaign, useCharacters } from '../campaigns/queries'
 import { useSaveCharacter } from '../campaigns/useSaveCharacter'
@@ -22,6 +23,7 @@ import {
 import { useLeaveWarning } from '../components/useLeaveWarning'
 import { Button, LoadError, Loading, PageTitle, SelectField, TextField } from '../components/ui'
 import { limits } from '../lib/limits'
+import { classesText, indexClasses, useClasses } from '../rules/classes'
 import { CharacterSpells } from '../spells/CharacterSpells'
 import { StatusListEditor } from '../statuses/StatusListEditor'
 import { de } from '../text/de'
@@ -34,7 +36,7 @@ const p = t.page
 interface Draft {
   name: string
   size: CreatureSize
-  characterClass: string
+  classes: CharacterClassEntry[]
   species: string
   age: string
   owner: string
@@ -59,7 +61,7 @@ const SECTIONS: { key: TextKey; max: number; rows: number }[] = [
 const draftOf = (character: Character): Draft => ({
   name: character.name,
   size: character.size,
-  characterClass: character.characterClass,
+  classes: character.classes,
   species: character.species,
   age: character.age,
   owner: character.ownerUserId,
@@ -129,7 +131,7 @@ function blankCharacter(me: { id: string; displayName: string }, colorIndex: num
     canEdit: true,
     colorIndex,
     tagline: '',
-    characterClass: '',
+    classes: [],
     species: '',
     age: '',
     appearance: '',
@@ -167,6 +169,8 @@ function CharacterView({
   const save = useSaveCharacter(campaignId, isNew ? undefined : character.id)
   const editing = draft !== null
   const ring = ringColor({ kind: 'character', ...character })
+  const classes = useClasses()
+  const classIndex = classes.data ? indexClasses(classes.data) : undefined
 
   function change(fields: Partial<Draft>) {
     setDraft((current) => current && { ...current, ...fields })
@@ -179,7 +183,7 @@ function CharacterView({
     return {
       name: d.name.trim(),
       size: d.size,
-      characterClass: d.characterClass.trim(),
+      classes: d.classes,
       species: d.species.trim(),
       age: d.age.trim(),
       tagline: d.tagline.trim(),
@@ -232,7 +236,7 @@ function CharacterView({
       body.name !== character.name ||
       body.tagline !== character.tagline ||
       body.size !== character.size ||
-      body.characterClass !== character.characterClass ||
+      JSON.stringify(body.classes) !== JSON.stringify(character.classes) ||
       body.species !== character.species ||
       body.age !== character.age ||
       body.appearance !== character.appearance ||
@@ -321,12 +325,6 @@ function CharacterView({
               />
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextField
-                  label={t.characterClass}
-                  maxLength={limits.characterFact}
-                  value={draft.characterClass}
-                  onChange={(event) => change({ characterClass: event.target.value })}
-                />
-                <TextField
                   label={t.species}
                   maxLength={limits.characterFact}
                   value={draft.species}
@@ -357,6 +355,7 @@ function CharacterView({
                   />
                 )}
               </div>
+              <ClassesField value={draft.classes} onChange={(classes) => change({ classes })} />
               <ColorField
                 value={draft.color}
                 fallback={defaultRingColor(character.colorIndex)}
@@ -382,7 +381,10 @@ function CharacterView({
               )}
               <Facts
                 facts={[
-                  [t.characterClass, character.characterClass],
+                  [
+                    t.characterClass(character.classes.length),
+                    classesText(character.classes, classIndex),
+                  ],
                   [t.species, character.species],
                   [t.age, character.age],
                   [t.size, de.sizes[character.size]],
@@ -412,6 +414,7 @@ function CharacterView({
             campaignId={campaignId}
             characterId={character.id}
             canEdit={character.canEdit}
+            classes={character.classes}
           />
         )}
 

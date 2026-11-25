@@ -29,7 +29,16 @@ public static class CharacterImport
             .Select(c => new
             {
                 Response = new ImportableCharacterResponse(
-                    c.Id, c.CampaignId, c.Campaign.Name, c.Name, c.Size, c.Tagline, c.CharacterClass, c.Species, c.Color, null),
+                    c.Id,
+                    c.CampaignId,
+                    c.Campaign.Name,
+                    c.Name,
+                    c.Size,
+                    c.Tagline,
+                    c.Classes.OrderBy(x => x.Position).Select(x => new CharacterClassView(x.ClassId, x.Level, x.SubclassId)).ToList(),
+                    c.Species,
+                    c.Color,
+                    null),
                 c.TokenAssetId,
             })
             .ToListAsync(cancellationToken);
@@ -55,6 +64,7 @@ public static class CharacterImport
     {
         var userId = user.GetUserId();
         var source = await Importable(db, campaignId, userId)
+            .Include(c => c.Classes)
             .AsNoTracking()
             .SingleOrDefaultAsync(c => c.Id == request.CharacterId, cancellationToken);
         if (source is null)
@@ -74,12 +84,13 @@ public static class CharacterImport
             Personality = source.Personality,
             Bonds = source.Bonds,
             Tagline = source.Tagline,
-            CharacterClass = source.CharacterClass,
             Species = source.Species,
             Age = source.Age,
             Color = source.Color,
             CreatedAt = now,
         };
+        Rules.CharacterClasses.Apply(
+            copy, [.. source.Classes.OrderBy(c => c.Position).Select(c => new CharacterClassView(c.ClassId, c.Level, c.SubclassId))]);
         db.Characters.Add(copy);
         await db.SaveChangesAsync(cancellationToken);
 

@@ -18,7 +18,7 @@ test('a player takes their character from another campaign, with its portrait', 
   const thorin = backend.addCharacter(there, mira, 'Thorin', {
     size: 'small',
     species: 'Zwerg',
-    characterClass: 'Kämpfer',
+    classes: [{ classId: 'fighter', level: 3, subclassId: 'champion' }],
     tagline: 'Hat immer Hunger.',
     appearance: 'Roter Bart',
   })
@@ -28,7 +28,10 @@ test('a player takes their character from another campaign, with its portrait', 
   await backend.attach(context)
 
   await page.goto('/')
-  await page.getByRole('link', { name: /Die Rabenküste/ }).first().click()
+  await page
+    .getByRole('link', { name: /Die Rabenküste/ })
+    .first()
+    .click()
   await page.getByRole('link', { name: /Charakter übernehmen/ }).click()
 
   const barovia = page.getByRole('region', { name: 'Der Fluch von Barovia' })
@@ -44,6 +47,9 @@ test('a player takes their character from another campaign, with its portrait', 
   expect(copies.map((c) => c.campaignId).sort()).toEqual([here.id, there.id].sort())
 
   // Back on the campaign page the copy is there; Thorin's source stays where it was.
-  await page.getByRole('link', { name: /Die Rabenküste/ }).first().click()
+  await page
+    .getByRole('link', { name: /Die Rabenküste/ })
+    .first()
+    .click()
   await expect(page.getByRole('link', { name: 'Thorin ansehen' })).toBeVisible()
 })

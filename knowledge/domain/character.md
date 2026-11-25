@@ -20,16 +20,29 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-10-10T20:30:00Z }
 | `tagline` | text | One flavor sentence, up to 120 characters, shown under the portrait on the [campaign page](/features/campaign-page.md) and under the name on the character's page. Not in the portrait prompt (project owner, 2026-10-27) |
 | `background` | text | Where the character comes from and what it has lived through, up to 1,500 characters. Feeds the portrait prompt, like `appearance` |
 | `personality` | text | How the character is and acts, up to 750 characters. Feeds the portrait prompt |
-| `characterClass`, `species`, `age` | text | Free-text facts shown under the name ("Klasse", "Spezies", "Alter"), up to 40 characters each. Feed the portrait prompt after the appearance, as "Species: …. Class: …. Age: ….", leaving out empty ones |
+| `classes` | list | Its classes from the 2024 Player's Handbook, in the order its player gave them, the first being the one it started with (see Classes) |
+| `species`, `age` | text | Free-text facts shown under the name ("Spezies", "Alter"), up to 40 characters each. Feed the portrait prompt after the appearance with the classes, as "Species: …. Class: …. Age: ….", leaving out empty ones |
 | `bonds` | text | Ties to people and places ("Verbindungen"), up to 1,500 characters. For the other players to read; never part of the portrait prompt |
 | `tokenAssetId` | → [Asset](/domain/asset.md), nullable | The picked portrait version: generated, uploaded or restyled from an upload ([token icons](/features/token-icons.md)) |
 | `color` | string, nullable | The ring colour its player picked, `#rrggbb` in lower case. Null keeps the default colour by the order characters were added ([token](/domain/token.md)). Characters may share a colour; the app doesn't check, and the DM sorts it out at the table (project owner, 2026-10-16). Added to stage 8 after its merge |
 
 Later (stage 9): a status list, the list of statuses its player picks from ([statuses](/features/statuses.md), [status](/domain/status.md)).
 
+# Classes
+
+A character has any number of the [Handbook's classes](/rules/handbook-classes.md), each once (multiclassing), with a level each ("Stufe", 1 to 20, together at most 20) and, from level 3 in that class, one of its subclasses ("Unterklasse"). Multiclassing prerequisites aren't checked. Set by the project owner on 2026-11-24; the old free-text class was thrown away, also in production.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `classId` | → class | `wizard` |
+| `level` | int | 1–20 |
+| `subclassId` | → subclass, nullable | Only one of this class, and only from level 3 |
+
+The server refuses anything else with `characterClassInvalid`. The portrait prompt names the classes in English without levels: "Class: Wizard (Evoker), Fighter.". On the character page they read "Magier 5 (Hervorrufer) · Kämpfer 2".
+
 # Spells
 
-A character keeps a list of [spells](/domain/spell.md), one variant each, and marks which are prepared. Whoever may edit the character changes the list; every member reads it ([spell cards](/features/spell-cards.md), 2026-11-21).
+A character keeps a list of [spells](/domain/spell.md), one variant each, and marks which are prepared. Whoever may edit the character changes the list; every member reads it ([spell cards](/features/spell-cards.md), 2026-11-21). Adding offers the spells of its classes first, but any spell may be taken (project owner, 2026-11-24).
 
 # Permissions
 

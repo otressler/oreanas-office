@@ -162,6 +162,21 @@ function Studio({ studio, refresh }: { studio: SpellStudio; refresh: () => void 
           }),
         ),
       ),
+    // A motif from the text model for the editor; null after an error, which shows above.
+    suggest: async () => {
+      setError(null)
+      try {
+        const { subject } = await unwrap(
+          api.POST('/api/spells/variants/{variantId}/studio/motif', path),
+        )
+        // It counts against the month's budget, shown under the title.
+        refresh()
+        return subject
+      } catch (err) {
+        setError(err)
+        return null
+      }
+    },
     cancel: (assetId: string) =>
       act(() =>
         unwrap(
@@ -339,6 +354,7 @@ type Actions = {
   pick: (assetId: string) => Promise<void>
   generate: (letter: string | null, promptId?: string) => Promise<void>
   save: (letter: string, subject: string, generate: boolean) => Promise<void>
+  suggest: () => Promise<string | null>
   cancel: (assetId: string) => Promise<void>
   upload: (letter: string | null, files: FileList) => Promise<void>
   approve: () => Promise<void>
@@ -369,6 +385,7 @@ function Motif({
   const [draft, setDraft] = useState<string | null>(null)
   const [history, setHistory] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [suggesting, setSuggesting] = useState(false)
   const upload = useRef<HTMLInputElement>(null)
   const text = draft ?? current?.subject ?? ''
   const dirty = draft != null && draft.trim() !== (current?.subject ?? '')
@@ -379,6 +396,13 @@ function Motif({
     await actions.save(letter, text.trim(), generate)
     setDraft(null)
     setBusy(false)
+  }
+
+  const suggest = async () => {
+    setSuggesting(true)
+    const subject = await actions.suggest()
+    if (subject) setDraft(subject)
+    setSuggesting(false)
   }
 
   return (
@@ -452,6 +476,16 @@ function Motif({
           >
             {t.saveGenerate}
           </Button>
+          {studio.motifSuggestions && (
+            <Button
+              busy={suggesting}
+              disabled={busy}
+              title={t.suggestHint}
+              onClick={() => void suggest()}
+            >
+              {t.suggest}
+            </Button>
+          )}
           {dirty && (
             <Button variant="quiet" onClick={() => setDraft(null)}>
               {t.discard}

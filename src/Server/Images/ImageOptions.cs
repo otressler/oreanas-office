@@ -134,12 +134,13 @@ public sealed class ImageOptions
 
     public int SpellArtHeight { get; set; } = 1152;
 
-    // The spell-cards studio's style block (prompts/style.txt), word for word. The subject
-    // goes after its first line, as "Subject: …".
+    // The spell-cards studio's style block (prompts/style.txt). The subject goes after its
+    // first line, as "Subject: …". Since 2026-11-24 the headroom follows the scene's own
+    // setting: with only outdoor examples, indoor scenes got sky and a castle above the room.
     public string SpellArtStyle { get; set; } =
         """
         Digital fantasy concept art, painted with loose visible acrylic brush strokes, flat painterly shapes with simplified forms, minimal blending, matte finish, limited moody palette, bold value contrast, rough expressive edges like a production concept painting.
-        Vertical portrait 7:12 composition (tall tarot card format) with generous headroom: the top quarter of the image is calm, low-detail background (sky, treetops, haze or distant scenery) where a title will be overlaid, with no heads, faces, hands or key action in it. Place the main subject and the action in the middle band of the frame, roughly between 25 % and 85 % of the image height, and keep the bottom eighth simple ground. No text, no border, no fine detail rendering, no glossy highlights, no photorealism.
+        Vertical portrait 7:12 composition (tall tarot card format) with generous headroom: the top quarter of the image is calm, low-detail background where a title will be overlaid, with no heads, faces, hands or key action in it. That headroom is part of the scene's own setting: outdoors sky, treetops, haze or distant scenery; indoors the ceiling, rafters, vaults or a dim upper wall; underground the dark cave roof. The whole image is one coherent place: never open a room to the sky or paint a landscape above an indoor scene. Place the main subject and the action in the middle band of the frame, roughly between 25 % and 85 % of the image height, and keep the bottom eighth simple ground. No text, no border, no fine detail rendering, no glossy highlights, no photorealism.
         Optimised for professional print: slightly raise overall brightness (+10-15 %). Lift midtones and dark areas and keep detail readable in the shadows, no crushed blacks, no very harsh contrast. Natural, rich, print-friendly colours, no extremely saturated RGB or neon colours. Realistic CMYK colour feel, soft tonal gradients without banding, detailed midtones. No exaggerated HDR or over-sharpening. Maximum ink coverage 280 %.
         """;
 }

@@ -29,7 +29,7 @@ function character(id: string, fields: Partial<Character> = {}): Character {
     personality: '',
     bonds: '',
     tagline: '',
-    characterClass: '',
+    classes: [],
     species: '',
     age: '',
     portraitUrl: null,

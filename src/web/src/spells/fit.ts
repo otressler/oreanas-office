@@ -1,7 +1,12 @@
 // The spell-cards app's autofit (render.js), for one card: titles shrink to stay on one line
 // (or two at a smaller size), the stats shrink to their width, and the back's text scale
-// (--k) goes down from 1.15 until the frame holds everything. Returns whether the back
-// still overflows. Layout is measured at print size: the card's transform doesn't count.
+// (--k) goes down from 1.15 until the body holds everything, but not below MIN_K: a back
+// whose text still doesn't fit scrolls below its head and stats instead (.sc-scrolls,
+// knowledge/features/spell-cards.md, "The card"). Layout is measured at print size: the
+// card's transform doesn't count.
+
+/** The smallest text scale of the back; below it the text would be hard to read on a phone. */
+export const MIN_K = 1
 
 interface Shrink {
   max: number
@@ -42,15 +47,48 @@ export function fitCard(root: HTMLElement): boolean {
   all('[data-fit="bar"]').forEach((el) => shrink(el, { max: 7, min: 6.4, step: 0.2, lines: 0 }))
   all('[data-fit="val"]').forEach((el) => shrink(el, { max: 8, min: 6.4, step: 0.2 }))
 
-  let overflow = false
+  let scrolls = false
   all('.sc-back').forEach((card) => {
     const frame = card.querySelector<HTMLElement>('.sc-frame')
-    if (!frame) return
-    for (let k = 1.15; k >= 0.88; k -= 0.02) {
+    const body = card.querySelector<HTMLElement>('.sc-body')
+    if (!frame || !body) return
+    frame.classList.remove('sc-scrolls')
+    const fits = () => body.scrollHeight <= body.clientHeight + 0.5
+    for (let k = 1.15; k >= MIN_K - 0.001; k -= 0.02) {
       card.style.setProperty('--k', k.toFixed(2))
-      if (frame.scrollHeight <= frame.clientHeight + 0.5) break
+      if (fits()) break
     }
-    if (frame.scrollHeight > frame.clientHeight + 0.5) overflow = true
+    if (fits()) {
+      body.scrollTop = 0
+    } else {
+      card.style.setProperty('--k', MIN_K.toFixed(2))
+      frame.classList.add('sc-scrolls')
+      scrolls = true
+    }
+    updateScroll(body)
   })
-  return overflow
+  return scrolls
+}
+
+/**
+ * Shows where a scrolling back is: the gold rail's thumb, the soft edge at the top once it has
+ * moved, and the fade and arrow at the bottom until its end. Called after fitting and on scroll.
+ */
+export function updateScroll(body: HTMLElement) {
+  const frame = body.parentElement
+  if (!frame) return
+  const height = body.clientHeight
+  const max = body.scrollHeight - height
+  frame.classList.toggle('sc-moved', body.scrollTop > 1)
+  frame.classList.toggle('sc-at-end', body.scrollTop >= max - 1)
+  const rail = frame.querySelector<HTMLElement>('.sc-rail')
+  const thumb = rail?.firstElementChild as HTMLElement | null
+  if (!rail || !thumb || max <= 0) return
+  const inset = 4
+  const length = height - 2 * inset
+  const size = Math.max(0.12, height / body.scrollHeight) * length
+  rail.style.top = `${body.offsetTop + inset}px`
+  rail.style.height = `${length}px`
+  thumb.style.height = `${size}px`
+  thumb.style.top = `${(body.scrollTop / max) * (length - size)}px`
 }

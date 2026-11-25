@@ -65,25 +65,24 @@ public sealed class CharacterAppearanceTests(AppFixture fixture) : IClassFixture
     }
 
     [Fact]
-    public async Task Class_species_and_age_are_saved_trimmed_and_cleared_when_left_out()
+    public async Task Species_and_age_are_saved_trimmed_and_cleared_when_left_out()
     {
         var (player, campaignId) = await PlayerAsync();
 
         var created = await (await player.Client.PostAsJsonAsync(
                 $"/api/campaigns/{campaignId}/characters",
-                new CharacterRequest("Ireena", CreatureSize.Medium, CharacterClass: " Duellantin ", Species: " Mensch ", Age: " Ende zwanzig "),
+                new CharacterRequest("Ireena", CreatureSize.Medium, Species: " Mensch ", Age: " Ende zwanzig "),
                 Json))
             .ReadAsync<CharacterResponse>(HttpStatusCode.Created);
         var cleared = await (await player.Client.PutAsJsonAsync(
                 $"/api/campaigns/{campaignId}/characters/{created.Id}", new CharacterRequest("Ireena", CreatureSize.Medium), Json))
             .ReadAsync<CharacterResponse>(HttpStatusCode.OK);
 
-        Assert.Equal(("Duellantin", "Mensch", "Ende zwanzig"), (created.CharacterClass, created.Species, created.Age));
-        Assert.Equal(("", "", ""), (cleared.CharacterClass, cleared.Species, cleared.Age));
+        Assert.Equal(("Mensch", "Ende zwanzig"), (created.Species, created.Age));
+        Assert.Equal(("", ""), (cleared.Species, cleared.Age));
     }
 
     [Theory]
-    [InlineData("characterClass")]
     [InlineData("species")]
     [InlineData("age")]
     public async Task A_fact_over_its_limit_is_refused(string field)
@@ -92,7 +91,6 @@ public sealed class CharacterAppearanceTests(AppFixture fixture) : IClassFixture
         var text = new string('x', Character.FactMaxLength + 1);
         var request = field switch
         {
-            "characterClass" => new CharacterRequest("Ireena", CreatureSize.Medium, CharacterClass: text),
             "species" => new CharacterRequest("Ireena", CreatureSize.Medium, Species: text),
             _ => new CharacterRequest("Ireena", CreatureSize.Medium, Age: text),
         };

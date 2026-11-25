@@ -29,7 +29,7 @@ function importable(fields: Partial<ImportableCharacter> = {}): ImportableCharac
     name: 'Thorin',
     size: 'small',
     tagline: 'Hat immer Hunger.',
-    characterClass: 'Kämpfer',
+    classes: [{ classId: 'fighter', level: 3, subclassId: 'champion' }],
     species: 'Zwerg',
     color: null,
     portraitUrl: null,
@@ -47,7 +47,7 @@ function character(fields: Partial<Character> = {}): Character {
     canEdit: true,
     colorIndex: 0,
     tagline: '',
-    characterClass: '',
+    classes: [],
     species: '',
     age: '',
     appearance: '',
@@ -99,7 +99,7 @@ describe('CharacterImportPage', () => {
 
     expect(await screen.findByRole('heading', { name: i.title, level: 1 })).toBeInTheDocument()
     const barovia = screen.getByRole('region', { name: 'Der Fluch von Barovia' })
-    expect(within(barovia).getByText('Zwerg · Kämpfer')).toBeInTheDocument()
+    expect(within(barovia).getByText('Zwerg · Kämpfer 3 (Champion)')).toBeInTheDocument()
     // A character of the same name is already the viewer's here.
     expect(within(barovia).getByText(i.alreadyHere)).toBeInTheDocument()
     const gruft = screen.getByRole('region', { name: 'Die Gruft' })

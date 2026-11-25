@@ -81,7 +81,7 @@ export function character(name: string, fields: Partial<Character> = {}): Charac
     personality: '',
     bonds: '',
     tagline: '',
-    characterClass: '',
+    classes: [],
     species: '',
     age: '',
     portraitUrl: null,

@@ -5,12 +5,11 @@ using static OreanasOffice.Server.Tests.CampaignTestApi;
 
 namespace OreanasOffice.Server.Tests;
 
-// Shortcuts for the spell tests (knowledge/features/spell-cards.md). Spells are site-wide and
-// test classes share one database, so every test makes spells of its own English names.
+// Shortcuts for the spell tests (knowledge/features/spell-cards.md). The spells are the
+// Handbook's, shared by every test class on the one database, so tests check their own
+// variants rather than a spell's whole list.
 public static class SpellTestApi
 {
-    public static string UniqueName(string name) => $"{name} {Guid.NewGuid():N}";
-
     public static SpellCard Card(string name = "Mondstrahl") => new()
     {
         Name = name,
@@ -40,9 +39,14 @@ public static class SpellTestApi
     public static Task<HttpResponseMessage> CreateVariantAsync(this Person person, CreateVariantRequest request) =>
         person.Client.PostAsJsonAsync("/api/spells/variants", request, Json);
 
-    public static async Task<SpellVariantView> CreateSpellAsync(
-        this Person person, string? nameEn = null, SpellCard? card = null, int level = 2, SpellSchool school = SpellSchool.Evocation) =>
-        await (await person.CreateVariantAsync(new CreateVariantRequest(nameEn ?? UniqueName("Moonbeam"), level, school, card ?? Card())))
+    // The library's spell of this English name.
+    public static async Task<SpellSummary> LibrarySpellAsync(this Person person, string nameEn) =>
+        (await (await person.Client.GetAsync("/api/spells")).ReadAsync<List<SpellSummary>>(HttpStatusCode.OK))
+            .Single(s => s.NameEn == nameEn);
+
+    // A new variant of the Handbook spell of this English name.
+    public static async Task<SpellVariantView> CreateSpellAsync(this Person person, string nameEn = "Moonbeam", SpellCard? card = null) =>
+        await (await person.CreateVariantAsync(new CreateVariantRequest((await person.LibrarySpellAsync(nameEn)).Id, card ?? Card())))
             .ReadAsync<SpellVariantView>(HttpStatusCode.Created);
 
     public static async Task<SpellDetail> GetSpellAsync(this Person person, Guid spellId) =>

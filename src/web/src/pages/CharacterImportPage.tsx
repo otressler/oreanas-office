@@ -15,6 +15,7 @@ import { SectionHeading } from '../components/ornaments'
 import { BackLink, SectionTitle } from '../components/sheet'
 import { SheetCard } from '../components/SheetCard'
 import { Button, ErrorAlert, LoadError, Loading } from '../components/ui'
+import { classesText, indexClasses, useClasses } from '../rules/classes'
 import { de } from '../text/de'
 
 const t = de.characters
@@ -28,6 +29,8 @@ export function CharacterImportPage() {
   const importable = useImportableCharacters(campaignId)
   const importing = useImportCharacter(campaignId)
   const navigate = useNavigate()
+  const classes = useClasses()
+  const classIndex = classes.data ? indexClasses(classes.data) : undefined
 
   for (const query of [campaign, characters, importable]) {
     if (query.isPending) return <Loading />
@@ -80,8 +83,9 @@ export function CharacterImportPage() {
                   name={character.name}
                   meta={
                     <>
-                      {[character.species, character.characterClass].filter(Boolean).join(' · ') ||
-                        de.sizes[character.size]}
+                      {[character.species, classesText(character.classes, classIndex)]
+                        .filter(Boolean)
+                        .join(' · ') || de.sizes[character.size]}
                       {namesHere.has(character.name.toLocaleLowerCase('de-DE')) && (
                         <span className="block font-semibold text-candle">{i.alreadyHere}</span>
                       )}

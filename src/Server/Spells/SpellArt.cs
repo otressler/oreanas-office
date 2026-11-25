@@ -36,10 +36,12 @@ public record SpellArtEventView(Guid Id, Guid? AssetId, SpellArtEventKind Kind, 
 public record SpellArtGenerator(bool Available, string? Model, string Quality, int Width, int Height);
 
 // Everything the studio needs for one variant. CanEdit: the author or a site admin.
+// MotifSuggestions: the text model is configured, so "Vorschlagen" works.
 public record SpellStudio(
     SpellVariantView Variant,
     bool CanEdit,
     SpellArtGenerator Generator,
+    bool MotifSuggestions,
     ImageBudgetResponse Budget,
     List<SpellArtPromptView> Prompts,
     List<SpellArtImage> Images,
@@ -53,6 +55,9 @@ public record SaveArtPromptResponse(SpellArtPromptView Prompt, SpellArtImage? Im
 
 // Queues a picture of a revision: PromptId, or the current one of Letter.
 public record GenerateArtRequest(string? Letter = null, Guid? PromptId = null);
+
+// A motif the text model suggests for the variant; nothing is saved.
+public record SuggestMotifResponse(string Subject);
 
 public record PickArtRequest(Guid AssetId);
 
@@ -82,6 +87,7 @@ public static class SpellArt
         studio.MapGet("/", GetStudio);
         studio.MapPost("/prompts", SavePrompt);
         studio.MapPost("/generate", Generate);
+        studio.MapPost("/motif", SuggestMotif);
         studio.MapPost("/upload", Upload).AcceptsRawPicture();
         studio.MapPut("/art", PickArt);
         studio.MapPut("/approved", Approve);
@@ -91,7 +97,7 @@ public static class SpellArt
     }
 
     private static async Task<Results<Ok<SpellStudio>, NotFound>> GetStudio(
-        Guid variantId, ClaimsPrincipal user, AppDbContext db, IOptions<ImageOptions> options, TimeProvider time, CancellationToken cancellationToken)
+        Guid variantId, ClaimsPrincipal user, AppDbContext db, SpellImport import, IOptions<ImageOptions> options, TimeProvider time, CancellationToken cancellationToken)
     {
         var variant = (await SpellEndpoints.ViewsAsync(db, db.SpellVariants.Where(v => v.Id == variantId), user, cancellationToken)).SingleOrDefault();
         if (variant is null)
@@ -114,6 +120,7 @@ public static class SpellArt
             variant,
             variant.CanEdit,
             new SpellArtGenerator(settings.Configured, settings.Deployment, settings.SpellArtQuality, settings.SpellArtRequestWidth, settings.SpellArtRequestHeight),
+            import.Available,
             await MapBackgrounds.BudgetAsync(db, settings, time, cancellationToken),
             prompts,
             await ImagesAsync(db, variantId, prompts, null, cancellationToken),
@@ -212,6 +219,71 @@ public static class SpellArt
 
         queue.Notify();
         return TypedResults.Accepted($"/api/spells/variants/{variantId}/studio", image!);
+    }
+
+    // "Vorschlagen": the text model reads the card and writes a new subject, different from
+    // the variant's current motifs. Only the author and admins, as it counts against the
+    // month's AI budget. Errors (409): NotSpellAuthor, TextModelUnavailable,
+    // ImageBudgetExhausted, MotifSuggestionFailed.
+    private static async Task<Results<Ok<SuggestMotifResponse>, NotFound, Conflict<ApiError>>> SuggestMotif(
+        Guid variantId, ClaimsPrincipal user, AppDbContext db, SpellImport import, CancellationToken cancellationToken)
+    {
+        var variant = await db.SpellVariants.AsNoTracking()
+            .Where(v => v.Id == variantId)
+            .Select(v => new { v.AuthorUserId, v.Card, v.SpellId, v.Spell.NameEn, v.Spell.Level, v.Spell.School })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (variant is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        if (variant.AuthorUserId != user.GetUserId() && !user.IsAdmin())
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.NotSpellAuthor));
+        }
+
+        if (!import.Available)
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.TextModelUnavailable));
+        }
+
+        if (!await import.BudgetLeftAsync(cancellationToken))
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.ImageBudgetExhausted));
+        }
+
+        var classes = await db.SpellListEntries.AsNoTracking()
+            .Where(e => e.SpellId == variant.SpellId && e.SubclassId == null)
+            .Join(db.CharacterClasses, e => e.ClassId, c => c.Id, (e, c) => c.NameEn)
+            .Distinct()
+            .OrderBy(n => n)
+            .ToListAsync(cancellationToken);
+        var prompts = await db.SpellArtPrompts.AsNoTracking()
+            .Where(p => p.VariantId == variantId)
+            .OrderBy(p => p.CreatedAt)
+            .Select(p => new { p.Letter, p.Subject })
+            .ToListAsync(cancellationToken);
+        var motifs = prompts.GroupBy(p => p.Letter).OrderBy(g => g.Key).Select(g => g.Last().Subject).ToList();
+        var notes = await db.SpellArtEvents.AsNoTracking()
+            .Where(e => e.VariantId == variantId && e.AssetId == null && e.Kind == SpellArtEventKind.Comment && e.Value != null)
+            .OrderByDescending(e => e.CreatedAt)
+            .Select(e => e.Value!)
+            .Take(10)
+            .ToListAsync(cancellationToken);
+        notes.Reverse();
+
+        try
+        {
+            var subject = await import.SuggestMotifAsync(
+                new SpellMotifInput(variant.NameEn, variant.Level, variant.School, variant.Card, classes, motifs, notes), user.GetUserId(), cancellationToken);
+            return subject is null
+                ? TypedResults.Conflict(new ApiError(ApiErrorCode.MotifSuggestionFailed))
+                : TypedResults.Ok(new SuggestMotifResponse(subject));
+        }
+        catch (SpellImportException)
+        {
+            return TypedResults.Conflict(new ApiError(ApiErrorCode.MotifSuggestionFailed));
+        }
     }
 
     // A picture of the variant, cropped to 7:12. Letter: the motif it belongs to, or none.

@@ -97,6 +97,44 @@ describe('the card', () => {
     expect(screen.getByText('SG')).toBeInTheDocument()
   })
 
+  it('shows a table between the text and the effects, with keys, colours and chips', () => {
+    const withTable = {
+      ...spell,
+      card: {
+        ...card,
+        tables: [
+          {
+            caption: 'Je Schicht RW Geschick',
+            rows: [
+              {
+                key: '1',
+                color: 'red' as const,
+                title: 'Rot',
+                text: 'Hält Pfeile auf.\n**Zerstört:** 25 Kälteschaden',
+                chip: { big: '12W6', small: 'Feuer', kind: 'fire' as const },
+              },
+              { key: '', color: null, title: '', text: 'nur Text', chip: null },
+            ],
+          },
+        ],
+      },
+    }
+    const { container } = render(<SpellCardBack spell={withTable} />)
+    expect(screen.getByText('Je Schicht RW Geschick')).toBeInTheDocument()
+    const rows = container.querySelectorAll('.sc-body .sc-row')
+    expect(rows).toHaveLength(2)
+    expect(rows[0]).toHaveClass('c-red')
+    expect(rows[0].querySelector('.sc-key')).toHaveTextContent('1')
+    expect(rows[0].querySelector('p b')).toHaveTextContent('Zerstört:')
+    expect(rows[0].querySelector('.sc-chip.k-fire')).toHaveTextContent('12W6')
+    expect(rows[1]).toHaveClass('sc-no-chip')
+    expect(rows[1].querySelector('h3')).toBeNull()
+    // The table comes before the effect rows, in the part that scrolls.
+    const body = container.querySelector('.sc-body')!
+    expect(body.firstElementChild).toHaveClass('sc-desc')
+    expect(body.querySelector('.sc-table ~ .sc-effects')).not.toBeNull()
+  })
+
   it('turns over on a tap and with the keyboard', async () => {
     render(<FlipCard spell={spell} />)
     const button = screen.getByRole('button', { name: 'Mondstrahl: Karte umdrehen' })

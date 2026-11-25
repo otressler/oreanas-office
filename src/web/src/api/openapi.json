@@ -44,6 +44,28 @@
         }
       }
     },
+    "/api/rules/classes": {
+      "get": {
+        "tags": [
+          "Rules"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClassView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campaigns/{campaignId}/maps/{mapId}": {
       "delete": {
         "tags": [
@@ -3722,67 +3744,6 @@
             "description": "Not Found"
           }
         }
-      },
-      "put": {
-        "tags": [
-          "Spells"
-        ],
-        "parameters": [
-          {
-            "name": "spellId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSpellRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpellDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/spells/variants": {
@@ -3813,6 +3774,16 @@
           },
           "400": {
             "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
@@ -4269,6 +4240,49 @@
         }
       }
     },
+    "/api/spells/variants/{variantId}/studio/motif": {
+      "post": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestMotifResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/spells/variants/{variantId}/studio/upload": {
       "post": {
         "tags": [
@@ -4693,6 +4707,7 @@
           "sessionInvalid",
           "colorInvalid",
           "notAMember",
+          "characterClassInvalid",
           "textTooLong",
           "mapSizeInvalid",
           "layoutVersionUnsupported",
@@ -4757,7 +4772,9 @@
           "spellNotInWiki",
           "spellNotRecognized",
           "spellImportFailed",
-          "artPromptInvalid"
+          "artPromptInvalid",
+          "spellNotInHandbook",
+          "motifSuggestionFailed"
         ]
       },
       "ApproveArtRequest": {
@@ -5489,6 +5506,51 @@
           }
         }
       },
+      "CharacterClassRequest": {
+        "required": [
+          "classId",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subclassId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CharacterClassView": {
+        "required": [
+          "classId",
+          "level",
+          "subclassId"
+        ],
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subclassId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CharacterPlacement": {
         "required": [
           "characterId",
@@ -5567,12 +5629,6 @@
               "string"
             ]
           },
-          "characterClass": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "species": {
             "type": [
               "null",
@@ -5584,6 +5640,15 @@
               "null",
               "string"
             ]
+          },
+          "classes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CharacterClassRequest"
+            }
           }
         }
       },
@@ -5603,9 +5668,9 @@
           "personality",
           "bonds",
           "tagline",
-          "characterClass",
           "species",
-          "age"
+          "age",
+          "classes"
         ],
         "type": "object",
         "properties": {
@@ -5660,14 +5725,17 @@
           "tagline": {
             "type": "string"
           },
-          "characterClass": {
-            "type": "string"
-          },
           "species": {
             "type": "string"
           },
           "age": {
             "type": "string"
+          },
+          "classes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterClassView"
+            }
           }
         }
       },
@@ -5693,6 +5761,43 @@
           },
           "variant": {
             "$ref": "#/components/schemas/SpellVariantView"
+          }
+        }
+      },
+      "ClassView": {
+        "required": [
+          "id",
+          "nameEn",
+          "nameDe",
+          "caster",
+          "subclasses"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameDe": {
+            "type": "string"
+          },
+          "caster": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellcastingKind"
+              }
+            ]
+          },
+          "subclasses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubclassView"
+            }
           }
         }
       },
@@ -5784,22 +5889,14 @@
       },
       "CreateVariantRequest": {
         "required": [
-          "nameEn",
-          "level",
-          "school",
+          "spellId",
           "card"
         ],
         "type": "object",
         "properties": {
-          "nameEn": {
-            "type": "string"
-          },
-          "level": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "school": {
-            "$ref": "#/components/schemas/SpellSchool"
+          "spellId": {
+            "type": "string",
+            "format": "uuid"
           },
           "card": {
             "$ref": "#/components/schemas/SpellCard"
@@ -5879,6 +5976,7 @@
               "sessionInvalid",
               "colorInvalid",
               "notAMember",
+              "characterClassInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -5944,6 +6042,8 @@
               "spellNotRecognized",
               "spellImportFailed",
               "artPromptInvalid",
+              "spellNotInHandbook",
+              "motifSuggestionFailed",
               null
             ]
           },
@@ -6370,6 +6470,7 @@
               "sessionInvalid",
               "colorInvalid",
               "notAMember",
+              "characterClassInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -6435,6 +6536,8 @@
               "spellNotRecognized",
               "spellImportFailed",
               "artPromptInvalid",
+              "spellNotInHandbook",
+              "motifSuggestionFailed",
               null
             ]
           },
@@ -6481,6 +6584,7 @@
               "sessionInvalid",
               "colorInvalid",
               "notAMember",
+              "characterClassInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -6546,6 +6650,8 @@
               "spellNotRecognized",
               "spellImportFailed",
               "artPromptInvalid",
+              "spellNotInHandbook",
+              "motifSuggestionFailed",
               null
             ]
           }
@@ -6600,7 +6706,7 @@
           "name",
           "size",
           "tagline",
-          "characterClass",
+          "classes",
           "species",
           "color",
           "portraitUrl"
@@ -6627,8 +6733,11 @@
           "tagline": {
             "type": "string"
           },
-          "characterClass": {
-            "type": "string"
+          "classes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterClassView"
+            }
           },
           "species": {
             "type": "string"
@@ -6665,7 +6774,8 @@
       "ImportByNameResponse": {
         "required": [
           "nameEn",
-          "existingSpellId",
+          "spellId",
+          "variantCount",
           "draft"
         ],
         "type": "object",
@@ -6673,12 +6783,13 @@
           "nameEn": {
             "type": "string"
           },
-          "existingSpellId": {
-            "type": [
-              "null",
-              "string"
-            ],
+          "spellId": {
+            "type": "string",
             "format": "uuid"
+          },
+          "variantCount": {
+            "type": "integer",
+            "format": "int32"
           },
           "draft": {
             "oneOf": [
@@ -6898,6 +7009,7 @@
               "sessionInvalid",
               "colorInvalid",
               "notAMember",
+              "characterClassInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -6963,6 +7075,8 @@
               "spellNotRecognized",
               "spellImportFailed",
               "artPromptInvalid",
+              "spellNotInHandbook",
+              "motifSuggestionFailed",
               null
             ]
           },
@@ -7017,6 +7131,7 @@
               "sessionInvalid",
               "colorInvalid",
               "notAMember",
+              "characterClassInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -7082,6 +7197,8 @@
               "spellNotRecognized",
               "spellImportFailed",
               "artPromptInvalid",
+              "spellNotInHandbook",
+              "motifSuggestionFailed",
               null
             ]
           },
@@ -7988,6 +8105,7 @@
               "sessionInvalid",
               "colorInvalid",
               "notAMember",
+              "characterClassInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -8053,6 +8171,8 @@
               "spellNotRecognized",
               "spellImportFailed",
               "artPromptInvalid",
+              "spellNotInHandbook",
+              "motifSuggestionFailed",
               null
             ]
           },
@@ -8851,6 +8971,7 @@
               "sessionInvalid",
               "colorInvalid",
               "notAMember",
+              "characterClassInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -8916,6 +9037,8 @@
               "spellNotRecognized",
               "spellImportFailed",
               "artPromptInvalid",
+              "spellNotInHandbook",
+              "motifSuggestionFailed",
               null
             ]
           },
@@ -9239,6 +9362,12 @@
               "$ref": "#/components/schemas/SpellEffect"
             }
           },
+          "tables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellTable"
+            }
+          },
           "icon": {
             "type": "string"
           },
@@ -9267,6 +9396,14 @@
             }
           }
         }
+      },
+      "SpellcastingKind": {
+        "enum": [
+          "full",
+          "half",
+          "pact",
+          null
+        ]
       },
       "SpellChip": {
         "required": [
@@ -9318,9 +9455,11 @@
         "required": [
           "id",
           "nameEn",
+          "nameDe",
           "level",
           "school",
-          "canEditFacts",
+          "inHandbook",
+          "lists",
           "variants"
         ],
         "type": "object",
@@ -9332,6 +9471,12 @@
           "nameEn": {
             "type": "string"
           },
+          "nameDe": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "level": {
             "type": "integer",
             "format": "int32"
@@ -9339,8 +9484,14 @@
           "school": {
             "$ref": "#/components/schemas/SpellSchool"
           },
-          "canEditFacts": {
+          "inHandbook": {
             "type": "boolean"
+          },
+          "lists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellListLink"
+            }
           },
           "variants": {
             "type": "array",
@@ -9352,15 +9503,20 @@
       },
       "SpellDraft": {
         "required": [
+          "spellId",
           "nameEn",
           "level",
           "school",
           "card",
           "origin",
-          "existingSpellId"
+          "variantCount"
         ],
         "type": "object",
         "properties": {
+          "spellId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "nameEn": {
             "type": "string"
           },
@@ -9377,12 +9533,9 @@
           "origin": {
             "$ref": "#/components/schemas/SpellVariantOrigin"
           },
-          "existingSpellId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
+          "variantCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -9435,6 +9588,44 @@
           }
         }
       },
+      "SpellListLink": {
+        "required": [
+          "classId",
+          "subclassId",
+          "classLevel"
+        ],
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string"
+          },
+          "subclassId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "classLevel": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "SpellRowColor": {
+        "enum": [
+          "red",
+          "orange",
+          "yellow",
+          "green",
+          "blue",
+          "indigo",
+          "violet",
+          null
+        ]
+      },
       "SpellSchool": {
         "enum": [
           "abjuration",
@@ -9452,6 +9643,7 @@
           "variant",
           "canEdit",
           "generator",
+          "motifSuggestions",
           "budget",
           "prompts",
           "images",
@@ -9467,6 +9659,9 @@
           },
           "generator": {
             "$ref": "#/components/schemas/SpellArtGenerator"
+          },
+          "motifSuggestions": {
+            "type": "boolean"
           },
           "budget": {
             "$ref": "#/components/schemas/ImageBudgetResponse"
@@ -9500,7 +9695,8 @@
           "name",
           "icon",
           "variantCount",
-          "artUrl"
+          "artUrl",
+          "lists"
         ],
         "type": "object",
         "properties": {
@@ -9532,6 +9728,60 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "lists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellListLink"
+            }
+          }
+        }
+      },
+      "SpellTable": {
+        "type": "object",
+        "properties": {
+          "caption": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellTableRow"
+            }
+          }
+        }
+      },
+      "SpellTableRow": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "color": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellRowColor"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "chip": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpellChip"
+              }
             ]
           }
         }
@@ -9818,6 +10068,7 @@
               "sessionInvalid",
               "colorInvalid",
               "notAMember",
+              "characterClassInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -9883,6 +10134,8 @@
               "spellNotRecognized",
               "spellImportFailed",
               "artPromptInvalid",
+              "spellNotInHandbook",
+              "motifSuggestionFailed",
               null
             ]
           },
@@ -9933,6 +10186,43 @@
           },
           "hasArchivedCopy": {
             "type": "boolean"
+          }
+        }
+      },
+      "SubclassView": {
+        "required": [
+          "id",
+          "nameEn",
+          "nameDe",
+          "spellListClassId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameDe": {
+            "type": "string"
+          },
+          "spellListClassId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SuggestMotifResponse": {
+        "required": [
+          "subject"
+        ],
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
           }
         }
       },
@@ -11071,26 +11361,6 @@
           }
         }
       },
-      "UpdateSpellRequest": {
-        "required": [
-          "nameEn",
-          "level",
-          "school"
-        ],
-        "type": "object",
-        "properties": {
-          "nameEn": {
-            "type": "string"
-          },
-          "level": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "school": {
-            "$ref": "#/components/schemas/SpellSchool"
-          }
-        }
-      },
       "UpdateVariantRequest": {
         "required": [
           "card"
@@ -11242,6 +11512,7 @@
               "sessionInvalid",
               "colorInvalid",
               "notAMember",
+              "characterClassInvalid",
               "textTooLong",
               "mapSizeInvalid",
               "layoutVersionUnsupported",
@@ -11307,6 +11578,8 @@
               "spellNotRecognized",
               "spellImportFailed",
               "artPromptInvalid",
+              "spellNotInHandbook",
+              "motifSuggestionFailed",
               null
             ]
           },
@@ -11350,6 +11623,9 @@
   "tags": [
     {
       "name": "Health"
+    },
+    {
+      "name": "Rules"
     },
     {
       "name": "Maps"

@@ -1,11 +1,19 @@
 // The "Zauber" section of the character page (knowledge/features/spell-cards.md, "A
 // character's spells"): the spells by level as small card fronts with "Vorbereitet", and for
-// whoever may edit the character adding, switching the variant and removing.
+// whoever may edit the character adding, switching the variant and removing. Adding first
+// shows the spells of the character's classes; the others stay a click away.
 import { useQueryClient } from '@tanstack/react-query'
 import { useDeferredValue, useState } from 'react'
-import type { CharacterSpell, SpellSummary, SpellVariant } from '../api/types'
+import { Link } from 'react-router'
+import type { CharacterClassEntry, CharacterSpell, SpellSummary, SpellVariant } from '../api/types'
 import { SectionTitle } from '../components/sheet'
 import { Button, ButtonLink, ErrorAlert, LoadError, Loading, TextField } from '../components/ui'
+import {
+  characterSpellFilter,
+  indexClasses,
+  spellMatchesFilter,
+  useClasses,
+} from '../rules/classes'
 import { Modal } from '../sync/Modal'
 import { de } from '../text/de'
 import { spellPaths } from './paths'
@@ -26,10 +34,13 @@ export function CharacterSpells({
   campaignId,
   characterId,
   canEdit,
+  classes,
 }: {
   campaignId: string
   characterId: string
   canEdit: boolean
+  /** The character's classes, for the add dialog's default filter. */
+  classes: CharacterClassEntry[]
 }) {
   const spells = useCharacterSpells(campaignId, characterId)
   const queries = useQueryClient()
@@ -155,6 +166,8 @@ export function CharacterSpells({
       {adding && (
         <AddSpellDialog
           has={new Set(list.map((s) => s.spellId))}
+          classes={classes}
+          forCharacter={{ campaignId, characterId }}
           onAdd={(variant) =>
             run(async () => {
               await setCharacterSpell(campaignId, characterId, variant.spellId, variant.id, false)
@@ -256,19 +269,33 @@ function VariantPicker({
 
 function AddSpellDialog({
   has,
+  classes,
+  forCharacter,
   onAdd,
   createPath,
   onClose,
 }: {
   has: ReadonlySet<string>
+  classes: CharacterClassEntry[]
+  forCharacter: { campaignId: string; characterId: string }
   onAdd: (variant: SpellVariant) => Promise<void>
   createPath: string
   onClose: () => void
 }) {
   const library = useSpellLibrary()
+  const classList = useClasses()
   const [query, setQuery] = useState('')
   const deferred = useDeferredValue(query)
   const [picking, setPicking] = useState<SpellSummary | null>(null)
+  // The character's class lists by default; players may still take any spell.
+  const [onlyMine, setOnlyMine] = useState(classes.length > 0)
+  const index = classList.data ? indexClasses(classList.data) : undefined
+  const filter = characterSpellFilter(classes, index)
+  const classNames = classes.map((c) => index?.classById.get(c.classId)?.nameDe ?? c.classId)
+  const shown = (library.data ?? []).filter(
+    (spell) =>
+      matchesSpell(spell, deferred) && (!onlyMine || spellMatchesFilter(spell.lists, filter)),
+  )
 
   return (
     <Modal title={t.pickTitle} onClose={onClose} size="wide">
@@ -290,37 +317,65 @@ function AddSpellDialog({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
+          {classes.length > 0 ? (
+            <label className="flex min-h-9 items-center gap-2 text-sm text-parchment">
+              <input
+                type="checkbox"
+                className="size-5 accent-candle"
+                checked={onlyMine}
+                onChange={(event) => setOnlyMine(event.target.checked)}
+              />
+              {t.onlyMyClasses(classNames.join(', '))}
+            </label>
+          ) : (
+            <p className="text-sm text-dim">{t.noClassHint}</p>
+          )}
           {library.isPending ? (
             <Loading />
           ) : library.isError ? (
             <LoadError error={library.error} onRetry={() => void library.refetch()} />
+          ) : shown.length === 0 ? (
+            <p className="text-dim">{onlyMine ? t.noMatch : de.spells.library.noMatch}</p>
           ) : (
             <ul className="flex max-h-[55dvh] flex-col divide-y divide-line overflow-y-auto">
-              {library.data
-                .filter((spell) => matchesSpell(spell, deferred))
-                .map((spell) => (
+              {shown.map((spell) => {
+                const label = (
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold text-parchment">{spell.name}</span>
+                    <span className="block text-xs text-dim">
+                      {spell.nameEn} · {de.spells.level(spell.level)} ·{' '}
+                      {de.spells.schools[spell.school]}
+                    </span>
+                  </span>
+                )
+                const row =
+                  'flex min-h-12 w-full items-center gap-3 px-2 py-2 text-left hover:bg-line/30'
+                return (
                   <li key={spell.id}>
-                    <button
-                      type="button"
-                      disabled={has.has(spell.id)}
-                      onClick={() => setPicking(spell)}
-                      className="flex min-h-12 w-full items-center gap-3 px-2 py-2 text-left hover:bg-line/30 disabled:opacity-50"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-semibold text-parchment">{spell.name}</span>
-                        <span className="block text-xs text-dim">
-                          {spell.nameEn} · {de.spells.level(spell.level)} ·{' '}
-                          {de.spells.schools[spell.school]}
+                    {spell.variantCount === 0 && !has.has(spell.id) ? (
+                      // Without a card there's nothing to add yet: write the first one.
+                      <Link to={spellPaths.create(forCharacter, spell.id)} className={row}>
+                        {label}
+                        <span className="text-xs text-candle">{t.noCardYet}</span>
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={has.has(spell.id)}
+                        onClick={() => setPicking(spell)}
+                        className={`${row} disabled:opacity-50`}
+                      >
+                        {label}
+                        <span className="text-xs text-dim">
+                          {has.has(spell.id)
+                            ? t.alreadyHas
+                            : de.spells.library.variants(spell.variantCount)}
                         </span>
-                      </span>
-                      <span className="text-xs text-dim">
-                        {has.has(spell.id)
-                          ? t.alreadyHas
-                          : de.spells.library.variants(spell.variantCount)}
-                      </span>
-                    </button>
+                      </button>
+                    )}
                   </li>
-                ))}
+                )
+              })}
             </ul>
           )}
           <p className="text-sm text-dim">

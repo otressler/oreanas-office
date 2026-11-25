@@ -49,7 +49,7 @@ interface Character {
   personality: string
   bonds: string
   tagline: string
-  characterClass: string
+  classes: S['CharacterClassView'][]
   species: string
   age: string
   /** "#rrggbb", or null for the colour by order. */
@@ -310,7 +310,7 @@ export class MockBackend {
       personality: '',
       bonds: '',
       tagline: '',
-      characterClass: '',
+      classes: [],
       species: '',
       age: '',
       color: null,
@@ -1006,6 +1006,10 @@ export class MockBackend {
       return [404]
     }
 
+    if (path === '/api/rules/classes' && method === 'GET') {
+      return [200, HANDBOOK_CLASSES]
+    }
+
     if (path === '/api/campaigns' && method === 'GET') {
       return [
         200,
@@ -1090,7 +1094,7 @@ export class MockBackend {
         personality: String(body.personality ?? '').trim(),
         bonds: String(body.bonds ?? '').trim(),
         tagline: String(body.tagline ?? '').trim(),
-        characterClass: String(body.characterClass ?? '').trim(),
+        classes: characterClasses(body),
         species: String(body.species ?? '').trim(),
         age: String(body.age ?? '').trim(),
         color: characterColor(body),
@@ -1126,7 +1130,7 @@ export class MockBackend {
             name: c.name,
             size: c.size,
             tagline: c.tagline,
-            characterClass: c.characterClass,
+            classes: c.classes,
             species: c.species,
             color: c.color,
             portraitUrl: this.pickedTokenImageUrl(c.id),
@@ -1162,7 +1166,7 @@ export class MockBackend {
       character.personality = String(body.personality ?? '').trim()
       character.bonds = String(body.bonds ?? '').trim()
       character.tagline = String(body.tagline ?? '').trim()
-      character.characterClass = String(body.characterClass ?? '').trim()
+      character.classes = characterClasses(body)
       character.species = String(body.species ?? '').trim()
       character.age = String(body.age ?? '').trim()
       character.color = characterColor(body)
@@ -2336,3 +2340,53 @@ function matchPath(pattern: string, path: string): Record<string, string> | null
   if (!result) return null
   return Object.fromEntries(names.map((name, i) => [name, decodeURIComponent(result[i + 1]!)]))
 }
+
+/** A character's classes as a request sends them; the real server checks the rules. */
+function characterClasses(body: Record<string, unknown>): S['CharacterClassView'][] {
+  const classes = Array.isArray(body.classes) ? (body.classes as S['CharacterClassRequest'][]) : []
+  return classes.map((c) => ({
+    classId: c.classId,
+    level: c.level,
+    subclassId: c.subclassId ?? null,
+  }))
+}
+
+/** Some of the Handbook's classes (knowledge/rules/handbook-classes.md). */
+const HANDBOOK_CLASSES: S['ClassView'][] = [
+  {
+    id: 'druid',
+    nameEn: 'Druid',
+    nameDe: 'Druide',
+    caster: 'full',
+    subclasses: [
+      {
+        id: 'circle-of-the-moon',
+        nameEn: 'Circle of the Moon',
+        nameDe: 'Zirkel des Mondes',
+        spellListClassId: null,
+      },
+    ],
+  },
+  {
+    id: 'fighter',
+    nameEn: 'Fighter',
+    nameDe: 'Kämpfer',
+    caster: null,
+    subclasses: [
+      { id: 'champion', nameEn: 'Champion', nameDe: 'Champion', spellListClassId: null },
+      {
+        id: 'eldritch-knight',
+        nameEn: 'Eldritch Knight',
+        nameDe: 'Mystischer Ritter',
+        spellListClassId: 'wizard',
+      },
+    ],
+  },
+  {
+    id: 'wizard',
+    nameEn: 'Wizard',
+    nameDe: 'Magier',
+    caster: 'full',
+    subclasses: [{ id: 'evoker', nameEn: 'Evoker', nameDe: 'Hervorrufer', spellListClassId: null }],
+  },
+]

@@ -1,11 +1,12 @@
 // /zauber/neu: a new spell by hand, by name through the wiki, or from a book photo
 // (knowledge/features/spell-cards.md, "Creating a spell"). All three end in the editor; nothing
 // is saved before "Änderungen speichern". With ?kampagne=…&charakter=… the saved spell is
-// added to that character and the page goes back there.
+// added to that character and the page goes back there; with ?zauber=… the card is for that
+// Handbook spell.
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
-import type { SpellDraft } from '../api/types'
+import type { SpellDraft, SpellSummary } from '../api/types'
 import { characterPath } from '../campaigns/paths'
 import { useCharacters } from '../campaigns/queries'
 import { BackLink } from '../components/sheet'
@@ -23,20 +24,28 @@ import {
   shrinkPhoto,
   spellKeys,
   useSpellImportStatus,
+  useSpellLibrary,
 } from './queries'
 
 const t = de.spells.create
 
 type Tab = 'manual' | 'name' | 'photo'
 
+/** A draft for the editor; `locked` when it is for a known spell (an import, ?zauber=…). */
+interface Draft {
+  edit: SpellEdit
+  locked: boolean
+}
+
 export function SpellCreatePage() {
   const [params] = useSearchParams()
   const campaignId = params.get('kampagne')
   const characterId = params.get('charakter')
   const forCharacter = campaignId && characterId ? { campaignId, characterId } : null
-  const [draft, setDraft] = useState<{ edit: SpellEdit; existingSpellId: string | null } | null>(
-    null,
-  )
+  const spellId = params.get('zauber')
+  const library = useSpellLibrary()
+  const preset = spellId ? (library.data?.find((s) => s.id === spellId) ?? null) : null
+  const [draft, setDraft] = useState<Draft | null>(null)
 
   if (draft) {
     return (
@@ -48,15 +57,18 @@ export function SpellCreatePage() {
       />
     )
   }
-  return <Choose forCharacter={forCharacter} onDraft={setDraft} />
+  return <Choose key={preset?.id} forCharacter={forCharacter} preset={preset} onDraft={setDraft} />
 }
 
 function Choose({
   forCharacter,
+  preset,
   onDraft,
 }: {
   forCharacter: { campaignId: string; characterId: string } | null
-  onDraft: (draft: { edit: SpellEdit; existingSpellId: string | null }) => void
+  /** The spell from ?zauber=…, once the library has loaded. */
+  preset: SpellSummary | null
+  onDraft: (draft: Draft) => void
 }) {
   const [tab, setTab] = useState<Tab>('name')
   const status = useSpellImportStatus()
@@ -71,7 +83,7 @@ function Choose({
         }
         label={t.back.replace('← ', '')}
       />
-      <PageTitle>{t.title}</PageTitle>
+      <PageTitle>{preset ? `${t.title}: ${preset.nameEn}` : t.title}</PageTitle>
       {forCharacter && <ForCharacter {...forCharacter} />}
       <div role="tablist" aria-label={t.title} className="mt-2 flex flex-wrap gap-2">
         {(['name', 'photo', 'manual'] as const).map((key) => (
@@ -97,13 +109,14 @@ function Choose({
               onClick={() =>
                 onDraft({
                   edit: {
-                    nameEn: '',
-                    level: 1,
-                    school: 'evocation',
+                    spellId: preset?.id ?? null,
+                    nameEn: preset?.nameEn ?? '',
+                    level: preset?.level ?? 1,
+                    school: preset?.school ?? 'evocation',
                     card: blankCard(),
                     origin: 'manual',
                   },
-                  existingSpellId: null,
+                  locked: !!preset,
                 })
               }
             >
@@ -111,7 +124,9 @@ function Choose({
             </Button>
           </>
         )}
-        {tab === 'name' && <ByName disabled={!importable} onDraft={onDraft} />}
+        {tab === 'name' && (
+          <ByName disabled={!importable} initialName={preset?.nameEn ?? ''} onDraft={onDraft} />
+        )}
         {tab === 'photo' && <ByPhoto disabled={!importable} onDraft={onDraft} />}
         {tab !== 'manual' && <p className="text-sm text-dim">{t.cost}</p>}
       </div>
@@ -125,25 +140,28 @@ function ForCharacter({ campaignId, characterId }: { campaignId: string; charact
   return name ? <p className="text-candle">{t.forCharacter(name)}</p> : null
 }
 
-const fromDraft = (draft: SpellDraft) => ({
+const fromDraft = (draft: SpellDraft): Draft => ({
   edit: {
+    spellId: draft.spellId,
     nameEn: draft.nameEn,
     level: draft.level,
     school: draft.school,
     card: draft.card,
     origin: draft.origin,
   },
-  existingSpellId: draft.existingSpellId ?? null,
+  locked: true,
 })
 
 function ByName({
   disabled,
+  initialName,
   onDraft,
 }: {
   disabled: boolean
-  onDraft: (draft: { edit: SpellEdit; existingSpellId: string | null }) => void
+  initialName: string
+  onDraft: (draft: Draft) => void
 }) {
-  const [name, setName] = useState('')
+  const [name, setName] = useState(initialName)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const [existing, setExisting] = useState<{ nameEn: string; spellId: string } | null>(null)
@@ -154,8 +172,8 @@ function ByName({
     try {
       const result = await importByName(name.trim(), force)
       if (result.draft) onDraft(fromDraft(result.draft))
-      else if (result.existingSpellId)
-        setExisting({ nameEn: result.nameEn, spellId: result.existingSpellId })
+      else if (result.variantCount > 0)
+        setExisting({ nameEn: result.nameEn, spellId: result.spellId })
     } catch (err) {
       setError(err)
     } finally {
@@ -212,13 +230,7 @@ function ByName({
   )
 }
 
-function ByPhoto({
-  disabled,
-  onDraft,
-}: {
-  disabled: boolean
-  onDraft: (draft: { edit: SpellEdit; existingSpellId: string | null }) => void
-}) {
+function ByPhoto({ disabled, onDraft }: { disabled: boolean; onDraft: (draft: Draft) => void }) {
   const input = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
@@ -285,7 +297,9 @@ function ByPhoto({
                     }}
                   />
                   <span className="text-parchment">{draft.card.name}</span>
-                  {draft.existingSpellId && <span className="text-xs text-dim">{t.inLibrary}</span>}
+                  {draft.variantCount > 0 && (
+                    <span className="text-xs text-dim">{t.inLibrary}</span>
+                  )}
                 </button>
               </li>
             ))}
@@ -301,7 +315,7 @@ function SaveDraft({
   forCharacter,
   onBack,
 }: {
-  draft: { edit: SpellEdit; existingSpellId: string | null }
+  draft: Draft
   forCharacter: { campaignId: string; characterId: string } | null
   onBack: () => void
 }) {
@@ -315,7 +329,8 @@ function SaveDraft({
     setBusy(true)
     setError(null)
     try {
-      const variant = await createVariant({ ...edit, origin })
+      if (!edit.spellId) return setBusy(false)
+      const variant = await createVariant({ spellId: edit.spellId, card: edit.card, origin })
       await queries.invalidateQueries({ queryKey: spellKeys.all })
       if (forCharacter) {
         await setCharacterSpell(
@@ -345,7 +360,7 @@ function SaveDraft({
       <PageTitle>{draft.edit.card.name || t.title}</PageTitle>
       <SpellEditor
         initial={draft.edit}
-        factsLocked={!!draft.existingSpellId}
+        factsLocked={draft.locked}
         intro={
           origin !== 'manual' ? (
             <p className="text-sm text-candle">
