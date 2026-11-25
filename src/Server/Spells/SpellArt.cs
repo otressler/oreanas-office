@@ -93,6 +93,7 @@ public static class SpellArt
         studio.MapPut("/approved", Approve);
         studio.MapPost("/events", AddEvent);
         studio.MapDelete("/requests/{assetId:guid}", CancelRequest);
+        studio.MapDelete("/motifs/{letter}", DeleteMotif);
         return app;
     }
 
@@ -467,6 +468,49 @@ public static class SpellArt
             .Where(a => a.Id == assetId && a.Status == AssetStatus.Queued)
             .ExecuteDeleteAsync(cancellationToken);
         return deleted > 0 ? TypedResults.NoContent() : TypedResults.Conflict(new ApiError(ApiErrorCode.GenerationRunning));
+    }
+
+    // Deletes a motif that nothing came of: all its revisions and its failed requests, which
+    // have no picture and cost nothing. A motif with a picture (generated or uploaded) or an
+    // open request stays (MotifInUse), so the studio's history of pictures stays whole.
+    private static async Task<Results<NoContent, NotFound, Conflict<ApiError>>> DeleteMotif(
+        Guid variantId, string letter, ClaimsPrincipal user, AppDbContext db, CancellationToken cancellationToken)
+    {
+        switch (await AccessAsync(db, variantId, user, cancellationToken))
+        {
+            case null:
+                return TypedResults.NotFound();
+            case false:
+                return TypedResults.Conflict(new ApiError(ApiErrorCode.NotSpellAuthor));
+        }
+
+        letter = letter.Trim().ToLowerInvariant();
+        var promptIds = await db.SpellArtPrompts
+            .Where(p => p.VariantId == variantId && p.Letter == letter)
+            .Select(p => p.Id)
+            .ToListAsync(cancellationToken);
+        if (promptIds.Count == 0)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var pictures = Pictures(db, variantId).Where(a => a.SpellArtPromptId != null && promptIds.Contains(a.SpellArtPromptId.Value));
+        var strategy = db.Database.CreateExecutionStrategy();
+        var deleted = await strategy.ExecuteAsync(async () =>
+        {
+            // Serializable, so a request queued for the motif meanwhile can't slip in.
+            await using var transaction = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            if (await pictures.AnyAsync(a => a.Status != AssetStatus.Failed, cancellationToken))
+            {
+                return false;
+            }
+
+            await pictures.ExecuteDeleteAsync(cancellationToken);
+            await db.SpellArtPrompts.Where(p => promptIds.Contains(p.Id)).ExecuteDeleteAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return true;
+        });
+        return deleted ? TypedResults.NoContent() : TypedResults.Conflict(new ApiError(ApiErrorCode.MotifInUse));
     }
 
     private static IQueryable<Asset> Pictures(AppDbContext db, Guid variantId) =>

@@ -198,6 +198,19 @@ function Studio({ studio, refresh }: { studio: SpellStudio; refresh: () => void 
           }),
         ),
       ),
+    // A motif never saved only lives here; a saved one goes on the server with its revisions.
+    deleteMotif: async (letter: string) => {
+      if (byLetter.has(letter)) {
+        await act(() =>
+          unwrap(
+            api.DELETE('/api/spells/variants/{variantId}/studio/motifs/{letter}', {
+              params: { path: { variantId: variant.id, letter } },
+            }),
+          ),
+        )
+      }
+      setNewLetters((current) => current.filter((l) => l !== letter))
+    },
   }
 
   const art = studio.images.find((i) => i.id === variant.artAssetId)
@@ -278,6 +291,8 @@ function Studio({ studio, refresh }: { studio: SpellStudio; refresh: () => void 
               flags={f}
               revisionNumber={revisionNumber}
               can={can}
+              // Unused: nothing came of it but failed requests, which go with it.
+              deletable={!studio.images.some((i) => i.letter === letter && i.status !== 'failed')}
               actions={actions}
               onOpen={setLightbox}
             />
@@ -358,6 +373,7 @@ type Actions = {
   cancel: (assetId: string) => Promise<void>
   upload: (letter: string | null, files: FileList) => Promise<void>
   approve: () => Promise<void>
+  deleteMotif: (letter: string) => Promise<void>
 }
 
 function Motif({
@@ -368,6 +384,7 @@ function Motif({
   flags: f,
   revisionNumber,
   can,
+  deletable,
   actions,
   onOpen,
 }: {
@@ -378,6 +395,8 @@ function Motif({
   flags: Flags
   revisionNumber: Map<string, number>
   can: boolean
+  /** No picture and no open request came from it. */
+  deletable: boolean
   actions: Actions
   onOpen: (id: string) => void
 }) {
@@ -386,6 +405,7 @@ function Motif({
   const [history, setHistory] = useState(false)
   const [busy, setBusy] = useState(false)
   const [suggesting, setSuggesting] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const upload = useRef<HTMLInputElement>(null)
   const text = draft ?? current?.subject ?? ''
   const dirty = draft != null && draft.trim() !== (current?.subject ?? '')
@@ -491,6 +511,31 @@ function Motif({
               {t.discard}
             </Button>
           )}
+          {deletable &&
+            (confirming ? (
+              // Asked in the row, not in a browser dialog: its revisions can't come back.
+              <span role="group" aria-label={t.deleteMotif} className="flex items-center gap-2">
+                <span className="text-sm text-candle">{t.confirmDeleteMotif(letter)}</span>
+                <Button variant="primary" onClick={() => void actions.deleteMotif(letter)}>
+                  {t.deleteMotifYes}
+                </Button>
+                <Button variant="quiet" onClick={() => setConfirming(false)}>
+                  {t.deleteMotifNo}
+                </Button>
+              </span>
+            ) : (
+              <Button
+                variant="quiet"
+                disabled={busy}
+                onClick={() => {
+                  // A motif never saved goes without asking: there is nothing to lose.
+                  if (current) setConfirming(true)
+                  else void actions.deleteMotif(letter)
+                }}
+              >
+                {t.deleteMotif}
+              </Button>
+            ))}
           <span className="text-xs text-dim">{t.ctrlEnter}</span>
         </div>
       )}

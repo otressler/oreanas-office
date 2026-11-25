@@ -117,19 +117,31 @@ describe('placement panel', () => {
       initiativeModifier: 0,
       initiativeRollMode: 'normal',
     })
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const confirm = vi.spyOn(window, 'confirm')
     renderInEncounter(<PlacePanel />)
     await user.click(await screen.findByRole('button', { name: b.edit('Wolf') }))
     const dialog = await screen.findByRole('dialog', { name: b.editTitle('Wolf') })
     await user.type(within(dialog).getByLabelText(b.name), 'srudel')
 
+    // Escape asks in the dialog; "Weiter bearbeiten", which has the focus, keeps the edits.
     await user.keyboard('{Escape}')
-    expect(confirm).toHaveBeenCalledWith(b.dialogDiscard)
-    expect(dialog).toBeInTheDocument()
-    confirm.mockReturnValue(true)
+    const question = within(dialog).getByRole('alertdialog', { name: b.dialogDiscard })
+    expect(within(question).getByRole('button', { name: b.dialogDiscardNo })).toHaveFocus()
+    await user.click(within(question).getByRole('button', { name: b.dialogDiscardNo }))
+    expect(within(dialog).queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(within(dialog).getByLabelText(b.name)).toHaveValue('Wolfsrudel')
+
+    // Escape again while it asks keeps editing too.
     await user.click(within(dialog).getByRole('button', { name: de.sync.close }))
+    await user.keyboard('{Escape}')
+    expect(within(dialog).queryByRole('alertdialog')).not.toBeInTheDocument()
+
+    await user.click(within(dialog).getByRole('button', { name: de.sync.close }))
+    await user.click(within(dialog).getByRole('button', { name: b.dialogDiscardYes }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect((await dbOf().creatureTypes.toArray())[0]?.name).toBe('Wolf')
+    expect(confirm).not.toHaveBeenCalled()
+    confirm.mockRestore()
   })
 
   it('archives a type: not pickable any more, and brought back from the collapsed part', async () => {

@@ -212,12 +212,8 @@ function SpellDialog({
             <Button onClick={() => setSwitching(!switching)} aria-expanded={switching}>
               {de.spells.character.switchVariant}
             </Button>
-            <Button
-              variant="quiet"
-              onClick={() => {
-                if (window.confirm(t.confirmRemove(entry.variant.card.name))) void onRemove()
-              }}
-            >
+            {/* No question first: a removed spell is quickly added again. */}
+            <Button variant="quiet" onClick={() => void onRemove()}>
               {t.remove}
             </Button>
           </>

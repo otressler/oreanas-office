@@ -97,6 +97,7 @@ const ALL_CODES = {
   artPromptInvalid: true,
   spellNotInHandbook: true,
   motifSuggestionFailed: true,
+  motifInUse: true,
 } satisfies Record<components['schemas']['ApiErrorCode'], true>
 
 function result(status: number, body?: unknown) {

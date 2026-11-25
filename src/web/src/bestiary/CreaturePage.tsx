@@ -186,6 +186,8 @@ function CreatureView({
   const [submitted, setSubmitted] = useState(false)
   const [failed, setFailed] = useState(false)
   const [saving, setSaving] = useState(false)
+  /** The dialog asks whether to drop unsaved changes (close()). */
+  const [asking, setAsking] = useState(false)
   const navigate = useNavigate()
   // Set just before leaving on purpose (saved, or cancelled), so the leave warning stays quiet.
   const leaving = useRef(false)
@@ -247,9 +249,13 @@ function CreatureView({
     void navigate(bestiaryPath(campaignId))
   }
 
-  /** The dialog's close button and Escape: typed-in changes are only dropped after asking. */
+  /**
+   * The dialog's close button and Escape: typed-in changes are only dropped after asking, in a
+   * bar at the top of the dialog. Escape while it asks keeps editing.
+   */
   function close() {
-    if (dirty && !window.confirm(t.dialogDiscard)) return
+    if (asking) return setAsking(false)
+    if (dirty) return setAsking(true)
     dialog?.onClose()
   }
 
@@ -492,6 +498,24 @@ function CreatureView({
   if (!dialog) return sheet
   return (
     <Modal size="page" title={isNew ? t.newTitle : t.editTitle(name)} onClose={close}>
+      {asking && (
+        <div
+          role="alertdialog"
+          aria-label={t.dialogDiscard}
+          className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-candle/60 bg-panel p-3"
+        >
+          <span className="text-sm text-parchment">{t.dialogDiscard}</span>
+          <span className="ml-auto flex flex-wrap gap-2">
+            <Button variant="primary" onClick={() => dialog?.onClose()}>
+              {t.dialogDiscardYes}
+            </Button>
+            {/* Focus lands on the safe choice. */}
+            <Button autoFocus onClick={() => setAsking(false)}>
+              {t.dialogDiscardNo}
+            </Button>
+          </span>
+        </div>
+      )}
       {sheet}
     </Modal>
   )

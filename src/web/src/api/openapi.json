@@ -4555,6 +4555,50 @@
           }
         }
       }
+    },
+    "/api/spells/variants/{variantId}/studio/motifs/{letter}": {
+      "delete": {
+        "tags": [
+          "Spells"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "letter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4774,7 +4818,8 @@
           "spellImportFailed",
           "artPromptInvalid",
           "spellNotInHandbook",
-          "motifSuggestionFailed"
+          "motifSuggestionFailed",
+          "motifInUse"
         ]
       },
       "ApproveArtRequest": {
@@ -6044,6 +6089,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "motifInUse",
               null
             ]
           },
@@ -6538,6 +6584,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "motifInUse",
               null
             ]
           },
@@ -6652,6 +6699,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "motifInUse",
               null
             ]
           }
@@ -7077,6 +7125,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "motifInUse",
               null
             ]
           },
@@ -7199,6 +7248,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "motifInUse",
               null
             ]
           },
@@ -8173,6 +8223,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "motifInUse",
               null
             ]
           },
@@ -9039,6 +9090,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "motifInUse",
               null
             ]
           },
@@ -10136,6 +10188,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "motifInUse",
               null
             ]
           },
@@ -11580,6 +11633,7 @@
               "artPromptInvalid",
               "spellNotInHandbook",
               "motifSuggestionFailed",
+              "motifInUse",
               null
             ]
           },

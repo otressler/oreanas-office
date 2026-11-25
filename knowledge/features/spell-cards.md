@@ -61,6 +61,7 @@ The spell-cards studio for one variant, as it was, with the app's [image queue](
 - **Vorschlagen** (project owner, 2026-11-24): the [text model](/decisions/text-model.md) reads the variant's card (name, level, school, stats, description, effects, higher levels, material), the classes whose list the spell is on, the current text of every motif and the notes on the variant, and writes one new subject in English, different from the motifs there are. It lands in the motif's text field as an unsaved change: "Speichern" keeps it, "Änderung verwerfen" brings the saved text back. Only the author and admins, like everything that costs; it counts against the monthly AI budget and is hidden without a text model.
 - **Generieren** queues a picture of the current revision. Each request shows as a tile while it's queued (with its place in the queue and "Abbrechen"), running (with the time so far), or failed (with the reason, "Erneut" and "Ausblenden").
 - **Hochladen**: pictures per motif; the server crops their middle to 7:12.
+- **Motiv löschen** (project owner, 2026-11-25): a motif nothing came of goes with all its revisions. "Nothing came of it" means no picture, generated or uploaded, and no request queued or running; its failed requests, which have no picture and cost nothing, go with it. A motif with pictures stays, so the history of every picture stays whole (`motifInUse`). A saved motif asks first, in its own row ("Löschen" or "Behalten"), never in a browser dialog; a new one never saved just disappears.
 - Every picture as a card front, with ★ (favourite), ✕ (reject, kept but hidden with "Verworfene ausblenden") and "Als Kartenbild". A lightbox shows a picture large with its prompt, model, size, timings and comments, and steps with ← and →.
 - "Als abgenommen markieren" says the art is done.
 - Updates arrive live while a request is open, over the image hub.
@@ -69,7 +70,7 @@ Only the variant's author and admins change anything; others see the studio read
 
 # A character's spells
 
-On the [character page](/features/character-page.md), a section **Zauber** below the texts: the character's spells grouped by level as small card fronts, each with a "Vorbereitet" switch, and for whoever may edit the character "Variante wechseln" and "Entfernen". "Zauber hinzufügen" opens a dialog that searches the library; a spell with several variants asks which one. By default it shows only the spells of the character's classes and subclasses ("Nur Zauber für Waldläufer"), whatever their level; unticking shows all, and any spell may be taken (project owner, 2026-11-24). A spell without a card links to "Karte anlegen" for it. "Neuen Zauber anlegen" goes to the creation page and comes back with the spell added. Every member reads the list; only whoever may edit the character changes it.
+On the [character page](/features/character-page.md), a section **Zauber** below the texts: the character's spells grouped by level as small card fronts, each with a "Vorbereitet" switch. A tap on a card opens it large in a dialog, with "Variante wechseln" and "Entfernen" for whoever may edit the character. "Entfernen" acts at once, without asking: a spell is quickly added again (project owner, 2026-11-25). "Zauber hinzufügen" opens a dialog that searches the library; a spell with several variants asks which one. By default it shows only the spells of the character's classes and subclasses ("Nur Zauber für Waldläufer"), whatever their level; unticking shows all, and any spell may be taken (project owner, 2026-11-24). A spell without a card links to "Karte anlegen" for it. "Neuen Zauber anlegen" goes to the creation page and comes back with the spell added. Every member reads the list; only whoever may edit the character changes it.
 
 # At the table: "Zauber"
 
@@ -115,6 +116,63 @@ Built on `feature/spell-cards`.
 - **Frontend**: `SpellCard.tsx` wraps everything below the stats in `.sc-body` and draws the tables (`SpellTableBlock`), the rail and the arrow; `fit.ts` stops at `MIN_K` (1.00), marks the frame `.sc-scrolls` and updates the rail and fades on scroll (`updateScroll`); `cards.css` has the scroll and table styles. The editor has a "Tabellen" section (up to 3 tables, 12 rows each) and shares the chip fields with the effects.
 - **Changes for existing cards**: a back that used to shrink below scale 1.00 to fit now scrolls a little instead.
 - **Tests**: `SpellUnitTests` (table limits, description limit, motif prompt), `SpellImportTests.A_table_in_the_rules_comes_as_a_table_cut_to_the_limits`, `spells.test.tsx` (the table on the back).
+
+# As built (2026-11-25): removing without asking, deleting motifs
+
+- **Server**: `DELETE /api/spells/variants/{id}/studio/motifs/{letter}` (author and admins; 404 for a letter without revisions, `motifInUse` for a motif with a picture or an open request). It checks and deletes in one serializable transaction, so a request queued meanwhile can't be orphaned. No schema change.
+- **Frontend**: "Entfernen" in a character's spell dialog no longer asks (`CharacterSpells.tsx`); "Motiv löschen" in a motif's row of buttons in the studio, only where nothing came of it, confirmed in the row.
+- **Tests**: `Images/SpellArtTests.Only_a_motif_nothing_came_of_can_be_deleted`, `SpellStudioPage.test.tsx`, `CharacterPage.test.tsx`.
+
+# Planned (2026-11-25)
+
+Agreed with the project owner on 2026-11-25, not built yet. Built in this order, each step on top of the one before, so the revision pass (4) redoes every existing card once.
+
+## 1. Paragraphs, lead-ins and lists
+
+The project owner noticed that cards often are one long block of text. In the description:
+
+- A blank line starts a new **paragraph** with a small gap (about 1 mm); a single line break stays a line break. Today a blank line is two line breaks, a whole empty line.
+- **Bold lead-ins**, as the 2024 book writes spells, are a writing rule, not new markup: "**Wand oder Kugel.** …", "**Licht.** …".
+- Lines starting with "- " are a compact **list**, for spells that offer choices (Command, Enhance Ability, Alter Self).
+- No headings: on a card they take room that lead-ins cover.
+
+Effect and table rows stay one block each. The import prompt changes from "no headings, no lists" to "short paragraphs by topic with a bold lead-in where the spell has parts; a list for choices".
+
+## 2. Explaining conditions: dashed underline and a tap
+
+- A German **glossary** ships with the app, so it works offline: the 15 conditions under the status keys of [statuses](/features/statuses.md) (`blinded`, `restrained` …), maybe a few rules terms (Konzentration, Vorteil/Nachteil, schwieriges Gelände, helles/dämmriges Licht). *Open*: the German SRD 5.2.1's text (CC BY 4.0, then credited in the [legal notice](/decisions/legal-notice.md)) or short summaries of our own.
+- **Markup** `[[festgesetzt]]` marks a term in any card text; the app matches it against each condition's word forms. Explicit, because German endings defeat guessing ("festgesetzte Kreatur", "darunterliegend"); without a match it's plain text. Spell import writes it.
+- **On the card** a marked term has a **dashed underline** in the school's colour (the project owner's idea): about 0.25 mm thick, a little below the letters, solid with a faint tint while its explanation is open. No ⓘ icons.
+- **A tap** on it (hover on a desktop as well) shows the condition's icon, name and rules, outside the card so it isn't clipped or scaled: a sheet at the bottom of the gallery on a phone, a popover beside the term on a desktop. The tap doesn't turn the card. The card then needs its own "Karte umdrehen" control for the keyboard and screen readers, since buttons can't sit inside the card's button.
+- The same explanation opens from a status on the [token card](/features/token-card.md) and in the initiative list.
+
+## 3. Statuses when a spell is added
+
+When a spell is added to a character (the "Zauber hinzufügen" dialog), and only when something is missing from the character's status list ([statuses](/features/statuses.md), "Status lists"), the dialog offers the statuses ticked: "Für Liriels Zustandsliste: ☑ Mal des Jägers ☑ Konzentration". Unticking skips them; nothing is added unseen.
+
+- **Spell statuses**: a switch on the card, "Als Zustand anbieten", for spells that mark a target or last on someone (Hunter's Mark, Hex, Bless, Faerie Fire). Set by the author in the editor and by spell import. The status takes the spell's name and the card's icon as its icon, so nothing is generated or spent and it works offline.
+- **Konzentration**, offered with a character's first concentration spell.
+- **Conditions** a card marks (step 2) that the character's list is missing. Mentioning isn't causing (Lesser Restoration ends Blinded), so only conditions missing anyway are offered, which keeps a wrong guess harmless.
+- Removing the spell keeps its statuses; tokens may carry them, and statuses are never deleted.
+- *Open*: whether a status made from a spell is linked to it, so two characters with Hunter's Mark share its name and icon and it isn't offered twice; whether Konzentration becomes a built-in status of every list instead of a suggestion.
+
+## 4. Revising the existing cards
+
+An admin action "Karten überarbeiten": for every variant, the text model gets the **current card**, not the wiki, and may change only its form: paragraphs and lead-ins (1), condition markup (2), the status switch (3).
+
+- **Checked**: the server strips markup and spacing from the old and the new text and compares them. Only formatting changed: the revision is saved. A word changed: nothing is saved, and the card is listed on the admin page to look at by hand.
+- **Undo**: the card before the revision is kept, so it can be put back. Variants have no history yet, so this needs a schema addition.
+- Moving text into tables rewrites it and can't pass the check; that stays with the editor and "Eigene Variante", card by card.
+- About 60 cards at a fraction of a cent each; it runs as a background job (below).
+
+## 5. A queue for card drafts and motif suggestions
+
+Project owner, 2026-11-25: queue all spells for suggestions, cards and art motifs, **but not the art itself** (pictures cost far more per image; 330 would use up the [image budget](/decisions/image-budget.md)).
+
+- **Starting it**: "Vorschläge erstellen" on the admin page, with the library's filters (level, class, school) and "nur Zauber ohne Karte" ticked by default, and the estimated cost before it starts. About 330 spells without a card cost well under $1 of the monthly AI budget.
+- **The queue**: a job per spell in the database (queued, running, done, failed), worked in the background like the image queue, with progress, failures and "Erneut versuchen" on the admin page. Production scales to zero ([hosting](/decisions/hosting.md)), so an interrupted run goes on at the next start. Wiki pages are fetched a few seconds apart, not all at once. The revision pass (4) runs on the same queue.
+- **Card drafts** are not variants: a machine card would look like someone's own, count as "Mit Karte" and could land on a character unchecked. A spell with a draft shows "Vorschlag bereit" in the library; its page shows the draft with "Prüfen und übernehmen", which opens the editor with it, and saving makes it a variant with whoever checked it as author. A spell with only a draft can't be added to a character. This settles the open question below for machine-written cards.
+- **Motif suggestions**: for each card without a motif, and for each draft, the text model writes one subject as "Vorschlagen" does. On a variant it becomes motif A with a revision of its own source (`suggestion`, shown as "Vorschlag" in the studio); a draft carries its suggestion into the variant when it's taken. One that doesn't fit is deleted with "Motiv löschen". Generating the picture stays the author's step.
 
 # Open
 

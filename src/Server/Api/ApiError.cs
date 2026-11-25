@@ -199,4 +199,6 @@ public enum ApiErrorCode
     // MotifSuggestionFailed: the text model gave no motif for the studio (no answer, or it
     // refused); trying again or writing the motif by hand helps.
     MotifSuggestionFailed,
+    // MotifInUse: a motif with pictures, or with a picture still being made, can't be deleted.
+    MotifInUse,
 }

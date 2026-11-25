@@ -120,6 +120,46 @@ public sealed class SpellArtTests(AppFixture fixture) : IClassFixture<AppFixture
     }
 
     [Fact]
+    public async Task Only_a_motif_nothing_came_of_can_be_deleted()
+    {
+        var fake = fixture.App.ResetFakeTokens();
+        fake.TokenPng = TestPictures.SplitJpeg(1008, 1728);
+        var author = await fixture.App.CreatePersonAsync("Mira");
+        var other = await fixture.App.CreatePersonAsync("Brom");
+        var variant = await author.CreateSpellAsync();
+        async Task<SaveArtPromptResponse> Save(string letter, string subject, bool generate = false) =>
+            await (await author.Client.PostAsJsonAsync(Studio(variant.Id) + "/prompts", new SaveArtPromptRequest(letter, subject, generate), Json))
+                .ReadAsync<SaveArtPromptResponse>(HttpStatusCode.OK);
+        Task<HttpResponseMessage> Delete(Person person, string letter) => person.Client.DeleteAsync($"{Studio(variant.Id)}/motifs/{letter}");
+
+        // a: two revisions, no picture. b: a picture. c: only a failed request. d: an upload.
+        await Save("a", "first idea");
+        await Save("a", "second idea");
+        var painted = await Save("b", "wolves", generate: true);
+        Assert.Equal(AssetStatus.Done, (await UntilFinishedAsync(author, variant.Id, painted.Image!.Id)).Status);
+        fake.EnqueueFailure(new ImageRejectedException("moderation"));
+        var failed = await Save("c", "a storm", generate: true);
+        Assert.Equal(AssetStatus.Failed, (await UntilFinishedAsync(author, variant.Id, failed.Image!.Id)).Status);
+        await Save("d", "an owl");
+        var upload = new ByteArrayContent(TestPictures.SplitJpeg(700, 1200));
+        upload.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+        (await author.Client.PostAsync(Studio(variant.Id) + "/upload?letter=d", upload)).EnsureSuccessStatusCode();
+
+        await (await Delete(other, "a")).AssertErrorAsync(HttpStatusCode.Conflict, ApiErrorCode.NotSpellAuthor);
+        Assert.Equal(HttpStatusCode.NotFound, (await Delete(author, "z")).StatusCode);
+        await (await Delete(author, "b")).AssertErrorAsync(HttpStatusCode.Conflict, ApiErrorCode.MotifInUse);
+        await (await Delete(author, "d")).AssertErrorAsync(HttpStatusCode.Conflict, ApiErrorCode.MotifInUse);
+        Assert.Equal(HttpStatusCode.NoContent, (await Delete(author, "A")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await Delete(author, "c")).StatusCode);
+
+        // All revisions of a and c are gone, and c's failed request with them.
+        var studio = await StudioAsync(author, variant.Id);
+        Assert.Equal(["b", "d"], studio.Prompts.Select(p => p.Letter).Distinct().Order());
+        Assert.DoesNotContain(studio.Images, i => i.Id == failed.Image.Id);
+        Assert.Contains(studio.Images, i => i.Id == painted.Image.Id);
+    }
+
+    [Fact]
     public async Task A_queued_request_can_be_cancelled_until_it_runs()
     {
         var fake = fixture.App.ResetFakeTokens();

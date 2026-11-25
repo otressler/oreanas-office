@@ -1345,6 +1345,8 @@ export const de = {
       ownVariantHint: 'Startet als Kopie dieser Variante.',
       delete: 'Löschen',
       confirmDelete: 'Diese Variante löschen? Das lässt sich nicht rückgängig machen.',
+      deleteYes: 'Endgültig löschen',
+      deleteNo: 'Behalten',
       tapToFlip: 'Tipp auf eine Karte, um sie umzudrehen.',
       noCards: 'Für diesen Zauber hat noch niemand eine Karte geschrieben.',
       writeCard: 'Karte anlegen',
@@ -1366,6 +1368,12 @@ export const de = {
       save: 'Speichern',
       saveGenerate: 'Speichern & generieren',
       discard: 'Änderung verwerfen',
+      /** Only for a motif without pictures and without a request being painted. */
+      deleteMotif: 'Motiv löschen',
+      confirmDeleteMotif: (letter: string) =>
+        `Motiv ${letter.toUpperCase()} mit allen Fassungen löschen?`,
+      deleteMotifYes: 'Löschen',
+      deleteMotifNo: 'Behalten',
       suggest: 'Vorschlagen',
       suggestHint:
         'Das Textmodell liest die Karte und schlägt ein neues Motiv vor; gespeichert wird erst mit „Speichern“.',
@@ -1437,7 +1445,6 @@ export const de = {
       preparedCount: (prepared: number, total: number) => `${prepared} von ${total} vorbereitet`,
       switchVariant: 'Variante wechseln',
       remove: 'Entfernen',
-      confirmRemove: (name: string) => `${name} von diesem Charakter entfernen?`,
       pickTitle: 'Zauber hinzufügen',
       pickVariant: (name: string) => `Welche Variante von „${name}“?`,
       alreadyHas: 'schon dabei',
@@ -2150,6 +2157,8 @@ export const de = {
       'Diesen Zauber gibt es nicht im Spielerhandbuch 2024. Die Sammlung hat nur dessen Zauber.',
     motifSuggestionFailed:
       'Das Textmodell hat gerade kein Motiv vorgeschlagen. Versuch es noch einmal oder beschreib das Motiv selbst.',
+    motifInUse:
+      'Zu diesem Motiv gibt es Bilder oder ein Bild wird gerade gemalt. Nur Motive ohne Bilder lassen sich löschen.',
   } satisfies Record<ApiErrorCode, string>,
 
   /** Sync and the map store (lane: sync client). */
@@ -2378,6 +2387,8 @@ export const de = {
     archive: 'Archivieren',
     /** Closing the creature dialog over the editor with unsaved changes. */
     dialogDiscard: 'Ungespeicherte Änderungen gehen verloren. Trotzdem schließen?',
+    dialogDiscardYes: 'Verwerfen und schließen',
+    dialogDiscardNo: 'Weiter bearbeiten',
     restore: 'Zurückholen',
     /** Accessible name of the button that brings an archived type back, e.g. "Goblin zurückholen". */
     restoreLabel: (name: string) => `${name} zurückholen`,

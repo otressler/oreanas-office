@@ -506,4 +506,54 @@ describe('CharacterPage', () => {
       expect(within(dialog).getByText('Mondstrahl')).toBeVisible()
     })
   })
+
+  it('removes a spell in its dialog, without asking', async () => {
+    const entry = {
+      spellId: 's1',
+      prepared: true,
+      addedAt: '2026-11-21T00:00:00Z',
+      variant: {
+        id: 'v1',
+        spellId: 's1',
+        nameEn: 'Moonbeam',
+        level: 2,
+        school: 'evocation',
+        author: { id: 'u', displayName: 'Mira' },
+        basedOnVariantId: null,
+        origin: 'manual',
+        card: { name: 'Mondstrahl', icon: 'moon', description: '', effects: [], pips: [] },
+        artAssetId: null,
+        artUrl: null,
+        artApproved: false,
+        usedBy: 1,
+        canEdit: false,
+        createdAt: '2026-11-21T00:00:00Z',
+        updatedAt: '2026-11-21T00:00:00Z',
+      },
+    }
+    const calls = open([character()], {
+      extra: {
+        'GET /api/campaigns/:id/characters/:characterId/spells': json(200, [entry]),
+        'DELETE /api/campaigns/:id/characters/:characterId/spells/:spellId': () =>
+          new Response(null, { status: 204 }),
+      },
+    })
+    const confirm = vi.spyOn(window, 'confirm')
+    const user = userEvent.setup()
+    const s = de.spells.character
+
+    // The overview has no "Entfernen"; the spell's dialog has.
+    await user.click(await screen.findByRole('button', { name: 'Mondstrahl' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Mondstrahl' })
+    expect(screen.getAllByRole('button', { name: s.remove })).toHaveLength(1)
+    await user.click(within(dialog).getByRole('button', { name: s.remove }))
+
+    await vi.waitFor(() =>
+      expect(calls.filter((c) => c.method === 'DELETE').map((c) => c.path)).toEqual([
+        `/api/campaigns/${CAMPAIGN}/characters/ch1/spells/s1`,
+      ]),
+    )
+    expect(confirm).not.toHaveBeenCalled()
+    confirm.mockRestore()
+  })
 })

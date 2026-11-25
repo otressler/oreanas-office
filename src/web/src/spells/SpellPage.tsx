@@ -95,8 +95,8 @@ function VariantCard({ variant, mine }: { variant: SpellVariant; mine: boolean }
   const queries = useQueryClient()
   const navigate = useNavigate()
   const [error, setError] = useState<unknown>(null)
+  const [confirming, setConfirming] = useState(false)
   const remove = async () => {
-    if (!window.confirm(t.confirmDelete)) return
     try {
       await deleteVariant(variant.id)
       await queries.invalidateQueries({ queryKey: spellKeys.all })
@@ -136,12 +136,28 @@ function VariantCard({ variant, mine }: { variant: SpellVariant; mine: boolean }
             {t.studio}
           </ButtonLink>
         )}
-        {variant.canEdit && variant.usedBy === 0 && (
-          <Button variant="quiet" onClick={() => void remove()}>
+        {variant.canEdit && variant.usedBy === 0 && !confirming && (
+          <Button variant="quiet" onClick={() => setConfirming(true)}>
             {t.delete}
           </Button>
         )}
       </div>
+      {/* Asked under the card, not in a browser dialog: a deleted variant can't come back. */}
+      {confirming && (
+        <div
+          role="group"
+          aria-label={t.delete}
+          className="flex flex-wrap items-center justify-center gap-2"
+        >
+          <span className="text-sm text-candle">{t.confirmDelete}</span>
+          <Button variant="primary" onClick={() => void remove()}>
+            {t.deleteYes}
+          </Button>
+          <Button variant="quiet" onClick={() => setConfirming(false)}>
+            {t.deleteNo}
+          </Button>
+        </div>
+      )}
       <ErrorAlert error={error} />
     </div>
   )

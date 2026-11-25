@@ -84,7 +84,7 @@ Whoever may edit the character ([character](/domain/character.md), Permissions) 
 
 # Art studio
 
-Per variant, the spell-cards studio's history, kept append-only like there (project owner chose the full studio, 2026-11-21). Only the variant's author (and admins) changes it; every signed-in user can look.
+Per variant, the spell-cards studio's history, kept append-only like there (project owner chose the full studio, 2026-11-21), with one exception: a motif nothing came of may be deleted with all its revisions and its failed requests (project owner, 2026-11-25; [spell cards](/features/spell-cards.md), "Art studio"). Only the variant's author (and admins) changes it; every signed-in user can look.
 
 - **Art prompt** ("Motiv"): `variantId`, `letter` (`a`–`z`, one line of ideas each), `subject` (up to 1,500 characters), `createdAt`, `createdByUserId`. Each save adds a revision; the newest per letter is current. The app adds the style block (`ImageOptions.SpellArtStyle`) around the subject.
 - **Art picture**: an [asset](/domain/asset.md) of kind `SpellArt`, owned by the variant, with the prompt revision it came from (`spellArtPromptId`), or an upload. Generated pictures go through the site's one image queue and count against the [budget](/decisions/image-budget.md). The asset row is also the request: queued, running, done or failed.
