@@ -37,16 +37,16 @@ Changes from the original: there's no class badge (a spell isn't one class's), i
 
 Three ways, as tabs; each ends in the same editor with a draft, and nothing is saved until "Speichern":
 
-1. **Von Hand**: an empty card. The English name is asked first and must be one of the Handbook's (the field suggests them); level and school come from the Handbook.
+1. **Von Hand**: an empty card. The English name is asked first and must be one of the Handbook's (the field suggests them); level and school come from the Handbook. When the page was opened for a known spell, its Handbook German name is filled in too.
 2. **Nach Name**: the user types a name in any language ("Mondstrahl", "Moonbeam"). The server:
    1. asks the text model for the English 2024 name, unless the input already is one;
    2. refuses a spell that isn't the Handbook's ("Diesen Zauber gibt es nicht im Spielerhandbuch 2024");
    3. if the spell has cards already, says so and offers its variants or "Eigene Variante";
    4. otherwise loads `https://dnd2024.wikidot.com/spell:<slug>` with the Handbook data's slug (404: "Diesen Zauber gibt es im Wiki nicht");
-   5. has the text model write the German card from that page, in meters, with the Handbook's level and school.
+   5. has the text model write the German card from that page, in meters, with the Handbook's English and German names, level and school. The official German name is also put on the returned draft, so a model's alternate translation cannot replace it.
 3. **Aus Foto**: the user takes or picks a photo of a Player's Handbook page. The app shrinks it on the device and sends it; the text model reads every spell on the page and writes a German card for each. Spells that aren't the Handbook's are dropped. With several spells, the user picks which ones to take.
 
-`/zauber/neu?zauber=<spellId>` is the creation page for one spell: "Von Hand" starts with it picked and "Nach Name" with its name filled in. A spell's page without cards links there ("Karte anlegen").
+`/zauber/neu?zauber=<spellId>` is the creation page for one spell: "Von Hand" starts with it picked and its known German name filled in, while "Nach Name" starts with its English name filled in. A spell's page without cards links there ("Karte anlegen").
 
 The editor shows the card live, front and back, beside the fields. Saving creates the variant of that spell, with the user as author. Opened from a character ("Neuen Zauber anlegen"), saving also adds the spell to that character.
 

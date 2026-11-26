@@ -84,17 +84,18 @@ public sealed class SpellImportTests(AppFixture fixture) : IClassFixture<AppFixt
 
         Assert.Equal(("Hunter's Mark", spell.Id, 0), (response.NameEn, response.SpellId, response.VariantCount));
         var draft = response.Draft!;
-        // The Handbook's name, level and school win over the model's; unknown icons become
+        // The Handbook's names, level and school win over the model's; unknown icons become
         // "spark"; two pips at most.
         Assert.Equal(
             (spell.Id, "Hunter's Mark", 1, SpellSchool.Divination, SpellVariantOrigin.Wiki),
             (draft.SpellId, draft.NameEn, draft.Level, draft.School, draft.Origin));
-        Assert.Equal(("Mal des Jägers", "spark"), (draft.Card.Name, draft.Card.Icon));
+        Assert.Equal(("Zeichen des Jägers", "spark"), (draft.Card.Name, draft.Card.Icon));
         Assert.Equal(["spark", "star"], draft.Card.Pips);
 
         var requests = Model.Requests.ToList();
         Assert.Equal(["spell-name", "spell-wiki"], requests.Select(r => r.Purpose));
         Assert.Equal("Mal des Jägers", requests[0].User);
+        Assert.Contains("Official German name: Zeichen des Jägers", requests[1].User);
         Assert.Contains("A silvery beam of pale light shines down in a 5-foot-radius Cylinder.", requests[1].User);
         Assert.Contains("Casting Time: Action\nRange: 120 feet", requests[1].User);
         Assert.DoesNotContain("ads()", requests[1].User);
@@ -217,6 +218,7 @@ public sealed class SpellImportTests(AppFixture fixture) : IClassFixture<AppFixt
         Assert.Equal(
             [("Moonbeam", existing.SpellId, 2, SpellVariantOrigin.Photo), ("Tsunami", tsunami.Id, 8, SpellVariantOrigin.Photo)],
             response.Drafts.Select(d => (d.NameEn, d.SpellId, d.Level, d.Origin)));
+        Assert.Equal(["Mondstrahl", "Tsunami"], response.Drafts.Select(d => d.Card.Name));
 
         // The photo goes to the model upright, as a JPEG of at most 2048 px.
         var sent = Assert.Single(Assert.Single(Model.Requests).Images!);
@@ -255,7 +257,7 @@ public sealed class SpellImportTests(AppFixture fixture) : IClassFixture<AppFixt
         // The model reads the card, the spell's classes, each motif's current revision and the notes.
         var request = Assert.Single(Model.Requests);
         Assert.Equal("spell-motif", request.Purpose);
-        Assert.Contains("Spell: Moonbeam (German: Mondstrahl), level 2, evocation", request.User);
+        Assert.Contains("Spell: Moonbeam (German: Mondstrahl); Official German name: Mondstrahl, level 2, evocation", request.User);
         Assert.Contains("Classes: Druid", request.User);
         Assert.Contains(variant.Card.Description, request.User);
         Assert.Contains("- a grey wolf howling in moonlight", request.User);

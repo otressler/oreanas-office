@@ -100,3 +100,32 @@ describe('a card draft', () => {
     )
   })
 })
+
+it('prefills a known spell’s German name for a manual card', async () => {
+  mockApi({
+    'GET /api/auth/me': json(200, testUser),
+    'GET /api/spells': json(200, [
+      {
+        id: 's1',
+        nameEn: "Hunter's Mark",
+        level: 1,
+        school: 'divination',
+        name: 'Zeichen des Jägers',
+        icon: 'spark',
+        variantCount: 0,
+        artUrl: null,
+        lists: [],
+        hasDraft: false,
+      },
+    ]),
+    'GET /api/spells/import': json(200, { available: true }),
+  })
+  renderApp('/zauber/neu?zauber=s1')
+  const user = userEvent.setup()
+
+  await screen.findByRole('heading', { name: `Neuer Zauber: Hunter's Mark` })
+  await user.click(await screen.findByRole('tab', { name: de.spells.create.tabs.manual }))
+  await user.click(await screen.findByRole('button', { name: de.spells.library.newSpell }))
+
+  expect(await screen.findByLabelText(de.spells.editor.name)).toHaveValue('Zeichen des Jägers')
+})

@@ -33,7 +33,7 @@ public static class SpellImportPrompts
 
         Language and units:
         - Everything on the card is German, in the terms of the 2024 German Spielerhandbuch: "Aktion", "Bonusaktion", "Reaktion", "Magie-Aktion", "Rettungswurf", "Fernkampf-Zauberangriff", "Nahkampf-Zauberangriff", "Konzentration", "Trefferpunkte", "Vorteil", "Nachteil", condition names as in the German book ("Verängstigt", "Liegend", "Gelähmt" …).
-        - "name" is the official German 2024 name of the spell when you know it, otherwise a faithful German translation. When a word of it is longer than 12 letters, mark the one place where it reads best broken across two lines with "|", usually between the parts of a compound ("Sonnen|explosion", "Monster|festhalten"); the card shows the mark only as a hyphen where it breaks. "nameEn" is the official English 2024 name.
+        - "name" is the official German 2024 name of the spell when you know it, otherwise a faithful German translation. If the prompt supplies "Official German name", copy it exactly, including punctuation and capitalization. When a word of it is longer than 12 letters, mark the one place where it reads best broken across two lines with "|", usually between the parts of a compound ("Sonnen|explosion", "Monster|festhalten"); the card shows the mark only as a hyphen where it breaks. "nameEn" is the official English 2024 name.
         - Dice are written the German way: "2W10", "1W8 + Mod". Use "Mod" for the spellcasting ability modifier.
         - Never feet or miles: 5 ft = 1,5 m, 10 ft = 3 m, 15 ft = 4,5 m, 20 ft = 6 m, 30 ft = 9 m, 60 ft = 18 m, 90 ft = 27 m, 100 ft = 30 m, 120 ft = 36 m, 150 ft = 45 m, 300 ft = 90 m, 1 mile = 1,5 km. Decimal comma.
 
@@ -79,8 +79,10 @@ public static class SpellImportPrompts
 
     public static string PhotoSystemWith(IReadOnlyCollection<string> terms) => PhotoSystem + GlossaryRule(terms);
 
-    public static string WikiUser(string nameEn, string pageText) =>
-        $"Spell: {nameEn}\n\nWiki page text:\n{pageText}";
+    public static string WikiUser(string nameEn, string pageText) => WikiUser(nameEn, null, pageText);
+
+    public static string WikiUser(string nameEn, string? nameDe, string pageText) =>
+        $"Spell: {nameEn}{GermanName(nameDe)}\n\nWiki page text:\n{pageText}";
 
     // The revision pass (knowledge/features/spell-cards.md, "Planned", step 4): the card's form
     // in the rules above, its words as they are. The server takes only the name, the texts and
@@ -102,11 +104,17 @@ public static class SpellImportPrompts
         RevisionIntro + "\n\n" + CardRules + GlossaryRule(terms) + RevisionRules;
 
     // The card as the model writes it: break points as "|", with the spell's facts.
-    public static string RevisionUser(string nameEn, int level, SpellSchool school, SpellCard card) =>
+    public static string RevisionUser(
+        string nameEn,
+        int level,
+        SpellSchool school,
+        SpellCard card,
+        string? nameDe = null) =>
         JsonSerializer.Serialize(
             new
             {
                 nameEn,
+                officialGermanName = nameDe,
                 name = card.Name.Replace(SpellCards.SoftHyphen, '|'),
                 level,
                 school,
@@ -130,6 +138,9 @@ public static class SpellImportPrompts
                 card.Statuses,
             },
             SpellConfiguration.CardJson);
+
+    private static string GermanName(string? nameDe) =>
+        string.IsNullOrWhiteSpace(nameDe) ? "" : $"\nOfficial German name: {nameDe}";
 
     public static string PhotoSystem =>
         $"""
@@ -274,7 +285,7 @@ public static class SpellImportPrompts
         var card = input.Card;
         var lines = new List<string>
         {
-            $"Spell: {input.NameEn} (German: {SpellCards.WithoutBreakPoints(card.Name)}), {(input.Level == 0 ? "cantrip" : $"level {input.Level}")}, {input.School.ToString().ToLowerInvariant()}",
+            $"Spell: {input.NameEn} (German: {SpellCards.WithoutBreakPoints(card.Name)}){(string.IsNullOrWhiteSpace(input.NameDe) ? "" : $"; Official German name: {input.NameDe}")}, {(input.Level == 0 ? "cantrip" : $"level {input.Level}")}, {input.School.ToString().ToLowerInvariant()}",
             $"Classes: {(input.Classes.Count == 0 ? "none listed" : string.Join(", ", input.Classes))}",
             $"Casting time: {card.CastingTime} · Range: {card.Range} · Duration: {card.Duration}",
         };

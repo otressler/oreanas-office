@@ -144,7 +144,11 @@ public sealed class SpellJobTests(AppFixture fixture) : IClassFixture<AppFixture
             Assert.All(wanted, w => Assert.True(library.Single(s => s.Id == w.Id) is { HasDraft: true, VariantCount: 0 }));
             var spell = await player.GetSpellAsync(wanted[0].Id);
             var draft = Assert.IsType<SpellCardDraftView>(spell.Draft);
-            Assert.Equal(("Entwurf", "A necromancer raising a pale light over a grave."), (draft.Card.Name, draft.MotifSubject));
+            Assert.Equal((spell.NameDe, "A necromancer raising a pale light over a grave."), (draft.Card.Name, draft.MotifSubject));
+            Assert.Contains(Model.Requests, r =>
+                r.Purpose == "spell-wiki"
+                && r.User.Contains($"Spell: {spell.NameEn}", StringComparison.Ordinal)
+                && r.User.Contains($"Official German name: {spell.NameDe}", StringComparison.Ordinal));
 
             // Checked and saved, it's the player's variant with the motif as a suggestion.
             var variant = await (await player.CreateVariantAsync(new CreateVariantRequest(spell.Id, draft.Card with { Name = "Geprüft" }, SpellVariantOrigin.Wiki, DraftId: draft.Id)))

@@ -49,7 +49,7 @@ public sealed partial class SpellImport(
         var key = Spell.KeyOf(nameEn);
         return await db.Spells.AsNoTracking()
             .Where(s => s.NameKey == key && s.InHandbook)
-            .Select(s => new HandbookMatch(s.Id, s.NameEn, s.Slug ?? "", s.Level, s.School, s.Variants.Count))
+            .Select(s => new HandbookMatch(s.Id, s.NameEn, s.Slug ?? "", s.Level, s.School, s.Variants.Count, s.NameDe))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -88,7 +88,12 @@ public sealed partial class SpellImport(
     public async Task<SpellDraft?> DraftFromWikiAsync(HandbookMatch spell, string pageText, Guid userId, CancellationToken cancellationToken)
     {
         var result = await CallAsync(
-            new TextModelRequest("spell-wiki", SpellImportPrompts.WikiSystemWith(await GlossaryTermsAsync(cancellationToken)), SpellImportPrompts.WikiUser(spell.NameEn, pageText), "spell_card", SpellImportPrompts.CardSchema()),
+            new TextModelRequest(
+                "spell-wiki",
+                SpellImportPrompts.WikiSystemWith(await GlossaryTermsAsync(cancellationToken)),
+                SpellImportPrompts.WikiUser(spell.NameEn, spell.NameDe, pageText),
+                "spell_card",
+                SpellImportPrompts.CardSchema()),
             userId,
             cancellationToken);
         var card = JsonSerializer.Deserialize<ModelCard>(result.Json, SpellConfiguration.CardJson);
@@ -121,13 +126,20 @@ public sealed partial class SpellImport(
 
     // The card in the revision pass's form, as the model wrote it (cut to the limits like a
     // draft), or null without a usable answer. SpellCardRevise decides what may be kept.
-    public async Task<SpellCard?> ReviseCardAsync(string nameEn, int level, SpellSchool school, SpellCard card, Guid userId, CancellationToken cancellationToken)
+    public async Task<SpellCard?> ReviseCardAsync(
+        string nameEn,
+        int level,
+        SpellSchool school,
+        SpellCard card,
+        Guid userId,
+        CancellationToken cancellationToken,
+        string? nameDe = null)
     {
         var result = await CallAsync(
             new TextModelRequest(
                 "spell-revise",
                 SpellImportPrompts.RevisionSystemWith(await GlossaryTermsAsync(cancellationToken)),
-                SpellImportPrompts.RevisionUser(nameEn, level, school, card),
+                SpellImportPrompts.RevisionUser(nameEn, level, school, card, nameDe),
                 "spell_card",
                 SpellImportPrompts.CardSchema()),
             userId,
@@ -153,7 +165,11 @@ public sealed partial class SpellImport(
         var keys = list.Select(d => Spell.KeyOf(d.NameEn)).ToList();
         var spells = await db.Spells.AsNoTracking()
             .Where(s => keys.Contains(s.NameKey) && s.InHandbook)
-            .Select(s => new { s.NameKey, Match = new HandbookMatch(s.Id, s.NameEn, s.Slug ?? "", s.Level, s.School, s.Variants.Count) })
+            .Select(s => new
+            {
+                s.NameKey,
+                Match = new HandbookMatch(s.Id, s.NameEn, s.Slug ?? "", s.Level, s.School, s.Variants.Count, s.NameDe),
+            })
             .ToDictionaryAsync(s => s.NameKey, s => s.Match, cancellationToken);
         return [.. list
             .Where(d => spells.ContainsKey(Spell.KeyOf(d.NameEn)))
@@ -395,7 +411,14 @@ public sealed partial class SpellImport(
 
 // A Handbook spell an import found: its library row, wiki slug and facts, and how many
 // variants it has.
-public sealed record HandbookMatch(Guid SpellId, string NameEn, string Slug, int Level, SpellSchool School, int VariantCount);
+public sealed record HandbookMatch(
+    Guid SpellId,
+    string NameEn,
+    string Slug,
+    int Level,
+    SpellSchool School,
+    int VariantCount,
+    string? NameDe = null);
 
 // What "Vorschlagen" in the studio sends: the variant's card and spell, the English names of
 // the classes whose list it is on, the current subject of each motif and the author's notes.
@@ -406,11 +429,12 @@ public sealed record SpellMotifInput(
     SpellCard Card,
     IReadOnlyList<string> Classes,
     IReadOnlyList<string> Motifs,
-    IReadOnlyList<string> Notes);
+    IReadOnlyList<string> Notes,
+    string? NameDe = null);
 
 internal static class SpellDrafts
 {
-    // The draft as a card for this Handbook spell: its id, name, level and school.
+    // The draft as a card for this Handbook spell: its id, official names, level and school.
     public static SpellDraft For(this SpellDraft draft, HandbookMatch spell) => draft with
     {
         SpellId = spell.SpellId,
@@ -418,6 +442,9 @@ internal static class SpellDrafts
         Level = spell.Level,
         School = spell.School,
         VariantCount = spell.VariantCount,
+        Card = string.IsNullOrWhiteSpace(spell.NameDe)
+            ? draft.Card
+            : draft.Card with { Name = spell.NameDe },
     };
 }
 

@@ -123,7 +123,7 @@ function Choose({
                     nameEn: preset?.nameEn ?? '',
                     level: preset?.level ?? 1,
                     school: preset?.school ?? 'evocation',
-                    card: blankCard(),
+                    card: { ...blankCard(), name: preset?.name ?? '' },
                     origin: 'manual',
                   },
                   locked: !!preset,

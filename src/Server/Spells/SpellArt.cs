@@ -231,7 +231,16 @@ public static class SpellArt
     {
         var variant = await db.SpellVariants.AsNoTracking()
             .Where(v => v.Id == variantId)
-            .Select(v => new { v.AuthorUserId, v.Card, v.SpellId, v.Spell.NameEn, v.Spell.Level, v.Spell.School })
+            .Select(v => new
+            {
+                v.AuthorUserId,
+                v.Card,
+                v.SpellId,
+                v.Spell.NameEn,
+                v.Spell.NameDe,
+                v.Spell.Level,
+                v.Spell.School,
+            })
             .SingleOrDefaultAsync(cancellationToken);
         if (variant is null)
         {
@@ -271,7 +280,17 @@ public static class SpellArt
         try
         {
             var subject = await import.SuggestMotifAsync(
-                new SpellMotifInput(variant.NameEn, variant.Level, variant.School, variant.Card, classes, motifs, notes), user.GetUserId(), cancellationToken);
+                new SpellMotifInput(
+                    variant.NameEn,
+                    variant.Level,
+                    variant.School,
+                    variant.Card,
+                    classes,
+                    motifs,
+                    notes,
+                    variant.NameDe),
+                user.GetUserId(),
+                cancellationToken);
             return subject is null
                 ? TypedResults.Conflict(new ApiError(ApiErrorCode.MotifSuggestionFailed))
                 : TypedResults.Ok(new SuggestMotifResponse(subject));

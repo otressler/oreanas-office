@@ -169,7 +169,7 @@ public sealed class SpellJobWorker(
             .Where(s => s.Id == job.SpellId)
             .Select(s => new
             {
-                Match = new HandbookMatch(s.Id, s.NameEn, s.Slug ?? "", s.Level, s.School, s.Variants.Count),
+                Match = new HandbookMatch(s.Id, s.NameEn, s.Slug ?? "", s.Level, s.School, s.Variants.Count, s.NameDe),
                 HasDraft = db.SpellCardDrafts.Any(d => d.SpellId == s.Id),
             })
             .SingleOrDefaultAsync(cancellationToken);
@@ -202,7 +202,7 @@ public sealed class SpellJobWorker(
             motif = await import.SuggestMotifAsync(
                 new SpellMotifInput(
                     spell.Match.NameEn, spell.Match.Level, spell.Match.School, draft.Card,
-                    await import.ClassNamesAsync(job.SpellId, cancellationToken), [], []),
+                    await import.ClassNamesAsync(job.SpellId, cancellationToken), [], [], spell.Match.NameDe),
                 job.CreatedByUserId,
                 cancellationToken);
         }
@@ -238,7 +238,15 @@ public sealed class SpellJobWorker(
     {
         var variant = await db.SpellVariants.AsNoTracking()
             .Where(v => v.Id == job.VariantId)
-            .Select(v => new { v.Card, v.SpellId, v.Spell.NameEn, v.Spell.Level, v.Spell.School })
+            .Select(v => new
+            {
+                v.Card,
+                v.SpellId,
+                v.Spell.NameEn,
+                v.Spell.NameDe,
+                v.Spell.Level,
+                v.Spell.School,
+            })
             .SingleOrDefaultAsync(cancellationToken);
         if (variant is null)
         {
@@ -253,7 +261,7 @@ public sealed class SpellJobWorker(
         var subject = await import.SuggestMotifAsync(
             new SpellMotifInput(
                 variant.NameEn, variant.Level, variant.School, variant.Card,
-                await import.ClassNamesAsync(variant.SpellId, cancellationToken), [], []),
+                await import.ClassNamesAsync(variant.SpellId, cancellationToken), [], [], variant.NameDe),
             job.CreatedByUserId,
             cancellationToken);
         if (subject is null)
@@ -289,14 +297,29 @@ public sealed class SpellJobWorker(
     {
         var variant = await db.SpellVariants.AsNoTracking()
             .Where(v => v.Id == job.VariantId)
-            .Select(v => new { v.Card, v.UpdatedAt, v.Spell.NameEn, v.Spell.Level, v.Spell.School })
+            .Select(v => new
+            {
+                v.Card,
+                v.UpdatedAt,
+                v.Spell.NameEn,
+                v.Spell.NameDe,
+                v.Spell.Level,
+                v.Spell.School,
+            })
             .SingleOrDefaultAsync(cancellationToken);
         if (variant is null)
         {
             return JobResult.Fail("Die Karte gibt es nicht mehr.");
         }
 
-        var proposed = await import.ReviseCardAsync(variant.NameEn, variant.Level, variant.School, variant.Card, job.CreatedByUserId, cancellationToken);
+        var proposed = await import.ReviseCardAsync(
+            variant.NameEn,
+            variant.Level,
+            variant.School,
+            variant.Card,
+            job.CreatedByUserId,
+            cancellationToken,
+            variant.NameDe);
         if (proposed is null)
         {
             return JobResult.Fail("Das Textmodell hat keine Karte geschrieben.");
