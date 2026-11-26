@@ -1009,6 +1009,9 @@ export class MockBackend {
     if (path === '/api/rules/classes' && method === 'GET') {
       return [200, HANDBOOK_CLASSES]
     }
+    if (path === '/api/rules/glossary' && method === 'GET') {
+      return [200, []]
+    }
 
     if (path === '/api/campaigns' && method === 'GET') {
       return [
